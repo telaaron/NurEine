@@ -1,3 +1,5 @@
+// DEPRECATED — This Edge Function duplicates scripts/send_newsletter.py + GitHub Actions.
+// The Python script is the canonical newsletter sender. Do not deploy this function.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // ---------------------------------------------------------------------------

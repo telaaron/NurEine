@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import { getStoryBySlug, getRelatedStories, getAllSlugs, getAllStories } from '$lib/server/queries';
 
-export const prerender = true;
+export const prerender = false;
 
 export async function entries() {
 	const slugs = await getAllSlugs();

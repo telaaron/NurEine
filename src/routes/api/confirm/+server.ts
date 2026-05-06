@@ -40,8 +40,7 @@ export async function GET({ url }) {
 		.from('nureine_subscribers')
 		.update({
 			confirmed: true,
-			confirmation_token: null,
-			updated_at: new Date().toISOString()
+			confirmation_token: null
 		})
 		.eq('id', subscriber.id);
 

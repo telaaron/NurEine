@@ -154,7 +154,7 @@ export async function POST({ request }) {
 
 		// Validate tier if provided
 		const validTiers = ['free', 'plus', 'b2b'];
-		const plan = tier && validTiers.includes(tier) ? tier : 'free';
+		const subscriberTier = tier && validTiers.includes(tier) ? tier : 'free';
 
 		// 2. Check if email already exists
 		const { data: existing, error: lookupError } = await supabaseAdmin
@@ -182,12 +182,11 @@ export async function POST({ request }) {
 				.from('nureine_subscribers')
 				.update({
 					confirmation_token: newToken,
-					plan,
+					tier: subscriberTier,
 					lat: lat ?? null,
 					lng: lng ?? null,
 					region: region ?? null,
-					region_code: region_code ?? null,
-					updated_at: new Date().toISOString()
+					region_code: region_code ?? null
 				})
 				.eq('id', existing.id);
 
@@ -211,15 +210,14 @@ export async function POST({ request }) {
 			.from('nureine_subscribers')
 			.insert({
 				email: email.toLowerCase().trim(),
-				plan,
+				tier: subscriberTier,
 				confirmed: false,
 				confirmation_token: confirmationToken,
 				lat: lat ?? null,
 				lng: lng ?? null,
 				region: region ?? null,
 				region_code: region_code ?? null,
-				created_at: now,
-				updated_at: now
+				created_at: now
 			});
 
 		if (insertError) {

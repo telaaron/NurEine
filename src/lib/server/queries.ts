@@ -317,17 +317,19 @@ export async function deleteStory(id: string) {
 
 // ---- Admin Auth ----
 
-export async function verifyAdminLogin(username: string, passwordHash: string): Promise<boolean> {
-  // In Supabase, we no longer have an admins table by default.
-  // This is kept as a simple check for now - will be enhanced.
-  // For development, accept hardcoded admin credentials.
-  return username === 'admin' && passwordHash === hashPassword('nureine2026');
-}
+import { ADMIN_USERNAME, ADMIN_PASSWORD } from '$env/static/private';
+import { timingSafeEqual } from 'node:crypto';
 
-import { createHash } from 'node:crypto';
+export async function verifyAdminLogin(username: string, password: string): Promise<boolean> {
+  if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+    console.error('ADMIN_USERNAME or ADMIN_PASSWORD env vars not set');
+    return false;
+  }
 
-function hashPassword(password: string): string {
-  return createHash('sha256')
-    .update(password + 'nureine-salt-2026')
-    .digest('hex');
+  const userOk = username.length === ADMIN_USERNAME.length &&
+    timingSafeEqual(Buffer.from(username), Buffer.from(ADMIN_USERNAME));
+  const passOk = password.length === ADMIN_PASSWORD.length &&
+    timingSafeEqual(Buffer.from(password), Buffer.from(ADMIN_PASSWORD));
+
+  return userOk && passOk;
 }

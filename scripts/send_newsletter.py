@@ -177,36 +177,34 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 def build_html_body(story: dict, subscriber_email: str, confirmation_token: str) -> str:
     """Render the HTML template with story and subscriber data."""
-    story_url = f"{PUBLIC_BASE_URL}/geschichte/{story['slug']}"
+    slug = f"{story.get('title', 'story')}-{story.get('id', '')[:8]}"
+    story_url = f"{PUBLIC_BASE_URL}/geschichte/{slug}"
     unsubscribe_url = (
         f"{PUBLIC_BASE_URL}/api/unsubscribe"
         f"?token={confirmation_token}&email={subscriber_email}"
     )
     category = story.get("category", "Allgemein")
     category_color = {
-        "Umwelt": "#5A8F6F",
-        "Gesundheit": "#C96A7B",
-        "Wissenschaft": "#5A8FA0",
-        "Innovation": "#5A8FA0",
-        "Hoffnung": "#C4803A",
+        "klima": "#5A8F6F",
+        "gesundheit": "#C96A7B",
+        "wissenschaft": "#5A8FA0",
+        "gemeinschaft": "#5A8FA0",
+        "tiere": "#8A7FB0",
+        "kultur": "#C4995A",
+        "innovation": "#5A8FA0",
     }.get(category, "#C4622D")
 
-    summary = story.get("body", "")
-    # Truncate body to ~300 chars as a summary if it's long
-    if len(summary) > 300:
-        summary = summary[:300].rsplit(" ", 1)[0] + " ..."
+    summary = story.get("summary", "")
 
     return HTML_TEMPLATE.format(
-        emoji=story.get("hero", ""),
+        emoji=story.get("emoji", ""),
         category=category,
         category_color=category_color,
         title=story.get("title", ""),
-        dek=story.get("dek", ""),
+        dek=story.get("subtitle", ""),
         summary=summary,
-        impact_score=story.get("impact_score", story.get("impactScore", "?")),
-        reading_minutes=story.get(
-            "reading_minutes", story.get("readingMinutes", "?")
-        ),
+        impact_score=story.get("impact_score", "?"),
+        reading_minutes=story.get("reading_time_min", "?"),
         story_url=story_url,
         unsubscribe_url=unsubscribe_url,
     )
@@ -275,7 +273,7 @@ def get_hero_story(is_hero: bool = True, limit: int = 1) -> dict | None:
     params = {
         "is_hero": f"eq.{str(is_hero).lower()}",
         "limit": str(limit),
-        "select": "slug,title,dek,body,category,hero,impact_score,reading_minutes",
+        "select": "id,title,subtitle,body_markdown,summary,category,emoji,impact_score,reading_time_min",
     }
     results = supabase_get("nureine_stories", params=params)
     if isinstance(results, list) and results:
@@ -311,15 +309,11 @@ def send_email(to_email: str, subject: str, html_body: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def log_send(subscriber_id: int, story_slug: str, newsletter_type: str,
-             success: bool, error_message: str | None = None) -> None:
+def log_send(subscriber_id: str, story_id: str) -> None:
     """Insert a row into the newsletter_sends table."""
     record = {
         "subscriber_id": subscriber_id,
-        "story_slug": story_slug,
-        "newsletter_type": newsletter_type,
-        "success": success,
-        "error_message": error_message,
+        "story_id": story_id,
         "sent_at": datetime.now(timezone.utc).isoformat(),
     }
     try:
@@ -332,14 +326,13 @@ def log_cron_run(newsletter_type: str, total_recipients: int,
                  success_count: int, failure_count: int) -> None:
     """Insert a row into the cron_runs table."""
     record = {
-        "newsletter_type": newsletter_type,
-        "total_recipients": total_recipients,
-        "success_count": success_count,
-        "failure_count": failure_count,
-        "status": "completed" if failure_count == 0 else "partial",
-        "started_at": datetime.now(timezone.utc).isoformat(),
-        "completed_at": datetime.now(timezone.utc).isoformat(),
+        "type": newsletter_type,
+        "stories_found": total_recipients,
+        "stories_inserted": success_count,
+        "ran_at": datetime.now(timezone.utc).isoformat(),
     }
+    if failure_count > 0:
+        record["error"] = f"{failure_count} of {total_recipients} sends failed"
     try:
         supabase_post("nureine_cron_runs", record)
     except requests.RequestException as exc:
@@ -411,7 +404,7 @@ def main() -> None:
         sys.exit(0)
 
     logger.info(
-        "Hero story: '%s' (slug=%s)", story.get("title", "?"), story.get("slug", "?")
+        "Hero story: '%s' (id=%s)", story.get("title", "?"), story.get("id", "?")
     )
 
     # ---- Send emails --------------------------------------------------------
@@ -422,7 +415,7 @@ def main() -> None:
         subscriber_id = sub.get("id")
         email = sub.get("email")
         token = sub.get("confirmation_token", "")
-        story_slug = story.get("slug", "")
+        story_id = str(story.get("id", ""))
 
         if not email or not subscriber_id:
             logger.warning("Skipping subscriber with missing id/email: %s", sub)
@@ -433,29 +426,15 @@ def main() -> None:
             html_body = build_html_body(story, email, token)
             result = send_email(email, subject, html_body)
             logger.info("Email sent to %s (resend_id=%s)", email, result.get("id"))
-            log_send(subscriber_id, story_slug, newsletter_type, success=True)
+            log_send(str(subscriber_id), story_id)
             success_count += 1
 
         except requests.RequestException as exc:
             logger.error("Failed to send email to %s: %s", email, exc)
-            log_send(
-                subscriber_id,
-                story_slug,
-                newsletter_type,
-                success=False,
-                error_message=str(exc),
-            )
             failure_count += 1
 
         except Exception as exc:
             logger.error("Unexpected error sending to %s: %s", email, exc)
-            log_send(
-                subscriber_id,
-                story_slug,
-                newsletter_type,
-                success=False,
-                error_message=str(exc),
-            )
             failure_count += 1
 
     # ---- Log cron run -------------------------------------------------------

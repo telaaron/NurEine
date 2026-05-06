@@ -1,6 +1,6 @@
 import { getAllStories } from '$lib/server/queries';
 
-export const prerender = true;
+export const prerender = false;
 
 export async function load() {
   const allStories = await getAllStories();

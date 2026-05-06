@@ -1,49 +1,100 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 
+	let emailInput = $state('');
+	let status = $state('');
+	let loading = $state(false);
+
+	async function handleSubmit(tier: string) {
+		const email = emailInput.trim();
+		if (!email) {
+			status = 'Bitte gib eine E-Mail-Adresse ein.';
+			return;
+		}
+
+		loading = true;
+		status = '';
+
+		try {
+			const res = await fetch('/api/subscribe', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email, tier })
+			});
+			const data = await res.json();
+
+			if (data.error) {
+				status = data.error;
+			} else {
+				status = data.message;
+				emailInput = '';
+			}
+		} catch {
+			status = 'Ein Fehler ist aufgetreten. Bitte versuche es spaeter erneut.';
+		} finally {
+			loading = false;
+		}
+	}
+
 	const tiers = [
 		{
 			name: 'Sonntags-Brief',
 			price: 'kostenlos',
-			cadence: 'wöchentlich',
+			cadence: 'woechentlich',
 			features: [
 				'Eine kuratierte Geschichte pro Woche',
 				'Hintergrund + Quellen',
 				'Ein Brief der Redaktion',
-				'Werbefrei, jederzeit kündbar'
+				'Werbefrei, jederzeit kuendbar'
 			],
 			cta: 'Abonnieren',
-			highlight: false
+			highlight: false,
+			tier: 'free'
 		},
 		{
 			name: 'NurEine Plus',
-			price: '29 €',
+			price: '29 \u20ac',
 			cadence: '/ Jahr (≈ 2,42 €/Monat)',
 			features: [
 				'Alles aus dem Sonntags-Brief',
-				'Tägliche Audio-Variante (5 Min.)',
-				'Wöchentlicher Deep-Dive zu globalen Bewegungen',
+				'Taegliche Audio-Variante (5 Min.)',
+				'Woechentlicher Deep-Dive zu globalen Bewegungen',
 				'Zugang zur Karte der Hoffnung in Hi-Res',
-				'Frühzugang neue Features'
+				'Fruehzugang neue Features'
 			],
 			cta: 'Plus abonnieren',
-			highlight: true
+			highlight: true,
+			tier: 'plus'
 		},
 		{
 			name: 'Redaktionen & Schulen',
-			price: 'ab 49 €',
+			price: 'ab 49 \u20ac',
 			cadence: '/ Monat (Team-Lizenz)',
 			features: [
 				'API-Zugriff zu Wirkungsindex-Daten',
 				'Wartezimmer- und Klassenraum-Display-Lizenz',
 				'Whitelabel-Newsletter',
 				'Monatliche Team-Auswertung',
-				'Persönlicher Ansprechpartner'
+				'Persoenlicher Ansprechpartner'
 			],
-			cta: 'Mehr erfahren →',
-			highlight: false
+			cta: 'Mehr erfahren \u2192',
+			highlight: false,
+			tier: 'b2b'
 		}
 	];
+
+	function inputBg(highlight: boolean): string {
+		return highlight ? 'rgba(250, 246, 238, 0.1)' : 'rgba(255, 255, 255, 0.9)';
+	}
+	function inputBorder(highlight: boolean): string {
+		return highlight ? 'rgba(250, 246, 238, 0.2)' : 'var(--color-rule)';
+	}
+	function inputColor(highlight: boolean): string {
+		return highlight ? 'var(--color-paper)' : 'var(--color-ink)';
+	}
+	function placeholderColor(highlight: boolean): string {
+		return highlight ? 'rgba(250, 246, 238, 0.4)' : 'var(--color-muted)';
+	}
 </script>
 
 <svelte:head>
@@ -72,6 +123,7 @@
 <section class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-20">
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 		{#each tiers as tier}
+			{@const isB2B = tier.name === 'Redaktionen & Schulen'}
 			<div
 				class="p-8 rounded-[8px] flex flex-col"
 				style="
@@ -115,7 +167,8 @@
 						</li>
 					{/each}
 				</ul>
-				{#if tier.cta === 'Mehr erfahren →'}
+
+				{#if isB2B}
 					<a
 						href={base + '/preise#b2b-form'}
 						class="mt-8 block w-full px-5 py-3 rounded-full text-sm font-medium text-center transition-all"
@@ -127,23 +180,66 @@
 						{tier.cta}
 					</a>
 				{:else}
-					<button
-						type="button"
-						class="mt-8 w-full px-5 py-3 rounded-full text-sm font-medium transition-all"
-						style="
-              background: {tier.highlight ? 'var(--color-amber)' : 'var(--color-ink)'};
-              color: var(--color-paper);
-            "
+					<form
+						onsubmit={(e) => {
+							e.preventDefault();
+							handleSubmit(tier.tier);
+						}}
+						class="mt-8 flex flex-col gap-3"
 					>
-						{tier.cta}
-					</button>
+						<input
+							type="email"
+							bind:value={emailInput}
+							placeholder="Deine E-Mail-Adresse"
+							required
+							autocomplete="email"
+							class="w-full px-4 py-3 rounded-full text-sm border outline-none transition-colors"
+							style="
+                background: {inputBg(tier.highlight)};
+                border-color: {inputBorder(tier.highlight)};
+                color: {inputColor(tier.highlight)};
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+              "
+							oninput={() => {
+								if (status) status = '';
+							}}
+						/>
+						<button
+							type="submit"
+							disabled={loading}
+							class="w-full px-5 py-3 rounded-full text-sm font-medium transition-all disabled:opacity-60"
+							style="
+                background: {tier.highlight ? 'var(--color-amber)' : 'var(--color-ink)'};
+                color: var(--color-paper);
+              "
+						>
+							{#if loading}
+								<span class="inline-flex items-center gap-2">
+									<span
+										class="inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"
+									></span>
+									Wird gesendet ...
+								</span>
+							{:else}
+								{tier.cta}
+							{/if}
+						</button>
+						{#if status}
+							<p
+								class="text-xs leading-relaxed text-center"
+								style="color: {tier.highlight ? 'var(--color-amber-soft)' : 'var(--color-amber)'};"
+							>
+								{status}
+							</p>
+						{/if}
+					</form>
 				{/if}
 			</div>
 		{/each}
 	</div>
 
 	<p class="mt-10 text-xs text-center" style="color: var(--color-muted);">
-		Wir senden ausschließlich, was du angefordert hast. Kein Tracking-Pixel, kein Verkauf von
+		Wir senden ausschliesslich, was du angefordert hast. Kein Tracking-Pixel, kein Verkauf von
 		E-Mail-Adressen.
 	</p>
 </section>

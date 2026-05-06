@@ -14,8 +14,8 @@ const config = {
 			runtime: 'nodejs22.x'
 		}),
 		prerender: {
-			crawl: true,
-			entries: ['/'],
+			crawl: false,
+			entries: [],
 			handleHttpError: 'warn',
 			handleUnseenRoutes: 'ignore'
 		}

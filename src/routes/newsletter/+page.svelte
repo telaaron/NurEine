@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { base } from '$app/paths';
+
 	const tiers = [
 		{
 			name: 'Sonntags-Brief',
@@ -15,8 +17,8 @@
 		},
 		{
 			name: 'Lichtblick Plus',
-			price: '5 €',
-			cadence: 'pro Monat',
+			price: '29 €',
+			cadence: '/ Jahr (≈ 2,42 €/Monat)',
 			features: [
 				'Alles aus dem Sonntags-Brief',
 				'Tägliche Audio-Variante (5 Min.)',
@@ -29,15 +31,16 @@
 		},
 		{
 			name: 'Redaktionen & Schulen',
-			price: 'auf Anfrage',
-			cadence: 'B2B-Lizenz',
+			price: 'ab 49 €',
+			cadence: '/ Monat (Team-Lizenz)',
 			features: [
 				'API-Zugriff zu Wirkungsindex-Daten',
 				'Wartezimmer- und Klassenraum-Display-Lizenz',
 				'Whitelabel-Newsletter',
+				'Monatliche Team-Auswertung',
 				'Persönlicher Ansprechpartner'
 			],
-			cta: 'Kontakt aufnehmen',
+			cta: 'Mehr erfahren →',
 			highlight: false
 		}
 	];
@@ -112,16 +115,29 @@
 						</li>
 					{/each}
 				</ul>
-				<button
-					type="button"
-					class="mt-8 px-5 py-3 rounded-full text-sm font-medium transition-all"
-					style="
-            background: {tier.highlight ? 'var(--color-amber)' : 'var(--color-ink)'};
-            color: var(--color-paper);
-          "
-				>
-					{tier.cta}
-				</button>
+				{#if tier.cta === 'Mehr erfahren →'}
+					<a
+						href={base + '/preise#b2b-form'}
+						class="mt-8 block w-full px-5 py-3 rounded-full text-sm font-medium text-center transition-all"
+						style="
+              background: {tier.highlight ? 'var(--color-amber)' : 'var(--color-ink)'};
+              color: var(--color-paper);
+            "
+					>
+						{tier.cta}
+					</a>
+				{:else}
+					<button
+						type="button"
+						class="mt-8 w-full px-5 py-3 rounded-full text-sm font-medium transition-all"
+						style="
+              background: {tier.highlight ? 'var(--color-amber)' : 'var(--color-ink)'};
+              color: var(--color-paper);
+            "
+					>
+						{tier.cta}
+					</button>
+				{/if}
 			</div>
 		{/each}
 	</div>

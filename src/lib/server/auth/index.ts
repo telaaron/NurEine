@@ -7,8 +7,8 @@ export function hashPassword(password: string): string {
 	return createHash('sha256').update(password + SALT).digest('hex');
 }
 
-export function verifyAdmin(username: string, password: string): boolean {
-	return verifyAdminLogin(username, hashPassword(password));
+export async function verifyAdmin(username: string, password: string): Promise<boolean> {
+	return await verifyAdminLogin(username, hashPassword(password));
 }
 
 export function validateSession(token: string): boolean {

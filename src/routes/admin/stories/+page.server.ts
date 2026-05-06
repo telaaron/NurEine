@@ -1,5 +1,5 @@
 import { getAllStories } from '$lib/server/queries';
 
-export function load() {
-  return { stories: getAllStories() };
+export async function load() {
+  return { stories: await getAllStories() };
 }

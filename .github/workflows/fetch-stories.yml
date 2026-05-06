@@ -1,0 +1,26 @@
+name: Fetch & Score Stories
+
+on:
+  schedule:
+    - cron: '0 6,10,14,18 * * *'  # 06:00, 10:00, 14:00, 18:00 UTC
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install feedparser requests python-dotenv
+
+      - name: Fetch and score stories
+        run: python scripts/fetch_stories.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}

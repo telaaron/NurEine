@@ -1,0 +1,24 @@
+[project]
+name = "lichtblick"
+major_version = 1
+
+[auth]
+enabled = false
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public"]
+max_rows = 1000
+
+[db]
+port = 54322
+migration_dir = "supabase/migrations"
+
+[edge_functions]
+enabled = true
+include = ["send-newsletter"]
+
+[analytics]
+enabled = false

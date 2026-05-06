@@ -137,26 +137,34 @@
 		class="mx-auto max-w-[860px] px-6 lg:px-10 mt-20 grid grid-cols-2 gap-4"
 		aria-label="Weitere Geschichten"
 	>
-		<a
-			href={base + '/geschichte/' + data.prev.slug}
-			class="paper p-6 rounded-[6px] block hover:opacity-90"
-			style="border: 1px solid var(--color-rule);"
-		>
-			<p class="text-[11px] uppercase tracking-[0.18em]" style="color: var(--color-faint);">
-				Vorherige
-			</p>
-			<p class="serif mt-2 leading-snug" style="color: var(--color-ink);">{data.prev.title}</p>
-		</a>
-		<a
-			href={base + '/geschichte/' + data.next.slug}
-			class="paper p-6 rounded-[6px] block hover:opacity-90 text-right"
-			style="border: 1px solid var(--color-rule);"
-		>
-			<p class="text-[11px] uppercase tracking-[0.18em]" style="color: var(--color-faint);">
-				Nächste
-			</p>
-			<p class="serif mt-2 leading-snug" style="color: var(--color-ink);">{data.next.title}</p>
-		</a>
+		{#if data.prev}
+			<a
+				href={base + '/geschichte/' + data.prev.slug}
+				class="paper p-6 rounded-[6px] block hover:opacity-90"
+				style="border: 1px solid var(--color-rule);"
+			>
+				<p class="text-[11px] uppercase tracking-[0.18em]" style="color: var(--color-faint);">
+					Vorherige
+				</p>
+				<p class="serif mt-2 leading-snug" style="color: var(--color-ink);">{data.prev.title}</p>
+			</a>
+		{:else}
+			<div></div>
+		{/if}
+		{#if data.next}
+			<a
+				href={base + '/geschichte/' + data.next.slug}
+				class="paper p-6 rounded-[6px] block hover:opacity-90 text-right"
+				style="border: 1px solid var(--color-rule);"
+			>
+				<p class="text-[11px] uppercase tracking-[0.18em]" style="color: var(--color-faint);">
+					Nächste
+				</p>
+				<p class="serif mt-2 leading-snug" style="color: var(--color-ink);">{data.next.title}</p>
+			</a>
+		{:else}
+			<div></div>
+		{/if}
 	</nav>
 
 	<!-- Related -->

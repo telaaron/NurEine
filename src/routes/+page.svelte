@@ -5,7 +5,7 @@
 
 	let { data } = $props();
 	const featured = $derived(data.featured);
-	const tone = $derived(toneStyles[featured.tone]);
+	const tone = $derived(featured ? toneStyles[featured.tone] : toneStyles['amber']);
 	const rest = $derived(data.rest);
 
 	const today = new Date();
@@ -47,39 +47,45 @@
 			{dateLong}
 		</p>
 
-		<a href={base + '/geschichte/' + featured.slug} class="block mt-6 group rise rise-d2">
-			<h1
-				class="serif tracking-tight leading-[1.02] text-[2.6rem] sm:text-[3.6rem] lg:text-[5rem] xl:text-[5.6rem] max-w-[18ch]"
-				style="color: var(--color-ink); font-weight: 500;"
-			>
-				{featured.title}
-			</h1>
-			<p
-				class="mt-7 text-xl lg:text-2xl leading-snug max-w-[62ch]"
-				style="color: var(--color-ink-soft); font-family: var(--font-serif);"
-			>
-				{featured.dek}
-			</p>
-		</a>
-
-		<div class="mt-10 flex flex-wrap items-center gap-4 text-sm rise rise-d3">
-			<a
-				href={base + '/geschichte/' + featured.slug}
-				class="inline-flex items-center gap-2 px-5 py-3 rounded-full transition-all"
-				style="background: var(--color-ink); color: var(--color-paper);"
-			>
-				Geschichte lesen
-				<span aria-hidden="true">→</span>
+		{#if featured}
+			<a href={base + '/geschichte/' + featured.slug} class="block mt-6 group rise rise-d2">
+				<h1
+					class="serif tracking-tight leading-[1.02] text-[2.6rem] sm:text-[3.6rem] lg:text-[5rem] xl:text-[5.6rem] max-w-[18ch]"
+					style="color: var(--color-ink); font-weight: 500;"
+				>
+					{featured.title}
+				</h1>
+				<p
+					class="mt-7 text-xl lg:text-2xl leading-snug max-w-[62ch]"
+					style="color: var(--color-ink-soft); font-family: var(--font-serif);"
+				>
+					{featured.dek}
+				</p>
 			</a>
-			<span class="flex items-center gap-2" style="color: var(--color-muted);">
-				<span
-					class="inline-block w-1.5 h-1.5 rounded-full"
-					aria-hidden="true"
-					style="background: {tone.fg};"
-				></span>
-				{featured.readingMinutes} Min. · Wirkung {featured.impactScore}/100 · {featured.country}
-			</span>
-		</div>
+
+			<div class="mt-10 flex flex-wrap items-center gap-4 text-sm rise rise-d3">
+				<a
+					href={base + '/geschichte/' + featured.slug}
+					class="inline-flex items-center gap-2 px-5 py-3 rounded-full transition-all"
+					style="background: var(--color-ink); color: var(--color-paper);"
+				>
+					Geschichte lesen
+					<span aria-hidden="true">→</span>
+				</a>
+				<span class="flex items-center gap-2" style="color: var(--color-muted);">
+					<span
+						class="inline-block w-1.5 h-1.5 rounded-full"
+						aria-hidden="true"
+						style="background: {tone.fg};"
+					></span>
+					{featured.readingMinutes} Min. · Wirkung {featured.impactScore}/100 · {featured.country}
+				</span>
+			</div>
+		{:else}
+			<p class="mt-6 serif text-xl" style="color: var(--color-muted);">
+				Noch keine Geschichten geladen. Bitte versuche es später erneut.
+			</p>
+		{/if}
 	</div>
 
 	<!-- Compass strip — quiet metadata -->

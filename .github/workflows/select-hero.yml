@@ -1,0 +1,25 @@
+name: Select Daily Hero Story
+
+on:
+  schedule:
+    - cron: '30 5 * * *'  # 05:30 UTC daily
+  workflow_dispatch:
+
+jobs:
+  select-hero:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests python-dotenv
+
+      - name: Select hero story
+        run: python scripts/select_hero.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

@@ -1,0 +1,28 @@
+name: Sunday Newsletter
+
+on:
+  schedule:
+    - cron: '0 7 * * 0'  # 07:00 UTC every Sunday
+  workflow_dispatch:
+
+jobs:
+  send-sunday:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests python-dotenv
+
+      - name: Send Sunday newsletter
+        run: python scripts/send_newsletter.py sunday
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
+          PUBLIC_BASE_URL: ${{ secrets.PUBLIC_BASE_URL || 'https://lichtblick.app' }}

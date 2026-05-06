@@ -7,10 +7,10 @@ export async function GET({ url }) {
   const stats = url.searchParams.get('stats');
 
   if (stats === 'true') {
-    return json(getStats());
+    return json(await getStats());
   }
 
-  let stories = getAllStories();
+  let stories = await getAllStories();
 
   if (category) {
     stories = stories.filter((s) => s.category === category);
@@ -30,7 +30,7 @@ export async function POST({ request, cookies }) {
   }
 
   const data = await request.json();
-  const result = insertStory({
+  const result = await insertStory({
     slug: data.slug,
     title: data.title,
     dek: data.dek,

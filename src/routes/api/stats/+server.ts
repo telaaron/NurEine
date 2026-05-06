@@ -2,5 +2,5 @@ import { json } from '@sveltejs/kit';
 import { getStats } from '$lib/server/queries';
 
 export async function GET() {
-  return json(getStats());
+  return json(await getStats());
 }

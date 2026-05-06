@@ -2,12 +2,15 @@ import { getAllStories, getLocalStories } from '$lib/server/queries';
 
 export const prerender = true;
 
-export function load() {
-  const allStories = getAllStories();
-  const local = getLocalStories().map((s) => ({
+export async function load() {
+  const [allStories, local] = await Promise.all([
+    getAllStories(),
+    getLocalStories()
+  ]);
+  const localWithCoords = local.map((s) => ({
     ...s,
     coords: [s.coordsX, s.coordsY] as [number, number]
   }));
 
-  return { stories: allStories, local };
+  return { stories: allStories, local: localWithCoords };
 }

@@ -6,7 +6,7 @@
 		{ href: '/', label: 'Heute' },
 		{ href: '/archiv', label: 'Archiv' },
 		{ href: '/karte', label: 'Karte der Hoffnung' },
-		{ href: '/lokal', label: 'Bei dir' },
+		{ href: '/bei-dir', label: 'Bei dir' },
 		{ href: '/manifest', label: 'Manifest' }
 	];
 

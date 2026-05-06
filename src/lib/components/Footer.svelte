@@ -24,7 +24,8 @@
 				<ul class="mt-4 space-y-2 text-sm">
 					<li><a class="hover:opacity-70" href={base + '/archiv'}>Archiv</a></li>
 					<li><a class="hover:opacity-70" href={base + '/karte'}>Karte der Hoffnung</a></li>
-					<li><a class="hover:opacity-70" href={base + '/lokal'}>Lokale Lichtblicke</a></li>
+					<li><a class="hover:opacity-70" href={base + '/bei-dir'}>Lokale Lichtblicke</a></li>
+					<li><a class="hover:opacity-70" href={base + '/preise'}>Preise & Abos</a></li>
 				</ul>
 			</div>
 			<div>
@@ -32,7 +33,7 @@
 					Mitmachen
 				</h3>
 				<ul class="mt-4 space-y-2 text-sm">
-					<li><a class="hover:opacity-70" href={base + '/lokal#einreichen'}>Story einreichen</a></li>
+					<li><a class="hover:opacity-70" href={base + '/bei-dir'}>Story einreichen</a></li>
 					<li><a class="hover:opacity-70" href={base + '/newsletter'}>Newsletter</a></li>
 					<li><a class="hover:opacity-70" href={base + '/manifest'}>Manifest</a></li>
 				</ul>

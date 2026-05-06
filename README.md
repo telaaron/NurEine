@@ -1,42 +1,137 @@
-# sv
+# Lichtblick — Gute Nachrichten. Täglich.
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Eine deutschsprachige Good-News-Plattform. Kuratiert von einer KI-Redaktion, automatisiert betrieben.
 
-## Creating a project
+**Tech Stack:** SvelteKit (Vercel) · Supabase (PostgreSQL + Edge Functions) · DeepSeek Chat · Resend · GitHub Actions
 
-If you're seeing this, you've probably already done this step. Congrats!
+---
 
-```sh
-# create a new project
-npx sv create my-app
+## Architektur
+
+```
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────┐
+│  SvelteKit App   │────▶│   Supabase DB    │◀────│  Python RSS  │
+│  (Vercel)        │     │  (PostgreSQL)    │     │  Fetcher     │
+└─────────────────┘     └──────────────────┘     │  (GH Action)  │
+       │                                          └──────┬───────┘
+       │                                                 │
+       ▼                                                 ▼
+┌──────────────────┐                          ┌──────────────────┐
+│  Resend API      │                          │  DeepSeek Chat   │
+│  (Newsletter)    │                          │  (Scoring)       │
+└──────────────────┘                          └──────────────────┘
 ```
 
-To recreate this project with the same configuration:
+---
 
-```sh
-# recreate this project
-pnpm dlx sv@0.15.1 create --template minimal --types ts --install pnpm voltfleet
+## Setup
+
+### 1. Supabase Projekt erstellen
+
+1. Gehe zu [supabase.com](https://supabase.com) und erstelle ein neues Projekt
+2. Im SQL Editor: führe `supabase/migrations/00001_schema.sql` aus (Tabellen + RLS)
+3. Führe `supabase/migrations/00002_seed_rss_sources.sql` aus (RSS-Quellen)
+
+### 2. Environment
+
+Kopiere `.env.example` zu `.env` und fülle alle Werte aus:
+
+```bash
+cp .env.example .env
 ```
 
-## Developing
+| Variable | Beschreibung |
+|---|---|
+| `PUBLIC_SUPABASE_URL` | Supabase Project URL (aus Dashboard Settings) |
+| `PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
+| `SUPABASE_SERVICE_KEY` | Supabase service_role key (für Admin-Aktionen) |
+| `DEEPSEEK_API_KEY` | DeepSeek API Key |
+| `RESEND_API_KEY` | Resend API Key |
+| `RESEND_FROM_EMAIL` | Verified Sender (z.B. `newsletter@lichtblick.app`) |
+| `PUBLIC_BASE_URL` | Öffentliche URL (z.B. `https://lichtblick.app`) |
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### 3. Lokale Entwicklung
 
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+```bash
+pnpm install
+pnpm dev
 ```
 
-## Building
+### 4. Deployment (Vercel)
 
-To create a production version of your app:
-
-```sh
-npm run build
+```bash
+pnpm build
+pnpm preview
 ```
 
-You can preview the production build with `npm run preview`.
+Verbinde das GitHub-Repository mit Vercel. Setze alle Environment-Variablen in den Vercel Project Settings.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+---
+
+## Automatisierung (GitHub Actions)
+
+### Workflows
+
+| Workflow | Cron | Beschreibung |
+|---|---|---|
+| `fetch-stories.yml` | 4× täglich (06, 10, 14, 18 UTC) | RSS-Feeds parsen, DeepSeek-Scoring, Stories speichern |
+| `select-hero.yml` | Täglich 05:30 UTC | Höchst-bewertete Story als Hero setzen |
+| `newsletter-sunday.yml` | Sonntags 07:00 UTC | Wochenbrief an Free + Plus Subscriber |
+| `newsletter-daily-plus.yml` | Täglich 07:30 UTC | Tägliches Update an Plus-Subscriber |
+
+### Secrets in GitHub setzen
+
+Folgende Repository Secrets müssen angelegt werden:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_KEY`
+- `DEEPSEEK_API_KEY`
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+- `PUBLIC_BASE_URL`
+
+---
+
+## Supabase Edge Function
+
+Die Newsletter-Funktion läuft als Supabase Edge Function:
+
+```bash
+# Lokal testen
+supabase functions serve send-newsletter
+
+# Deployen
+supabase functions deploy send-newsletter
+```
+
+---
+
+## RSS-Quellen
+
+Im System hinterlegte Quellen (über `rss_sources`-Tabelle):
+
+| Quelle | Sprache | Region |
+|---|---|---|
+| Good News Network | en | global |
+| Positive.News | en | global |
+| Golem Science | de | DE |
+| Utopia.de | de | DE |
+| Berliner Zeitung | de | DE/BB |
+| Mongabay | en | global |
+| WHO News | en | global |
+| Nature News | en | global |
+
+---
+
+## Newsletter Double-Opt-In
+
+1. User gibt E-Mail ein → `POST /api/subscribe`
+2. Resend sendet Bestätigungsmail mit Link `{BASE_URL}/api/confirm?token=XXX`
+3. Link setzt `confirmed=true` in Supabase
+4. User wird weitergeleitet zu `/newsletter?confirmed=true`
+
+---
+
+## Lizenz
+
+Privatprojekt. Alle Rechte vorbehalten.

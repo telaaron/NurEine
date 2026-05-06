@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-node';
+import adapter from '@sveltejs/adapter-vercel';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -8,15 +8,16 @@ const config = {
 	},
 	kit: {
 		paths: {
-			base: '/sites/lichtblick'
+			base: ''
 		},
 		adapter: adapter({
-			precompress: true
+			runtime: 'nodejs22.x'
 		}),
 		prerender: {
 			crawl: true,
 			entries: ['/'],
-			handleHttpError: 'warn'
+			handleHttpError: 'warn',
+			handleUnseenRoutes: 'ignore'
 		}
 	}
 };

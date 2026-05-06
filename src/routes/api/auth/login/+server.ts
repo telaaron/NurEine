@@ -10,7 +10,7 @@ import { verifyAdminLogin } from '$lib/server/queries';
 export async function POST({ request, cookies }) {
   const { username, password } = await request.json();
 
-  if (verifyAdminLogin(username, hashPassword(password))) {
+  if (await verifyAdminLogin(username, hashPassword(password))) {
     cookies.set('admin_token', 'admin-authenticated', {
       path: '/',
       httpOnly: true,

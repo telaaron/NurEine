@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { getStoryById, updateStory, deleteStory } from '$lib/server/queries';
 
 export async function GET({ params }) {
-  const story = getStoryById(parseInt(params.id));
+  const story = await getStoryById(params.id);
   if (!story) {
     return json({ error: 'Story nicht gefunden' }, { status: 404 });
   }
@@ -16,9 +16,9 @@ export async function PUT({ request, params, cookies }) {
   }
 
   const data = await request.json();
-  const id = parseInt(params.id);
+  const id = params.id;
 
-  updateStory(id, {
+  await updateStory(id, {
     slug: data.slug,
     title: data.title,
     dek: data.dek,
@@ -50,6 +50,6 @@ export async function DELETE({ params, cookies }) {
     return json({ error: 'Nicht autorisiert' }, { status: 401 });
   }
 
-  deleteStory(parseInt(params.id));
+  await deleteStory(params.id);
   return json({ success: true });
 }

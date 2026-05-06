@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Lichtblick — Story Fetcher
+NurEine — Story Fetcher
 
 Fetches RSS feeds, analyzes articles with DeepSeek Chat,
 and inserts positive news stories into Supabase.
@@ -109,7 +109,7 @@ def supabase_post(table: str, data: dict[str, Any]) -> dict[str, Any]:
 def source_exists(source_url: str) -> bool:
     """Return True if a story with this source_url already exists in Supabase."""
     params = {"source_url": f"eq.{source_url}", "select": "id", "limit": "1"}
-    rows = supabase_get("lichtblick_stories", params=params)
+    rows = supabase_get("nureine_stories", params=params)
     return len(rows) > 0
 
 
@@ -161,7 +161,7 @@ def call_deepseek(prompt: str) -> str | None:
 # DeepSeek prompt (exact, as specified)
 # ---------------------------------------------------------------------------
 ANALYSIS_PROMPT_TEMPLATE = """\
-Du bist Redakteur bei Lichtblick, einer Plattform für bedeutsame Good News.
+Du bist Redakteur bei NurEine, einer Plattform für bedeutsame Good News.
 
 Analysiere diesen Artikel und antworte NUR mit einem JSON-Objekt:
 
@@ -270,7 +270,7 @@ def load_active_sources() -> list[dict[str, Any]]:
     """Load all active RSS sources from Supabase."""
     params = {"active": "eq.true", "select": "*"}
     try:
-        sources = supabase_get("lichtblick_rss_sources", params=params)
+        sources = supabase_get("nureine_rss_sources", params=params)
         log.info("Loaded %d active RSS source(s)", len(sources))
         return sources
     except requests.RequestException as exc:
@@ -296,7 +296,7 @@ def log_cron_run(
         "error_message": error_message,
     }
     try:
-        supabase_post("lichtblick_cron_runs", record)
+        supabase_post("nureine_cron_runs", record)
         log.info("Cron run logged (status=%s, added=%d)", status, stories_added)
     except requests.RequestException as exc:
         log.error("Failed to log cron run: %s", exc)
@@ -423,7 +423,7 @@ def run() -> None:
                     pass  # keep original string
 
             try:
-                supabase_post("lichtblick_stories", story_record)
+                supabase_post("nureine_stories", story_record)
                 stories_added += 1
                 log.info(
                     "  INSERTED: %s [%s — %s]",
@@ -463,7 +463,7 @@ def run() -> None:
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     log.info("=" * 60)
-    log.info("Lichtblick — Story Fetcher")
+    log.info("NurEine — Story Fetcher")
     log.info("=" * 60)
     try:
         run()

@@ -1,7 +1,7 @@
-# CLAUDE.md — Lichtblick
+# CLAUDE.md — NurEine
 
 ## Projekt-Kontext
-Du arbeitest an **Lichtblick**, einer autonomen Good-News-Plattform.
+Du arbeitest an **NurEine**, einer autonomen Good-News-Plattform.
 Teltow, Brandenburg. Gegründet 2026.
 
 ## Wichtigste Regel

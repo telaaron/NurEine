@@ -54,7 +54,7 @@
 
 	// ---- State ----
 
-	const STORAGE_KEY = 'lichtblick_geolocation';
+	const STORAGE_KEY = 'nureine_geolocation';
 
 	const geo = $state<GeoState>({
 		status: 'loading',
@@ -195,7 +195,7 @@
 				// Try reverse geocode via a free service to get city/region
 				fetch(
 					`https://nominatim.openstreetmap.org/reverse?format=json&lat=${state.lat}&lon=${state.lng}&addressdetails=1&accept-language=de`,
-					{ headers: { 'User-Agent': 'Lichtblick/1.0' } }
+					{ headers: { 'User-Agent': 'NurEine/1.0' } }
 				)
 					.then((r) => r.json())
 					.then((addr) => {
@@ -464,7 +464,7 @@
 </script>
 
 <svelte:head>
-	<title>Bei dir — Gute Nachrichten aus deiner Region — Lichtblick</title>
+	<title>Bei dir — Gute Nachrichten aus deiner Region — NurEine</title>
 </svelte:head>
 
 <!-- ===== HEADER ===== -->
@@ -566,7 +566,7 @@
 			class="mt-3 max-w-[55ch] text-base leading-relaxed rise rise-d2"
 			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 		>
-			Lichtblicke in deiner N&auml;he &mdash; sortiert nach Entfernung.
+			Gute Nachrichten in deiner N&auml;he &mdash; sortiert nach Entfernung.
 		</p>
 	{/if}
 </section>
@@ -644,7 +644,7 @@
 					class="serif text-2xl lg:text-3xl leading-tight"
 					style="color: var(--color-ink); font-weight: 500;"
 				>
-					Noch keine lokalen Lichtblicke in deiner N&auml;he
+					Noch keine lokalen Nachrichten in deiner N&auml;he
 				</h2>
 				<p
 					class="mt-4 max-w-[50ch] mx-auto text-base leading-relaxed"
@@ -687,7 +687,7 @@
 							class="serif text-lg leading-snug"
 							style="color: var(--color-ink); font-weight: 500;"
 						>
-							Europ&auml;ische Lichtblicke
+							Europ&auml;ische Nachrichten
 						</h3>
 						<p
 							class="mt-1 text-sm leading-relaxed"

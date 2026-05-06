@@ -1,4 +1,4 @@
-# CONTENT.md — Lichtblick Redaktions-Richtlinien
+# CONTENT.md — NurEine Redaktions-Richtlinien
 
 Zuletzt aktualisiert: Mai 2026
 

@@ -22,7 +22,7 @@
 		<div class="flex items-center justify-between py-5">
 			<a href={base + '/'} class="flex items-baseline gap-3 group">
 				<span class="serif text-2xl font-medium tracking-tight" style="color: var(--color-ink);"
-					>Lichtblick</span
+					>NurEine</span
 				>
 				<span
 					class="hidden md:inline text-[11px] uppercase tracking-[0.18em]"

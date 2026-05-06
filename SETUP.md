@@ -1,4 +1,4 @@
-# SETUP.md — Lichtblick Launch-Checkliste
+# SETUP.md — NurEine Launch-Checkliste
 
 ## Einmalig (vor Go-Live)
 
@@ -12,7 +12,7 @@
 - [ ] Account unter resend.com erstellen
 - [ ] Domain verifizieren (DKIM/SPF DNS-Einträge setzen)
 - [ ] API Key erstellen
-- [ ] Absender-Email bestätigen (z.B. newsletter@lichtblick.app)
+- [ ] Absender-Email bestätigen (z.B. newsletter@nureine.de)
 
 ### 3. Google Gemini
 - [ ] API Key unter aistudio.google.com erstellen

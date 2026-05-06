@@ -25,4 +25,4 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}
-          PUBLIC_BASE_URL: ${{ secrets.PUBLIC_BASE_URL || 'https://lichtblick.app' }}
+          PUBLIC_BASE_URL: ${{ secrets.PUBLIC_BASE_URL || 'https://nureine.de' }}

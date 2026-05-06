@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import { createHash } from 'crypto';
 
 function hashPassword(password: string): string {
-  return createHash('sha256').update(password + 'lichtblick-salt-2024').digest('hex');
+  return createHash('sha256').update(password + 'nureine-salt-2026').digest('hex');
 }
 
 import { verifyAdminLogin } from '$lib/server/queries';

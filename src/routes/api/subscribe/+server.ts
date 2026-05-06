@@ -13,7 +13,7 @@ import crypto from 'node:crypto';
 // 4. Send confirmation email via Resend API
 // 5. Return success
 
-const BASE_URL = PUBLIC_BASE_URL || 'https://lichtblick.app';
+const BASE_URL = PUBLIC_BASE_URL || 'https://nureine.de';
 
 function isValidEmail(email: string): boolean {
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -39,7 +39,7 @@ function buildConfirmationEmailHtml(token: string): string {
           <tr>
             <td style="background:linear-gradient(135deg,#f5b041,#e67e22);padding:32px 40px;text-align:center;">
               <h1 style="margin:0;font-family:'Fraunces','Georgia',serif;font-size:28px;font-weight:700;color:#1a1815;">
-                🌿 Lichtblick
+                📰 NurEine
               </h1>
               <p style="margin:8px 0 0;font-size:16px;color:#1a1815;opacity:0.85;">
                 Gute Nachrichten f\u00fcr eine bessere Welt
@@ -54,7 +54,7 @@ function buildConfirmationEmailHtml(token: string): string {
                 Fast geschafft!
               </h2>
               <p style="margin:0 0 20px;font-size:16px;line-height:1.6;color:#4a4845;">
-                Danke f\u00fcr deine Anmeldung zum Lichtblick-Newsletter.
+                Danke f\u00fcr deine Anmeldung zum NurEine-Newsletter.
                 Wir freuen uns, dass du dabei bist!
               </p>
               <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4a4845;">
@@ -94,7 +94,7 @@ function buildConfirmationEmailHtml(token: string): string {
           <tr>
             <td style="background-color:#1a1815;padding:24px 40px;text-align:center;">
               <p style="margin:0;font-size:13px;color:#9a9895;">
-                Lichtblick &ndash; Gute Nachrichten e. V.
+                NurEine &ndash; Gute Nachrichten. Jeden Tag exakt eine.
               </p>
               <p style="margin:8px 0 0;font-size:12px;color:#6a6865;">
                 <a href="${BASE_URL}/newsletter" style="color:#f5b041;text-decoration:none;">Newsletter</a>
@@ -105,7 +105,7 @@ function buildConfirmationEmailHtml(token: string): string {
           </tr>
         </table>
         <p style="margin:16px 0 0;font-size:12px;color:#9a9895;">
-          &copy; ${new Date().getFullYear()} Lichtblick. Alle Rechte vorbehalten.
+          &copy; ${new Date().getFullYear()} NurEine. Alle Rechte vorbehalten.
         </p>
       </td>
     </tr>
@@ -127,7 +127,7 @@ async function sendConfirmationEmail(email: string, token: string): Promise<void
 		body: JSON.stringify({
 			from: RESEND_FROM_EMAIL,
 			to: email,
-			subject: 'Bitte bestätige deine E-Mail-Adresse für den Lichtblick-Newsletter',
+			subject: 'Bitte bestätige deine E-Mail-Adresse für den NurEine-Newsletter',
 			html
 		})
 	});
@@ -158,7 +158,7 @@ export async function POST({ request }) {
 
 		// 2. Check if email already exists
 		const { data: existing, error: lookupError } = await supabaseAdmin
-			.from('lichtblick_subscribers')
+			.from('nureine_subscribers')
 			.select('id, email, confirmed')
 			.eq('email', email.toLowerCase().trim())
 			.maybeSingle();
@@ -179,7 +179,7 @@ export async function POST({ request }) {
 			// Already exists but not confirmed — resend confirmation
 			const newToken = crypto.randomUUID();
 			const { error: updateError } = await supabaseAdmin
-				.from('lichtblick_subscribers')
+				.from('nureine_subscribers')
 				.update({
 					confirmation_token: newToken,
 					plan,
@@ -208,7 +208,7 @@ export async function POST({ request }) {
 		const now = new Date().toISOString();
 
 		const { error: insertError } = await supabaseAdmin
-			.from('lichtblick_subscribers')
+			.from('nureine_subscribers')
 			.insert({
 				email: email.toLowerCase().trim(),
 				plan,

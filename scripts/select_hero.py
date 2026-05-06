@@ -41,14 +41,14 @@ def main():
 
     # 1. Set all stories is_hero = false
     print("[hero] Resetting all hero flags...")
-    resp = supabase_patch('lichtblick_stories', {'is_hero': False})
+    resp = supabase_patch('nureine_stories', {'is_hero': False})
     if resp.status_code not in (200, 204):
         print(f"[hero] Failed to reset heroes: {resp.status_code} {resp.text}")
         sys.exit(1)
 
     # 2. Get the highest-impact story from the last 24 hours
     yesterday = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
-    resp = supabase_get('lichtblick_stories', {
+    resp = supabase_get('nureine_stories', {
         'published_at': f'gte.{yesterday}',
         'order': 'impact_score.desc',
         'limit': '1',
@@ -58,7 +58,7 @@ def main():
     if resp.status_code != 200 or not resp.json():
         # Fallback: get highest-impact story overall
         print("[hero] No stories from last 24h, using highest impact overall")
-        resp = supabase_get('lichtblick_stories', {
+        resp = supabase_get('nureine_stories', {
             'order': 'impact_score.desc',
             'limit': '1',
             'select': 'id,title,impact_score,published_at'
@@ -73,7 +73,7 @@ def main():
     hero_id = hero['id']
 
     # 3. Set the best story as hero
-    resp = supabase_patch(f"lichtblick_stories?id=eq.{hero_id}", {'is_hero': True})
+    resp = supabase_patch(f"nureine_stories?id=eq.{hero_id}", {'is_hero': True})
     if resp.status_code in (200, 204):
         print(f"[hero] Hero set: {hero.get('title', hero_id)} (score: {hero.get('impact_score', '?')})")
     else:
@@ -88,7 +88,7 @@ def main():
         'error': None
     }
     resp = requests.post(
-        f"{SUPABASE_URL}/rest/v1/lichtblick_cron_runs",
+        f"{SUPABASE_URL}/rest/v1/nureine_cron_runs",
         headers=HEADERS,
         json=log
     )

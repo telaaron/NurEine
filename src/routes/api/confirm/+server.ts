@@ -15,7 +15,7 @@ export async function GET({ url }) {
 
 	// 1. Look up subscriber by confirmation_token
 	const { data: subscriber, error: lookupError } = await supabaseAdmin
-		.from('lichtblick_subscribers')
+		.from('nureine_subscribers')
 		.select('id, email, confirmed')
 		.eq('confirmation_token', token)
 		.maybeSingle();
@@ -37,7 +37,7 @@ export async function GET({ url }) {
 
 	// 2. Set confirmed=true, clear confirmation_token
 	const { error: updateError } = await supabaseAdmin
-		.from('lichtblick_subscribers')
+		.from('nureine_subscribers')
 		.update({
 			confirmed: true,
 			confirmation_token: null,

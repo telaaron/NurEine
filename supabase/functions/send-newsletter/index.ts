@@ -80,7 +80,7 @@ function buildEmailHtml(opts: {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${opts.title} — Lichtblick</title>
+  <title>${opts.title} — NurEine</title>
 </head>
 <body style="margin:0;padding:0;background-color:#F5F0E8;-webkit-font-smoothing:antialiased;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F5F0E8;">
@@ -97,7 +97,7 @@ function buildEmailHtml(opts: {
                 <tr>
                   <td style="padding:32px 40px 0 40px;text-align:center;">
                     <span style="font-family:'Fraunces',Georgia,serif;font-size:28px;font-weight:700;color:#C4622D;letter-spacing:-0.02em;">
-                      Lichtblick
+                      NurEine
                     </span>
                     <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px;color:#7A756E;margin:4px 0 0 0;text-transform:uppercase;letter-spacing:0.06em;">
                       Gute Nachrichten. Jeden Tag.
@@ -190,7 +190,7 @@ function buildEmailHtml(opts: {
                 <tr>
                   <td style="padding:24px 40px;text-align:center;">
                     <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:12px;color:#7A756E;margin:0 0 8px 0;line-height:1.5;">
-                      Du erh&auml;ltst diese E-Mail, weil du den Lichtblick-Newsletter abonniert hast.
+                      Du erh&auml;ltst diese E-Mail, weil du den NurEine-Newsletter abonniert hast.
                     </p>
                     <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:12px;color:#7A756E;margin:0;line-height:1.5;">
                       <a href="${opts.unsubscribeUrl}"
@@ -212,7 +212,7 @@ function buildEmailHtml(opts: {
           <tr>
             <td style="padding:16px 0 0 0;text-align:center;">
               <p style="font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:11px;color:#9A948C;margin:0;">
-                Lichtblick &mdash; Gute Nachrichten f&uuml;r einen besseren Blick auf die Welt.
+                NurEine &mdash; Gute Nachrichten. Jeden Tag exakt eine.
               </p>
             </td>
           </tr>
@@ -327,7 +327,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // 1. Fetch the hero story
   // -----------------------------------------------------------------------
   let storyQuery = supabase
-    .from('lichtblick_stories')
+    .from('nureine_stories')
     .select('id, slug, title, dek, body, hero, reading_minutes, published_at')
     .eq('is_hero', true)
     .order('published_at', { ascending: false })
@@ -359,7 +359,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       : 'No hero story found.'
     console.warn(msg)
     // Still log the cron run with 0 stories
-    await supabase.from('lichtblick_cron_runs').insert({
+    await supabase.from('nureine_cron_runs').insert({
       type: payload.type,
       stories_found: 0,
       stories_inserted: 0,
@@ -375,7 +375,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // 2. Fetch subscribers
   // -----------------------------------------------------------------------
   let subscriberQuery = supabase
-    .from('lichtblick_subscribers')
+    .from('nureine_subscribers')
     .select('id, email, tier, token')
     .eq('confirmed', true)
 
@@ -398,7 +398,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (!subscribers || subscribers.length === 0) {
     const msg = 'No confirmed subscribers found.'
     console.warn(msg)
-    await supabase.from('lichtblick_cron_runs').insert({
+    await supabase.from('nureine_cron_runs').insert({
       type: payload.type,
       stories_found: 1,
       stories_inserted: 0,
@@ -414,8 +414,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // 3. Send emails
   // -----------------------------------------------------------------------
   const subject = payload.type === 'sunday'
-    ? `Lichtblick Wochenende — ${story.title}`
-    : `Lichtblick Plus — ${story.title}`
+    ? `NurEine Wochenende — ${story.title}`
+    : `NurEine Plus — ${story.title}`
 
   const total = subscribers.length
   let sentCount = 0
@@ -462,7 +462,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // 4. Log sends
   // -----------------------------------------------------------------------
   if (sendLogs.length > 0) {
-    const { error: logError } = await supabase.from('lichtblick_newsletter_sends').insert(sendLogs)
+    const { error: logError } = await supabase.from('nureine_newsletter_sends').insert(sendLogs)
     if (logError) {
       console.error('Failed to log newsletter sends:', logError.message)
     }
@@ -471,7 +471,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // -----------------------------------------------------------------------
   // 5. Log cron run
   // -----------------------------------------------------------------------
-  const { error: cronError } = await supabase.from('lichtblick_cron_runs').insert({
+  const { error: cronError } = await supabase.from('nureine_cron_runs').insert({
     type: payload.type,
     stories_found: 1,
     stories_inserted: sentCount,

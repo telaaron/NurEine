@@ -1,4 +1,4 @@
-# Lichtblick — Gute Nachrichten. Täglich.
+# NurEine — Gute Nachrichten. Jeden Tag exakt eine.
 
 Eine deutschsprachige Good-News-Plattform. Kuratiert von einer KI-Redaktion, automatisiert betrieben.
 
@@ -47,8 +47,8 @@ cp .env.example .env
 | `SUPABASE_SERVICE_KEY` | Supabase service_role key (für Admin-Aktionen) |
 | `DEEPSEEK_API_KEY` | DeepSeek API Key |
 | `RESEND_API_KEY` | Resend API Key |
-| `RESEND_FROM_EMAIL` | Verified Sender (z.B. `newsletter@lichtblick.app`) |
-| `PUBLIC_BASE_URL` | Öffentliche URL (z.B. `https://lichtblick.app`) |
+| `RESEND_FROM_EMAIL` | Verified Sender (z.B. `newsletter@nureine.de`) |
+| `PUBLIC_BASE_URL` | Öffentliche URL (z.B. `https://nureine.de`) |
 
 ### 3. Lokale Entwicklung
 

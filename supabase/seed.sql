@@ -1,5 +1,5 @@
 -- Seed RSS Sources
-INSERT INTO lichtblick_rss_sources (name, url, language, region, region_code, active) VALUES
+INSERT INTO nureine_rss_sources (name, url, language, region, region_code, active) VALUES
   ('Good News Network', 'https://www.goodnewsnetwork.org/feed/', 'en', 'global', NULL, true),
   ('Positive.News', 'https://www.positive.news/feed/', 'en', 'global', NULL, true),
   ('Golem Science', 'https://rss.golem.de/rss.php?feed=RSS2.0', 'de', 'Deutschland', 'DE', true),

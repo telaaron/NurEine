@@ -10,7 +10,7 @@
 </script>
 
 <svelte:head>
-	<title>{story.title} — Lichtblick</title>
+	<title>{story.title} — NurEine</title>
 	<meta name="description" content={story.dek} />
 </svelte:head>
 
@@ -81,7 +81,7 @@
 	</header>
 
 	<!-- Body -->
-	<div class="relative mx-auto max-w-[680px] px-6 lg:px-0 prose-lichtblick">
+	<div class="relative mx-auto max-w-[680px] px-6 lg:px-0 prose-nureine">
 		{#each paras as para, i (i)}
 			{#if i === 0}
 				<p class="dropcap" style="font-size: 1.28rem !important;">
@@ -119,7 +119,7 @@
 				{story.impactNote}
 			</p>
 			<p class="mt-4 text-xs leading-relaxed" style="color: var(--color-muted);">
-				Der Lichtblick-Wirkungsindex bewertet, wie viele Menschen messbar positiv beeinflusst
+				Der NurEine-Wirkungsindex bewertet, wie viele Menschen messbar positiv beeinflusst
 				werden — gewichtet nach Belegbarkeit, Reichweite und Dauerhaftigkeit. Methodik:
 				<a
 					class="underline"

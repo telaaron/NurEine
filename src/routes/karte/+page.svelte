@@ -201,7 +201,7 @@
 </script>
 
 <svelte:head>
-	<title>Karte der Hoffnung — Lichtblick</title>
+	<title>Karte — NurEine</title>
 </svelte:head>
 
 <!-- ===== HEADER ===== -->

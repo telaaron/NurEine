@@ -126,7 +126,7 @@ function beschreibeWirkung(score: number, durability: number | null): string {
 
 export async function getAllStories(): Promise<StoryResult[]> {
   const { data, error } = await supabaseAdmin
-    .from('lichtblick_stories')
+    .from('nureine_stories')
     .select('*')
     .order('published_at', { ascending: false });
 
@@ -147,7 +147,7 @@ export async function getStoryBySlug(slug: string): Promise<StoryResult | undefi
 
 export async function getStoryById(id: string): Promise<StoryResult | undefined> {
   const { data, error } = await supabaseAdmin
-    .from('lichtblick_stories')
+    .from('nureine_stories')
     .select('*')
     .eq('id', id)
     .single();
@@ -158,7 +158,7 @@ export async function getStoryById(id: string): Promise<StoryResult | undefined>
 
 export async function getLatestFeatured(): Promise<StoryResult | undefined> {
   const { data, error } = await supabaseAdmin
-    .from('lichtblick_stories')
+    .from('nureine_stories')
     .select('*')
     .eq('is_hero', true)
     .order('published_at', { ascending: false })
@@ -176,7 +176,7 @@ export async function getLatestFeatured(): Promise<StoryResult | undefined> {
 export async function getLocalStories(): Promise<StoryResult[]> {
   // Stories with lat/lng data, sorted by recent
   const { data, error } = await supabaseAdmin
-    .from('lichtblick_stories')
+    .from('nureine_stories')
     .select('*')
     .not('lat', 'is', null)
     .not('lng', 'is', null)
@@ -191,7 +191,7 @@ export async function getRelatedStories(slug: string, limit = 3): Promise<StoryR
   if (!story) return [];
 
   const { data, error } = await supabaseAdmin
-    .from('lichtblick_stories')
+    .from('nureine_stories')
     .select('*')
     .eq('category', story.category)
     .order('impact_score', { ascending: false })
@@ -223,7 +223,7 @@ export async function getStats(): Promise<{
   co2Saved: string;
 }> {
   const { count, error } = await supabaseAdmin
-    .from('lichtblick_stories')
+    .from('nureine_stories')
     .select('*', { count: 'exact', head: true });
 
   return {
@@ -237,7 +237,7 @@ export async function getStats(): Promise<{
 
 export async function insertStory(data: Record<string, any>): Promise<{ lastInsertRowid: string }> {
   // Map camelCase form fields back to Supabase column names
-  const result = await supabaseAdmin.from('lichtblick_stories').insert({
+  const result = await supabaseAdmin.from('nureine_stories').insert({
     title: data.title,
     subtitle: data.dek || data.subtitle,
     body_markdown: data.body || data.body_markdown,
@@ -299,7 +299,7 @@ export async function updateStory(id: string, data: Record<string, any>) {
   if (data.published_at !== undefined) updateData.published_at = data.published_at;
 
   const { error } = await supabaseAdmin
-    .from('lichtblick_stories')
+    .from('nureine_stories')
     .update(updateData)
     .eq('id', id);
 
@@ -308,7 +308,7 @@ export async function updateStory(id: string, data: Record<string, any>) {
 
 export async function deleteStory(id: string) {
   const { error } = await supabaseAdmin
-    .from('lichtblick_stories')
+    .from('nureine_stories')
     .delete()
     .eq('id', id);
 
@@ -321,13 +321,13 @@ export async function verifyAdminLogin(username: string, passwordHash: string): 
   // In Supabase, we no longer have an admins table by default.
   // This is kept as a simple check for now - will be enhanced.
   // For development, accept hardcoded admin credentials.
-  return username === 'admin' && passwordHash === hashPassword('lichtblick2025');
+  return username === 'admin' && passwordHash === hashPassword('nureine2026');
 }
 
 import { createHash } from 'node:crypto';
 
 function hashPassword(password: string): string {
   return createHash('sha256')
-    .update(password + 'lichtblick-salt-2024')
+    .update(password + 'nureine-salt-2026')
     .digest('hex');
 }

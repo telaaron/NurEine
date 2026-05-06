@@ -1,3 +1,5 @@
+// DEPRECATED — This file relied on SQLite/Drizzle (now removed in favor of Supabase).
+// Kept for reference only. Does not compile in the current project.
 import Database from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
 import * as schema from '../src/lib/server/db/schema';
@@ -10,13 +12,13 @@ if (!existsSync(dataDir)) {
   mkdirSync(dataDir, { recursive: true });
 }
 
-const dbPath = join(dataDir, 'lichtblick.db');
+const dbPath = join(dataDir, 'nureine.db');
 const sqlite = new Database(dbPath);
 sqlite.pragma('journal_mode = WAL');
 const db = drizzle(sqlite, { schema });
 
 function hashPassword(password: string): string {
-  return createHash('sha256').update(password + 'lichtblick-salt-2024').digest('hex');
+  return createHash('sha256').update(password + 'nureine-salt-2026').digest('hex');
 }
 
 async function seed() {
@@ -761,9 +763,9 @@ async function seed() {
     db.insert(schema.stories).values(story).run();
   }
 
-  // Create default admin (password: lichtblick2025)
+  // Create default admin (password: nureine2026)
   sqlite.exec('DELETE FROM admins');
-  const passwordHash = hashPassword('lichtblick2025');
+  const passwordHash = hashPassword('nureine2026');
   db.insert(schema.admins).values({
     username: 'admin',
     passwordHash
@@ -773,7 +775,7 @@ async function seed() {
   sqlite.exec('DELETE FROM settings');
   db.insert(schema.settings).values({
     key: 'site_title',
-    value: 'Lichtblick'
+    value: 'NurEine'
   }).run();
   db.insert(schema.settings).values({
     key: 'sources_count',
@@ -789,7 +791,7 @@ async function seed() {
   }).run();
 
   console.log(`✅ ${allStories.length} Stories eingefügt`);
-  console.log('✅ Admin-Account: admin / lichtblick2025');
+  console.log('✅ Admin-Account: admin / nureine2026');
   console.log('✅ Settings initialisiert');
   console.log('🎉 Seed abgeschlossen!');
 }

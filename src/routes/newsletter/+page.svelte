@@ -16,7 +16,7 @@
 			highlight: false
 		},
 		{
-			name: 'Lichtblick Plus',
+			name: 'NurEine Plus',
 			price: '29 €',
 			cadence: '/ Jahr (≈ 2,42 €/Monat)',
 			features: [
@@ -47,7 +47,7 @@
 </script>
 
 <svelte:head>
-	<title>Newsletter — Lichtblick</title>
+	<title>Newsletter — NurEine</title>
 </svelte:head>
 
 <section class="mx-auto max-w-[1180px] px-6 lg:px-10 pt-12 lg:pt-16 pb-12">

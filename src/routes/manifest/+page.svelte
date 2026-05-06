@@ -43,7 +43,7 @@
 </script>
 
 <svelte:head>
-	<title>Manifest — Lichtblick</title>
+	<title>Manifest — NurEine</title>
 </svelte:head>
 
 <section class="relative">

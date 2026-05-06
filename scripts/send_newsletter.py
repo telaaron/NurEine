@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Lichtblick Newsletter Sender
+NurEine Newsletter Sender
 
 Called from GitHub Actions with one argument:
   sunday       — send to all confirmed subscribers (free + plus tiers)
@@ -71,7 +71,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Lichtblick</title>
+  <title>NurEine</title>
 </head>
 <body style="margin:0;padding:0;background-color:#F5F0E8;font-family:Georgia,'Times New Roman',serif;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F5F0E8;">
@@ -83,7 +83,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <tr>
             <td style="background-color:#C4622D;padding:28px 36px 24px;">
               <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:700;color:#FFFFFF;letter-spacing:1px;">
-                Lichtblick
+                NurEine
               </h1>
               <p style="margin:4px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:14px;color:#F5E6D8;font-style:italic;">
                 Die gute Nachricht des Tages
@@ -154,7 +154,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <tr>
             <td style="padding:24px 36px 32px;">
               <p style="margin:0 0 8px;font-size:12px;color:#8A8480;line-height:1.5;">
-                Du erh&auml;ltst diese E-Mail, weil du den Lichtblick-Newsletter abonniert hast.
+                Du erh&auml;ltst diese E-Mail, weil du den NurEine-Newsletter abonniert hast.
               </p>
               <p style="margin:0;font-size:12px;color:#8A8480;line-height:1.5;">
                 <a href="{unsubscribe_url}" target="_blank" style="color:#C4622D;text-decoration:underline;">
@@ -166,7 +166,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </table>
         <!-- Imprint -->
         <p style="margin:16px 0 0;font-size:11px;color:#A09890;">
-          Lichtblick &mdash; Dein t&auml;glicher Blick auf das Gute
+          NurEine &mdash; Gute Nachrichten. Jeden Tag exakt eine.
         </p>
       </td>
     </tr>
@@ -262,7 +262,7 @@ def get_subscribers(tier_filter: str | list[str] | None = None) -> list[dict]:
     else:
         params["tier"] = f"eq.{tier_filter}"
 
-    result = supabase_get("lichtblick_subscribers", params=params)
+    result = supabase_get("nureine_subscribers", params=params)
     if isinstance(result, dict):
         # Some unexpected shape; treat as empty
         logger.warning("Unexpected subscribers response shape: %s", result)
@@ -277,7 +277,7 @@ def get_hero_story(is_hero: bool = True, limit: int = 1) -> dict | None:
         "limit": str(limit),
         "select": "slug,title,dek,body,category,hero,impact_score,reading_minutes",
     }
-    results = supabase_get("lichtblick_stories", params=params)
+    results = supabase_get("nureine_stories", params=params)
     if isinstance(results, list) and results:
         return results[0]
     logger.warning("No hero story found (is_hero=%s)", is_hero)
@@ -323,7 +323,7 @@ def log_send(subscriber_id: int, story_slug: str, newsletter_type: str,
         "sent_at": datetime.now(timezone.utc).isoformat(),
     }
     try:
-        supabase_post("lichtblick_newsletter_sends", record)
+        supabase_post("nureine_newsletter_sends", record)
     except requests.RequestException as exc:
         logger.error("Failed to log send for subscriber %s: %s", subscriber_id, exc)
 
@@ -341,7 +341,7 @@ def log_cron_run(newsletter_type: str, total_recipients: int,
         "completed_at": datetime.now(timezone.utc).isoformat(),
     }
     try:
-        supabase_post("lichtblick_cron_runs", record)
+        supabase_post("nureine_cron_runs", record)
     except requests.RequestException as exc:
         logger.error("Failed to log cron run: %s", exc)
 
@@ -377,10 +377,10 @@ def main() -> None:
     # ---- Fetch subscribers --------------------------------------------------
     if newsletter_type == "sunday":
         tier_filter = None  # free + plus
-        subject = "Lichtblick Wochenendausgabe"
+        subject = "NurEine Wochenendausgabe"
     else:
         tier_filter = "plus"
-        subject = "Lichtblick Plus – Deine t\u00e4gliche gute Nachricht"
+        subject = "NurEine Plus – Gute Nachrichten. Jeden Tag exakt eine."
 
     logger.info("Fetching subscribers (filter=%s)", tier_filter or "free+plus")
 

@@ -19,7 +19,7 @@
 			url: base + '/'
 		},
 		{
-			name: 'Lichtblick Plus',
+			name: 'NurEine Plus',
 			tagline: 'Dein tägliches 5-Minuten-Ritual',
 			price: '29',
 			cadence: '€ / Jahr',
@@ -44,7 +44,7 @@
 			cadence: '€ / Monat',
 			note: 'pro Standort, Bildungsstätte oder Praxis',
 			features: [
-				'Alles aus Lichtblick Plus',
+				'Alles aus NurEine Plus',
 				'Wartezimmer- / Klassenraum-Display-Lizenz',
 				'Whitelabel-Newsletter für deine Organisation',
 				'API-Zugriff auf alle Inhalte & Wirkungsdaten',
@@ -83,7 +83,7 @@
 
 	const testimonials = [
 		{
-			quote: 'Ich habe den Newsletter meiner Praxis aufgegeben und ersetze ihn jetzt durch den Lichtblick-Sonntagsbrief. Die Patienten lieben es.',
+			quote: 'Ich habe den Newsletter meiner Praxis aufgegeben und ersetze ihn jetzt durch den NurEine-Sonntagsbrief. Die Patienten lieben es.',
 			author: 'Dr. Sabine Lorenz',
 			role: 'Allgemeinmedizinerin, München'
 		},
@@ -108,7 +108,7 @@
 </script>
 
 <svelte:head>
-	<title>Preise — Lichtblick</title>
+	<title>Preise — NurEine</title>
 </svelte:head>
 
 <!-- Hero -->
@@ -345,7 +345,7 @@
 			class="mt-4 text-base leading-relaxed max-w-[55ch]"
 			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 		>
-			Ob Wartezimmer, Klassenraum oder Teampause — Lichtblick verwandelt Bildschirme in
+			Ob Wartezimmer, Klassenraum oder Teampause — NurEine verwandelt Bildschirme in
 			Hoffnungsmomente. Praxen berichten von entspannteren Patienten, Schulen von
 			aufmerksameren Schülern. Sprecht mit uns über eine maßgeschneiderte Lösung.
 		</p>
@@ -437,7 +437,7 @@
 				Kann ich jederzeit kündigen?
 			</summary>
 			<p class="mt-3 text-sm leading-relaxed" style="color: var(--color-ink-soft);">
-				Ja. Lichtblick Plus ist ein Jahresabo und kann jederzeit zum Ende des Abrechnungszeitraums
+				Ja. NurEine Plus ist ein Jahresabo und kann jederzeit zum Ende des Abrechnungszeitraums
 				gekündigt werden. Keine Mindestlaufzeit, kein Ärger.
 			</p>
 		</details>

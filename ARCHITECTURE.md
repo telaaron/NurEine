@@ -1,10 +1,10 @@
-# ARCHITECTURE.md — Lichtblick
+# ARCHITECTURE.md — NurEine
 
 Zuletzt aktualisiert: Mai 2026
 
 ## Übersicht
 
-Lichtblick läuft vollständig autonom. Nach dem initialen Setup
+NurEine läuft vollständig autonom. Nach dem initialen Setup
 sind keine manuellen Eingriffe nötig.
 RSS-Quellen (8+)
 ↓

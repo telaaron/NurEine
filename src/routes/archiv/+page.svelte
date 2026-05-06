@@ -17,7 +17,7 @@
 </script>
 
 <svelte:head>
-	<title>Archiv — Lichtblick</title>
+	<title>Archiv — NurEine</title>
 </svelte:head>
 
 <section class="mx-auto max-w-[1180px] px-6 lg:px-10 pt-12 lg:pt-16 pb-12">

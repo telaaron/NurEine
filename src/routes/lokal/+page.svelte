@@ -6,7 +6,7 @@
 </script>
 
 <svelte:head>
-	<title>Lokale Lichtblicke — Lichtblick</title>
+	<title>Lokal — NurEine</title>
 </svelte:head>
 
 <section class="mx-auto max-w-[1180px] px-6 lg:px-10 pt-12 lg:pt-16 pb-12">

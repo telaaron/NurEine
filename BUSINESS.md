@@ -1,4 +1,4 @@
-# BUSINESS.md — Lichtblick
+# BUSINESS.md — NurEine
 
 Zuletzt aktualisiert: Mai 2026
 
@@ -6,7 +6,7 @@ Zuletzt aktualisiert: Mai 2026
 
 ## Vision
 Die Nachrichtenlage ist nicht die Welt. Sie ist eine Auswahl.
-Lichtblick filtert tausende Quellen täglich — und sucht,
+NurEine filtert tausende Quellen täglich — und sucht,
 was zeigt, dass Menschen vorankommen: bauen, heilen, einigen, erfinden, schützen.
 
 ---
@@ -29,7 +29,7 @@ was zeigt, dass Menschen vorankommen: bauen, heilen, einigen, erfinden, schütze
 | Tier | Preis | Kanal | Inhalt |
 |---|---|---|---|
 | Sonntags-Brief (Free) | €0 | Email | 1 Story/Woche — reiner Top-of-Funnel, kein Produkt |
-| Lichtblick Plus | €12/Monat | Email + Web | Täglich, Audio-Briefing (5 Min.), Deep-Dives, Karte Hi-Res, Frühzugang |
+| NurEine Plus | €12/Monat | Email + Web | Täglich, Audio-Briefing (5 Min.), Deep-Dives, Karte Hi-Res, Frühzugang |
 | Founding Member (limitiert) | €99 einmalig | Email + Web | Lifetime Plus-Zugang, 100 Plätze, sofortiger Cashflow |
 | B2B Screen-Lizenz | €499/Monat | API + Screen | API-Feed für Office-Bildschirme, Whitelabel-Option, Wartezimmer/Kantine |
 | B2B Whitelabel / Enterprise | €799–999/Monat | API + Newsletter | Custom Branding, Firmen-Newsletter-Integration, Multi-Standort |
@@ -154,7 +154,7 @@ was zeigt, dass Menschen vorankommen: bauen, heilen, einigen, erfinden, schütze
 ### Monat 4–6
 - [ ] 10 zahlende B2B-Kunden → Preis auf €699 anheben
 - [ ] Affiliate-Programm starten
-- [ ] Englische Version evaluieren (domain: lichtblick.news?)
+- [ ] Englische Version evaluieren (domain: nureine.de?)
 
 ---
 

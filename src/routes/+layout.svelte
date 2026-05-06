@@ -7,10 +7,10 @@
 </script>
 
 <svelte:head>
-	<title>Lichtblick — Eine Geschichte am Tag, die dich aufrichtet</title>
+	<title>NurEine — Gute Nachrichten. Jeden Tag exakt eine.</title>
 	<meta
 		name="description"
-		content="Lichtblick filtert tausende Quellen mit KI auf das Wesentliche: Geschichten, die zeigen, dass die Welt voranschreitet. Anti-Doomscroll, deutsch und kuratiert."
+		content="NurEine filtert tausende Quellen mit KI auf das Wesentliche: Geschichten, die zeigen, dass die Welt voranschreitet. Anti-Doomscroll, deutsch und kuratiert."
 	/>
 </svelte:head>
 

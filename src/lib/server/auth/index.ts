@@ -1,7 +1,7 @@
 import { verifyAdminLogin } from '$lib/server/queries';
 import { createHash } from 'crypto';
 
-const SALT = 'lichtblick-salt-2024';
+const SALT = 'nureine-salt-2026';
 
 export function hashPassword(password: string): string {
 	return createHash('sha256').update(password + SALT).digest('hex');

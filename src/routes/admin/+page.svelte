@@ -6,7 +6,7 @@
 </script>
 
 <h1 class="serif text-2xl" style="color: var(--color-ink);">Dashboard</h1>
-<p class="mt-2 text-sm" style="color: var(--color-muted);">Übersicht über dein Lichtblick-Archiv.</p>
+<p class="mt-2 text-sm" style="color: var(--color-muted);">Übersicht über dein NurEine-Archiv.</p>
 
 <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4">
 	<div class="paper p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">

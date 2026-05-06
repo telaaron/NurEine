@@ -20,7 +20,7 @@ export async function GET({ url }) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} &mdash; Lichtblick</title>
+  <title>${title} &mdash; NurEine</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -81,7 +81,7 @@ export async function GET({ url }) {
     <h1>${title}</h1>
     <p>${message}</p>
     <a href="/newsletter">Zur\u00fcck zum Newsletter</a>
-    <p class="footer"><a href="/">Lichtblick &mdash; Startseite</a></p>
+    <p class="footer"><a href="/">NurEine &mdash; Startseite</a></p>
   </div>
 </body>
 </html>`,
@@ -101,7 +101,7 @@ export async function GET({ url }) {
 
 	// 1. Look up subscriber by email
 	const { data: subscriber, error: lookupError } = await supabaseAdmin
-		.from('lichtblick_subscribers')
+		.from('nureine_subscribers')
 		.select('id, email, confirmation_token')
 		.eq('email', email.toLowerCase().trim())
 		.maybeSingle();
@@ -126,7 +126,7 @@ export async function GET({ url }) {
 	// 2. Delete the subscriber (or deactivate)
 	// Using delete for complete removal per the spec
 	const { error: deleteError } = await supabaseAdmin
-		.from('lichtblick_subscribers')
+		.from('nureine_subscribers')
 		.delete()
 		.eq('id', subscriber.id);
 
@@ -142,6 +142,6 @@ export async function GET({ url }) {
 	// 3. Return success HTML page
 	return htmlResponse(
 		'Erfolgreich abgemeldet',
-		'Du wurdest erfolgreich vom Lichtblick-Newsletter abgemeldet. Wir freuen uns, wenn du sp\u00e4ter wieder vorbeischaust!'
+		'Du wurdest erfolgreich vom NurEine-Newsletter abgemeldet. Wir freuen uns, wenn du sp\u00e4ter wieder vorbeischaust!'
 	);
 }

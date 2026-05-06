@@ -23,7 +23,7 @@
 	style="background: var(--color-paper); border-color: var(--color-rule);"
 >
 	<a href={base + '/admin'} class="serif text-lg" style="color: var(--color-ink); font-weight: 500;">
-		Lichtblick Admin
+		NurEine Admin
 	</a>
 	<button
 		type="button"
@@ -57,7 +57,7 @@
 	>
 		<div class="flex items-center justify-between lg:justify-start">
 			<a href={base + '/admin'} class="serif text-xl" style="color: var(--color-ink); font-weight: 500;">
-				Lichtblick
+				NurEine
 			</a>
 			<button
 				type="button"

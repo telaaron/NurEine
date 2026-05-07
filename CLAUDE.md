@@ -13,7 +13,7 @@ Bevor du Code schreibst: Lies ARCHITECTURE.md und BUSINESS.md.
 - DB: Supabase (PostgreSQL + Edge Functions)
 - KI: Google Gemini Flash 2.5
 - Automatisierung: GitHub Actions Cronjobs
-- Email: Resend API
+- Email: Brevo API
 - Karte: Leaflet.js
 - Geolokation: Browser Geolocation API + ip-api.com Fallback
 
@@ -28,8 +28,8 @@ Bevor du Code schreibst: Lies ARCHITECTURE.md und BUSINESS.md.
 ## Environment Variables
 Alle in .env.example dokumentiert. Nie hardcoden. Nie committen.
 Benötigt: PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY,
-SUPABASE_SERVICE_KEY, GEMINI_API_KEY, RESEND_API_KEY,
-RESEND_FROM_EMAIL, RESEND_FROM_NAME
+SUPABASE_SERVICE_KEY, GEMINI_API_KEY, BREVO_API_KEY,
+BREVO_FROM_EMAIL, BREVO_FROM_NAME
 
 ## Cronjob-Zeiten (UTC)
 - 05:30 — Hero-Story wählen (select-hero.yml)

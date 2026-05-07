@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { supabaseAdmin } from '$lib/server/supabase/client';
-import { RESEND_API_KEY, RESEND_FROM_EMAIL } from '$env/static/private';
+import { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME } from '$env/static/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 import crypto from 'node:crypto';
 
@@ -10,7 +10,7 @@ import crypto from 'node:crypto';
 // 1. Validate email format
 // 2. Check if email already exists in subscribers table
 // 3. If not, insert with confirmed=false, confirmation_token=crypto.randomUUID()
-// 4. Send confirmation email via Resend API
+// 4. Send confirmation email via Brevo API
 // 5. Return success
 
 const BASE_URL = PUBLIC_BASE_URL || 'https://nureine.de';
@@ -114,27 +114,28 @@ function buildConfirmationEmailHtml(token: string): string {
 </html>`.trim();
 }
 
-// Helper to send confirmation email via Resend
+// Helper to send confirmation email via Brevo
 async function sendConfirmationEmail(email: string, token: string): Promise<void> {
 	const html = buildConfirmationEmailHtml(token);
 
-	const response = await fetch('https://api.resend.com/emails', {
+	const response = await fetch('https://api.brevo.com/v3/smtp/email', {
 		method: 'POST',
 		headers: {
-			'Authorization': `Bearer ${RESEND_API_KEY}`,
-			'Content-Type': 'application/json'
+			'api-key': BREVO_API_KEY,
+			'Content-Type': 'application/json',
+			'Accept': 'application/json'
 		},
 		body: JSON.stringify({
-			from: RESEND_FROM_EMAIL,
-			to: email,
+			sender: { name: BREVO_FROM_NAME, email: BREVO_FROM_EMAIL },
+			to: [{ email }],
 			subject: 'Bitte bestätige deine E-Mail-Adresse für den NurEine-Newsletter',
-			html
+			htmlContent: html
 		})
 	});
 
 	if (!response.ok) {
 		const errorBody = await response.text();
-		console.error('Resend API error:', response.status, errorBody);
+		console.error('Brevo API error:', response.status, errorBody);
 		throw new Error('Fehler beim Senden der Bestätigungs-E-Mail');
 	}
 }

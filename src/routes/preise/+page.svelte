@@ -112,12 +112,12 @@
 </svelte:head>
 
 <!-- Hero -->
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pt-12 lg:pt-16 pb-12">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-10 sm:pb-12">
 	<p class="text-[11px] uppercase tracking-[0.22em]" style="color: var(--color-amber); font-weight: 500;">
 		Preise
 	</p>
 	<h1
-		class="serif mt-3 leading-tight tracking-tight text-[2.4rem] lg:text-[3.6rem]"
+		class="serif mt-3 leading-tight tracking-tight text-[1.8rem] sm:text-[2.4rem] lg:text-[3.6rem]"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
 		Hoffnung ist kein Luxus.
@@ -125,7 +125,7 @@
 		<span style="color: var(--color-amber);">Sie ist die Basis.</span>
 	</h1>
 	<p
-		class="mt-5 max-w-[55ch] text-lg leading-relaxed"
+		class="mt-5 max-w-[55ch] text-[15px] sm:text-lg leading-relaxed"
 		style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 	>
 		Wir glauben, dass jeder Zugang zu konstruktiven Nachrichten haben sollte — ob privat, im
@@ -134,11 +134,11 @@
 </section>
 
 <!-- Pricing cards -->
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-16">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-12 sm:pb-16">
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 		{#each tiers as tier}
 			<div
-				class="p-8 rounded-[8px] flex flex-col"
+				class="p-6 sm:p-8 rounded-[8px] flex flex-col"
 				style="
           background: {tier.highlight ? 'var(--color-ink)' : 'var(--color-paper)'};
           color: {tier.highlight ? 'var(--color-paper)' : 'var(--color-ink)'};
@@ -168,7 +168,7 @@
 				</p>
 
 				<div class="mt-6 flex items-baseline gap-1">
-					<span class="serif text-5xl" style="font-weight: 500;">{tier.price}</span>
+					<span class="serif text-4xl sm:text-5xl" style="font-weight: 500;">{tier.price}</span>
 					<span
 						class="text-sm"
 						style="color: {tier.highlight ? 'rgba(250, 246, 238, 0.65)' : 'var(--color-muted)'};"
@@ -229,9 +229,9 @@
 </section>
 
 <!-- Comparison table -->
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-20">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20">
 	<h2
-		class="serif text-2xl text-center mb-10"
+		class="serif text-xl sm:text-2xl text-center mb-10"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
 		Was ist in welchem Plan enthalten?
@@ -299,11 +299,11 @@
 </section>
 
 <!-- Testimonials -->
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-20">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20">
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 		{#each testimonials as t}
 			<div
-				class="p-8 rounded-[8px]"
+				class="p-6 sm:p-8 rounded-[8px]"
 				style="border: 1px solid var(--color-rule); background: var(--color-paper);"
 			>
 				<blockquote>
@@ -326,17 +326,17 @@
 <!-- B2B contact -->
 <section
 	id="b2b-form"
-	class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-20 scroll-mt-20"
+	class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20 scroll-mt-20"
 >
 	<div
-		class="paper rounded-[8px] p-10 lg:p-16"
+		class="paper rounded-[8px] p-6 sm:p-10 lg:p-16"
 		style="border: 1px solid var(--color-rule);"
 	>
 		<p class="text-[11px] uppercase tracking-[0.22em]" style="color: var(--color-amber); font-weight: 500;">
 			Für Teams & Einrichtungen
 		</p>
 		<h2
-			class="serif text-3xl lg:text-4xl mt-3 leading-tight"
+			class="serif text-2xl sm:text-3xl lg:text-4xl mt-3 leading-tight"
 			style="color: var(--color-ink); font-weight: 500;"
 		>
 			Gute Nachrichten als Arbeitsumfeld
@@ -421,16 +421,16 @@
 </section>
 
 <!-- FAQ -->
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-20">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20">
 	<h2
-		class="serif text-2xl text-center mb-10"
+		class="serif text-xl sm:text-2xl text-center mb-10"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
 		Häufige Fragen
 	</h2>
 	<div class="max-w-2xl mx-auto space-y-4">
 		<details
-			class="p-5 rounded-[6px] open:pb-6"
+			class="p-4 sm:p-5 rounded-[6px] open:pb-6"
 			style="border: 1px solid var(--color-rule); background: var(--color-paper);"
 		>
 			<summary class="text-sm font-medium cursor-pointer" style="color: var(--color-ink);">
@@ -442,7 +442,7 @@
 			</p>
 		</details>
 		<details
-			class="p-5 rounded-[6px] open:pb-6"
+			class="p-4 sm:p-5 rounded-[6px] open:pb-6"
 			style="border: 1px solid var(--color-rule); background: var(--color-paper);"
 		>
 			<summary class="text-sm font-medium cursor-pointer" style="color: var(--color-ink);">
@@ -455,7 +455,7 @@
 			</p>
 		</details>
 		<details
-			class="p-5 rounded-[6px] open:pb-6"
+			class="p-4 sm:p-5 rounded-[6px] open:pb-6"
 			style="border: 1px solid var(--color-rule); background: var(--color-paper);"
 		>
 			<summary class="text-sm font-medium cursor-pointer" style="color: var(--color-ink);">
@@ -468,7 +468,7 @@
 			</p>
 		</details>
 		<details
-			class="p-5 rounded-[6px] open:pb-6"
+			class="p-4 sm:p-5 rounded-[6px] open:pb-6"
 			style="border: 1px solid var(--color-rule); background: var(--color-paper);"
 		>
 			<summary class="text-sm font-medium cursor-pointer" style="color: var(--color-ink);">

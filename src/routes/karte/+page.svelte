@@ -2,6 +2,7 @@
 	import { base } from '$app/paths';
 	import { browser } from '$app/environment';
 	import 'leaflet/dist/leaflet.css';
+	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import type * as LeafletModule from 'leaflet';
 	import { formatDate } from '$lib/utils';
 
@@ -42,6 +43,9 @@
 
 	const activeStory = $derived(
 		activeSlug ? stories.find((s) => s.slug === activeSlug) ?? null : null
+	);
+	const activeStoryImageSrc = $derived(
+		activeStory ? getStoryHeroImageSrc(activeStory.title, base) : null
 	);
 
 	const toneColors: Record<string, string> = {
@@ -205,7 +209,7 @@
 </svelte:head>
 
 <!-- ===== HEADER ===== -->
-<section class="mx-auto max-w-[1400px] px-6 lg:px-10 pt-10 lg:pt-14 pb-6 lg:pb-8">
+<section class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-14 pb-4 sm:pb-6 lg:pb-8">
 	<p
 		class="text-[11px] uppercase tracking-[0.22em]"
 		style="color: var(--color-amber); font-weight: 500;"
@@ -213,7 +217,7 @@
 		Karte der Hoffnung
 	</p>
 	<h1
-		class="serif mt-3 leading-tight tracking-tight text-[2.2rem] lg:text-[3.2rem]"
+		class="serif mt-3 leading-tight tracking-tight text-[1.7rem] sm:text-[2.2rem] lg:text-[3.2rem]"
 		style="color: var(--color-ink); font-weight: 500; max-width: 14ch;"
 	>
 		Wo auf der Welt Gutes passiert.
@@ -237,13 +241,13 @@
 </section>
 
 <!-- ===== MAP + SIDEBAR ===== -->
-<div class="mx-auto max-w-[1400px] px-6 lg:px-10 pb-12 lg:pb-16">
+<div class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 lg:pb-16">
 	<div class="flex flex-col lg:flex-row gap-6 lg:gap-10">
 		<!-- Map area -->
 		<div class="flex-1 min-h-0">
 			<div
 				class="paper relative w-full rounded-[8px] overflow-hidden"
-				style="border: 1px solid var(--color-rule); height: 55vh; min-height: 380px;"
+				style="border: 1px solid var(--color-rule); height: 55vh; min-height: 280px;"
 				bind:this={mapContainer}
 			>
 				{#if !mapReady}
@@ -263,7 +267,7 @@
 
 			<!-- Legend (below map) -->
 			<div
-				class="mt-4 flex flex-wrap items-center gap-5 text-xs"
+				class="mt-3 sm:mt-4 flex flex-wrap items-center gap-3 sm:gap-5 text-xs"
 				style="color: var(--color-muted);"
 			>
 				<span class="uppercase tracking-[0.14em]">Legende:</span>
@@ -298,7 +302,7 @@
 					<!-- Tone header bar -->
 					<div class="h-1.5" style="background: {hex};"></div>
 
-					<div class="p-6 lg:p-7">
+					<div class="p-5 sm:p-6 lg:p-7">
 						<!-- Meta row -->
 						<div class="flex items-center gap-2.5 text-xs" style="color: var(--color-muted);">
 							<span
@@ -311,11 +315,21 @@
 							<span>{activeStory.country}</span>
 						</div>
 
-						<!-- Emoji + Title -->
+						<!-- Hero image + Title -->
 						<div class="mt-5 flex items-start gap-3">
-							<span class="text-2xl flex-shrink-0 mt-0.5">{activeStory.hero || '📰'}</span>
+							{#if activeStoryImageSrc}
+								<img
+									src={activeStoryImageSrc}
+									alt=""
+									class="h-10 w-10 rounded-md object-cover flex-shrink-0 mt-0.5"
+									loading="lazy"
+									decoding="async"
+								/>
+							{:else}
+								<span class="text-2xl flex-shrink-0 mt-0.5">{activeStory.hero || '📰'}</span>
+							{/if}
 							<h2
-								class="serif leading-snug text-[1.35rem] lg:text-[1.5rem]"
+								class="serif leading-snug text-[1.2rem] sm:text-[1.35rem] lg:text-[1.5rem]"
 								style="color: var(--color-ink); font-weight: 500;"
 							>
 								{activeStory.title}
@@ -416,7 +430,7 @@
 		<div class="h-1" style="background: {hex};"></div>
 
 		<!-- Scrollable content -->
-		<div class="overflow-y-auto px-6 pb-8 pt-4" style="max-height: calc(60vh - 32px);">
+		<div class="overflow-y-auto px-4 sm:px-6 pb-8 pt-4" style="max-height: calc(60vh - 32px);">
 			<!-- Close button -->
 			<div class="flex justify-end mb-2">
 				<button
@@ -444,11 +458,21 @@
 				<span>{activeStory.country}</span>
 			</div>
 
-			<!-- Emoji + Title -->
+			<!-- Hero image + Title -->
 			<div class="mt-3 flex items-start gap-3">
-				<span class="text-2xl flex-shrink-0 mt-0.5">{activeStory.hero || '📰'}</span>
+				{#if activeStoryImageSrc}
+					<img
+						src={activeStoryImageSrc}
+						alt=""
+						class="h-10 w-10 rounded-md object-cover flex-shrink-0 mt-0.5"
+						loading="lazy"
+						decoding="async"
+					/>
+				{:else}
+					<span class="text-2xl flex-shrink-0 mt-0.5">{activeStory.hero || '📰'}</span>
+				{/if}
 				<h2
-					class="serif leading-snug text-[1.3rem]"
+					class="serif leading-snug text-[1.2rem] sm:text-[1.3rem]"
 					style="color: var(--color-ink); font-weight: 500;"
 				>
 					{activeStory.title}

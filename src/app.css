@@ -49,6 +49,14 @@
 	src: url('https://fonts.gstatic.com/s/inter/v20/UcCo3FwrK3iLTcvneQg7Ca725JhhKnNqk4j1ebLhAm8SrXTcydhP.woff2') format('woff2');
 }
 
+/* ── Base ──────────────────────────────────────────── */
+html {
+	font-size: 15px; /* mobile-first base: tighter rhythm */
+}
+@media (min-width: 768px) {
+	html { font-size: 16px; }
+}
+
 html,
 body {
 	background: var(--color-canvas);
@@ -64,6 +72,7 @@ body {
 	color: var(--color-paper);
 }
 
+/* ── Typography utilities ─────────────────────────── */
 .serif {
 	font-family: var(--font-serif);
 	font-feature-settings: 'ss01', 'ss02', 'liga';
@@ -73,45 +82,89 @@ body {
 	font-variant-numeric: tabular-nums;
 }
 
+/* ── Dropcap — mobile-first: smaller scale ────────── */
 .dropcap::first-letter {
 	font-family: var(--font-serif);
 	float: left;
-	font-size: 4.6em;
-	line-height: 0.85;
-	padding-right: 0.12em;
-	padding-top: 0.08em;
+	font-size: 3.4em;
+	line-height: 0.82;
+	padding-right: 0.1em;
+	padding-top: 0.06em;
 	font-weight: 600;
 	color: var(--color-amber);
 }
+@media (min-width: 640px) {
+	.dropcap::first-letter {
+		font-size: 4.2em;
+		line-height: 0.84;
+		padding-right: 0.12em;
+		padding-top: 0.08em;
+	}
+}
+@media (min-width: 1024px) {
+	.dropcap::first-letter {
+		font-size: 4.6em;
+		line-height: 0.85;
+	}
+}
 
+/* ── Prose — mobile-first, tighter line-height ────── */
 .prose-nureine p {
 	font-family: var(--font-serif);
-	font-size: 1.18rem;
-	line-height: 1.75;
+	font-size: 1.05rem;
+	line-height: 1.7;
 	color: var(--color-ink-soft);
-	margin: 0 0 1.4em 0;
+	margin: 0 0 1.2em 0;
 	max-width: 65ch;
 	font-weight: 400;
 }
+@media (min-width: 640px) {
+	.prose-nureine p { font-size: 1.12rem; line-height: 1.72; margin: 0 0 1.35em 0; }
+}
+@media (min-width: 1024px) {
+	.prose-nureine p { font-size: 1.18rem; line-height: 1.75; margin: 0 0 1.4em 0; }
+}
+
 .prose-nureine h2 {
 	font-family: var(--font-serif);
-	font-size: 1.85rem;
+	font-size: 1.45rem;
 	line-height: 1.2;
 	font-weight: 500;
 	color: var(--color-ink);
-	margin: 2.4em 0 0.8em;
+	margin: 1.8em 0 0.6em;
 	letter-spacing: -0.01em;
 }
+@media (min-width: 640px) {
+	.prose-nureine h2 { font-size: 1.65rem; margin: 2.2em 0 0.7em; }
+}
+@media (min-width: 1024px) {
+	.prose-nureine h2 { font-size: 1.85rem; margin: 2.4em 0 0.8em; }
+}
+
 .prose-nureine blockquote {
 	font-family: var(--font-serif);
 	font-style: italic;
-	font-size: 1.5rem;
+	font-size: 1.15rem;
 	line-height: 1.4;
 	color: var(--color-amber);
 	border-left: 2px solid var(--color-amber);
-	padding-left: 1.4em;
-	margin: 2em 0;
+	padding-left: 1em;
+	margin: 1.6em 0;
 	font-weight: 400;
+}
+@media (min-width: 640px) {
+	.prose-nureine blockquote { font-size: 1.32rem; padding-left: 1.2em; margin: 1.8em 0; }
+}
+@media (min-width: 1024px) {
+	.prose-nureine blockquote { font-size: 1.5rem; padding-left: 1.4em; margin: 2em 0; }
+}
+
+/* ── Touch-friendly tap targets ───────────────────── */
+@media (max-width: 767px) {
+	a, button, [role='button'], summary, input[type='submit'] {
+		min-height: 44px;
+		min-width: 44px;
+	}
 }
 
 :focus-visible {

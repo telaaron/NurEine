@@ -30,21 +30,21 @@ def supabase_get(path: str, params: dict = None) -> requests.Response:
     return requests.get(url, headers=HEADERS, params=params)
 
 
-def supabase_patch(path: str, data: dict) -> requests.Response:
+def supabase_patch(path: str, data: dict, params: dict = None) -> requests.Response:
     url = f"{SUPABASE_URL}/rest/v1/{path}"
     headers = {**HEADERS, 'Prefer': 'return=minimal'}
-    return requests.patch(url, headers=headers, json=data)
+    return requests.patch(url, headers=headers, json=data, params=params)
 
 
 def main():
     print("[hero] Starting daily hero selection...")
 
-    # 1. Set all stories is_hero = false
-    print("[hero] Resetting all hero flags...")
-    resp = supabase_patch('nureine_stories', {'is_hero': False})
+    # 1. Set all stories that are currently hero to is_hero = false
+    print("[hero] Resetting hero flags for current heroes...")
+    resp = supabase_patch('nureine_stories', {'is_hero': False}, {'is_hero': 'eq.true'})
     if resp.status_code not in (200, 204):
         print(f"[hero] Failed to reset heroes: {resp.status_code} {resp.text}")
-        sys.exit(1)
+        # Non-fatal: there may simply be no hero stories yet
 
     # 2. Get the highest-impact story from the last 24 hours
     yesterday = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()

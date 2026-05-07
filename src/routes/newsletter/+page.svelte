@@ -101,18 +101,18 @@
 	<title>Newsletter — NurEine</title>
 </svelte:head>
 
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pt-12 lg:pt-16 pb-12">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-10 sm:pb-12">
 	<p class="text-[11px] uppercase tracking-[0.22em]" style="color: var(--color-amber); font-weight: 500;">
 		Newsletter
 	</p>
 	<h1
-		class="serif mt-3 leading-tight tracking-tight text-[2.4rem] lg:text-[3.6rem] max-w-[18ch]"
+		class="serif mt-3 leading-tight tracking-tight text-[1.8rem] sm:text-[2.4rem] lg:text-[3.6rem] max-w-[18ch]"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
 		Eine Geschichte. Sonntag morgens. Mehr nicht.
 	</h1>
 	<p
-		class="mt-5 max-w-[55ch] text-lg leading-relaxed"
+		class="mt-5 max-w-[55ch] text-[15px] sm:text-lg leading-relaxed"
 		style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 	>
 		Wir verschicken keine Push-Nachrichten, keine Daily-Mails, keine "Breaking News". Nur einen
@@ -120,12 +120,12 @@
 	</p>
 </section>
 
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-20">
-	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20">
+	<div class="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
 		{#each tiers as tier}
 			{@const isB2B = tier.name === 'Redaktionen & Schulen'}
 			<div
-				class="p-8 rounded-[8px] flex flex-col"
+				class="p-6 sm:p-8 rounded-[8px] flex flex-col"
 				style="
           background: {tier.highlight ? 'var(--color-ink)' : 'var(--color-paper)'};
           color: {tier.highlight ? 'var(--color-paper)' : 'var(--color-ink)'};
@@ -139,7 +139,7 @@
 					{tier.name}
 				</p>
 				<div class="mt-4 flex items-baseline gap-2">
-					<span class="serif text-4xl" style="font-weight: 500;">{tier.price}</span>
+					<span class="serif text-3xl sm:text-4xl" style="font-weight: 500;">{tier.price}</span>
 					<span
 						class="text-sm"
 						style="color: {tier.highlight ? 'rgba(250, 246, 238, 0.65)' : 'var(--color-muted)'};"
@@ -238,7 +238,7 @@
 		{/each}
 	</div>
 
-	<p class="mt-10 text-xs text-center" style="color: var(--color-muted);">
+	<p class="mt-8 sm:mt-10 text-xs text-center" style="color: var(--color-muted);">
 		Wir senden ausschliesslich, was du angefordert hast. Kein Tracking-Pixel, kein Verkauf von
 		E-Mail-Adressen.
 	</p>

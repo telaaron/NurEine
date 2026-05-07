@@ -1,5 +1,6 @@
 // DEPRECATED — This Edge Function duplicates scripts/send_newsletter.py + GitHub Actions.
 // The Python script is the canonical newsletter sender. Do not deploy this function.
+// Now uses Brevo API instead of Resend.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // ---------------------------------------------------------------------------
@@ -228,34 +229,36 @@ function buildEmailHtml(opts: {
 }
 
 // ---------------------------------------------------------------------------
-// Send a single email via Resend
+// Send a single email via Brevo
 // ---------------------------------------------------------------------------
 
-async function sendViaResend(opts: {
+async function sendViaBrevo(opts: {
   to: string
   subject: string
   html: string
-  resendApiKey: string
-  fromAddress: string
+  brevoApiKey: string
+  fromEmail: string
+  fromName: string
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch('https://api.resend.com/emails', {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${opts.resendApiKey}`,
+        'api-key': opts.brevoApiKey,
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
       body: JSON.stringify({
-        from: opts.fromAddress,
-        to: [opts.to],
+        sender: { name: opts.fromName, email: opts.fromEmail },
+        to: [{ email: opts.to }],
         subject: opts.subject,
-        html: opts.html,
+        htmlContent: opts.html,
       }),
     })
 
     if (!response.ok) {
       const body = await response.text()
-      return { success: false, error: `Resend API error ${response.status}: ${body}` }
+      return { success: false, error: `Brevo API error ${response.status}: ${body}` }
     }
 
     return { success: true }
@@ -321,8 +324,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // --- Bootstrap --------------------------------------------------------
   const supabase = getSupabase()
-  const resendApiKey = env('RESEND_API_KEY')
-  const fromAddress = env('NEWSLETTER_FROM_ADDRESS')
+  const brevoApiKey = env('BREVO_API_KEY')
+  const fromEmail = env('BREVO_FROM_EMAIL')
+  const fromName = env('BREVO_FROM_NAME')
   const baseUrl = env('BASE_URL')
 
   // -----------------------------------------------------------------------
@@ -439,12 +443,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
       isPlus: payload.type === 'daily_plus',
     })
 
-    const result = await sendViaResend({
+    const result = await sendViaBrevo({
       to: subscriber.email,
       subject,
       html,
-      resendApiKey,
-      fromAddress,
+      brevoApiKey,
+      fromEmail,
+      fromName,
     })
 
     if (result.success) {

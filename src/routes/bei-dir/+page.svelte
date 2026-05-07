@@ -2,6 +2,7 @@
 	import { base } from '$app/paths';
 	import { browser } from '$app/environment';
 	import 'leaflet/dist/leaflet.css';
+	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import type * as LeafletModule from 'leaflet';
 	import { formatDate, toneStyles } from '$lib/utils';
 
@@ -297,6 +298,9 @@
 	const activeStory = $derived(
 		activeSlug ? displayStories.find((s) => s.slug === activeSlug) ?? null : null
 	);
+	const activeStoryImageSrc = $derived(
+		activeStory ? getStoryHeroImageSrc(activeStory.title, base) : null
+	);
 
 	$effect(() => {
 		const el = mapContainer;
@@ -468,7 +472,7 @@
 </svelte:head>
 
 <!-- ===== HEADER ===== -->
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pt-12 lg:pt-16 pb-6 lg:pb-8">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-4 sm:pb-6 lg:pb-8">
 	{#if geo.status === 'loading'}
 		<!-- Loading state -->
 		<div class="flex flex-col gap-3 rise">
@@ -479,7 +483,7 @@
 				Standort wird ermittelt
 			</p>
 			<h1
-				class="serif leading-tight tracking-tight text-[2rem] lg:text-[3rem]"
+				class="serif leading-tight tracking-tight text-[1.6rem] sm:text-[2rem] lg:text-[3rem]"
 				style="color: var(--color-ink); font-weight: 500;"
 			>
 				Gute Nachrichten aus deiner Region.
@@ -503,7 +507,7 @@
 			Bei dir
 		</p>
 		<h1
-			class="serif mt-3 leading-tight tracking-tight text-[2rem] lg:text-[3rem] rise rise-d1"
+			class="serif mt-3 leading-tight tracking-tight text-[1.6rem] sm:text-[2rem] lg:text-[3rem] rise rise-d1"
 			style="color: var(--color-ink); font-weight: 500;"
 		>
 			Ort konnte nicht ermittelt werden.
@@ -543,7 +547,7 @@
 			Bei dir
 		</p>
 		<h1
-			class="serif mt-3 leading-tight tracking-tight text-[2rem] lg:text-[3rem] rise rise-d1"
+			class="serif mt-3 leading-tight tracking-tight text-[1.6rem] sm:text-[2rem] lg:text-[3rem] rise rise-d1"
 			style="color: var(--color-ink); font-weight: 500;"
 		>
 			Gute Nachrichten
@@ -573,11 +577,11 @@
 
 <!-- ===== MAP ===== -->
 {#if geo.status !== 'loading' && geo.status !== 'error'}
-	<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-8 lg:pb-10">
+	<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-6 sm:pb-8 lg:pb-10">
 		<div class="flex flex-col gap-4">
 			<div
 				class="paper relative w-full rounded-[8px] overflow-hidden"
-				style="border: 1px solid var(--color-rule); height: 380px; min-height: 280px;"
+				style="border: 1px solid var(--color-rule); height: 340px; min-height: 260px;"
 				bind:this={mapContainer}
 			>
 				{#if !mapReady}
@@ -598,7 +602,7 @@
 
 			<!-- Legend -->
 			<div
-				class="flex flex-wrap items-center gap-4 text-xs"
+				class="flex flex-wrap items-center gap-3 sm:gap-4 text-xs"
 				style="color: var(--color-muted);"
 			>
 				<span class="uppercase tracking-[0.14em]">Legende:</span>
@@ -632,16 +636,16 @@
 
 <!-- ===== STORIES ===== -->
 {#if geo.status !== 'loading' && geo.status !== 'error'}
-	<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-16">
+	<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-12 sm:pb-16">
 		{#if displayStories.length === 0}
 			<!-- Empty / No local stories -->
 			<div
-				class="paper rounded-[8px] p-10 lg:p-14 text-center"
+				class="paper rounded-[8px] p-6 sm:p-10 lg:p-14 text-center"
 				style="border: 1px solid var(--color-rule);"
 			>
 				<span class="text-5xl block mb-4">🔍</span>
 				<h2
-					class="serif text-2xl lg:text-3xl leading-tight"
+					class="serif text-xl sm:text-2xl lg:text-3xl leading-tight"
 					style="color: var(--color-ink); font-weight: 500;"
 				>
 					Noch keine lokalen Nachrichten in deiner N&auml;he
@@ -678,7 +682,7 @@
 			<!-- Show fallback info banner if using European stories -->
 			{#if nearbyStories.length === 0}
 				<div
-					class="mb-8 paper rounded-[8px] p-6 lg:p-8 flex items-start gap-4"
+					class="mb-8 paper rounded-[8px] p-4 sm:p-6 lg:p-8 flex items-start gap-4"
 					style="border: 1px solid var(--color-rule);"
 				>
 					<span class="text-2xl flex-shrink-0 mt-0.5">🌍</span>
@@ -720,6 +724,7 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
 				{#each displayStories as story (story.slug)}
 					{@const t = toneStyles[story.tone]}
+					{@const heroImageSrc = getStoryHeroImageSrc(story.title, base)}
 					<a
 						href={base + '/geschichte/' + story.slug}
 						class="group block paper rounded-[6px] overflow-hidden transition-all duration-500"
@@ -735,12 +740,26 @@
 									radial-gradient(circle at 75% 70%, {t.fg}1f 0%, transparent 55%),
 									linear-gradient(160deg, {t.bg}, var(--color-paper));"
 							></div>
-							<div
-								class="absolute inset-0 flex items-center justify-center text-7xl"
-								style="filter: saturate(0.85);"
-							>
-								{story.hero}
-							</div>
+							{#if heroImageSrc}
+								<img
+									src={heroImageSrc}
+									alt=""
+									class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] group-hover:scale-[1.04]"
+									loading="lazy"
+									decoding="async"
+								/>
+								<div
+									class="absolute inset-0"
+									style="background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(245,241,234,0.2));"
+								></div>
+							{:else}
+								<div
+									class="absolute inset-0 flex items-center justify-center text-7xl"
+									style="filter: saturate(0.85);"
+								>
+									{story.hero}
+								</div>
+							{/if}
 							<div class="absolute top-3 left-3 flex gap-2">
 								<span
 									class="px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] rounded-full backdrop-blur-sm"
@@ -761,7 +780,7 @@
 								</div>
 							{/if}
 						</div>
-						<div class="p-5 lg:p-6">
+						<div class="p-4 sm:p-5 lg:p-6">
 							<div class="flex items-center gap-2 text-xs" style="color: var(--color-faint);">
 								<span>{story.country}</span>
 								<span>&middot;</span>
@@ -770,13 +789,13 @@
 								<span>{story.readingMinutes} Min. Lesezeit</span>
 							</div>
 							<h3
-								class="serif mt-3 leading-[1.18] tracking-tight text-[1.35rem]"
+								class="serif mt-3 leading-[1.18] tracking-tight text-[1.2rem] sm:text-[1.28rem] lg:text-[1.35rem]"
 								style="color: var(--color-ink); font-weight: 500;"
 							>
 								{story.title}
 							</h3>
 							<p
-								class="mt-3 text-[15px] leading-relaxed line-clamp-3"
+								class="mt-3 text-[13px] sm:text-[14px] lg:text-[15px] leading-relaxed line-clamp-3"
 								style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 							>
 								{story.dek}
@@ -821,7 +840,7 @@
 			<div class="w-10 h-1 rounded-full" style="background: var(--color-rule-strong);"></div>
 		</div>
 		<div class="h-1" style="background: {hex};"></div>
-		<div class="overflow-y-auto px-6 pb-8 pt-4" style="max-height: calc(60vh - 32px);">
+		<div class="overflow-y-auto px-4 sm:px-6 pb-8 pt-4" style="max-height: calc(60vh - 32px);">
 			<div class="flex justify-end mb-2">
 				<button
 					type="button"
@@ -846,9 +865,19 @@
 				<span>{activeStory.country}</span>
 			</div>
 			<div class="mt-3 flex items-start gap-3">
-				<span class="text-2xl flex-shrink-0 mt-0.5">{activeStory.hero || '📰'}</span>
+				{#if activeStoryImageSrc}
+					<img
+						src={activeStoryImageSrc}
+						alt=""
+						class="h-10 w-10 rounded-md object-cover flex-shrink-0 mt-0.5"
+						loading="lazy"
+						decoding="async"
+					/>
+				{:else}
+					<span class="text-2xl flex-shrink-0 mt-0.5">{activeStory.hero || '📰'}</span>
+				{/if}
 				<h2
-					class="serif leading-snug text-[1.3rem]"
+					class="serif leading-snug text-[1.15rem] sm:text-[1.3rem]"
 					style="color: var(--color-ink); font-weight: 500;"
 				>
 					{activeStory.title}

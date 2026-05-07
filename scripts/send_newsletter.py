@@ -9,8 +9,9 @@ Called from GitHub Actions with one argument:
 Requires the following environment variables:
   SUPABASE_URL
   SUPABASE_SERVICE_KEY
-  RESEND_API_KEY
-  RESEND_FROM_EMAIL
+  BREVO_API_KEY
+  BREVO_FROM_EMAIL
+  BREVO_FROM_NAME
   PUBLIC_BASE_URL
 """
 
@@ -39,15 +40,16 @@ logger = logging.getLogger("send_newsletter")
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
-RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
-RESEND_FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL")
+BREVO_API_KEY = os.environ.get("BREVO_API_KEY")
+BREVO_FROM_EMAIL = os.environ.get("BREVO_FROM_EMAIL")
+BREVO_FROM_NAME = os.environ.get("BREVO_FROM_NAME", "NurEine")
 PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL")
 
 REQUIRED_ENV = (
     "SUPABASE_URL",
     "SUPABASE_SERVICE_KEY",
-    "RESEND_API_KEY",
-    "RESEND_FROM_EMAIL",
+    "BREVO_API_KEY",
+    "BREVO_FROM_EMAIL",
     "PUBLIC_BASE_URL",
 )
 
@@ -59,8 +61,8 @@ SUPABASE_HEADERS = {
     "Accept": "application/json",
 }
 
-# Resend API endpoint
-RESEND_URL = "https://api.resend.com/emails"
+# Brevo API endpoint
+BREVO_URL = "https://api.brevo.com/v3/smtp/email"
 
 # ---------------------------------------------------------------------------
 # HTML Email Template
@@ -73,71 +75,82 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>NurEine</title>
 </head>
-<body style="margin:0;padding:0;background-color:#F5F0E8;font-family:Georgia,'Times New Roman',serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#F5F0E8;">
+<body style="margin:0;padding:0;background-color:#f5f1ea;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;">
     <tr>
       <td align="center" style="padding:40px 16px;">
-        <!-- Main container -->
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#FFFFFF;border-radius:8px;overflow:hidden;">
-          <!-- Header bar -->
+        <!-- Main card -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:8px;overflow:hidden;border:1px solid rgba(26,24,21,0.12);">
+          <!-- Image header -->
           <tr>
-            <td style="background-color:#C4622D;padding:28px 36px 24px;">
-              <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:700;color:#FFFFFF;letter-spacing:1px;">
-                NurEine
-              </h1>
-              <p style="margin:4px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:14px;color:#F5E6D8;font-style:italic;">
-                Die gute Nachricht des Tages
-              </p>
+            <td style="padding:0;">
+              <!--[if mso]><div style="display:none;"><![endif]-->
+              <div style="margin:0;font-size:72px;line-height:1;text-align:center;padding:32px 36px 0;filter:saturate(0.85);">{emoji}</div>
+              <!--[if mso]></div><![endif]-->
             </td>
           </tr>
           <!-- Body -->
           <tr>
-            <td style="padding:36px 36px 28px;">
-              <!-- Hero emoji -->
-              <div style="font-size:48px;line-height:1;margin-bottom:16px;">{emoji}</div>
-
-              <!-- Category label -->
-              <span style="display:inline-block;background-color:{category_color};color:#FFFFFF;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:4px 10px;border-radius:4px;margin-bottom:12px;">
-                {category}
-              </span>
-
-              <!-- Title -->
-              <h2 style="margin:0 0 8px;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;color:#1A1815;line-height:1.3;">
-                {title}
-              </h2>
-
-              <!-- Subtitle / Dek -->
-              <p style="margin:0 0 16px;font-size:16px;color:#4A4540;line-height:1.5;">
-                {dek}
-              </p>
-
-              <!-- Summary -->
-              <p style="margin:0 0 20px;font-size:15px;color:#5C5650;line-height:1.6;">
-                {summary}
-              </p>
-
-              <!-- Meta row: impact + reading time -->
-              <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+            <td style="padding:20px 36px 28px;">
+              <!-- Category + date row -->
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
                 <tr>
-                  <td style="padding-right:20px;">
-                    <span style="font-size:13px;color:#6B6560;">
-                      <strong>Impact:</strong> {impact_score}/100
-                    </span>
-                  </td>
                   <td>
-                    <span style="font-size:13px;color:#6B6560;">
-                      <strong>Lesezeit:</strong> {reading_minutes} Min.
+                    <span style="display:inline-block;background-color:{category_color};color:#faf6ee;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.16em;padding:3px 10px;border-radius:9999px;">
+                      {category}
                     </span>
                   </td>
                 </tr>
               </table>
 
-              <!-- CTA Button -->
+              <!-- Title -->
+              <h2 style="margin:0 0 12px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:26px;font-weight:500;color:#1a1815;line-height:1.18;letter-spacing:-0.01em;">
+                {title}
+              </h2>
+
+              <!-- Dek -->
+              <p style="margin:0 0 20px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:17px;color:#3a342c;line-height:1.45;">
+                {dek}
+              </p>
+
+              <!-- Summary -->
+              <p style="margin:0 0 24px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.65;">
+                {summary}
+              </p>
+            </td>
+          </tr>
+          <!-- Meta strip -->
+          <tr>
+            <td style="padding:0 36px 0;">
+              <hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:16px 36px 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+                <tr>
+                  <td style="padding-right:24px;">
+                    <span style="font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;">
+                      <strong style="color:#1a1815;">Wirkung</strong> {impact_score}/100
+                    </span>
+                  </td>
+                  <td>
+                    <span style="font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;">
+                      <strong style="color:#1a1815;">Lesezeit</strong> {reading_minutes} Min.
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- CTA -->
+          <tr>
+            <td style="padding:0 36px 28px;">
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="background-color:#C4622D;border-radius:6px;text-align:center;">
-                    <a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:6px;">
-                      Weiterlesen
+                  <td style="background-color:#1a1815;border-radius:9999px;text-align:center;">
+                    <a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 36px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:500;color:#faf6ee;text-decoration:none;border-radius:9999px;">
+                      Geschichte lesen &rarr;
                     </a>
                   </td>
                 </tr>
@@ -147,26 +160,26 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <!-- Divider -->
           <tr>
             <td style="padding:0 36px;">
-              <hr style="border:none;border-top:1px solid #E0D8CE;margin:0;" />
+              <hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0;" />
             </td>
           </tr>
           <!-- Footer -->
           <tr>
             <td style="padding:24px 36px 32px;">
-              <p style="margin:0 0 8px;font-size:12px;color:#8A8480;line-height:1.5;">
+              <p style="margin:0 0 8px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.5;">
                 Du erh&auml;ltst diese E-Mail, weil du den NurEine-Newsletter abonniert hast.
               </p>
-              <p style="margin:0;font-size:12px;color:#8A8480;line-height:1.5;">
-                <a href="{unsubscribe_url}" target="_blank" style="color:#C4622D;text-decoration:underline;">
-                  Hier kannst du dich abmelden
+              <p style="margin:0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.5;">
+                <a href="{unsubscribe_url}" target="_blank" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">
+                  Abmelden
                 </a>
               </p>
             </td>
           </tr>
         </table>
-        <!-- Imprint -->
-        <p style="margin:16px 0 0;font-size:11px;color:#A09890;">
-          NurEine &mdash; Gute Nachrichten. Jeden Tag exakt eine.
+        <!-- Site footer -->
+        <p style="margin:16px 0 0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;">
+          NurEine &mdash; Eine Geschichte am Tag. Mehr nicht.
         </p>
       </td>
     </tr>
@@ -184,15 +197,23 @@ def build_html_body(story: dict, subscriber_email: str, confirmation_token: str)
         f"?token={confirmation_token}&email={subscriber_email}"
     )
     category = story.get("category", "Allgemein")
+    # Category -> Tone mapping (matches website toneStyles)
+    tone_map = {
+        "klima": "sage",
+        "gesundheit": "rose",
+        "wissenschaft": "sky",
+        "gemeinschaft": "amber",
+        "tiere": "sage",
+        "kultur": "amber",
+        "innovation": "sky",
+    }
+    tone = tone_map.get(category, "amber")
     category_color = {
-        "klima": "#5A8F6F",
-        "gesundheit": "#C96A7B",
-        "wissenschaft": "#5A8FA0",
-        "gemeinschaft": "#5A8FA0",
-        "tiere": "#8A7FB0",
-        "kultur": "#C4995A",
-        "innovation": "#5A8FA0",
-    }.get(category, "#C4622D")
+        "amber": "#c87340",
+        "sage": "#5a7a52",
+        "rose": "#b87a7a",
+        "sky": "#6c8aa8",
+    }.get(tone, "#c87340")
 
     summary = story.get("summary", "")
 
@@ -283,23 +304,24 @@ def get_hero_story(is_hero: bool = True, limit: int = 1) -> dict | None:
 
 
 # ---------------------------------------------------------------------------
-# Resend API
+# Brevo API
 # ---------------------------------------------------------------------------
 
 
 def send_email(to_email: str, subject: str, html_body: str) -> dict:
-    """Send an email via the Resend API."""
+    """Send an email via the Brevo API v3."""
     payload = {
-        "from": RESEND_FROM_EMAIL,
-        "to": [to_email],
+        "sender": {"name": BREVO_FROM_NAME, "email": BREVO_FROM_EMAIL},
+        "to": [{"email": to_email}],
         "subject": subject,
-        "html": html_body,
+        "htmlContent": html_body,
     }
     headers = {
-        "Authorization": f"Bearer {RESEND_API_KEY}",
+        "api-key": BREVO_API_KEY,
         "Content-Type": "application/json",
+        "Accept": "application/json",
     }
-    resp = requests.post(RESEND_URL, headers=headers, json=payload, timeout=30)
+    resp = requests.post(BREVO_URL, headers=headers, json=payload, timeout=30)
     resp.raise_for_status()
     return resp.json()
 
@@ -425,7 +447,7 @@ def main() -> None:
         try:
             html_body = build_html_body(story, email, token)
             result = send_email(email, subject, html_body)
-            logger.info("Email sent to %s (resend_id=%s)", email, result.get("id"))
+            logger.info("Email sent to %s (messageId=%s)", email, result.get("messageId"))
             log_send(str(subscriber_id), story_id)
             success_count += 1
 

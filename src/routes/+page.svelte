@@ -25,15 +25,15 @@
 		style="opacity: 0.7;"
 	></div>
 
-	<div class="relative mx-auto max-w-[1180px] px-6 lg:px-10 pt-12 lg:pt-16 pb-20">
+	<div class="relative mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-14 sm:pb-16 lg:pb-20">
 		<div class="flex items-center gap-3 rise">
 			<span
-				class="inline-block w-8 h-px"
+				class="inline-block w-6 sm:w-8 h-px"
 				style="background: var(--color-amber);"
 				aria-hidden="true"
 			></span>
 			<span
-				class="text-[11px] uppercase tracking-[0.22em]"
+				class="text-[10px] sm:text-[11px] uppercase tracking-[0.22em]"
 				style="color: var(--color-amber); font-weight: 500;"
 			>
 				Eine gute Nachricht heute
@@ -41,32 +41,32 @@
 		</div>
 
 		<p
-			class="mt-3 text-sm rise rise-d1"
+			class="mt-2 sm:mt-3 text-xs sm:text-sm rise rise-d1"
 			style="color: var(--color-muted); font-family: var(--font-serif);"
 		>
 			{dateLong}
 		</p>
 
 		{#if featured}
-			<a href={base + '/geschichte/' + featured.slug} class="block mt-6 group rise rise-d2">
+			<a href={base + '/geschichte/' + featured.slug} class="block mt-4 sm:mt-6 group rise rise-d2">
 				<h1
-					class="serif tracking-tight leading-[1.02] text-[2.6rem] sm:text-[3.6rem] lg:text-[5rem] xl:text-[5.6rem] max-w-[18ch]"
+					class="serif tracking-tight leading-[1.04] text-[2rem] sm:text-[2.8rem] md:text-[3.6rem] lg:text-[5rem] xl:text-[5.6rem] max-w-[18ch]"
 					style="color: var(--color-ink); font-weight: 500;"
 				>
 					{featured.title}
 				</h1>
 				<p
-					class="mt-7 text-xl lg:text-2xl leading-snug max-w-[62ch]"
+					class="mt-4 sm:mt-6 lg:mt-7 text-[15px] sm:text-lg lg:text-2xl leading-snug max-w-[62ch]"
 					style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 				>
 					{featured.dek}
 				</p>
 			</a>
 
-			<div class="mt-10 flex flex-wrap items-center gap-4 text-sm rise rise-d3">
+			<div class="mt-7 sm:mt-10 flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm rise rise-d3">
 				<a
 					href={base + '/geschichte/' + featured.slug}
-					class="inline-flex items-center gap-2 px-5 py-3 rounded-full transition-all"
+					class="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full transition-all"
 					style="background: var(--color-ink); color: var(--color-paper);"
 				>
 					Geschichte lesen
@@ -91,11 +91,11 @@
 	<!-- Compass strip — quiet metadata -->
 	<div class="border-t border-b" style="border-color: var(--color-rule); background: var(--color-canvas-soft);">
 		<div
-			class="mx-auto max-w-[1180px] px-6 lg:px-10 py-5 grid grid-cols-2 md:grid-cols-4 gap-6 text-xs"
+			class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 py-4 sm:py-5 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-[10px] sm:text-xs"
 		>
 			<div>
 				<p class="uppercase tracking-[0.18em]" style="color: var(--color-faint);">Heute kuratiert</p>
-				<p class="mt-1.5 serif text-2xl tnum" style="color: var(--color-ink);">
+				<p class="mt-1 sm:mt-1.5 serif text-lg sm:text-2xl tnum" style="color: var(--color-ink);">
 					{data.stats.storiesCount}
 				</p>
 			</div>
@@ -103,7 +103,7 @@
 				<p class="uppercase tracking-[0.18em]" style="color: var(--color-faint);">
 					Quellen geprüft
 				</p>
-				<p class="mt-1.5 serif text-2xl tnum" style="color: var(--color-ink);">
+				<p class="mt-1 sm:mt-1.5 serif text-lg sm:text-2xl tnum" style="color: var(--color-ink);">
 					{data.stats.sourcesCount}
 				</p>
 			</div>
@@ -111,9 +111,9 @@
 				<p class="uppercase tracking-[0.18em]" style="color: var(--color-faint);">
 					Ø Wirkungsindex
 				</p>
-				<p class="mt-1.5 serif text-2xl tnum" style="color: var(--color-ink);">
+				<p class="mt-1 sm:mt-1.5 serif text-lg sm:text-2xl tnum" style="color: var(--color-ink);">
 					{Math.round(data.totalImpact / data.stats.storiesCount)}<span
-						class="text-base"
+						class="text-sm sm:text-base"
 						style="color: var(--color-faint);"
 					>
 						/100</span
@@ -122,8 +122,8 @@
 			</div>
 			<div>
 				<p class="uppercase tracking-[0.18em]" style="color: var(--color-faint);">Ø Lesezeit</p>
-				<p class="mt-1.5 serif text-2xl tnum" style="color: var(--color-ink);">
-					{data.avgRead}<span class="text-base" style="color: var(--color-faint);"> min</span>
+				<p class="mt-1 sm:mt-1.5 serif text-lg sm:text-2xl tnum" style="color: var(--color-ink);">
+					{data.avgRead}<span class="text-sm sm:text-base" style="color: var(--color-faint);"> min</span>
 				</p>
 			</div>
 		</div>
@@ -131,18 +131,18 @@
 </section>
 
 <!-- Manifesto strip -->
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 py-16 lg:py-20">
-	<div class="grid lg:grid-cols-12 gap-10 items-start">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 py-12 sm:py-16 lg:py-20">
+	<div class="grid lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-start">
 		<div class="lg:col-span-4">
 			<p
-				class="text-[11px] uppercase tracking-[0.22em]"
+				class="text-[10px] sm:text-[11px] uppercase tracking-[0.22em]"
 				style="color: var(--color-amber); font-weight: 500;"
 			>
 				Warum es uns gibt
 			</p>
 		</div>
 		<div class="lg:col-span-8">
-			<p class="serif text-2xl lg:text-[1.85rem] leading-snug" style="color: var(--color-ink);">
+			<p class="serif text-xl sm:text-2xl lg:text-[1.85rem] leading-snug" style="color: var(--color-ink);">
 				Die Nachrichtenlage ist nicht die Welt. Sie ist eine Auswahl. Wir filtern dieselben
 				tausenden Quellen — aber suchen das, was zeigt, dass Menschen
 				<span style="color: var(--color-amber);">vorankommen</span>: bauen, heilen, einigen,
@@ -150,7 +150,7 @@
 			</p>
 			<a
 				href={base + '/manifest'}
-				class="mt-6 inline-flex items-center gap-2 text-sm hover:opacity-70"
+				class="mt-4 sm:mt-6 inline-flex items-center gap-2 text-xs sm:text-sm hover:opacity-70"
 				style="color: var(--color-ink-soft); border-bottom: 1px solid var(--color-rule-strong);"
 			>
 				Vollständiges Manifest lesen <span aria-hidden="true">→</span>
@@ -160,16 +160,16 @@
 </section>
 
 <!-- Story grid -->
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-20">
-	<div class="flex items-end justify-between mb-10">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-16 lg:pb-20">
+	<div class="flex items-end justify-between mb-7 sm:mb-10">
 		<div>
 			<p
-				class="text-[11px] uppercase tracking-[0.22em]"
+				class="text-[10px] sm:text-[11px] uppercase tracking-[0.22em]"
 				style="color: var(--color-amber); font-weight: 500;"
 			>
 				Diese Woche
 			</p>
-			<h2 class="serif text-3xl lg:text-4xl mt-2" style="color: var(--color-ink); font-weight: 500;">
+			<h2 class="serif text-2xl sm:text-3xl lg:text-4xl mt-1.5 sm:mt-2" style="color: var(--color-ink); font-weight: 500;">
 				Geschichten, die weitertragen
 			</h2>
 		</div>
@@ -182,40 +182,50 @@
 		</a>
 	</div>
 
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
 		{#each rest as story, i (story.slug)}
 			<div class="rise" style="animation-delay: {0.1 + i * 0.06}s;">
 				<StoryCard {story} />
 			</div>
 		{/each}
 	</div>
+
+	<!-- Mobile archive link -->
+	<a
+		href={base + '/archiv'}
+		class="md:hidden mt-8 inline-flex items-center justify-center gap-2 w-full px-5 py-3 rounded-full text-sm transition-all"
+		style="background: var(--color-ink); color: var(--color-paper);"
+	>
+		Ganzes Archiv
+		<span aria-hidden="true">→</span>
+	</a>
 </section>
 
 <!-- Newsletter / quiet CTA -->
 <section
-	class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-16"
+	class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-12 sm:pb-16"
 	aria-labelledby="newsletter-heading"
 >
 	<div
-		class="paper rounded-[8px] p-10 lg:p-16 grid lg:grid-cols-12 gap-8 items-end"
+		class="paper rounded-[8px] p-6 sm:p-10 lg:p-16 grid lg:grid-cols-12 gap-6 sm:gap-8 items-end"
 		style="border: 1px solid var(--color-rule);"
 	>
 		<div class="lg:col-span-7">
 			<p
-				class="text-[11px] uppercase tracking-[0.22em]"
+				class="text-[10px] sm:text-[11px] uppercase tracking-[0.22em]"
 				style="color: var(--color-amber); font-weight: 500;"
 			>
 				Sonntags-Brief
 			</p>
 			<h2
 				id="newsletter-heading"
-				class="serif text-3xl lg:text-4xl mt-3 leading-tight"
+				class="serif text-2xl sm:text-3xl lg:text-4xl mt-2 sm:mt-3 leading-tight"
 				style="color: var(--color-ink); font-weight: 500;"
 			>
 				Eine ausgewählte Geschichte. Sonntag morgens. Werbefrei.
 			</h2>
 			<p
-				class="mt-4 text-base leading-relaxed max-w-[55ch]"
+				class="mt-3 sm:mt-4 text-sm sm:text-base leading-relaxed max-w-[55ch]"
 				style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 			>
 				Kein Daily-Hammering, kein Algorithmus. Nur eine Geschichte pro Woche, die wir tiefer

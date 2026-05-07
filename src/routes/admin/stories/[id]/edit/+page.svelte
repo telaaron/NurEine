@@ -244,13 +244,13 @@
 			</div>
 
 			<div>
-				<label class="block text-xs uppercase tracking-[0.12em] mb-1" style="color: var(--color-muted);">Hero-Emoji</label>
+				<label class="block text-xs uppercase tracking-[0.12em] mb-1" style="color: var(--color-muted);">Bild-URL</label>
 				<input
 					type="text"
 					bind:value={hero}
 					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
-					maxlength="10"
+					placeholder="https://..."
 				/>
 			</div>
 

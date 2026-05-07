@@ -9,7 +9,7 @@
 	<title>Lokal — NurEine</title>
 </svelte:head>
 
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pt-12 lg:pt-16 pb-12">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-10 sm:pb-12">
 	<p
 		class="text-[11px] uppercase tracking-[0.22em] rise"
 		style="color: var(--color-amber); font-weight: 500;"
@@ -17,13 +17,13 @@
 		Bei dir um die Ecke
 	</p>
 	<h1
-		class="serif mt-3 leading-tight tracking-tight text-[2.4rem] lg:text-[3.6rem] rise rise-d1"
+		class="serif mt-3 leading-tight tracking-tight text-[1.8rem] sm:text-[2.4rem] lg:text-[3.6rem] rise rise-d1"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
 		Gute Nachrichten aus deiner Region.
 	</h1>
 	<p
-		class="mt-5 max-w-[55ch] text-lg leading-relaxed rise rise-d2"
+		class="mt-5 max-w-[55ch] text-[15px] sm:text-lg leading-relaxed rise rise-d2"
 		style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 	>
 		Hyperlokal aus Berlin, Brandenburg und ganz Deutschland. Wir arbeiten mit kleinen Redaktionen, Vereinen und
@@ -32,7 +32,7 @@
 	</p>
 </section>
 
-<section class="mx-auto max-w-[1180px] px-6 lg:px-10 pb-16">
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-12 sm:pb-16">
 	{#if local.length > 0}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
 			{#each local as story (story.slug)}
@@ -40,7 +40,7 @@
 			{/each}
 		</div>
 	{:else}
-		<div class="paper rounded-[8px] p-10 text-center" style="border: 1px solid var(--color-rule);">
+		<div class="paper rounded-[8px] p-8 sm:p-10 text-center" style="border: 1px solid var(--color-rule);">
 			<p class="serif text-xl" style="color: var(--color-ink-soft);">
 				Aktuell gibt es noch keine lokalen Geschichten. Kennst du eine? Schreib uns!
 			</p>
@@ -49,7 +49,7 @@
 
 	<div
 		id="einreichen"
-		class="mt-20 paper rounded-[8px] p-10 lg:p-14"
+		class="mt-14 sm:mt-20 paper rounded-[8px] p-6 sm:p-10 lg:p-14"
 		style="border: 1px solid var(--color-rule);"
 	>
 		<div class="grid lg:grid-cols-12 gap-8">
@@ -61,7 +61,7 @@
 					Story einreichen
 				</p>
 				<h2
-					class="serif text-3xl lg:text-4xl mt-3 leading-tight"
+					class="serif text-2xl sm:text-3xl lg:text-4xl mt-3 leading-tight"
 					style="color: var(--color-ink); font-weight: 500;"
 				>
 					Du kennst eine Geschichte, die wir kennen sollten?

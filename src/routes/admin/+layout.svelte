@@ -19,7 +19,7 @@
 
 <!-- Mobile header bar -->
 <div
-	class="lg:hidden flex items-center justify-between p-4 border-b"
+	class="lg:hidden flex items-center justify-between p-3 sm:p-4 border-b"
 	style="background: var(--color-paper); border-color: var(--color-rule);"
 >
 	<a href={base + '/admin'} class="serif text-lg" style="color: var(--color-ink); font-weight: 500;">
@@ -48,7 +48,7 @@
 <div class="min-h-screen flex" style="background: var(--color-canvas);">
 	<!-- Sidebar -->
 	<nav
-		class="w-56 shrink-0 paper p-6 border-r flex flex-col gap-6 transition-transform duration-200"
+		class="w-64 shrink-0 paper p-4 sm:p-6 border-r flex flex-col gap-6 transition-transform duration-200"
 		style="border-color: var(--color-rule); min-height: 100vh;
       {sidebarOpen ? '' : 'transform: translateX(-100%);'}
       position: fixed; left: 0; top: 0; z-index: 20;
@@ -77,6 +77,9 @@
 			</a>
 			<a href={base + '/admin/stories'} class="px-3 py-2 rounded-[4px] hover:opacity-70" style="color: var(--color-ink-soft);">
 				Stories
+			</a>
+			<a href={base + '/admin' + '#newsletter-test'} class="px-3 py-2 rounded-[4px] hover:opacity-70" style="color: var(--color-ink-soft);">
+				Newsletter
 			</a>
 		</div>
 		<div class="mt-auto pt-6 border-t text-xs" style="border-color: var(--color-rule);">
@@ -108,7 +111,7 @@
 		}
 	</style>
 
-	<main class="flex-1 p-4 lg:p-8 min-w-0">
+	<main class="flex-1 p-3 sm:p-4 lg:p-8 min-w-0">
 		{@render children()}
 	</main>
 </div>

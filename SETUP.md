@@ -2,11 +2,13 @@
 
 ## Einmalig (vor Go-Live)
 
-### 1. Supabase
+### 1. Supabase (SKIP)
 - [ ] Neues Projekt unter app.supabase.com erstellen
 - [ ] supabase/migrations/00001_schema.sql ausführen
 - [ ] supabase/migrations/00002_seed_rss_sources.sql ausführen
 - [ ] Service Role Key kopieren
+
+- INFO: wird um kosten zu sparen aktuell über anderes projekt betrieben
 
 ### 2. Resend
 - [ ] Account unter resend.com erstellen
@@ -15,8 +17,8 @@
 - [ ] Absender-Email bestätigen (z.B. newsletter@nureine.de)
 
 ### 3. Google Gemini
-- [ ] API Key unter aistudio.google.com erstellen
-- [ ] Quota prüfen: 250 Requests/Tag Free Tier
+- [x] API Key unter aistudio.google.com erstellen
+- [x] Quota prüfen: 250 Requests/Tag Free Tier
 
 ### 4. Vercel
 - [ ] Repo verbinden

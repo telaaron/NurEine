@@ -52,18 +52,18 @@
 		aria-hidden="true"
 		style="opacity: 0.5;"
 	></div>
-	<div class="relative mx-auto max-w-[860px] px-6 lg:px-10 pt-16 lg:pt-24 pb-12">
+	<div class="relative mx-auto max-w-[860px] px-4 sm:px-6 lg:px-10 pt-12 sm:pt-16 lg:pt-24 pb-12">
 		<p class="text-[11px] uppercase tracking-[0.22em] rise" style="color: var(--color-amber); font-weight: 500;">
 			Manifest
 		</p>
 		<h1
-			class="serif mt-4 leading-[1.05] tracking-tight text-[2.6rem] sm:text-[3.6rem] lg:text-[5rem] rise rise-d1"
+			class="serif mt-4 leading-[1.05] tracking-tight text-[1.9rem] sm:text-[2.6rem] lg:text-[5rem] rise rise-d1"
 			style="color: var(--color-ink); font-weight: 500;"
 		>
 			Sechs Sätze, an denen wir uns messen lassen.
 		</h1>
 		<p
-			class="mt-7 text-xl lg:text-2xl leading-snug max-w-[55ch] rise rise-d2"
+			class="mt-7 text-base sm:text-xl lg:text-2xl leading-snug max-w-[55ch] rise rise-d2"
 			style="color: var(--color-ink-soft); font-family: var(--font-serif); font-style: italic;"
 		>
 			Nachrichten formen, wie wir die Welt sehen. Wenn ein Großteil der Berichterstattung Schmerz
@@ -72,27 +72,27 @@
 	</div>
 </section>
 
-<section class="mx-auto max-w-[860px] px-6 lg:px-10 pb-20">
-	<ol class="space-y-14">
+<section class="mx-auto max-w-[860px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20">
+	<ol class="space-y-10 sm:space-y-14">
 		{#each principles as p, i (p.n)}
 			<li class="grid grid-cols-12 gap-6 rise" style="animation-delay: {0.1 + i * 0.06}s;">
-				<div class="col-span-2">
+				<div class="col-span-3 sm:col-span-2">
 					<span
-						class="serif text-3xl tnum"
+						class="serif text-2xl sm:text-3xl tnum"
 						style="color: var(--color-amber); font-weight: 400;"
 					>
 						{p.n}
 					</span>
 				</div>
-				<div class="col-span-10">
+				<div class="col-span-9 sm:col-span-10">
 					<h2
-						class="serif leading-tight tracking-tight text-2xl lg:text-[2rem]"
+						class="serif leading-tight tracking-tight text-xl sm:text-2xl lg:text-[2rem]"
 						style="color: var(--color-ink); font-weight: 500;"
 					>
 						{p.title}
 					</h2>
 					<p
-						class="mt-3 leading-relaxed text-lg"
+						class="mt-3 leading-relaxed text-[15px] sm:text-lg"
 						style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 					>
 						{p.body}
@@ -105,17 +105,17 @@
 	<!-- Methodik anchor -->
 	<div
 		id="methodik"
-		class="mt-20 paper rounded-[8px] p-10 lg:p-14"
+		class="mt-14 sm:mt-20 paper rounded-[8px] p-6 sm:p-10 lg:p-14"
 		style="border: 1px solid var(--color-rule);"
 	>
 		<p class="text-[11px] uppercase tracking-[0.22em]" style="color: var(--color-amber); font-weight: 500;">
 			Methodik
 		</p>
-		<h2 class="serif text-3xl lg:text-4xl mt-3" style="color: var(--color-ink); font-weight: 500;">
+		<h2 class="serif text-2xl sm:text-3xl lg:text-4xl mt-3" style="color: var(--color-ink); font-weight: 500;">
 			Wie der Wirkungsindex berechnet wird
 		</h2>
 		<p
-			class="mt-5 leading-relaxed text-lg max-w-[60ch]"
+			class="mt-5 leading-relaxed text-base sm:text-lg max-w-[60ch]"
 			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 		>
 			Drei gewichtete Faktoren, jeweils 0–100, dann gemittelt:
@@ -162,7 +162,7 @@
 		</ul>
 	</div>
 
-	<div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4">
+	<div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
 		{#each team as t}
 			<div
 				class="p-5 rounded-[6px]"
@@ -171,7 +171,7 @@
 				<p class="uppercase tracking-[0.16em] text-[11px]" style="color: var(--color-faint);">
 					{t.role}
 				</p>
-				<p class="serif text-2xl tnum mt-2" style="color: var(--color-ink);">
+				<p class="serif text-xl sm:text-2xl tnum mt-2" style="color: var(--color-ink);">
 					{t.n}
 				</p>
 			</div>
@@ -180,7 +180,7 @@
 
 	<a
 		href={base + '/'}
-		class="mt-14 inline-flex items-center gap-2 text-sm hover:opacity-70"
+		class="mt-10 sm:mt-14 inline-flex items-center gap-2 text-sm hover:opacity-70"
 		style="color: var(--color-ink-soft); border-bottom: 1px solid var(--color-rule-strong);"
 	>
 		<span aria-hidden="true">←</span> Zurück zur heutigen Geschichte

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from './supabase/client';
+import { ADMIN_USERNAME, ADMIN_PASSWORD, BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME } from '$env/static/private';
 
 // ---- Types ----
 
@@ -20,7 +21,7 @@ export type SupabaseStory = {
   impact_durability: number | null;
   impact_evidence: number | null;
   reading_time_min: number;
-  emoji: string | null;
+  image_url: string | null;
   is_hero: boolean;
   published_at: string;
   created_at: string;
@@ -99,7 +100,7 @@ function mapStory(row: SupabaseStory): StoryResult {
     impactScore: row.impact_score,
     impactNote: beschreibeWirkung(row.impact_score, row.impact_durability),
     tone,
-    hero: row.emoji || '✨',
+    hero: row.image_url || '✨',
     pinned: 0,
     local: 0,
     featuredDate: row.is_hero ? row.published_at : null,
@@ -254,7 +255,7 @@ export async function insertStory(data: Record<string, any>): Promise<{ lastInse
     impact_durability: data.impact_durability,
     impact_evidence: data.impact_evidence,
     reading_time_min: data.readingMinutes || data.reading_time_min || 3,
-    emoji: data.hero || data.emoji || '✨',
+    image_url: data.hero || data.image_url || null,
     is_hero: data.featuredDate ? true : false,
     published_at: data.publishedAt || data.published_at || new Date().toISOString()
   }).select('id').single();
@@ -291,8 +292,8 @@ export async function updateStory(id: string, data: Record<string, any>) {
   if (data.impact_evidence !== undefined) updateData.impact_evidence = data.impact_evidence;
   if (data.readingMinutes !== undefined) updateData.reading_time_min = data.readingMinutes;
   if (data.reading_time_min !== undefined) updateData.reading_time_min = data.reading_time_min;
-  if (data.hero !== undefined) updateData.emoji = data.hero;
-  if (data.emoji !== undefined) updateData.emoji = data.emoji;
+  if (data.hero !== undefined) updateData.image_url = data.hero;
+  if (data.image_url !== undefined) updateData.image_url = data.image_url;
   if (data.featuredDate !== undefined) updateData.is_hero = data.featuredDate ? true : false;
   if (data.is_hero !== undefined) updateData.is_hero = data.is_hero;
   if (data.publishedAt !== undefined) updateData.published_at = data.publishedAt;
@@ -315,9 +316,144 @@ export async function deleteStory(id: string) {
   return { success: !error };
 }
 
-// ---- Admin Auth ----
+// ---- Subscriber Stats ----
 
-import { ADMIN_USERNAME, ADMIN_PASSWORD } from '$env/static/private';
+export async function getSubscriberStats(): Promise<{
+  total: number;
+  confirmed: number;
+  free: number;
+  plus: number;
+  b2b: number;
+}> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_subscribers')
+    .select('confirmed, tier');
+
+  if (error || !data) {
+    console.error('getSubscriberStats error:', error);
+    return { total: 0, confirmed: 0, free: 0, plus: 0, b2b: 0 };
+  }
+
+  const rows = data as { confirmed: boolean; tier: string }[];
+  return {
+    total: rows.length,
+    confirmed: rows.filter(r => r.confirmed).length,
+    free: rows.filter(r => r.tier === 'free').length,
+    plus: rows.filter(r => r.tier === 'plus').length,
+    b2b: rows.filter(r => r.tier === 'b2b').length
+  };
+}
+
+// ---- Newsletter Send (shared by cron + admin test) ----
+
+export interface NewsletterSendResult {
+  success: boolean;
+  total: number;
+  sent: number;
+  errors: Array<{ email: string; error: string }>;
+  messageId?: string;
+}
+
+export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSendResult> {
+  if (!BREVO_API_KEY || !BREVO_FROM_EMAIL) {
+    return { success: false, total: 1, sent: 0, errors: [{ email: toEmail, error: 'Brevo env vars not configured' }] };
+  }
+
+  // Get the hero story
+  const { data: storyData, error: storyError } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('id,title,subtitle,body_markdown,summary,category,emoji,impact_score,reading_time_min')
+    .eq('is_hero', true)
+    .order('published_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (storyError || !storyData) {
+    return { success: false, total: 1, sent: 0, errors: [{ email: toEmail, error: 'No hero story found' }] };
+  }
+
+  const story = storyData as Record<string, unknown>;
+  const title = (story.title as string) || 'Keine Titel';
+  const summary = (story.summary as string) || (story.subtitle as string) || '';
+  const imageUrl = (story.image_url as string) || '';
+  const emojiFallback = imageUrl
+    ? `<img src="${imageUrl}" alt="" style="width:120px;height:120px;object-fit:cover;border-radius:8px;margin-bottom:16px;display:block;" />`
+    : '<div style="font-size:48px;line-height:1;margin-bottom:16px;">✨</div>';
+  const impactScore = story.impact_score || '?';
+  const readingMinutes = story.reading_time_min || '?';
+  const category = (story.category as string) || 'Allgemein';
+  const storyId = story.id as string;
+  const slug = `${title}-${storyId.slice(0, 8)}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+  const categoryColor: Record<string, string> = {
+    klima: '#5A8F6F', gesundheit: '#C96A7B', wissenschaft: '#5A8FA0',
+    gemeinschaft: '#5A8FA0', tiere: '#8A7FB0', kultur: '#C4995A', innovation: '#5A8FA0'
+  };
+  const color = categoryColor[category] || '#C4622D';
+
+  const html = `<!DOCTYPE html>
+<html lang="de">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background-color:#F5F0E8;font-family:Georgia,'Times New Roman',serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F5F0E8;">
+<tr><td align="center" style="padding:40px 16px;">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#fff;border-radius:8px;overflow:hidden;">
+<tr><td style="background-color:#C4622D;padding:28px 36px 24px;">
+<h1 style="margin:0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#fff;">NurEine</h1>
+<p style="margin:4px 0 0;font-size:14px;color:#F5E6D8;font-style:italic;">TEST-NEWSLETTER — Die gute Nachricht des Tages</p>
+</td></tr>
+<tr><td style="padding:36px;">
+${emojiFallback}
+<span style="display:inline-block;background-color:${color};color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;padding:4px 10px;border-radius:4px;margin-bottom:12px;">${category}</span>
+<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;font-weight:700;color:#1A1815;line-height:1.3;">${title}</h2>
+<p style="margin:0 0 20px;font-size:15px;color:#5C5650;line-height:1.6;">${summary}</p>
+<table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+<tr><td style="padding-right:20px;"><span style="font-size:13px;color:#6B6560;"><strong>Impact:</strong> ${impactScore}/100</span></td>
+<td><span style="font-size:13px;color:#6B6560;"><strong>Lesezeit:</strong> ${readingMinutes} Min.</span></td></tr>
+</table>
+<p style="margin:0;font-size:12px;color:#8A8480;line-height:1.5;">Dies ist ein Test-Newsletter, gesendet aus dem Admin-Dashboard.</p>
+</td></tr>
+<tr><td style="padding:24px 36px 32px;">
+<p style="margin:0;font-size:12px;color:#8A8480;line-height:1.5;">NurEine — Gute Nachrichten. Jeden Tag exakt eine.</p>
+</td></tr>
+</table>
+</td></tr></table></body></html>`;
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'api-key': BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        sender: { name: BREVO_FROM_NAME || 'NurEine', email: BREVO_FROM_EMAIL },
+        to: [{ email: toEmail }],
+        subject: `[TEST] NurEine — ${title}`,
+        htmlContent: html
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      return { success: false, total: 1, sent: 0, errors: [{ email: toEmail, error: `Brevo error: ${errText}` }] };
+    }
+
+    const result = await response.json();
+    return {
+      success: true,
+      total: 1,
+      sent: 1,
+      errors: [],
+      messageId: result.messageId
+    };
+  } catch (err) {
+    return { success: false, total: 1, sent: 0, errors: [{ email: toEmail, error: String(err) }] };
+  }
+}
+
+// ---- Admin Auth ----
 import { timingSafeEqual } from 'node:crypto';
 
 export async function verifyAdminLogin(username: string, password: string): Promise<boolean> {

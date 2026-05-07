@@ -26,7 +26,7 @@
         opacity: 0.8;"
 		></div>
 
-		<div class="relative mx-auto max-w-[860px] px-6 lg:px-10 pt-12 lg:pt-20 pb-10">
+		<div class="relative mx-auto max-w-[860px] px-4 sm:px-6 lg:px-10 pt-10 sm:pt-12 lg:pt-20 pb-8 sm:pb-10">
 			<a
 				href={base + '/'}
 				class="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] hover:opacity-70 rise"
@@ -48,21 +48,21 @@
 			</div>
 
 			<h1
-				class="serif mt-6 leading-[1.05] tracking-tight text-[2.4rem] sm:text-[3.2rem] lg:text-[4.2rem] rise rise-d2"
+				class="serif mt-6 leading-[1.05] tracking-tight text-[1.8rem] sm:text-[2.4rem] lg:text-[4.2rem] rise rise-d2"
 				style="color: var(--color-ink); font-weight: 500;"
 			>
 				{story.title}
 			</h1>
 
 			<p
-				class="mt-6 text-xl lg:text-2xl leading-snug max-w-[55ch] rise rise-d3"
+				class="mt-6 text-base sm:text-xl lg:text-2xl leading-snug max-w-[55ch] rise rise-d3"
 				style="color: var(--color-ink-soft); font-family: var(--font-serif); font-style: italic;"
 			>
 				{story.dek}
 			</p>
 
 			<div
-				class="mt-10 pt-6 flex flex-wrap items-center gap-6 text-xs rise rise-d4"
+				class="mt-8 sm:mt-10 pt-4 sm:pt-6 flex flex-wrap items-center gap-4 sm:gap-6 text-xs rise rise-d4"
 				style="border-top: 1px solid var(--color-rule); color: var(--color-muted);"
 			>
 				<span>{formatDate(story.publishedAt)}</span>
@@ -81,7 +81,7 @@
 	</header>
 
 	<!-- Body -->
-	<div class="relative mx-auto max-w-[680px] px-6 lg:px-0 prose-nureine">
+	<div class="relative mx-auto max-w-[680px] px-4 sm:px-6 lg:px-0 prose-nureine">
 		{#each paras as para, i (i)}
 			{#if i === 0}
 				<p class="dropcap" style="font-size: 1.28rem !important;">
@@ -94,7 +94,7 @@
 
 		<!-- Impact callout -->
 		<aside
-			class="not-prose my-12 p-8 rounded-[6px]"
+			class="not-prose my-8 sm:my-12 p-6 sm:p-8 rounded-[6px]"
 			style="background: var(--color-canvas-soft); border-left: 3px solid {tone.fg};"
 		>
 			<p
@@ -105,7 +105,7 @@
 			</p>
 			<div class="mt-3 flex items-baseline gap-3">
 				<span
-					class="serif tnum text-5xl"
+					class="serif tnum text-4xl sm:text-5xl"
 					style="color: var(--color-ink); font-weight: 500;"
 				>
 					{story.impactScore}
@@ -134,13 +134,13 @@
 
 	<!-- Nav prev/next -->
 	<nav
-		class="mx-auto max-w-[860px] px-6 lg:px-10 mt-20 grid grid-cols-2 gap-4"
+		class="mx-auto max-w-[860px] px-4 sm:px-6 lg:px-10 mt-14 sm:mt-20 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
 		aria-label="Weitere Geschichten"
 	>
 		{#if data.prev}
 			<a
 				href={base + '/geschichte/' + data.prev.slug}
-				class="paper p-6 rounded-[6px] block hover:opacity-90"
+				class="paper p-4 sm:p-6 rounded-[6px] block hover:opacity-90"
 				style="border: 1px solid var(--color-rule);"
 			>
 				<p class="text-[11px] uppercase tracking-[0.18em]" style="color: var(--color-faint);">
@@ -154,7 +154,7 @@
 		{#if data.next}
 			<a
 				href={base + '/geschichte/' + data.next.slug}
-				class="paper p-6 rounded-[6px] block hover:opacity-90 text-right"
+				class="paper p-4 sm:p-6 rounded-[6px] block hover:opacity-90 text-right"
 				style="border: 1px solid var(--color-rule);"
 			>
 				<p class="text-[11px] uppercase tracking-[0.18em]" style="color: var(--color-faint);">
@@ -169,14 +169,14 @@
 
 	<!-- Related -->
 	{#if data.related.length}
-		<section class="mx-auto max-w-[1180px] px-6 lg:px-10 mt-24">
+		<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 mt-14 sm:mt-24">
 			<h2
-				class="serif text-2xl mb-8"
+				class="serif text-xl sm:text-2xl mb-6 sm:mb-8"
 				style="color: var(--color-ink); font-weight: 500;"
 			>
 				Weiteres aus {story.category}
 			</h2>
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
 				{#each data.related as r (r.slug)}
 					<StoryCard story={r} />
 				{/each}

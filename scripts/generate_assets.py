@@ -10,7 +10,7 @@ from pathlib import Path
 from PIL import Image
 import re
 
-PROJECT = Path("/Users/aaronpfutzner/Dateien - Local/lichtblick")
+PROJECT = Path("/Users/aaronpfutzner/Dateien - Local/NurEine")
 IMAGES = PROJECT / "static" / "images"
 IMAGES.mkdir(parents=True, exist_ok=True)
 

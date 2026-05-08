@@ -11,7 +11,7 @@ Bevor du Code schreibst: Lies ARCHITECTURE.md und BUSINESS.md.
 ## Tech Stack (nicht ändern ohne Grund)
 - Frontend: SvelteKit + TypeScript, deployed auf Vercel
 - DB: Supabase (PostgreSQL + Edge Functions)
-- KI: DeepSeek Chat (Textanalyse) + OpenAI DALL-E 3 (Bildgenerierung)
+- KI: DeepSeek Chat (Textanalyse)
 - Automatisierung: GitHub Actions Cronjobs
 - Email: Brevo API
 - Karte: Leaflet.js
@@ -29,7 +29,7 @@ Bevor du Code schreibst: Lies ARCHITECTURE.md und BUSINESS.md.
 ## Environment Variables
 Alle in .env.example dokumentiert. Nie hardcoden. Nie committen.
 Benötigt: PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY,
-SUPABASE_SERVICE_KEY, DEEPSEEK_API_KEY, OPENAI_API_KEY,
+SUPABASE_SERVICE_KEY, DEEPSEEK_API_KEY,
 BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME
 
 ## Cronjob-Zeiten (UTC → CET)

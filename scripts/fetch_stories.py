@@ -3,17 +3,15 @@
 NurEine — Story Fetcher
 
 Fetches RSS feeds, analyzes articles with DeepSeek Chat,
-generates images with DALL-E 3, uploads to Supabase Storage,
 and inserts positive news stories into Supabase.
 
 Usage:
-    SUPABASE_URL=https://... SUPABASE_SERVICE_KEY=... DEEPSEEK_API_KEY=... OPENAI_API_KEY=... python scripts/fetch_stories.py
+    SUPABASE_URL=https://... SUPABASE_SERVICE_KEY=... DEEPSEEK_API_KEY=... python scripts/fetch_stories.py
 
 Environment variables:
     SUPABASE_URL          — Supabase project URL (e.g. https://abc.supabase.co)
     SUPABASE_SERVICE_KEY  — Supabase service_role key (full access)
     DEEPSEEK_API_KEY      — DeepSeek API key
-    OPENAI_API_KEY        — OpenAI API key (for DALL-E 3 image generation)
 """
 
 from __future__ import annotations
@@ -53,16 +51,10 @@ load_dotenv()
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 DEEPSEEK_MODEL = "deepseek-chat"
 DEEPSEEK_ENDPOINT = "https://api.deepseek.com/chat/completions"
 
-# DALL-E 3
-DALLE_MODEL = "dall-e-3"
-DALLE_ENDPOINT = "https://api.openai.com/v1/images/generations"
-DALLE_SIZE = "1024x1024"
-DALLE_QUALITY = "standard"
 # Supabase Storage bucket for story images
 STORAGE_BUCKET = "story_images"
 
@@ -70,8 +62,6 @@ STORAGE_BUCKET = "story_images"
 MAX_ARTICLES_PER_RUN = 100
 # Pause between API calls (seconds) to stay within rate limits
 API_DELAY_SECONDS = 1.5
-# Extra delay after image generation (DALL-E rate limits)
-IMAGE_API_DELAY_SECONDS = 2.0
 
 MISSING_ENVVARS: list[str] = []
 if not SUPABASE_URL:
@@ -80,8 +70,6 @@ if not SUPABASE_SERVICE_KEY:
     MISSING_ENVVARS.append("SUPABASE_SERVICE_KEY")
 if not DEEPSEEK_API_KEY:
     MISSING_ENVVARS.append("DEEPSEEK_API_KEY")
-if not OPENAI_API_KEY:
-    MISSING_ENVVARS.append("OPENAI_API_KEY")
 
 if MISSING_ENVVARS:
     log.error(
@@ -209,43 +197,6 @@ def call_deepseek(prompt: str) -> str | None:
         return None
 
 
-def generate_image(image_prompt: str) -> bytes | None:
-    """Generate an image using DALL-E 3 and return the raw image bytes.
-
-    Returns None if generation fails.
-    """
-    headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    payload: dict[str, Any] = {
-        "model": DALLE_MODEL,
-        "prompt": image_prompt,
-        "n": 1,
-        "size": DALLE_SIZE,
-        "quality": DALLE_QUALITY,
-        "response_format": "url",
-    }
-    try:
-        resp = requests.post(DALLE_ENDPOINT, json=payload, headers=headers, timeout=120)
-        resp.raise_for_status()
-        data = resp.json()
-        image_url = data.get("data", [{}])[0].get("url")
-        if not image_url:
-            log.warning("DALL-E returned no image URL: %s", data)
-            return None
-
-        # Download the generated image
-        log.info("  Downloading generated image from OpenAI...")
-        img_resp = requests.get(image_url, timeout=60)
-        img_resp.raise_for_status()
-        return img_resp.content
-
-    except requests.RequestException as exc:
-        log.error("DALL-E image generation failed: %s", exc)
-        return None
-
-
 # ---------------------------------------------------------------------------
 # DeepSeek prompt — analysis + image prompt
 # ---------------------------------------------------------------------------
@@ -356,34 +307,12 @@ def parse_ai_response(text: str | None) -> dict[str, Any] | None:
 # Image pipeline: generate + upload
 # ---------------------------------------------------------------------------
 def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None:
-    """Generate an image via DALL-E and upload it to Supabase Storage.
+    """Image generation disabled — no DALL-E / OpenAI dependency.
 
-    Returns the public URL of the uploaded image, or None on failure.
+    Returns None. Kept as a no-op to avoid refactoring the main loop.
     """
-    if not image_prompt or not image_prompt.strip():
-        log.warning("  Empty image prompt — skipping image generation.")
-        return None
-
-    log.info("  Generating image: %.100s...", image_prompt)
-
-    image_bytes = generate_image(image_prompt)
-    if not image_bytes:
-        log.warning("  Image generation failed for: %.60s", story_title)
-        return None
-
-    # Build a clean filename: story-images/story-{uuid8}.png
-    short_id = uuid.uuid4().hex[:12]
-    safe_title = (
-        story_title.lower()
-        .replace(" ", "-")
-        .replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
-    )
-    # Limit filename length and remove unsafe chars
-    safe_title = "".join(c for c in safe_title if c.isalnum() or c == "-")[:40]
-    filename = f"story-images/{safe_title}-{short_id}.png"
-
-    public_url = supabase_upload_image(image_bytes, filename)
-    return public_url
+    log.info("  Image generation disabled — skipping.")
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -515,7 +444,7 @@ def run() -> None:
 
             story_title = result.get("title", "")
 
-            # 5. Generate and upload image (non-blocking: store story even if image fails)
+            # 5. Generate and upload image (disabled)
             image_url: str | None = None
             image_prompt = result.get("image_prompt", "")
             if image_prompt:
@@ -527,7 +456,6 @@ def run() -> None:
                     if first_error is None:
                         first_error = str(exc)
                     # Continue — we still want to insert the story without an image
-                time.sleep(IMAGE_API_DELAY_SECONDS)
             else:
                 log.info("  No image_prompt in AI response — skipping image generation.")
 
@@ -605,7 +533,7 @@ def run() -> None:
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     log.info("=" * 60)
-    log.info("NurEine — Story Fetcher (with DALL-E image pipeline)")
+    log.info("NurEine — Story Fetcher")
     log.info("=" * 60)
     try:
         run()

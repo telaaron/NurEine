@@ -20,18 +20,17 @@
 	<meta property="og:title" content="NurEine — Gute Nachrichten. Jeden Tag eine." />
 	<meta property="og:description" content="Eine Geschichte am Tag. Mehr nicht." />
 	<meta property="og:type" content="website" />
-	<meta property="og:image" content="{imgPath}/logo-360.png" />
-	<meta property="og:image:width" content="360" />
-	<meta property="og:image:height" content="78" />
+	<meta property="og:image" content="{base}/NurEine.svg" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
 	<meta name="twitter:card" content="summary" />
 
 	<!-- Canonical -->
 	<link rel="canonical" href="https://nureine.de" />
 
-	<!-- Favicon: modern SVG + legacy ICO + PWA apple-touch-icon -->
-	<link rel="icon" type="image/svg+xml" href="{imgPath}/favicon.svg" />
-	<link rel="icon" sizes="32x32" href="{imgPath}/favicon.ico" />
-	<link rel="apple-touch-icon" sizes="180x180" href="{imgPath}/favicon-180.png" />
+	<!-- Favicon: NurEine SVG logo -->
+	<link rel="icon" type="image/svg+xml" href="{base}/NurEine.svg" />
+	<link rel="apple-touch-icon" href="{base}/NurEine.svg" />
 
 	<!-- Web app capabilities -->
 	<meta name="theme-color" content="#f5f1ea" />

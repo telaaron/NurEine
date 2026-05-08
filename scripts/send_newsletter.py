@@ -82,13 +82,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <!-- Main card -->
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:8px;overflow:hidden;border:1px solid rgba(26,24,21,0.12);">
           <!-- Image header -->
-          <tr>
-            <td style="padding:0;">
-              <!--[if mso]><div style="display:none;"><![endif]-->
-              <div style="margin:0;font-size:72px;line-height:1;text-align:center;padding:32px 36px 0;filter:saturate(0.85);">{emoji}</div>
-              <!--[if mso]></div><![endif]-->
-            </td>
-          </tr>
+          {header}
           <!-- Body -->
           <tr>
             <td style="padding:20px 36px 28px;">
@@ -216,9 +210,18 @@ def build_html_body(story: dict, subscriber_email: str, confirmation_token: str)
     }.get(tone, "#c87340")
 
     summary = story.get("summary", "")
+    image_url = story.get("image_url", "")
+    emoji = story.get("emoji", "")
+    # Build header: use <img> if image_url is set, else emoji
+    if image_url:
+        header_html = f'<td style="padding:0;"><img src="{image_url}" alt="" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;border-radius:8px 8px 0 0;" /></td>'
+    elif emoji:
+        header_html = f'<td style="padding:0;"><div style="margin:0;font-size:72px;line-height:1;text-align:center;padding:20px 36px 0;filter:saturate(0.85);">{emoji}</div></td>'
+    else:
+        header_html = ''
 
     return HTML_TEMPLATE.format(
-        emoji=story.get("emoji", ""),
+        header=header_html,
         category=category,
         category_color=category_color,
         title=story.get("title", ""),
@@ -294,7 +297,7 @@ def get_hero_story(is_hero: bool = True, limit: int = 1) -> dict | None:
     params = {
         "is_hero": f"eq.{str(is_hero).lower()}",
         "limit": str(limit),
-        "select": "id,title,subtitle,body_markdown,summary,category,emoji,impact_score,reading_time_min",
+        "select": "id,title,subtitle,body_markdown,summary,category,emoji,image_url,impact_score,reading_time_min",
     }
     results = supabase_get("nureine_stories", params=params)
     if isinstance(results, list) and results:

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from './supabase/client';
 import { ADMIN_USERNAME, ADMIN_PASSWORD, BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME } from '$env/static/private';
+import { PUBLIC_BASE_URL } from '$env/static/public';
 
 // ---- Types ----
 
@@ -21,6 +22,7 @@ export type SupabaseStory = {
   impact_durability: number | null;
   impact_evidence: number | null;
   reading_time_min: number;
+  emoji: string | null;
   image_url: string | null;
   is_hero: boolean;
   published_at: string;
@@ -48,6 +50,8 @@ export type StoryResult = {
   impactNote: string;
   tone: 'amber' | 'sage' | 'rose' | 'sky';
   hero: string;
+  imageUrl: string | null;
+  image_url: string | null;
   pinned: number;
   local: number;
   featuredDate: string | null;
@@ -100,7 +104,9 @@ function mapStory(row: SupabaseStory): StoryResult {
     impactScore: row.impact_score,
     impactNote: beschreibeWirkung(row.impact_score, row.impact_durability),
     tone,
-    hero: row.image_url || '✨',
+    hero: row.image_url || row.emoji || '✨',
+    imageUrl: row.image_url,
+    image_url: row.image_url,
     pinned: 0,
     local: 0,
     featuredDate: row.is_hero ? row.published_at : null,
@@ -255,7 +261,7 @@ export async function insertStory(data: Record<string, any>): Promise<{ lastInse
     impact_durability: data.impact_durability,
     impact_evidence: data.impact_evidence,
     reading_time_min: data.readingMinutes || data.reading_time_min || 3,
-    image_url: data.hero || data.image_url || null,
+    image_url: data.imageUrl || data.image_url || data.hero || null,
     is_hero: data.featuredDate ? true : false,
     published_at: data.publishedAt || data.published_at || new Date().toISOString()
   }).select('id').single();
@@ -292,6 +298,7 @@ export async function updateStory(id: string, data: Record<string, any>) {
   if (data.impact_evidence !== undefined) updateData.impact_evidence = data.impact_evidence;
   if (data.readingMinutes !== undefined) updateData.reading_time_min = data.readingMinutes;
   if (data.reading_time_min !== undefined) updateData.reading_time_min = data.reading_time_min;
+  if (data.imageUrl !== undefined) updateData.image_url = data.imageUrl;
   if (data.hero !== undefined) updateData.image_url = data.hero;
   if (data.image_url !== undefined) updateData.image_url = data.image_url;
   if (data.featuredDate !== undefined) updateData.is_hero = data.featuredDate ? true : false;
@@ -362,7 +369,7 @@ export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSen
   // Get the hero story
   const { data: storyData, error: storyError } = await supabaseAdmin
     .from('nureine_stories')
-    .select('id,title,subtitle,body_markdown,summary,category,emoji,impact_score,reading_time_min')
+    .select('id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min')
     .eq('is_hero', true)
     .order('published_at', { ascending: false })
     .limit(1)
@@ -373,50 +380,79 @@ export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSen
   }
 
   const story = storyData as Record<string, unknown>;
-  const title = (story.title as string) || 'Keine Titel';
-  const summary = (story.summary as string) || (story.subtitle as string) || '';
+  const title = (story.title as string) || 'Kein Titel';
+  const dek = (story.subtitle as string) || '';
+  const summary = (story.summary as string) || '';
   const imageUrl = (story.image_url as string) || '';
-  const emojiFallback = imageUrl
-    ? `<img src="${imageUrl}" alt="" style="width:120px;height:120px;object-fit:cover;border-radius:8px;margin-bottom:16px;display:block;" />`
-    : '<div style="font-size:48px;line-height:1;margin-bottom:16px;">✨</div>';
+  const emojiData = (story.emoji as string) || '';
+  const emojiHeader = emojiData
+    ? `<div style="margin:0;font-size:72px;line-height:1;text-align:center;padding:32px 36px 0;filter:saturate(0.85);">${emojiData}</div>`
+    : `<div style="margin:0;font-size:72px;line-height:1;text-align:center;padding:32px 36px 0;filter:saturate(0.85);">\u2728</div>`;
   const impactScore = story.impact_score || '?';
   const readingMinutes = story.reading_time_min || '?';
   const category = (story.category as string) || 'Allgemein';
   const storyId = story.id as string;
   const slug = `${title}-${storyId.slice(0, 8)}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const storyUrl = `${PUBLIC_BASE_URL || 'https://nureine.de'}/geschichte/${slug}`;
 
-  const categoryColor: Record<string, string> = {
-    klima: '#5A8F6F', gesundheit: '#C96A7B', wissenschaft: '#5A8FA0',
-    gemeinschaft: '#5A8FA0', tiere: '#8A7FB0', kultur: '#C4995A', innovation: '#5A8FA0'
+  // Category -> Tone mapping (matches website toneStyles)
+  const toneMap: Record<string, string> = {
+    klima: 'sage', gesundheit: 'rose', wissenschaft: 'sky',
+    gemeinschaft: 'amber', tiere: 'sage', kultur: 'amber', innovation: 'sky'
   };
-  const color = categoryColor[category] || '#C4622D';
+  const tone = toneMap[category] || 'amber';
+  const categoryColor: Record<string, string> = {
+    amber: '#c87340', sage: '#5a7a52', rose: '#b87a7a', sky: '#6c8aa8'
+  };
+  const color = categoryColor[tone] || '#c87340';
 
   const html = `<!DOCTYPE html>
 <html lang="de">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
-<body style="margin:0;padding:0;background-color:#F5F0E8;font-family:Georgia,'Times New Roman',serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F5F0E8;">
+<body style="margin:0;padding:0;background-color:#f5f1ea;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;">
 <tr><td align="center" style="padding:40px 16px;">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#fff;border-radius:8px;overflow:hidden;">
-<tr><td style="background-color:#C4622D;padding:28px 36px 24px;">
-<h1 style="margin:0;font-family:Georgia,serif;font-size:28px;font-weight:700;color:#fff;">NurEine</h1>
-<p style="margin:4px 0 0;font-size:14px;color:#F5E6D8;font-style:italic;">TEST-NEWSLETTER — Die gute Nachricht des Tages</p>
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:8px;overflow:hidden;border:1px solid rgba(26,24,21,0.12);">
+<tr><td style="padding:0;">
+${emojiHeader}
 </td></tr>
-<tr><td style="padding:36px;">
-${emojiFallback}
-<span style="display:inline-block;background-color:${color};color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;padding:4px 10px;border-radius:4px;margin-bottom:12px;">${category}</span>
-<h2 style="margin:0 0 8px;font-family:Georgia,serif;font-size:24px;font-weight:700;color:#1A1815;line-height:1.3;">${title}</h2>
-<p style="margin:0 0 20px;font-size:15px;color:#5C5650;line-height:1.6;">${summary}</p>
-<table cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
-<tr><td style="padding-right:20px;"><span style="font-size:13px;color:#6B6560;"><strong>Impact:</strong> ${impactScore}/100</span></td>
-<td><span style="font-size:13px;color:#6B6560;"><strong>Lesezeit:</strong> ${readingMinutes} Min.</span></td></tr>
+<tr><td style="padding:20px 36px 28px;">
+<!-- Test badge -->
+<table cellpadding="0" cellspacing="0" style="margin-bottom:16px;"><tr><td>
+<span style="display:inline-block;background-color:#c87340;color:#faf6ee;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.16em;padding:3px 10px;border-radius:9999px;">TEST</span>
+</td></tr></table>
+<!-- Category -->
+<table cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>
+<span style="display:inline-block;background-color:${color};color:#faf6ee;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.16em;padding:3px 10px;border-radius:9999px;">${category}</span>
+</td></tr></table>
+<h2 style="margin:0 0 12px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:26px;font-weight:500;color:#1a1815;line-height:1.18;letter-spacing:-0.01em;">${title}</h2>
+${dek ? `<p style="margin:0 0 20px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:17px;color:#3a342c;line-height:1.45;">${dek}</p>` : ''}
+<p style="margin:0 0 24px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.65;">${summary || '<em>Keine Zusammenfassung vorhanden.</em>'}</p>
+</td></tr>
+<!-- Meta strip -->
+<tr><td style="padding:0 36px 0;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0;"/></td></tr>
+<tr><td style="padding:16px 36px 0;">
+<table cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+<tr><td style="padding-right:24px;"><span style="font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;"><strong style="color:#1a1815;">Wirkung</strong> ${impactScore}/100</span></td>
+<td><span style="font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;"><strong style="color:#1a1815;">Lesezeit</strong> ${readingMinutes} Min.</span></td></tr>
 </table>
-<p style="margin:0;font-size:12px;color:#8A8480;line-height:1.5;">Dies ist ein Test-Newsletter, gesendet aus dem Admin-Dashboard.</p>
 </td></tr>
+<!-- CTA -->
+<tr><td style="padding:0 36px 28px;">
+<table cellpadding="0" cellspacing="0"><tr>
+<td style="background-color:#1a1815;border-radius:9999px;text-align:center;">
+<a href="${storyUrl}" target="_blank" style="display:inline-block;padding:14px 36px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:500;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen &rarr;</a>
+</td>
+</tr></table>
+</td></tr>
+<!-- Divider -->
+<tr><td style="padding:0 36px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0;"/></td></tr>
+<!-- Footer -->
 <tr><td style="padding:24px 36px 32px;">
-<p style="margin:0;font-size:12px;color:#8A8480;line-height:1.5;">NurEine — Gute Nachrichten. Jeden Tag exakt eine.</p>
+<p style="margin:0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.5;">Test-Newsletter, gesendet aus dem Admin-Dashboard.</p>
 </td></tr>
 </table>
+<p style="margin:16px 0 0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;">NurEine &mdash; Eine Geschichte am Tag. Mehr nicht.</p>
 </td></tr></table></body></html>`;
 
   try {

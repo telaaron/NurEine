@@ -11,11 +11,12 @@ Bevor du Code schreibst: Lies ARCHITECTURE.md und BUSINESS.md.
 ## Tech Stack (nicht ändern ohne Grund)
 - Frontend: SvelteKit + TypeScript, deployed auf Vercel
 - DB: Supabase (PostgreSQL + Edge Functions)
-- KI: Google Gemini Flash 2.5
+- KI: DeepSeek Chat (Textanalyse) + OpenAI DALL-E 3 (Bildgenerierung)
 - Automatisierung: GitHub Actions Cronjobs
 - Email: Brevo API
 - Karte: Leaflet.js
 - Geolokation: Browser Geolocation API + ip-api.com Fallback
+- Bildspeicher: Supabase Storage Bucket (story_images, public)
 
 ## Code-Stil
 - TypeScript strict mode überall
@@ -28,14 +29,14 @@ Bevor du Code schreibst: Lies ARCHITECTURE.md und BUSINESS.md.
 ## Environment Variables
 Alle in .env.example dokumentiert. Nie hardcoden. Nie committen.
 Benötigt: PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY,
-SUPABASE_SERVICE_KEY, GEMINI_API_KEY, BREVO_API_KEY,
-BREVO_FROM_EMAIL, BREVO_FROM_NAME
+SUPABASE_SERVICE_KEY, DEEPSEEK_API_KEY, OPENAI_API_KEY,
+BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME
 
-## Cronjob-Zeiten (UTC)
-- 05:30 — Hero-Story wählen (select-hero.yml)
-- 06/10/14/18 — Stories fetchen & scoren (fetch-stories.yml)
-- 07:00 sonntags — Sonntags-Brief (newsletter-sunday.yml)
-- 07:30 täglich — Plus-Newsletter (newsletter-daily-plus.yml)
+## Cronjob-Zeiten (UTC → CET)
+- 04:00 UTC (06:30 CET) — Hero-Story wählen (select-hero.yml)
+- 06/10/14/18 UTC — Stories fetchen & scoren (fetch-stories.yml)
+- 05:00 UTC (07:00 CET) täglich — Plus-Newsletter (newsletter-daily-plus.yml)
+- 07:00 UTC sonntags — Sonntags-Brief (newsletter-sunday.yml)
 
 ## Aktueller Status
 Alle 16 Tasks der initialen Architektur sind implementiert.
@@ -48,7 +49,10 @@ Noch offen: echte API-Keys, Supabase-Projekt live, Domain.
 INSERT INTO rss_sources (name, url, language, region, region_code) VALUES (...);
 
 ### Wirkungsindex-Formel anpassen
-→ scripts/fetch_stories.py, Zeile ~80, Gemini-Prompt-Block
+→ scripts/fetch_stories.py, ANALYSIS_PROMPT_TEMPLATE, impact_score-Berechnung
+
+### Bildstil ändern
+→ scripts/fetch_stories.py, ANALYSIS_PROMPT_TEMPLATE, image_prompt-Definition
 
 ### Neues Newsletter-Template
 → scripts/send_newsletter.py, Funktion build_html()

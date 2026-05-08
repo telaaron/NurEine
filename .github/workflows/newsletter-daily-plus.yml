@@ -2,7 +2,7 @@ name: Daily Plus Newsletter
 
 on:
   schedule:
-    - cron: '30 7 * * *'  # 07:30 UTC daily
+    - cron: '0 5 * * *'  # 05:00 UTC = 07:00 CET daily
   workflow_dispatch:
 
 jobs:

@@ -28,84 +28,93 @@ function buildConfirmationEmailHtml(token: string): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bestätige deine Anmeldung</title>
+  <title>Best\u00e4tige deine Anmeldung</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f5f1ea;font-family:'Inter','Helvetica Neue',Arial,sans-serif;">
+<body style="margin:0;padding:0;background-color:#f5f1ea;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;padding:40px 20px;">
     <tr>
       <td align="center">
-        <table width="560" cellpadding="0" cellspacing="0" style="background-color:#faf6ee;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(26,24,21,0.08);">
+        <table width="560" cellpadding="0" cellspacing="0" style="background-color:#faf6ee;border-radius:8px;overflow:hidden;border:1px solid rgba(26,24,21,0.12);">
           <!-- Header -->
           <tr>
-            <td style="background:linear-gradient(135deg,#f5b041,#e67e22);padding:32px 40px;text-align:center;">
-              <h1 style="margin:0;font-family:'Fraunces','Georgia',serif;font-size:28px;font-weight:700;color:#1a1815;">
-                📰 NurEine
+            <td style="padding:36px 40px 28px;text-align:center;">
+              <h1 style="margin:0;font-family:'Fraunces','Cambria',Georgia,serif;font-size:24px;font-weight:500;color:#1a1815;letter-spacing:-0.01em;">
+                NurEine
               </h1>
-              <p style="margin:8px 0 0;font-size:16px;color:#1a1815;opacity:0.85;">
-                Gute Nachrichten f\u00fcr eine bessere Welt
+              <p style="margin:4px 0 0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-transform:uppercase;letter-spacing:0.18em;">
+                t\u00e4gliche Dosis Hoffnung
               </p>
             </td>
           </tr>
-
+          <!-- Divider -->
+          <tr>
+            <td style="padding:0 40px;">
+              <hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0;">
+            </td>
+          </tr>
           <!-- Body -->
           <tr>
-            <td style="padding:40px;">
-              <h2 style="margin:0 0 16px;font-family:'Fraunces','Georgia',serif;font-size:22px;font-weight:600;color:#1a1815;">
+            <td style="padding:32px 40px;">
+              <h2 style="margin:0 0 12px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:22px;font-weight:500;color:#1a1815;line-height:1.2;">
                 Fast geschafft!
               </h2>
-              <p style="margin:0 0 20px;font-size:16px;line-height:1.6;color:#4a4845;">
+              <p style="margin:0 0 16px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.65;color:#3a342c;">
                 Danke f\u00fcr deine Anmeldung zum NurEine-Newsletter.
                 Wir freuen uns, dass du dabei bist!
               </p>
-              <p style="margin:0 0 24px;font-size:16px;line-height:1.6;color:#4a4845;">
-                Bitte best\u00e4tige deine E-Mail-Adresse mit einem Klick auf den Button unten,
-                damit wir dir ab sofort t\u00e4glich eine Portion gute Nachrichten schicken k\u00f6nnen.
+              <p style="margin:0 0 28px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.65;color:#3a342c;">
+                Bitte best\u00e4tige deine E-Mail-Adresse, damit wir dir ab sofort gute Nachrichten schicken k\u00f6nnen.
               </p>
 
               <!-- CTA Button -->
               <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;">
                 <tr>
-                  <td align="center" style="background-color:#1a1815;border-radius:8px;padding:14px 36px;">
-                    <a href="${confirmUrl}" style="color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;display:inline-block;">
-                      E-Mail best\u00e4tigen
+                  <td align="center" style="background-color:#1a1815;border-radius:9999px;padding:14px 36px;">
+                    <a href="${confirmUrl}" style="display:inline-block;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:500;color:#faf6ee;text-decoration:none;">
+                      E-Mail best\u00e4tigen &rarr;
                     </a>
                   </td>
                 </tr>
               </table>
 
               <!-- Fallback link -->
-              <p style="margin:0 0 24px;font-size:14px;line-height:1.5;color:#7a7875;">
+              <p style="margin:0 0 8px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.5;color:#6b6359;">
                 Falls der Button nicht funktioniert, kopiere bitte diesen Link in deinen Browser:
               </p>
-              <p style="margin:0 0 32px;font-size:13px;line-height:1.5;color:#7a7875;word-break:break-all;background-color:#f5f1ea;padding:12px;border-radius:6px;">
-                <a href="${confirmUrl}" style="color:#e67e22;text-decoration:underline;">${confirmUrl}</a>
+              <p style="margin:0 0 28px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;line-height:1.5;color:#6b6359;word-break:break-all;background-color:#f5f1ea;padding:12px;border-radius:6px;">
+                <a href="${confirmUrl}" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">${confirmUrl}</a>
               </p>
 
-              <hr style="border:none;border-top:1px solid #e0ddd8;margin:0 0 24px;">
+              <hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0 0 24px;">
 
-              <p style="margin:0;font-size:13px;line-height:1.5;color:#7a7875;">
-                Du hast dich nicht angemeldet? Kein Problem &ndash; ignoriere einfach diese E-Mail.
-                Deine E-Mail-Adresse wird automatisch gel\u00f6scht, falls du nicht best\u00e4tigst.
+              <p style="margin:0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;line-height:1.55;color:#9a9087;">
+                Du hast dich nicht angemeldet? Ignoriere einfach diese E-Mail.
+                Deine Adresse wird automatisch gel\u00f6scht, falls du nicht best\u00e4tigst.
               </p>
             </td>
           </tr>
-
+          <!-- Divider -->
+          <tr>
+            <td style="padding:0 40px;">
+              <hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0;">
+            </td>
+          </tr>
           <!-- Footer -->
           <tr>
-            <td style="background-color:#1a1815;padding:24px 40px;text-align:center;">
-              <p style="margin:0;font-size:13px;color:#9a9895;">
-                NurEine &ndash; Gute Nachrichten. Jeden Tag exakt eine.
+            <td style="padding:24px 40px 32px;text-align:center;">
+              <p style="margin:0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;">
+                NurEine &ndash; Eine Geschichte am Tag. Mehr nicht.
               </p>
-              <p style="margin:8px 0 0;font-size:12px;color:#6a6865;">
-                <a href="${BASE_URL}/newsletter" style="color:#f5b041;text-decoration:none;">Newsletter</a>
+              <p style="margin:8px 0 0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;">
+                <a href="${BASE_URL}/newsletter" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">Newsletter</a>
                 &nbsp;&middot;&nbsp;
-                <a href="${BASE_URL}/unsubscribe" style="color:#f5b041;text-decoration:none;">Abmelden</a>
+                <a href="${BASE_URL}/unsubscribe" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">Abmelden</a>
               </p>
             </td>
           </tr>
         </table>
-        <p style="margin:16px 0 0;font-size:12px;color:#9a9895;">
-          &copy; ${new Date().getFullYear()} NurEine. Alle Rechte vorbehalten.
+        <p style="margin:16px 0 0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;">
+          &copy; ${new Date().getFullYear()} NurEine. Ver\u00f6ffentlicht in Teltow, Brandenburg.
         </p>
       </td>
     </tr>

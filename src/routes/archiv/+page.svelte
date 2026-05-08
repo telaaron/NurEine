@@ -59,23 +59,29 @@
 				</button>
 			{/each}
 		</div>
-		<div class="flex items-center gap-2 text-xs" style="color: var(--color-muted);">
+		<div class="flex items-center gap-3 text-xs" style="color: var(--color-muted);">
 			<span class="uppercase tracking-[0.16em]">Sortierung</span>
 			<button
 				type="button"
 				onclick={() => (sortBy = 'date')}
-				class="px-2 py-1 rounded"
-				style="color: {sortBy === 'date' ? 'var(--color-ink)' : 'var(--color-muted)'};
-          border-bottom: 1px solid {sortBy === 'date' ? 'var(--color-amber)' : 'transparent'};"
+				aria-pressed="{sortBy === 'date'}"
+				class="px-3 py-1.5 rounded-full text-sm font-medium transition-all"
+				style="background: {sortBy === 'date' ? 'var(--color-amber)' : 'transparent'};
+				      color: {sortBy === 'date' ? 'var(--color-ink)' : 'var(--color-muted)'};
+				      border: 1px solid {sortBy === 'date' ? 'var(--color-amber)' : 'var(--color-rule)'};
+				      box-shadow: {sortBy === 'date' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none'};"
 			>
 				Datum
 			</button>
 			<button
 				type="button"
 				onclick={() => (sortBy = 'impact')}
-				class="px-2 py-1 rounded"
-				style="color: {sortBy === 'impact' ? 'var(--color-ink)' : 'var(--color-muted)'};
-          border-bottom: 1px solid {sortBy === 'impact' ? 'var(--color-amber)' : 'transparent'};"
+				aria-pressed="{sortBy === 'impact'}"
+				class="px-3 py-1.5 rounded-full text-sm font-medium transition-all"
+				style="background: {sortBy === 'impact' ? 'var(--color-amber)' : 'transparent'};
+				      color: {sortBy === 'impact' ? 'var(--color-ink)' : 'var(--color-muted)'};
+				      border: 1px solid {sortBy === 'impact' ? 'var(--color-amber)' : 'var(--color-rule)'};
+				      box-shadow: {sortBy === 'impact' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none'};"
 			>
 				Wirkung
 			</button>

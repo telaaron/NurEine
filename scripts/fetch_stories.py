@@ -3,15 +3,17 @@
 NurEine — Story Fetcher
 
 Fetches RSS feeds, analyzes articles with DeepSeek Chat,
+generates images with DALL-E 3, uploads to Supabase Storage,
 and inserts positive news stories into Supabase.
 
 Usage:
-    SUPABASE_URL=https://... SUPABASE_SERVICE_KEY=... DEEPSEEK_API_KEY=... python scripts/fetch_stories.py
+    SUPABASE_URL=https://... SUPABASE_SERVICE_KEY=... DEEPSEEK_API_KEY=... OPENAI_API_KEY=... python scripts/fetch_stories.py
 
 Environment variables:
     SUPABASE_URL          — Supabase project URL (e.g. https://abc.supabase.co)
     SUPABASE_SERVICE_KEY  — Supabase service_role key (full access)
     DEEPSEEK_API_KEY      — DeepSeek API key
+    OPENAI_API_KEY        — OpenAI API key (for DALL-E 3 image generation)
 """
 
 from __future__ import annotations
@@ -21,7 +23,9 @@ import logging
 import os
 import sys
 import time
+import uuid
 from datetime import datetime, timezone
+from io import BytesIO
 from typing import Any
 
 import feedparser
@@ -49,14 +53,25 @@ load_dotenv()
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 DEEPSEEK_MODEL = "deepseek-chat"
 DEEPSEEK_ENDPOINT = "https://api.deepseek.com/chat/completions"
+
+# DALL-E 3
+DALLE_MODEL = "dall-e-3"
+DALLE_ENDPOINT = "https://api.openai.com/v1/images/generations"
+DALLE_SIZE = "1024x1024"
+DALLE_QUALITY = "standard"
+# Supabase Storage bucket for story images
+STORAGE_BUCKET = "story_images"
 
 # Safety limit to avoid runaway loops
 MAX_ARTICLES_PER_RUN = 100
 # Pause between API calls (seconds) to stay within rate limits
 API_DELAY_SECONDS = 1.5
+# Extra delay after image generation (DALL-E rate limits)
+IMAGE_API_DELAY_SECONDS = 2.0
 
 MISSING_ENVVARS: list[str] = []
 if not SUPABASE_URL:
@@ -65,6 +80,8 @@ if not SUPABASE_SERVICE_KEY:
     MISSING_ENVVARS.append("SUPABASE_SERVICE_KEY")
 if not DEEPSEEK_API_KEY:
     MISSING_ENVVARS.append("DEEPSEEK_API_KEY")
+if not OPENAI_API_KEY:
+    MISSING_ENVVARS.append("OPENAI_API_KEY")
 
 if MISSING_ENVVARS:
     log.error(
@@ -87,6 +104,16 @@ def supabase_headers() -> dict[str, str]:
     }
 
 
+def supabase_storage_headers(content_type: str = "image/png") -> dict[str, str]:
+    """Return headers for Supabase Storage uploads."""
+    return {
+        "apikey": SUPABASE_SERVICE_KEY,  # type: ignore[arg-type]
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": content_type,
+        "x-upsert": "true",
+    }
+
+
 def supabase_get(table: str, params: dict[str, str] | None = None) -> list[dict[str, Any]]:
     """GET rows from a Supabase table via the PostgREST REST API."""
     url = f"{SUPABASE_URL}/rest/v1/{table}"
@@ -104,6 +131,31 @@ def supabase_post(table: str, data: dict[str, Any]) -> dict[str, Any]:
     if not resp.text:
         return {}
     return resp.json()
+
+
+def supabase_upload_image(image_bytes: bytes, filename: str) -> str | None:
+    """Upload an image to Supabase Storage and return the public URL.
+
+    Returns None if upload fails.
+    """
+    # Upload to: storage/v1/object/{bucket}/{filename}
+    upload_url = f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{filename}"
+    try:
+        resp = requests.post(
+            upload_url,
+            headers=supabase_storage_headers("image/png"),
+            data=image_bytes,
+            timeout=60,
+        )
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        log.error("Failed to upload image to Supabase Storage: %s", exc)
+        return None
+
+    # Construct the public URL
+    public_url = f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{filename}"
+    log.info("  Image uploaded: %s", public_url)
+    return public_url
 
 
 def source_exists(source_url: str) -> bool:
@@ -157,8 +209,45 @@ def call_deepseek(prompt: str) -> str | None:
         return None
 
 
+def generate_image(image_prompt: str) -> bytes | None:
+    """Generate an image using DALL-E 3 and return the raw image bytes.
+
+    Returns None if generation fails.
+    """
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload: dict[str, Any] = {
+        "model": DALLE_MODEL,
+        "prompt": image_prompt,
+        "n": 1,
+        "size": DALLE_SIZE,
+        "quality": DALLE_QUALITY,
+        "response_format": "url",
+    }
+    try:
+        resp = requests.post(DALLE_ENDPOINT, json=payload, headers=headers, timeout=120)
+        resp.raise_for_status()
+        data = resp.json()
+        image_url = data.get("data", [{}])[0].get("url")
+        if not image_url:
+            log.warning("DALL-E returned no image URL: %s", data)
+            return None
+
+        # Download the generated image
+        log.info("  Downloading generated image from OpenAI...")
+        img_resp = requests.get(image_url, timeout=60)
+        img_resp.raise_for_status()
+        return img_resp.content
+
+    except requests.RequestException as exc:
+        log.error("DALL-E image generation failed: %s", exc)
+        return None
+
+
 # ---------------------------------------------------------------------------
-# DeepSeek prompt (exact, as specified)
+# DeepSeek prompt — analysis + image prompt
 # ---------------------------------------------------------------------------
 ANALYSIS_PROMPT_TEMPLATE = """\
 Du bist Redakteur bei NurEine, einer Plattform für bedeutsame Good News.
@@ -192,7 +281,7 @@ lat: Breitengrad (float)
 
 lng: Längengrad (float)
 
-emoji: ein passendes Emoji
+image_prompt: Ein kurzer englischer Prompt für eine Bild-KI (DALL-E 3). Stil: Minimalist vector art, isometric, flat colors, soft lighting, no text, clean composition. Der Prompt soll das zentrale Thema der Nachricht visuell beschreiben. Beispiel: "Minimalist vector art, isometric view of a mangrove forest with people planting saplings, flat earth tones, soft golden lighting, clean composition, no text"
 
 impact_reach: geschätzte Anzahl direkt positiv betroffener Menschen (integer)
 
@@ -264,6 +353,40 @@ def parse_ai_response(text: str | None) -> dict[str, Any] | None:
 
 
 # ---------------------------------------------------------------------------
+# Image pipeline: generate + upload
+# ---------------------------------------------------------------------------
+def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None:
+    """Generate an image via DALL-E and upload it to Supabase Storage.
+
+    Returns the public URL of the uploaded image, or None on failure.
+    """
+    if not image_prompt or not image_prompt.strip():
+        log.warning("  Empty image prompt — skipping image generation.")
+        return None
+
+    log.info("  Generating image: %.100s...", image_prompt)
+
+    image_bytes = generate_image(image_prompt)
+    if not image_bytes:
+        log.warning("  Image generation failed for: %.60s", story_title)
+        return None
+
+    # Build a clean filename: story-images/story-{uuid8}.png
+    short_id = uuid.uuid4().hex[:12]
+    safe_title = (
+        story_title.lower()
+        .replace(" ", "-")
+        .replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+    )
+    # Limit filename length and remove unsafe chars
+    safe_title = "".join(c for c in safe_title if c.isalnum() or c == "-")[:40]
+    filename = f"story-images/{safe_title}-{short_id}.png"
+
+    public_url = supabase_upload_image(image_bytes, filename)
+    return public_url
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 def load_active_sources() -> list[dict[str, Any]]:
@@ -303,7 +426,7 @@ def log_cron_run(
 
 
 def run() -> None:
-    """Main execution: fetch feeds, analyze, insert."""
+    """Main execution: fetch feeds, analyze, generate images, insert."""
     start_time = time.time()
     articles_processed = 0
     stories_added = 0
@@ -368,7 +491,7 @@ def run() -> None:
                     first_error = str(exc)
                 # Continue anyway — the insert will fail if it's a true duplicate
 
-            # 4. Call DeepSeek
+            # 4. Call DeepSeek for analysis + image prompt
             prompt = build_prompt(entry, source_name)
             log.info("  Analyzing: %s", entry.get("title", "(kein Titel)"))
             raw = call_deepseek(prompt)
@@ -390,9 +513,27 @@ def run() -> None:
                 time.sleep(API_DELAY_SECONDS)
                 continue
 
-            # 5. Insert into Supabase
+            story_title = result.get("title", "")
+
+            # 5. Generate and upload image (non-blocking: store story even if image fails)
+            image_url: str | None = None
+            image_prompt = result.get("image_prompt", "")
+            if image_prompt:
+                try:
+                    image_url = generate_and_upload_image(image_prompt, story_title)
+                except Exception as exc:
+                    log.error("  Image pipeline failed for '%s': %s", story_title, exc)
+                    errors += 1
+                    if first_error is None:
+                        first_error = str(exc)
+                    # Continue — we still want to insert the story without an image
+                time.sleep(IMAGE_API_DELAY_SECONDS)
+            else:
+                log.info("  No image_prompt in AI response — skipping image generation.")
+
+            # 6. Insert into Supabase
             story_record: dict[str, Any] = {
-                "title": result.get("title", ""),
+                "title": story_title,
                 "subtitle": result.get("subtitle", ""),
                 "summary": result.get("summary", ""),
                 "category": result.get("category", "gemeinschaft"),
@@ -400,7 +541,7 @@ def run() -> None:
                 "region_code": result.get("region_code", ""),
                 "lat": result.get("lat"),
                 "lng": result.get("lng"),
-                "emoji": result.get("emoji", ""),
+                "image_url": image_url,
                 "source_url": source_url,
                 "source_name": source_name,
                 "impact_reach": result.get("impact_reach"),
@@ -426,10 +567,11 @@ def run() -> None:
                 supabase_post("nureine_stories", story_record)
                 stories_added += 1
                 log.info(
-                    "  INSERTED: %s [%s — %s]",
+                    "  INSERTED: %s [%s — %s] image=%s",
                     story_record.get("title", ""),
                     story_record.get("category", ""),
                     story_record.get("region", ""),
+                    "yes" if image_url else "no",
                 )
             except requests.RequestException as exc:
                 log.error("  Failed to insert story '%s': %s", story_record.get("title", ""), exc)
@@ -463,7 +605,7 @@ def run() -> None:
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     log.info("=" * 60)
-    log.info("NurEine — Story Fetcher")
+    log.info("NurEine — Story Fetcher (with DALL-E image pipeline)")
     log.info("=" * 60)
     try:
         run()

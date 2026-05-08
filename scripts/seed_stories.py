@@ -147,7 +147,7 @@ lat: Breitengrad (float, ungefaehr)
 
 lng: Laengengrad (float, ungefaehr)
 
-emoji: ein passendes Emoji
+image_prompt: Ein kurzer englischer Prompt fuer eine Bild-KI (DALL-E 3). Stil: Minimalist vector art, isometric, flat colors, soft lighting, no text, clean composition. Der Prompt soll das zentrale Thema der Nachricht visuell beschreiben. Beispiel: "Minimalist vector art, isometric view of a mangrove forest with people planting saplings, flat earth tones, soft golden lighting, clean composition, no text"
 
 impact_reach: geschaetzte Anzahl direkt positiv betroffener Menschen (integer)
 
@@ -304,7 +304,7 @@ def run() -> None:
                 "region_code": result.get("region_code", ""),
                 "lat": result.get("lat"),
                 "lng": result.get("lng"),
-                "emoji": result.get("emoji", ""),
+                "image_url": result.get("image_url", ""),
                 "source_url": source_url,
                 "source_name": source_name,
                 "impact_reach": result.get("impact_reach"),

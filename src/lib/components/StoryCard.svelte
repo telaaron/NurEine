@@ -59,7 +59,7 @@
 				class="absolute inset-0 flex items-center justify-center text-5xl sm:text-6xl lg:text-7xl"
 				style="filter: saturate(0.85);"
 			>
-				✨
+				{story.hero || '✨'}
 			</div>
 		{/if}
 		<div class="absolute top-3 left-3 flex gap-2">

@@ -21,7 +21,7 @@
 	let impactScore = $state(50);
 	let impactNote = $state('');
 	let tone = $state('');
-	let hero = $state('');
+	let imageUrl = $state('');
 	let pinned = $state(false);
 	let local = $state(false);
 	let featuredDate = $state('');
@@ -45,7 +45,7 @@
 		impactScore = story.impactScore;
 		impactNote = story.impactNote;
 		tone = story.tone;
-		hero = story.hero;
+		imageUrl = story.image_url || story.hero || '';
 		pinned = !!story.pinned;
 		local = !!story.local;
 		featuredDate = story.featuredDate || '';
@@ -88,7 +88,7 @@
 				impactScore,
 				impactNote,
 				tone,
-				hero,
+				imageUrl,
 				pinned,
 				local,
 				featuredDate: featuredDate || null
@@ -247,10 +247,10 @@
 				<label class="block text-xs uppercase tracking-[0.12em] mb-1" style="color: var(--color-muted);">Bild-URL</label>
 				<input
 					type="text"
-					bind:value={hero}
+					bind:value={imageUrl}
 					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
-					placeholder="https://..."
+					placeholder="https://xxx.supabase.co/storage/v1/object/public/story_images/..."
 				/>
 			</div>
 

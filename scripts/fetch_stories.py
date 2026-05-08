@@ -460,10 +460,12 @@ def run() -> None:
                 log.info("  No image_prompt in AI response — skipping image generation.")
 
             # 6. Insert into Supabase
+            summary = result.get("summary", "")
             story_record: dict[str, Any] = {
                 "title": story_title,
                 "subtitle": result.get("subtitle", ""),
-                "summary": result.get("summary", ""),
+                "body_markdown": summary,  # RSS fetch only gets description, use AI summary as body
+                "summary": summary,
                 "category": result.get("category", "gemeinschaft"),
                 "region": result.get("region", ""),
                 "region_code": result.get("region_code", ""),

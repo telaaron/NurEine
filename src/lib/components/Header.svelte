@@ -34,12 +34,10 @@
 		<div class="flex items-center justify-between py-2.5 sm:py-3 lg:py-4">
 			<!-- Logo + Brand -->
 			<a href={base + '/'} class="flex items-center gap-2.5 sm:gap-3 group shrink-0" aria-label="NurEine — Startseite">
-				<img src="{base}/NurEine.svg" alt="NurEine Logo" class="h-7 sm:h-8 lg:h-[34px] w-auto" />
-				<span
-					class="text-[9px] sm:text-[10px] lg:text-[11px] uppercase tracking-[0.2em] leading-tight"
-					style="color: var(--color-faint);"
-				>
-					tägliche Dosis<br class="sm:hidden" />Hoffnung
+				<img src="{base}/NurEine.svg" alt="" class="h-10 sm:h-8 lg:h-[34px] w-auto" aria-hidden="true" />
+				<span class="serif text-2xl sm:text-xl lg:text-[22px] tracking-tight" style="color: var(--color-ink); font-weight: 500;">NurEine</span>
+				<span class="hidden lg:inline text-[10px] lg:text-[11px] uppercase tracking-[0.2em] leading-tight" style="color: var(--color-faint);">
+					tägliche Dosis Hoffnung
 				</span>
 			</a>
 
@@ -110,10 +108,7 @@
 		class="lg:hidden fixed top-0 right-0 z-50 w-72 max-w-[82vw] h-full flex flex-col paper shadow-2xl animate-slide-in"
 	>
 		<!-- Drawer header -->
-		<div class="flex items-center justify-between p-4 border-b" style="border-color: var(--color-rule);">
-			<div class="flex items-center gap-2">
-				<img src="{base}/NurEine.svg" alt="NurEine Logo" class="h-5 w-auto" />
-			</div>
+		<div class="flex items-center justify-end p-4">
 			<button
 				type="button"
 				onclick={closeMenu}

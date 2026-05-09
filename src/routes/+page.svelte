@@ -77,27 +77,28 @@
 				</p>
 			</a>
 
-			<div class="mt-7 sm:mt-10 flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm rise rise-d3">
-				<a
-					href={base + '/geschichte/' + featured.slug}
-					class="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full transition-all"
-					style="background: var(--color-ink); color: var(--color-paper);"
-				>
-					Geschichte lesen
-					<span aria-hidden="true">→</span>
-				</a>
-				<span class="flex items-center gap-2" style="color: var(--color-muted);">
-					<span
-						class="inline-block w-1.5 h-1.5 rounded-full"
-						aria-hidden="true"
-						style="background: {tone.fg};"
-					></span>
-					{featured.readingMinutes} Min. · Wirkung {featured.impactScore}/100 · {featured.country}
-				</span>
-				<span class="hidden sm:inline" style="color: var(--color-rule-strong);" aria-hidden="true">|</span>
-				<span class="hidden sm:inline-flex">
+			<div class="mt-7 sm:mt-10 space-y-4 rise rise-d3">
+				<div class="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm">
+					<a
+						href={base + '/geschichte/' + featured.slug}
+						class="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full transition-all"
+						style="background: var(--color-ink); color: var(--color-paper);"
+					>
+						Geschichte lesen
+						<span aria-hidden="true">→</span>
+					</a>
+					<span class="flex items-center gap-2" style="color: var(--color-muted);">
+						<span
+							class="inline-block w-1.5 h-1.5 rounded-full"
+							aria-hidden="true"
+							style="background: {tone.fg};"
+						></span>
+						{featured.readingMinutes} Min. · Wirkung {featured.impactScore}/100 · {featured.country}
+					</span>
+				</div>
+				<div class="flex items-center">
 					<ShareBar url={featuredUrl} title={featured.title} text={featured.dek} showLabel={true} />
-				</span>
+				</div>
 			</div>
 		{:else}
 			<p class="mt-6 serif text-xl" style="color: var(--color-muted);">

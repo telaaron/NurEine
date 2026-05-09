@@ -10,7 +10,7 @@
 	let filterOpen = $state(false);
 
 	const filtered = $derived(
-		(active === 'Alle' ? stories : stories.filter((s) => s.category === active)).slice().sort((a, b) => {
+		(active === 'Alle' ? stories : stories.filter((s) => s.category.toLowerCase() === active.toLowerCase())).slice().sort((a, b) => {
 			if (sortBy === 'impact') return b.impactScore - a.impactScore;
 			return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
 		})

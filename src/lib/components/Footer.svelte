@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import ShareBar from '$lib/components/ShareBar.svelte';
+
+	const siteUrl = 'https://nureine.de';
 </script>
 
 <footer class="mt-16 sm:mt-24 lg:mt-32 border-t" style="border-color: var(--color-rule);">
@@ -18,7 +21,7 @@
 				</p>
 			</div>
 			<div>
-				<h3 class="text-[11px] uppercase tracking-[0.18em]" style="color: var(--color-faint);">
+				<h3 class="footer-heading" style="color: var(--color-faint);">
 					Entdecken
 				</h3>
 				<ul class="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 text-sm">
@@ -29,7 +32,7 @@
 				</ul>
 			</div>
 			<div>
-				<h3 class="text-[11px] uppercase tracking-[0.18em]" style="color: var(--color-faint);">
+				<h3 class="footer-heading" style="color: var(--color-faint);">
 					Mitmachen
 				</h3>
 				<ul class="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 text-sm">
@@ -41,10 +44,15 @@
 		</div>
 
 		<div
-			class="mt-8 sm:mt-10 lg:mt-14 pt-5 sm:pt-6 lg:pt-8 border-t flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 text-[11px] sm:text-xs"
+			class="meta mt-8 sm:mt-10 lg:mt-14 pt-5 sm:pt-6 lg:pt-8 border-t flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4"
 			style="border-color: var(--color-rule); color: var(--color-faint);"
 		>
-			<p>&copy; 2026 NurEine. Ver&ouml;ffentlicht in Teltow, Brandenburg.</p>
+			<div class="flex items-center gap-4">
+				<p>&copy; 2026 NurEine. Ver&ouml;ffentlicht in Teltow, Brandenburg.</p>
+				<span class="hidden sm:inline-flex">
+					<ShareBar url={siteUrl} title="NurEine — Gute Nachrichten. Jeden Tag eine." text="Eine Geschichte am Tag. Mehr nicht. Anti-Doomscroll aus Teltow, Brandenburg." size={15} />
+				</span>
+			</div>
 			<p class="leading-relaxed">
 				Quellen: Reuters Solutions &middot; Mongabay &middot; WHO &middot; Nature &middot; Good News Network &middot; Positive.News &middot;
 				lokale Redaktionen

@@ -1,4 +1,5 @@
 import { getAllStories, getLatestFeatured, getStats } from '$lib/server/queries';
+import { PUBLIC_BASE_URL } from '$env/static/public';
 
 export const prerender = false;
 
@@ -14,5 +15,7 @@ export async function load() {
   const totalImpact = allStories.reduce((sum, s) => sum + s.impactScore, 0);
   const avgRead = (allStories.reduce((sum, s) => sum + s.readingMinutes, 0) / allStories.length).toFixed(1);
 
-  return { stories: allStories, featured: hero, rest, stats, totalImpact, avgRead };
+  const baseUrl = PUBLIC_BASE_URL || 'https://nureine.de';
+
+  return { stories: allStories, featured: hero, rest, stats, totalImpact, avgRead, baseUrl };
 }

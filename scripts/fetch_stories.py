@@ -3,15 +3,17 @@
 NurEine — Story Fetcher
 
 Fetches RSS feeds, analyzes articles with DeepSeek Chat,
-and inserts positive news stories into Supabase.
+generates images with FLUX.1 [schnell] via fal.ai,
+uploads to Supabase Storage, and inserts stories into Supabase.
 
 Usage:
-    SUPABASE_URL=https://... SUPABASE_SERVICE_KEY=... DEEPSEEK_API_KEY=... python scripts/fetch_stories.py
+    SUPABASE_URL=https://... SUPABASE_SERVICE_KEY=... DEEPSEEK_API_KEY=... FAL_KEY=... python scripts/fetch_stories.py
 
 Environment variables:
     SUPABASE_URL          — Supabase project URL (e.g. https://abc.supabase.co)
     SUPABASE_SERVICE_KEY  — Supabase service_role key (full access)
     DEEPSEEK_API_KEY      — DeepSeek API key
+    FAL_KEY               — fal.ai API key (for FLUX.1 image generation)
 """
 
 from __future__ import annotations
@@ -51,9 +53,17 @@ load_dotenv()
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
+FAL_KEY = os.environ.get("FAL_KEY")
 
 DEEPSEEK_MODEL = "deepseek-chat"
 DEEPSEEK_ENDPOINT = "https://api.deepseek.com/chat/completions"
+
+# fal.ai FLUX.1 [schnell]
+FAL_ENDPOINT = "https://fal.run/fal-ai/flux/schnell"
+FAL_IMAGE_SIZE = "square"  # 1024x1024
+FAL_NUM_IMAGES = 1
+FAL_POLL_INTERVAL = 2  # seconds between status polls
+FAL_POLL_TIMEOUT = 120  # max seconds to wait for generation
 
 # Supabase Storage bucket for story images
 STORAGE_BUCKET = "story_images"
@@ -62,6 +72,8 @@ STORAGE_BUCKET = "story_images"
 MAX_ARTICLES_PER_RUN = 100
 # Pause between API calls (seconds) to stay within rate limits
 API_DELAY_SECONDS = 1.5
+# Extra delay after image generation
+IMAGE_API_DELAY_SECONDS = 1.0
 
 MISSING_ENVVARS: list[str] = []
 if not SUPABASE_URL:
@@ -70,6 +82,8 @@ if not SUPABASE_SERVICE_KEY:
     MISSING_ENVVARS.append("SUPABASE_SERVICE_KEY")
 if not DEEPSEEK_API_KEY:
     MISSING_ENVVARS.append("DEEPSEEK_API_KEY")
+if not FAL_KEY:
+    MISSING_ENVVARS.append("FAL_KEY")
 
 if MISSING_ENVVARS:
     log.error(
@@ -232,7 +246,7 @@ lat: Breitengrad (float)
 
 lng: Längengrad (float)
 
-image_prompt: Ein kurzer englischer Prompt für eine Bild-KI (DALL-E 3). Stil: Minimalist vector art, isometric, flat colors, soft lighting, no text, clean composition. Der Prompt soll das zentrale Thema der Nachricht visuell beschreiben. Beispiel: "Minimalist vector art, isometric view of a mangrove forest with people planting saplings, flat earth tones, soft golden lighting, clean composition, no text"
+image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: Minimalist 3D spot illustration, isolated on solid warm beige background (#FAF8F5), soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K. No text, no environment, no background elements. Format: "Minimalist 3D spot illustration of [OBJECT] made of [MATERIAL]. [CONCEPT] concept. Isolated completely on solid warm beige background #FAF8F5. Soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K resolution. No text, no environment, no background elements." Beispiel: "Minimalist 3D spot illustration of mangrove saplings made of glossy ceramic. Environmental restoration concept. Isolated completely on solid warm beige background #FAF8F5. Soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K resolution. No text, no environment, no background elements."
 
 impact_reach: geschätzte Anzahl direkt positiv betroffener Menschen (integer)
 
@@ -306,13 +320,103 @@ def parse_ai_response(text: str | None) -> dict[str, Any] | None:
 # ---------------------------------------------------------------------------
 # Image pipeline: generate + upload
 # ---------------------------------------------------------------------------
-def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None:
-    """Image generation disabled — no DALL-E / OpenAI dependency.
+def generate_image_fal(image_prompt: str) -> bytes | None:
+    """Generate an image using FLUX.1 [schnell] via fal.ai.
 
-    Returns None. Kept as a no-op to avoid refactoring the main loop.
+    Returns raw image bytes, or None on failure.
     """
-    log.info("  Image generation disabled — skipping.")
-    return None
+    headers = {
+        "Authorization": f"Key {FAL_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload: dict[str, Any] = {
+        "prompt": image_prompt,
+        "image_size": FAL_IMAGE_SIZE,
+        "num_images": FAL_NUM_IMAGES,
+        "enable_safety_checker": True,
+    }
+
+    try:
+        # Submit generation job
+        resp = requests.post(FAL_ENDPOINT, json=payload, headers=headers, timeout=30)
+        resp.raise_for_status()
+        submission = resp.json()
+
+        # fal.ai returns the result directly for schnell (no polling needed),
+        # but handle queue mode just in case
+        status_url = submission.get("status_url")
+        if status_url:
+            # Queue mode — poll until complete
+            log.info("  Waiting for image generation...")
+            elapsed = 0
+            while elapsed < FAL_POLL_TIMEOUT:
+                time.sleep(FAL_POLL_INTERVAL)
+                elapsed += FAL_POLL_INTERVAL
+                status_resp = requests.get(status_url, headers=headers, timeout=30)
+                status_resp.raise_for_status()
+                status_data = status_resp.json()
+                state = status_data.get("status", "")
+                if state == "COMPLETED":
+                    submission = status_data
+                    break
+                if state in ("FAILED", "CANCELLED"):
+                    log.error("  Image generation failed: %s", status_data)
+                    return None
+            else:
+                log.error("  Image generation timed out after %ds", FAL_POLL_TIMEOUT)
+                return None
+
+        # Extract image URL
+        images = submission.get("images", [])
+        if not images:
+            log.warning("  fal.ai returned no images: %s", submission)
+            return None
+
+        image_url = images[0].get("url")
+        if not image_url:
+            log.warning("  fal.ai response missing image URL")
+            return None
+
+        # Download the generated image
+        log.info("  Downloading generated image...")
+        img_resp = requests.get(image_url, timeout=60)
+        img_resp.raise_for_status()
+        return img_resp.content
+
+    except requests.RequestException as exc:
+        log.error("  FLUX.1 image generation failed: %s", exc)
+        return None
+
+
+def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None:
+    """Generate an image via FLUX.1 on fal.ai and upload to Supabase Storage.
+
+    Returns the public URL of the uploaded image, or None on failure.
+    """
+    if not image_prompt or not image_prompt.strip():
+        log.warning("  Empty image prompt — skipping image generation.")
+        return None
+
+    log.info("  Generating image: %.100s...", image_prompt)
+
+    image_bytes = generate_image_fal(image_prompt)
+    if not image_bytes:
+        log.warning("  Image generation failed for: %.60s", story_title)
+        return None
+
+    # Build a clean filename: story-images/story-{slug}-{uuid12}.png
+    short_id = uuid.uuid4().hex[:12]
+    safe_title = (
+        story_title.lower()
+        .replace(" ", "-")
+        .replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+    )
+    # Limit filename length and remove unsafe chars
+    safe_title = "".join(c for c in safe_title if c.isalnum() or c == "-")[:40]
+    filename = f"story-images/{safe_title}-{short_id}.png"
+
+    public_url = supabase_upload_image(image_bytes, filename)
+    return public_url
 
 
 # ---------------------------------------------------------------------------
@@ -444,7 +548,7 @@ def run() -> None:
 
             story_title = result.get("title", "")
 
-            # 5. Generate and upload image (disabled)
+            # 5. Generate and upload image (non-blocking: store story even if image fails)
             image_url: str | None = None
             image_prompt = result.get("image_prompt", "")
             if image_prompt:
@@ -456,6 +560,7 @@ def run() -> None:
                     if first_error is None:
                         first_error = str(exc)
                     # Continue — we still want to insert the story without an image
+                time.sleep(IMAGE_API_DELAY_SECONDS)
             else:
                 log.info("  No image_prompt in AI response — skipping image generation.")
 

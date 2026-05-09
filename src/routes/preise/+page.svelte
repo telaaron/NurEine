@@ -113,11 +113,11 @@
 
 <!-- Hero -->
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-10 sm:pb-12">
-	<p class="text-[11px] uppercase tracking-[0.22em]" style="color: var(--color-amber); font-weight: 500;">
+	<p class="eyebrow" style="color: var(--color-amber);">
 		Preise
 	</p>
 	<h1
-		class="serif mt-3 leading-tight tracking-tight text-[1.8rem] sm:text-[2.4rem] lg:text-[3.6rem]"
+		class="serif page-h1 mt-3"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
 		Hoffnung ist kein Luxus.
@@ -125,7 +125,7 @@
 		<span style="color: var(--color-amber);">Sie ist die Basis.</span>
 	</h1>
 	<p
-		class="mt-5 max-w-[55ch] text-[15px] sm:text-lg leading-relaxed"
+		class="page-dek mt-5 max-w-[55ch] leading-relaxed"
 		style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 	>
 		Wir glauben, dass jeder Zugang zu konstruktiven Nachrichten haben sollte — ob privat, im
@@ -148,15 +148,15 @@
 			>
 				{#if tier.highlight}
 					<span
-						class="inline-block text-[10px] uppercase tracking-[0.22em] px-3 py-1 rounded-full mb-4"
+						class="badge inline-block px-3 py-1 rounded-full mb-4"
 						style="background: var(--color-amber); color: var(--color-ink); font-weight: 600; width: fit-content;"
 					>
 						Empfohlen
 					</span>
 				{/if}
 				<p
-					class="text-[11px] uppercase tracking-[0.22em]"
-					style="color: {tier.highlight ? 'var(--color-amber-soft)' : 'var(--color-amber)'}; font-weight: 500;"
+					class="eyebrow"
+					style="color: {tier.highlight ? 'var(--color-amber-soft)' : 'var(--color-amber)'};"
 				>
 					{tier.name}
 				</p>
@@ -332,8 +332,8 @@
 		class="paper rounded-[8px] p-6 sm:p-10 lg:p-16"
 		style="border: 1px solid var(--color-rule);"
 	>
-		<p class="text-[11px] uppercase tracking-[0.22em]" style="color: var(--color-amber); font-weight: 500;">
-			Für Teams & Einrichtungen
+		<p class="eyebrow" style="color: var(--color-amber);">
+			F&uuml;r Teams &amp; Einrichtungen
 		</p>
 		<h2
 			class="serif text-2xl sm:text-3xl lg:text-4xl mt-3 leading-tight"

@@ -36,13 +36,13 @@
 			<a href={base + '/'} class="flex items-center gap-2.5 sm:gap-3 group shrink-0" aria-label="NurEine — Startseite">
 				<img src="{base}/NurEine.svg" alt="" class="h-10 sm:h-8 lg:h-[34px] w-auto" aria-hidden="true" />
 				<span class="serif text-2xl sm:text-xl lg:text-[22px] tracking-tight" style="color: var(--color-ink); font-weight: 500;">NurEine</span>
-				<span class="hidden lg:inline text-[10px] lg:text-[11px] uppercase tracking-[0.2em] leading-tight" style="color: var(--color-faint);">
-					tägliche Dosis Hoffnung
+				<span class="hidden lg:inline eyebrow" style="color: var(--color-faint);">
+					t&auml;gliche Dosis Hoffnung
 				</span>
 			</a>
 
 			<!-- Desktop nav -->
-			<nav class="hidden lg:flex items-center gap-6 xl:gap-8 text-[13px] lg:text-sm">
+			<nav class="hidden lg:flex items-center gap-6 xl:gap-8 nav-link">
 				{#each nav as item}
 					<a
 						href={base + item.href}
@@ -142,7 +142,7 @@
 			<a
 				href={base + '/newsletter'}
 				onclick={closeMenu}
-				class="flex items-center justify-center gap-2 w-full py-3 rounded-full text-[15px] font-medium transition-all active:scale-[0.98]"
+				class="flex items-center justify-center gap-2 w-full py-3 rounded-full text-base font-medium transition-all active:scale-[0.98]"
 				style="background: var(--color-ink); color: var(--color-paper);"
 			>
 				Newsletter abonnieren

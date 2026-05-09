@@ -1,5 +1,6 @@
 import { error } from '@sveltejs/kit';
 import { getStoryBySlug, getRelatedStories, getAllSlugs, getAllStories } from '$lib/server/queries';
+import { PUBLIC_BASE_URL } from '$env/static/public';
 
 export const prerender = false;
 
@@ -24,5 +25,7 @@ export async function load({ params }: { params: { slug: string } }) {
 		? (idx > 0 ? allStories[idx - 1] : allStories[allStories.length - 1])
 		: undefined;
 
-	return { story, next, prev, related };
+	const baseUrl = PUBLIC_BASE_URL || 'https://nureine.de';
+
+	return { story, next, prev, related, baseUrl };
 }

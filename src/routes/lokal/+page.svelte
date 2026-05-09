@@ -10,20 +10,17 @@
 </svelte:head>
 
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-10 sm:pb-12">
-	<p
-		class="text-[11px] uppercase tracking-[0.22em] rise"
-		style="color: var(--color-amber); font-weight: 500;"
-	>
+	<p class="eyebrow rise" style="color: var(--color-amber);">
 		Bei dir um die Ecke
 	</p>
 	<h1
-		class="serif mt-3 leading-tight tracking-tight text-[1.8rem] sm:text-[2.4rem] lg:text-[3.6rem] rise rise-d1"
+		class="serif page-h1 mt-3 rise rise-d1"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
 		Gute Nachrichten aus deiner Region.
 	</h1>
 	<p
-		class="mt-5 max-w-[55ch] text-[15px] sm:text-lg leading-relaxed rise rise-d2"
+		class="page-dek mt-5 max-w-[55ch] leading-relaxed rise rise-d2"
 		style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 	>
 		Hyperlokal aus Berlin, Brandenburg und ganz Deutschland. Wir arbeiten mit kleinen Redaktionen, Vereinen und
@@ -54,10 +51,7 @@
 	>
 		<div class="grid lg:grid-cols-12 gap-8">
 			<div class="lg:col-span-5">
-				<p
-					class="text-[11px] uppercase tracking-[0.22em]"
-					style="color: var(--color-amber); font-weight: 500;"
-				>
+				<p class="eyebrow" style="color: var(--color-amber);">
 					Story einreichen
 				</p>
 				<h2

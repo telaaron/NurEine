@@ -82,6 +82,99 @@ body {
 	font-variant-numeric: tabular-nums;
 }
 
+/* ── Semantic type scale — rem-based, respects html font-size ── */
+
+/* Eyebrow / section label — tiny amber uppercase with wide tracking */
+.eyebrow {
+	font-size: 0.667rem;   /* 10px @ 15px base */
+	text-transform: uppercase;
+	letter-spacing: 0.22em;
+	font-weight: 500;
+}
+@media (min-width: 768px) {
+	.eyebrow { font-size: 0.688rem; }  /* 11px @ 16px base */
+}
+
+/* Badge — pill-shaped category / tag labels */
+.badge {
+	font-size: 0.6rem;     /* 9px @ 15px base */
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+}
+@media (min-width: 768px) {
+	.badge { font-size: 0.625rem; }  /* 10px @ 16px base */
+}
+
+/* Metadata — for dates, reading time, footer fine print */
+.meta {
+	font-size: 0.733rem;   /* 11px @ 15px base */
+}
+@media (min-width: 768px) {
+	.meta { font-size: 0.75rem; }  /* 12px — xs equivalent */
+}
+
+/* Card heading (medium) — story card titles */
+.card-heading {
+	font-size: 1.2rem;     /* 18px @ 15px */
+	line-height: 1.18;
+	letter-spacing: -0.01em;
+}
+@media (min-width: 640px) {
+	.card-heading { font-size: 1.28rem; }
+}
+@media (min-width: 1024px) {
+	.card-heading { font-size: 1.35rem; }
+}
+
+/* Card dek — story card subtitle */
+.card-dek {
+	font-size: 0.867rem;   /* 13px @ 15px */
+	line-height: 1.6;
+}
+@media (min-width: 640px) {
+	.card-dek { font-size: 0.875rem; }   /* 14px @ 16px */
+}
+@media (min-width: 1024px) {
+	.card-dek { font-size: 0.938rem; }   /* 15px @ 16px */
+}
+
+/* Page heading — serif h1 on sub-pages */
+.page-h1 {
+	font-size: 1.8rem;
+	line-height: 1.05;
+	letter-spacing: -0.01em;
+}
+@media (min-width: 640px) {
+	.page-h1 { font-size: 2.4rem; }
+}
+@media (min-width: 1024px) {
+	.page-h1 { font-size: 3.6rem; }
+}
+
+/* Page dek — serif intro paragraph below h1 */
+.page-dek {
+	font-size: 1rem;       /* 15px @ 15px base */
+	line-height: 1.6;
+}
+@media (min-width: 640px) {
+	.page-dek { font-size: 1.125rem; }   /* lg */
+}
+
+/* Footer heading — small uppercase labels in footer columns */
+.footer-heading {
+	font-size: 0.733rem;   /* 11px @ 15px */
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+}
+
+/* Nav link — desktop navigation text size */
+.nav-link {
+	font-size: 0.867rem;   /* 13px @ 15px */
+}
+@media (min-width: 768px) {
+	.nav-link { font-size: 0.875rem; }  /* 14px — sm */
+}
+
 /* ── Dropcap — mobile-first: smaller scale ────────── */
 .dropcap::first-letter {
 	font-family: var(--font-serif);

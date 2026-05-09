@@ -102,17 +102,17 @@
 </svelte:head>
 
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-10 sm:pb-12">
-	<p class="text-[11px] uppercase tracking-[0.22em]" style="color: var(--color-amber); font-weight: 500;">
+	<p class="eyebrow" style="color: var(--color-amber);">
 		Newsletter
 	</p>
 	<h1
-		class="serif mt-3 leading-tight tracking-tight text-[1.8rem] sm:text-[2.4rem] lg:text-[3.6rem] max-w-[18ch]"
+		class="serif page-h1 mt-3 max-w-[18ch]"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
 		Eine Geschichte. Sonntag morgens. Mehr nicht.
 	</h1>
 	<p
-		class="mt-5 max-w-[55ch] text-[15px] sm:text-lg leading-relaxed"
+		class="page-dek mt-5 max-w-[55ch] leading-relaxed"
 		style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 	>
 		Wir verschicken keine Push-Nachrichten, keine Daily-Mails, keine "Breaking News". Nur einen
@@ -133,8 +133,8 @@
         "
 			>
 				<p
-					class="text-[11px] uppercase tracking-[0.22em]"
-					style="color: {tier.highlight ? 'var(--color-amber-soft)' : 'var(--color-amber)'}; font-weight: 500;"
+					class="eyebrow"
+					style="color: {tier.highlight ? 'var(--color-amber-soft)' : 'var(--color-amber)'};"
 				>
 					{tier.name}
 				</p>

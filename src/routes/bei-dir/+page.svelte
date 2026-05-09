@@ -476,10 +476,7 @@
 	{#if geo.status === 'loading'}
 		<!-- Loading state -->
 		<div class="flex flex-col gap-3 rise">
-			<p
-				class="text-[11px] uppercase tracking-[0.22em]"
-				style="color: var(--color-amber); font-weight: 500;"
-			>
+			<p class="eyebrow" style="color: var(--color-amber);">
 				Standort wird ermittelt
 			</p>
 			<h1
@@ -500,10 +497,7 @@
 		</div>
 	{:else if geo.status === 'error'}
 		<!-- Error state -->
-		<p
-			class="text-[11px] uppercase tracking-[0.22em] rise"
-			style="color: var(--color-amber); font-weight: 500;"
-		>
+		<p class="eyebrow rise" style="color: var(--color-amber);">
 			Bei dir
 		</p>
 		<h1
@@ -540,10 +534,7 @@
 		</div>
 	{:else}
 		<!-- Success / Fallback state -->
-		<p
-			class="text-[11px] uppercase tracking-[0.22em] rise"
-			style="color: var(--color-amber); font-weight: 500;"
-		>
+		<p class="eyebrow rise" style="color: var(--color-amber);">
 			Bei dir
 		</p>
 		<h1
@@ -707,7 +698,7 @@
 			<!-- Stories count badge -->
 			<div class="mb-6 flex items-center gap-2">
 				<span
-					class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] uppercase tracking-[0.16em]"
+					class="eyebrow inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
 					style="background: var(--color-amber-tint); color: var(--color-amber);"
 				>
 					<span class="tnum font-semibold">{displayStories.length}</span>
@@ -762,7 +753,7 @@
 							{/if}
 							<div class="absolute top-3 left-3 flex gap-2">
 								<span
-									class="px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] rounded-full backdrop-blur-sm"
+									class="badge px-2.5 py-1 rounded-full backdrop-blur-sm"
 									style="background: rgba(255, 252, 245, 0.75); color: {t.fg}; border: 1px solid {t.ring};"
 								>
 									{story.category}
@@ -772,7 +763,7 @@
 							{#if story.distance > 0}
 								<div class="absolute top-3 right-3">
 									<span
-										class="px-2.5 py-1 text-[10px] uppercase tracking-[0.12em] rounded-full backdrop-blur-sm tnum"
+										class="badge px-2.5 py-1 rounded-full backdrop-blur-sm tnum"
 										style="background: rgba(26, 24, 21, 0.7); color: var(--color-paper);"
 									>
 										{story.distance}&thinsp;km
@@ -795,7 +786,7 @@
 								{story.title}
 							</h3>
 							<p
-								class="mt-3 text-[13px] sm:text-[14px] lg:text-[15px] leading-relaxed line-clamp-3"
+								class="card-dek mt-3 leading-relaxed line-clamp-3"
 								style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 							>
 								{story.dek}
@@ -856,7 +847,7 @@
 			</div>
 			<div class="flex items-center gap-2.5 text-xs" style="color: var(--color-muted);">
 				<span
-					class="px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] rounded-full"
+					class="badge px-2.5 py-1 rounded-full"
 					style="background: color-mix(in srgb, {hex} 12%, transparent); color: {hex}; font-weight: 600;"
 				>
 					{activeStory.category}
@@ -884,7 +875,7 @@
 				</h2>
 			</div>
 			<p
-				class="mt-3 text-[14px] leading-relaxed"
+				class="card-dek mt-3 leading-relaxed"
 				style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 			>
 				{activeStory.dek}

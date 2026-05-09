@@ -210,10 +210,7 @@
 
 <!-- ===== HEADER ===== -->
 <section class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-14 pb-4 sm:pb-6 lg:pb-8">
-	<p
-		class="text-[11px] uppercase tracking-[0.22em]"
-		style="color: var(--color-amber); font-weight: 500;"
-	>
+	<p class="eyebrow" style="color: var(--color-amber);">
 		Karte der Hoffnung
 	</p>
 	<h1
@@ -224,14 +221,14 @@
 	</h1>
 	<div class="mt-4 flex flex-wrap items-center gap-4">
 		<p
-			class="text-[15px] leading-relaxed"
+			class="page-dek leading-relaxed"
 			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 		>
 			{storyCount} Geschichten aus aller Welt. Klick auf einen Punkt — helle Farbe bedeutet
 			h&ouml;here Wirkung.
 		</p>
 		<span
-			class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] uppercase tracking-[0.16em]"
+			class="eyebrow inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
 			style="background: var(--color-amber-tint); color: var(--color-amber);"
 		>
 			<span class="tnum font-semibold">{storyCount}</span>
@@ -306,7 +303,7 @@
 						<!-- Meta row -->
 						<div class="flex items-center gap-2.5 text-xs" style="color: var(--color-muted);">
 							<span
-								class="px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] rounded-full"
+								class="badge px-2.5 py-1 rounded-full"
 								style="background: color-mix(in srgb, {hex} 12%, transparent); color: {hex}; font-weight: 600;"
 							>
 								{activeStory.category}
@@ -338,7 +335,7 @@
 
 						<!-- Dek -->
 						<p
-							class="mt-4 text-[14px] leading-relaxed"
+							class="card-dek mt-4 leading-relaxed"
 							style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 						>
 							{activeStory.dek}
@@ -392,7 +389,7 @@
 					<p class="text-sm leading-relaxed" style="color: var(--color-muted); max-width: 26ch;">
 						W&auml;hle einen Punkt auf der Karte, um eine Geschichte zu entdecken.
 					</p>
-					<p class="text-[11px]" style="color: var(--color-faint);">
+					<p class="meta" style="color: var(--color-faint);">
 						{storyCount} Geschichten geladen
 					</p>
 				</div>
@@ -449,7 +446,7 @@
 			<!-- Meta row -->
 			<div class="flex items-center gap-2.5 text-xs" style="color: var(--color-muted);">
 				<span
-					class="px-2.5 py-1 text-[10px] uppercase tracking-[0.18em] rounded-full"
+					class="badge px-2.5 py-1 rounded-full"
 					style="background: color-mix(in srgb, {hex} 12%, transparent); color: {hex}; font-weight: 600;"
 				>
 					{activeStory.category}
@@ -481,7 +478,7 @@
 
 			<!-- Dek -->
 			<p
-				class="mt-3 text-[14px] leading-relaxed"
+				class="card-dek mt-3 leading-relaxed"
 				style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 			>
 				{activeStory.dek}

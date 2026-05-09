@@ -2,11 +2,18 @@
 	import { base } from '$app/paths';
 	import { formatDate, toneStyles } from '$lib/utils';
 	import StoryCard from '$lib/components/StoryCard.svelte';
+	import ShareBar from '$lib/components/ShareBar.svelte';
 
 	let { data } = $props();
 	const featured = $derived(data.featured);
 	const tone = $derived(featured ? toneStyles[featured.tone] : toneStyles['amber']);
 	const rest = $derived(data.rest);
+
+	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
+	const featuredUrl = $derived(featured ? `${baseUrl}/geschichte/${featured.slug}` : baseUrl);
+	const ogImageUrl = $derived(featured ? `${baseUrl}/api/og/${featured.slug}` : `${baseUrl}/NurEine.svg`);
+	const pageTitle = $derived(featured ? `${featured.title} — NurEine` : 'NurEine — Gute Nachrichten. Jeden Tag exakt eine.');
+	const pageDesc = $derived(featured ? featured.dek : 'NurEine filtert tausende Quellen mit KI auf das Wesentliche: Geschichten, die zeigen, dass die Welt voranschreitet.');
 
 	const today = new Date();
 	const dateLong = today.toLocaleDateString('de-DE', {
@@ -16,6 +23,16 @@
 		year: 'numeric'
 	});
 </script>
+
+<svelte:head>
+	<title>{pageTitle}</title>
+	<meta name="description" content={pageDesc} />
+	<meta property="og:title" content={pageTitle} />
+	<meta property="og:description" content={pageDesc} />
+	<meta property="og:image" content={ogImageUrl} />
+	<meta property="og:url" content={baseUrl} />
+	<link rel="canonical" href={baseUrl} />
+</svelte:head>
 
 <!-- Hero — daily story -->
 <section class="relative overflow-hidden">
@@ -32,10 +49,7 @@
 				style="background: var(--color-amber);"
 				aria-hidden="true"
 			></span>
-			<span
-				class="text-[10px] sm:text-[11px] uppercase tracking-[0.22em]"
-				style="color: var(--color-amber); font-weight: 500;"
-			>
+			<span class="eyebrow" style="color: var(--color-amber);">
 				Eine gute Nachricht heute
 			</span>
 		</div>
@@ -50,13 +64,13 @@
 		{#if featured}
 			<a href={base + '/geschichte/' + featured.slug} class="block mt-4 sm:mt-6 group rise rise-d2">
 				<h1
-					class="serif tracking-tight leading-[1.04] text-[2rem] sm:text-[2.8rem] md:text-[3.6rem] lg:text-[5rem] xl:text-[5.6rem] max-w-[18ch]"
+					class="serif tracking-tight leading-[1.04] text-[2.5rem] sm:text-[2.8rem] md:text-[3.6rem] lg:text-[5rem] xl:text-[5.6rem] max-w-[18ch]"
 					style="color: var(--color-ink); font-weight: 500;"
 				>
 					{featured.title}
 				</h1>
 				<p
-					class="mt-4 sm:mt-6 lg:mt-7 text-[15px] sm:text-lg lg:text-2xl leading-snug max-w-[62ch]"
+					class="page-dek mt-4 sm:mt-6 lg:mt-7 sm:text-lg lg:text-2xl leading-snug max-w-[62ch]"
 					style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 				>
 					{featured.dek}
@@ -80,6 +94,10 @@
 					></span>
 					{featured.readingMinutes} Min. · Wirkung {featured.impactScore}/100 · {featured.country}
 				</span>
+				<span class="hidden sm:inline" style="color: var(--color-rule-strong);" aria-hidden="true">|</span>
+				<span class="hidden sm:inline-flex">
+					<ShareBar url={featuredUrl} title={featured.title} text={featured.dek} showLabel={true} />
+				</span>
 			</div>
 		{:else}
 			<p class="mt-6 serif text-xl" style="color: var(--color-muted);">
@@ -91,7 +109,7 @@
 	<!-- Compass strip — quiet metadata -->
 	<div class="border-t border-b" style="border-color: var(--color-rule); background: var(--color-canvas-soft);">
 		<div
-			class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 py-4 sm:py-5 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-[10px] sm:text-xs"
+			class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 py-4 sm:py-5 grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 footer-heading"
 		>
 			<div>
 				<p class="uppercase tracking-[0.18em]" style="color: var(--color-faint);">Heute kuratiert</p>
@@ -134,10 +152,7 @@
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 py-12 sm:py-16 lg:py-20">
 	<div class="grid lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 items-start">
 		<div class="lg:col-span-4">
-			<p
-				class="text-[10px] sm:text-[11px] uppercase tracking-[0.22em]"
-				style="color: var(--color-amber); font-weight: 500;"
-			>
+			<p class="eyebrow" style="color: var(--color-amber);">
 				Warum es uns gibt
 			</p>
 		</div>
@@ -163,10 +178,7 @@
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-16 lg:pb-20">
 	<div class="flex items-end justify-between mb-7 sm:mb-10">
 		<div>
-			<p
-				class="text-[10px] sm:text-[11px] uppercase tracking-[0.22em]"
-				style="color: var(--color-amber); font-weight: 500;"
-			>
+		<p class="eyebrow" style="color: var(--color-amber);">
 				Diese Woche
 			</p>
 			<h2 class="serif text-2xl sm:text-3xl lg:text-4xl mt-1.5 sm:mt-2" style="color: var(--color-ink); font-weight: 500;">
@@ -211,10 +223,7 @@
 		style="border: 1px solid var(--color-rule);"
 	>
 		<div class="lg:col-span-7">
-			<p
-				class="text-[10px] sm:text-[11px] uppercase tracking-[0.22em]"
-				style="color: var(--color-amber); font-weight: 500;"
-			>
+		<p class="eyebrow" style="color: var(--color-amber);">
 				Sonntags-Brief
 			</p>
 			<h2

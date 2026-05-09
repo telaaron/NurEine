@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import ShareBar from '$lib/components/ShareBar.svelte';
+
+	const manifestUrl = 'https://nureine.de/manifest';
 
 	const principles = [
 		{
@@ -44,6 +47,12 @@
 
 <svelte:head>
 	<title>Manifest — NurEine</title>
+	<meta name="description" content="Sechs Sätze, an denen wir uns messen lassen. Nachrichten formen, wie wir die Welt sehen — wir zeigen, dass Menschen vorankommen." />
+	<meta property="og:title" content="Manifest — NurEine" />
+	<meta property="og:description" content="Sechs Sätze, an denen wir uns messen lassen. Unser Manifest für eine neue Art von Nachrichten." />
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://nureine.de/manifest" />
+	<link rel="canonical" href="https://nureine.de/manifest" />
 </svelte:head>
 
 <section class="relative">
@@ -53,7 +62,7 @@
 		style="opacity: 0.5;"
 	></div>
 	<div class="relative mx-auto max-w-[860px] px-4 sm:px-6 lg:px-10 pt-12 sm:pt-16 lg:pt-24 pb-12">
-		<p class="text-[11px] uppercase tracking-[0.22em] rise" style="color: var(--color-amber); font-weight: 500;">
+		<p class="eyebrow rise" style="color: var(--color-amber);">
 			Manifest
 		</p>
 		<h1
@@ -92,7 +101,7 @@
 						{p.title}
 					</h2>
 					<p
-						class="mt-3 leading-relaxed text-[15px] sm:text-lg"
+						class="page-dek mt-3 leading-relaxed"
 						style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 					>
 						{p.body}
@@ -102,13 +111,23 @@
 		{/each}
 	</ol>
 
+	<!-- Share -->
+	<div class="mt-12 sm:mt-16 text-center">
+		<p class="serif text-sm sm:text-base leading-relaxed" style="color: var(--color-muted); font-style: italic;">
+			Unsere Philosophie teilen
+		</p>
+		<div class="mt-3 flex items-center justify-center">
+			<ShareBar url={manifestUrl} title="Manifest — NurEine" text="Sechs Sätze, an denen wir uns messen lassen. Unser Manifest für eine neue Art von Nachrichten." size={20} />
+		</div>
+	</div>
+
 	<!-- Methodik anchor -->
 	<div
 		id="methodik"
 		class="mt-14 sm:mt-20 paper rounded-[8px] p-6 sm:p-10 lg:p-14"
 		style="border: 1px solid var(--color-rule);"
 	>
-		<p class="text-[11px] uppercase tracking-[0.22em]" style="color: var(--color-amber); font-weight: 500;">
+		<p class="eyebrow" style="color: var(--color-amber);">
 			Methodik
 		</p>
 		<h2 class="serif text-2xl sm:text-3xl lg:text-4xl mt-3" style="color: var(--color-ink); font-weight: 500;">
@@ -168,7 +187,7 @@
 				class="p-5 rounded-[6px]"
 				style="border: 1px solid var(--color-rule); background: var(--color-canvas-soft);"
 			>
-				<p class="uppercase tracking-[0.16em] text-[11px]" style="color: var(--color-faint);">
+			<p class="footer-heading" style="color: var(--color-faint);">
 					{t.role}
 				</p>
 				<p class="serif text-xl sm:text-2xl tnum mt-2" style="color: var(--color-ink);">

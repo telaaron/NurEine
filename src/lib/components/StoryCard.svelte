@@ -17,14 +17,39 @@
 		hero: string;
 	};
 
-	type Props = { story: StoryCardData; size?: 'sm' | 'md' | 'lg' };
-	let { story, size = 'md' }: Props = $props();
+	type Props = { story: StoryCardData; size?: 'sm' | 'md' | 'lg'; baseUrl?: string };
+	let { story, size = 'md', baseUrl = 'https://nureine.de' }: Props = $props();
 
 	const t = $derived(toneStyles[story.tone]);
 	const staticImageSrc = $derived(getStoryHeroImageSrc(story.title, base));
 	const heroImageSrc = $derived(
 		story.hero && story.hero.startsWith('http') ? story.hero : staticImageSrc
 	);
+
+	const storyUrl = $derived(`${baseUrl}/geschichte/${story.slug}`);
+
+	let copied = $state(false);
+	let copyTimeout: ReturnType<typeof setTimeout>;
+
+	function shareClick(e: MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+		if (typeof navigator !== 'undefined' && navigator.share) {
+			navigator.share({ title: story.title, text: story.dek, url: storyUrl }).catch(() => {});
+		} else {
+			copyLink(e);
+		}
+	}
+
+	function copyLink(e: MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+		navigator.clipboard.writeText(storyUrl).then(() => {
+			copied = true;
+			clearTimeout(copyTimeout);
+			copyTimeout = setTimeout(() => (copied = false), 1800);
+		}).catch(() => {});
+	}
 </script>
 
 <a
@@ -64,15 +89,35 @@
 		{/if}
 		<div class="absolute top-3 left-3 flex gap-2">
 			<span
-				class="px-2 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] uppercase tracking-[0.16em] rounded-full backdrop-blur-sm"
+				class="badge px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full backdrop-blur-sm"
 				style="background: rgba(255, 252, 245, 0.75); color: {t.fg}; border: 1px solid {t.ring};"
 			>
 				{story.category}
 			</span>
 		</div>
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<button
+			type="button"
+			onclick={shareClick}
+			class="absolute top-3 right-3 w-8 h-8 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-sm"
+			style="background: rgba(255, 252, 245, 0.75); color: var(--color-muted); border: 1px solid var(--color-rule);"
+			aria-label="Story teilen"
+			title="Story teilen"
+		>
+			{#if copied}
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--color-sage)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="20 6 9 17 4 12" />
+				</svg>
+			{:else}
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+					<line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+				</svg>
+			{/if}
+		</button>
 	</div>
 	<div class="p-4 sm:p-5 lg:p-6">
-		<div class="flex items-center gap-2 text-[11px] sm:text-xs" style="color: var(--color-faint);">
+		<div class="flex items-center gap-2 meta" style="color: var(--color-faint);">
 			<span>{story.country}</span>
 			<span>·</span>
 			<span>{formatDate(story.publishedAt, 'short')}</span>
@@ -82,19 +127,19 @@
 		<h3
 			class="serif mt-2 sm:mt-3 leading-[1.18] tracking-tight {size === 'lg'
 				? 'text-xl sm:text-2xl lg:text-3xl'
-				: 'text-[1.2rem] sm:text-[1.28rem] lg:text-[1.35rem]'}"
+				: 'card-heading'}"
 			style="color: var(--color-ink); font-weight: 500;"
 		>
 			{story.title}
 		</h3>
 		<p
-			class="mt-2 sm:mt-3 text-[13px] sm:text-[14px] lg:text-[15px] leading-relaxed line-clamp-3"
+			class="card-dek mt-2 sm:mt-3 leading-relaxed line-clamp-3"
 			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 		>
 			{story.dek}
 		</p>
 		<div
-			class="mt-4 sm:mt-5 pt-3 sm:pt-4 flex items-center justify-between text-[11px] sm:text-xs"
+			class="meta mt-4 sm:mt-5 pt-3 sm:pt-4 flex items-center justify-between"
 			style="border-top: 1px solid var(--color-rule); color: var(--color-muted);"
 		>
 			<span class="flex items-center gap-2">

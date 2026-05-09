@@ -2,16 +2,41 @@
 	import { base } from '$app/paths';
 	import { formatDate, paragraphs, inline, toneStyles } from '$lib/utils';
 	import StoryCard from '$lib/components/StoryCard.svelte';
+	import ShareBar from '$lib/components/ShareBar.svelte';
 
 	let { data } = $props();
 	const story = $derived(data.story);
 	const tone = $derived(toneStyles[story.tone]);
 	const paras = $derived(paragraphs(story.body));
+
+	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
+	const storyUrl = $derived(`${baseUrl}/geschichte/${story.slug}`);
+	const ogImageUrl = $derived(`${baseUrl}/api/og/${story.slug}`);
 </script>
 
 <svelte:head>
 	<title>{story.title} — NurEine</title>
 	<meta name="description" content={story.dek} />
+
+	<!-- Open Graph -->
+	<meta property="og:title" content={story.title} />
+	<meta property="og:description" content={story.dek} />
+	<meta property="og:type" content="article" />
+	<meta property="og:image" content={ogImageUrl} />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:url" content={storyUrl} />
+	<meta property="og:site_name" content="NurEine" />
+	<meta property="og:locale" content="de_DE" />
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={story.title} />
+	<meta name="twitter:description" content={story.dek} />
+	<meta name="twitter:image" content={ogImageUrl} />
+
+	<!-- Canonical -->
+	<link rel="canonical" href={storyUrl} />
 </svelte:head>
 
 <!-- Hero -->
@@ -37,7 +62,7 @@
 
 			<div class="mt-10 flex items-center gap-3 rise rise-d1">
 				<span
-					class="px-3 py-1 text-[10px] uppercase tracking-[0.18em] rounded-full"
+					class="badge px-3 py-1 rounded-full"
 					style="background: {tone.bg}; color: {tone.fg}; border: 1px solid {tone.ring};"
 				>
 					{story.category}
@@ -76,6 +101,8 @@
 				>
 					Quelle: {story.source}
 				</a>
+				<span class="hidden sm:inline" style="color: var(--color-rule-strong);" aria-hidden="true">|</span>
+				<ShareBar url={storyUrl} title={story.title} text={story.dek} showLabel={true} />
 			</div>
 		</div>
 	</header>
@@ -97,10 +124,7 @@
 			class="not-prose my-8 sm:my-12 p-6 sm:p-8 rounded-[6px]"
 			style="background: var(--color-canvas-soft); border-left: 3px solid {tone.fg};"
 		>
-			<p
-				class="text-[11px] uppercase tracking-[0.22em]"
-				style="color: {tone.fg}; font-weight: 500;"
-			>
+			<p class="eyebrow" style="color: {tone.fg};">
 				Wirkungsindex
 			</p>
 			<div class="mt-3 flex items-baseline gap-3">
@@ -132,6 +156,16 @@
 		</aside>
 	</div>
 
+	<!-- Share CTA — editorial closer -->
+	<div class="relative mx-auto max-w-[680px] px-4 sm:px-6 lg:px-0 mt-10 sm:mt-14 text-center">
+		<p class="serif text-sm sm:text-base leading-relaxed" style="color: var(--color-muted); font-style: italic;">
+			Diese Geschichte ist zu gut, um sie für sich zu behalten.
+		</p>
+		<div class="mt-4 flex items-center justify-center">
+			<ShareBar url={storyUrl} title={story.title} text={story.dek} size={20} />
+		</div>
+	</div>
+
 	<!-- Nav prev/next -->
 	<nav
 		class="mx-auto max-w-[860px] px-4 sm:px-6 lg:px-10 mt-14 sm:mt-20 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
@@ -143,7 +177,7 @@
 				class="paper p-4 sm:p-6 rounded-[6px] block hover:opacity-90"
 				style="border: 1px solid var(--color-rule);"
 			>
-				<p class="text-[11px] uppercase tracking-[0.18em]" style="color: var(--color-faint);">
+				<p class="footer-heading" style="color: var(--color-faint);">
 					Vorherige
 				</p>
 				<p class="serif mt-2 leading-snug" style="color: var(--color-ink);">{data.prev.title}</p>
@@ -157,8 +191,8 @@
 				class="paper p-4 sm:p-6 rounded-[6px] block hover:opacity-90 text-right"
 				style="border: 1px solid var(--color-rule);"
 			>
-				<p class="text-[11px] uppercase tracking-[0.18em]" style="color: var(--color-faint);">
-					Nächste
+				<p class="footer-heading" style="color: var(--color-faint);">
+					N&auml;chste
 				</p>
 				<p class="serif mt-2 leading-snug" style="color: var(--color-ink);">{data.next.title}</p>
 			</a>

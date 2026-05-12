@@ -10,12 +10,12 @@ Eine deutschsprachige Good-News-Plattform. Kuratiert von einer KI-Redaktion, aut
 
 ```
 ┌─────────────────┐     ┌──────────────────┐     ┌──────────────┐
-│  SvelteKit App   │────▶│   Supabase DB    │◀────│  Python RSS  │
-│  (Vercel)        │     │  (PostgreSQL)    │     │  Fetcher     │
-└─────────────────┘     └──────────────────┘     │  (GH Action)  │
-       │                                          └──────┬───────┘
-       │                                                 │
-       ▼                                                 ▼
+│  SvelteKit App  │────▶│   Supabase DB    │◀────│  Python RSS  │
+│  (Vercel)       │     │  (PostgreSQL)    │     │  Fetcher     │
+└─────────────────┘     └──────────────────┘     │  (GH Action) │
+        │                                        └──────┬───────┘
+        │                                               │
+        ▼                                               ▼
 ┌──────────────────┐                          ┌──────────────────┐
 │  Resend API      │                          │  DeepSeek Chat   │
 │  (Newsletter)    │                          │  (Scoring)       │

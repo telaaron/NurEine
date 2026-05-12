@@ -467,10 +467,6 @@
 	});
 </script>
 
-<svelte:head>
-	<title>Bei dir — Gute Nachrichten aus deiner Region — NurEine</title>
-</svelte:head>
-
 <!-- ===== HEADER ===== -->
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-4 sm:pb-6 lg:pb-8">
 	{#if geo.status === 'loading'}

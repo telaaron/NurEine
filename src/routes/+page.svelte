@@ -11,10 +11,7 @@
 
 	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
 	const featuredUrl = $derived(featured ? `${baseUrl}/geschichte/${featured.slug}` : baseUrl);
-	const ogImageUrl = $derived(featured?.ogImageUrl || (featured ? `${baseUrl}/api/og/${featured.slug}` : `${baseUrl}/NurEine.svg`));
-	const pageTitle = $derived(featured ? `${featured.title} — NurEine` : 'NurEine — Gute Nachrichten. Jeden Tag exakt eine.');
-	const pageDesc = $derived(featured ? featured.dek : 'NurEine filtert tausende Quellen mit KI auf das Wesentliche: Geschichten, die zeigen, dass die Welt voranschreitet.');
-
+			
 	const today = new Date();
 	const dateLong = today.toLocaleDateString('de-DE', {
 		weekday: 'long',
@@ -23,16 +20,6 @@
 		year: 'numeric'
 	});
 </script>
-
-<svelte:head>
-	<title>{pageTitle}</title>
-	<meta name="description" content={pageDesc} />
-	<meta property="og:title" content={pageTitle} />
-	<meta property="og:description" content={pageDesc} />
-	<meta property="og:image" content={ogImageUrl} />
-	<meta property="og:url" content={baseUrl} />
-	<link rel="canonical" href={baseUrl} />
-</svelte:head>
 
 <!-- Hero — daily story -->
 <section class="relative overflow-hidden">

@@ -11,33 +11,7 @@
 
 	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
 	const storyUrl = $derived(`${baseUrl}/geschichte/${story.slug}`);
-	const ogImageUrl = $derived(story.ogImageUrl || `${baseUrl}/api/og/${story.slug}`);
-</script>
-
-<svelte:head>
-	<title>{story.title} — NurEine</title>
-	<meta name="description" content={story.dek} />
-
-	<!-- Open Graph -->
-	<meta property="og:title" content={story.title} />
-	<meta property="og:description" content={story.dek} />
-	<meta property="og:type" content="article" />
-	<meta property="og:image" content={ogImageUrl} />
-	<meta property="og:image:width" content="1200" />
-	<meta property="og:image:height" content="630" />
-	<meta property="og:url" content={storyUrl} />
-	<meta property="og:site_name" content="NurEine" />
-	<meta property="og:locale" content="de_DE" />
-
-	<!-- Twitter Card -->
-	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content={story.title} />
-	<meta name="twitter:description" content={story.dek} />
-	<meta name="twitter:image" content={ogImageUrl} />
-
-	<!-- Canonical -->
-	<link rel="canonical" href={storyUrl} />
-</svelte:head>
+	</script>
 
 <!-- Hero -->
 <article>

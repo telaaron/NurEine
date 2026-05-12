@@ -97,10 +97,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Newsletter — NurEine</title>
-</svelte:head>
-
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-10 sm:pb-12">
 	<p class="eyebrow" style="color: var(--color-amber);">
 		Newsletter

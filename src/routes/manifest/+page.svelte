@@ -45,16 +45,6 @@
 	];
 </script>
 
-<svelte:head>
-	<title>Manifest — NurEine</title>
-	<meta name="description" content="Sechs Sätze, an denen wir uns messen lassen. Nachrichten formen, wie wir die Welt sehen — wir zeigen, dass Menschen vorankommen." />
-	<meta property="og:title" content="Manifest — NurEine" />
-	<meta property="og:description" content="Sechs Sätze, an denen wir uns messen lassen. Unser Manifest für eine neue Art von Nachrichten." />
-	<meta property="og:type" content="website" />
-	<meta property="og:url" content="https://nureine.de/manifest" />
-	<link rel="canonical" href="https://nureine.de/manifest" />
-</svelte:head>
-
 <section class="relative">
 	<div
 		class="absolute inset-0 sun-glow pointer-events-none"

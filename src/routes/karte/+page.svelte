@@ -204,10 +204,6 @@
 	}
 </script>
 
-<svelte:head>
-	<title>Karte — NurEine</title>
-</svelte:head>
-
 <!-- ===== HEADER ===== -->
 <section class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-14 pb-4 sm:pb-6 lg:pb-8">
 	<p class="eyebrow" style="color: var(--color-amber);">

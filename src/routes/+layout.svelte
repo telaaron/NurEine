@@ -1,18 +1,18 @@
 <script lang="ts">
-	import '../app.css';
-	import Header from '$lib/components/Header.svelte';
-	import Footer from '$lib/components/Footer.svelte';
-	import { base } from '$app/paths';
-	import { page } from '$app/state';
+        import '../app.css';
+        import Header from '$lib/components/Header.svelte';
+        import Footer from '$lib/components/Footer.svelte';
+        import { base } from '$app/paths';
+        import { page } from '$app/state';
 
-	let { children } = $props();
+        let { children } = $props();
 
         const pagePath = $derived(page.url.pathname.replace(base, '') || '/');
         const canonicalUrl = $derived(
                 `https://nureine.de${pagePath === '/' ? '' : pagePath}`
         );
 
-        const isStory = $derived(!!page.data.story);
+        const isStory = $derived(!!page?.data?.story);
         const isIndex = $derived(pagePath === '/');
 
         const pathTitles: Record<string, string> = {
@@ -68,3 +68,11 @@
         <link rel="icon" type="image/svg+xml" href="{base}/NurEine.svg" />
         <link rel="apple-touch-icon" href="{base}/NurEine.svg" />
 
+        <meta name="theme-color" content="#f5f1ea" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+</svelte:head>
+
+<Header />
+<main>{@render children?.()}</main>
+<Footer />

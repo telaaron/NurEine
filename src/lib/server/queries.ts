@@ -24,9 +24,11 @@ export type SupabaseStory = {
   reading_time_min: number;
   emoji: string | null;
   image_url: string | null;
+  og_image_url: string | null;
   is_hero: boolean;
   published_at: string;
   created_at: string;
+  gut_filter_reason: string | null;
 };
 
 export type StoryResult = {
@@ -52,6 +54,7 @@ export type StoryResult = {
   hero: string;
   imageUrl: string | null;
   image_url: string | null;
+  ogImageUrl: string | null;
   pinned: number;
   local: number;
   featuredDate: string | null;
@@ -107,6 +110,7 @@ function mapStory(row: SupabaseStory): StoryResult {
     hero: row.image_url || row.emoji || '✨',
     imageUrl: row.image_url,
     image_url: row.image_url,
+    ogImageUrl: row.og_image_url || null,
     pinned: 0,
     local: 0,
     featuredDate: row.is_hero ? row.published_at : null,

@@ -36,9 +36,9 @@
 			<a href={base + '/'} class="flex items-center gap-2.5 sm:gap-3 group shrink-0" aria-label="NurEine — Startseite">
 				<img src="{base}/NurEine.svg" alt="" class="h-10 sm:h-8 lg:h-[34px] w-auto" aria-hidden="true" />
 				<span class="serif text-2xl sm:text-xl lg:text-[22px] tracking-tight" style="color: var(--color-ink); font-weight: 500;">NurEine</span>
-				<span class="hidden lg:inline eyebrow" style="color: var(--color-faint);">
+				<!-- <span class="hidden lg:inline eyebrow" style="color: var(--color-faint);">
 					t&auml;gliche Dosis Hoffnung
-				</span>
+				</span> -->
 			</a>
 
 			<!-- Desktop nav -->

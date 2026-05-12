@@ -11,7 +11,7 @@
 
 	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
 	const storyUrl = $derived(`${baseUrl}/geschichte/${story.slug}`);
-	const ogImageUrl = $derived(`${baseUrl}/api/og/${story.slug}`);
+	const ogImageUrl = $derived(story.ogImageUrl || `${baseUrl}/api/og/${story.slug}`);
 </script>
 
 <svelte:head>

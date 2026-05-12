@@ -82,8 +82,8 @@ if not SUPABASE_SERVICE_KEY:
     MISSING_ENVVARS.append("SUPABASE_SERVICE_KEY")
 if not DEEPSEEK_API_KEY:
     MISSING_ENVVARS.append("DEEPSEEK_API_KEY")
-if not FAL_KEY:
-    MISSING_ENVVARS.append("FAL_KEY")
+# FAL_KEY is optional — if missing, image generation is skipped
+IMAGE_GENERATION_ENABLED = bool(FAL_KEY)
 
 if MISSING_ENVVARS:
     log.error(
@@ -91,6 +91,9 @@ if MISSING_ENVVARS:
         ", ".join(MISSING_ENVVARS),
     )
     sys.exit(1)
+
+if not IMAGE_GENERATION_ENABLED:
+    log.warning("FAL_KEY not set — image generation will be skipped.")
 
 
 # ---------------------------------------------------------------------------
@@ -215,26 +218,69 @@ def call_deepseek(prompt: str) -> str | None:
 # DeepSeek prompt — analysis + image prompt
 # ---------------------------------------------------------------------------
 ANALYSIS_PROMPT_TEMPLATE = """\
-Du bist Redakteur bei NurEine, einer Plattform für bedeutsame Good News.
+Du bist Chef vom Dienst bei NurEine, einer Premium-Plattform für bedeutsame Good News.
+Deine Zielgruppe: HR-Abteilungen, Schulleiter, Klinik-Manager (B2B).
+Dein Job ist härter als "nur positives filtern": Du suchst Geschichten, die einem Entscheider das Gefühl geben "Wow, die Welt kommt voran."
 
-Analysiere diesen Artikel und antworte NUR mit einem JSON-Objekt:
+=== DEINE DREI TODSÜNDEN (absolutes Ausschlusskriterium) ===
+
+1. HISTORIEN-FALLE: Jahrestage, "Vor X Jahren", historische Rückblicke, Gedenktage.
+   → BEISPIEL: "Vor 200 Jahren wurde der Sklavenhandel abgeschafft" → ABLEHNEN.
+   → BEISPIEL: "Kriegsende in Europa: Massenkapitulation 1945" → ABLEHNEN.
+   → Grund: News-Portal, kein Kalenderblatt. Nur tagesaktuelle Ereignisse.
+   → gut_filter_reason: "history_trap"
+
+2. LOCAL FLUFF / DODO-SYNDROM: Lokale Einzelereignisse ohne strukturellen Impact.
+   → BEISPIEL: "Hässlicher Briefkasten in Sackgasse entfernt" → ABLEHNEN.
+   → BEISPIEL: "Haarloser Welpe aus Küchenschrank gerettet" → ABLEHNEN.
+   → BEISPIEL: "Hockeyfans singen Hymne nach Mikrofonausfall" → ABLEHNEN.
+   → BEISPIEL: "Junge spricht mit gehörlosem Mädchen" → ABLEHNEN.
+   → Grund: Viraler Clickbait ohne Substanz. Ändert nichts am Zustand der Welt.
+   → gut_filter_reason: "local_fluff"
+
+3. SPORT- UND NISCHEN-SPAM: Sportereignisse, Einzelleistungen einzelner Athleten.
+   → BEISPIEL: "Tolga Cigerci schießt Cottbus Richtung Aufstieg" → ABLEHNEN.
+   → BEISPIEL: "Marie-Louise Eta gewinnt" → ABLEHNEN.
+   → Ausnahme: Strukturelle Änderungen IM Sport (z.B. "FIFA reformiert Sicherheitsregeln für alle Stadien").
+   → gut_filter_reason: "sports_niche"
+
+=== WAS WIR SUCHEN (Gold-Standard) ===
+
+Eine NurEine-Geschichte hat MINDESTENS eines dieser Merkmale:
+- Strukturelle Veränderung (neues Gesetz, Systemwechsel, Reform)
+- Wissenschaftlicher Durchbruch (Peer-Reviewed, nicht "Forscher vermuten")
+- Technologische Innovation mit Massen-Impact (nicht: neues Gadget)
+- Kampf David gegen Goliath gewonnen (Bürger vs. Konzern, NGO vs. Monopol)
+- Greifbarer Nutzen für >100.000 Menschen nachweisbar
+
+Gold-Beispiele (zum Kalibrieren deines inneren Kompass):
+- ✅ "Kenia: Saatgut-Teilen wieder legal – Sieg gegen Agrarkonzerne" (Strukturänderung)
+- ✅ "KI erkennt Bauchspeicheldrüsenkrebs 3 Jahre früher" (Wissenschaftlicher Durchbruch)
+- ✅ "Moringa-Samen filtern 98% Mikroplastik aus Leitungswasser" (Innovation mit Impact)
+- ✅ "Entsalzungsanlage versorgt San Diego und hilft Nachbarstaaten" (Technologie mit Reichweite)
+- ✅ "Indien entkriminalisiert 717 Straftaten" (Massen-Impact)
+
+=== ANALYSEAUFGABE ===
+
+Analysiere diesen Artikel und antworte NUR mit einem JSON-Objekt (kein Text davor/danach):
 
 Artikel-Titel: {title}
 Artikel-Text: {description}
 Quelle: {source}
 
-Aufgaben:
+JSON-Felder:
 
-Ist das eine bedeutsame positive Nachricht (nicht bloß "nett", sondern mit echtem Impact)?
-→ is_positive: true/false
+is_nureine: true/false — Erfüllt diese Story unsere Qualitätsstandards? Prüfe ALLE drei Todsünden + Gold-Standard-Kriterien.
 
-Falls ja, extrahiere:
+gut_filter_reason: null (wenn is_nureine=true) ODER einer von ["history_trap", "local_fluff", "sports_niche"] (wenn is_nureine=false). Bei anderem Ablehnungsgrund (z.B. einfach keine positive Nachricht): "not_positive".
 
-title: Deutscher Titel (max 80 Zeichen, prägnant)
+NUR wenn is_nureine=true, fülle zusätzlich:
 
-subtitle: Eine Zeile Kontext (max 120 Zeichen)
+title: Deutscher Titel (max 80 Zeichen, prägnant, keine Clickbait-Formulierungen)
 
-summary: 2-3 deutsche Sätze, was passiert ist und warum es wichtig ist
+subtitle: Eine Zeile Kontext (max 120 Zeichen, sachlich)
+
+summary: 2-3 deutsche Sätze, was passiert ist und warum es strukturell wichtig ist
 
 category: eine von [klima, gesundheit, wissenschaft, gemeinschaft, tiere, kultur, innovation]
 
@@ -246,7 +292,7 @@ lat: Breitengrad (float)
 
 lng: Längengrad (float)
 
-image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: Minimalist 3D spot illustration, isolated on solid warm beige background (#FAF8F5), soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K. No text, no environment, no background elements. Format: "Minimalist 3D spot illustration of [OBJECT] made of [MATERIAL]. [CONCEPT] concept. Isolated completely on solid warm beige background #FAF8F5. Soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K resolution. No text, no environment, no background elements." Beispiel: "Minimalist 3D spot illustration of mangrove saplings made of glossy ceramic. Environmental restoration concept. Isolated completely on solid warm beige background #FAF8F5. Soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K resolution. No text, no environment, no background elements."
+image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: Minimalist 3D spot illustration, isolated on solid warm beige background (#FAF8F5), soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K. The image will be used as a hero illustration on a news website AND composited into editorial Open Graph share images (1200x630) — so the main subject should be visually striking and centered, with generous empty space around it for text overlays. No text, no environment, no background elements. Format: "Minimalist 3D spot illustration of [OBJECT] made of [MATERIAL]. [CONCEPT] concept. Isolated completely on solid warm beige background #FAF8F5. Soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K resolution. No text, no environment, no background elements." Beispiel: "Minimalist 3D spot illustration of mangrove saplings made of glossy ceramic. Environmental restoration concept. Isolated completely on solid warm beige background #FAF8F5. Soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K resolution. No text, no environment, no background elements."
 
 impact_reach: geschätzte Anzahl direkt positiv betroffener Menschen (integer)
 
@@ -466,6 +512,13 @@ def run() -> None:
     errors = 0
     first_error: str | None = None
 
+    # Track filter reasons for cron_runs auditing
+    filter_reasons: dict[str, int] = {}
+
+    # In-memory deduplication: track titles we've already inserted this run
+    # to catch near-duplicates (same story from different feeds, or same story on consecutive days)
+    seen_titles_normalized: list[str] = []
+
     # 1. Load sources
     sources = load_active_sources()
     if not sources:
@@ -512,7 +565,7 @@ def run() -> None:
                 log.debug("  Skipping entry with no link.")
                 continue
 
-            # 3. Deduplicate against Supabase stories table
+            # 3. Deduplicate against Supabase stories table (URL-based)
             try:
                 if source_exists(source_url):
                     log.info("  Skipping (already exists): %s", source_url)
@@ -540,31 +593,71 @@ def run() -> None:
                 time.sleep(API_DELAY_SECONDS)
                 continue
 
-            is_positive = result.get("is_positive", False)
-            if not is_positive:
-                log.info("  Not positive — skipping.")
+            # 5. Gatekeeping: is_nureine replaces old is_positive
+            is_nureine = result.get("is_nureine", False)
+            gut_filter_reason = result.get("gut_filter_reason")
+
+            if not is_nureine:
+                reason = gut_filter_reason or "unknown"
+                filter_reasons[reason] = filter_reasons.get(reason, 0) + 1
+                log.info("  Rejected (is_nureine=false, reason=%s): %s", reason, entry.get("title", "(kein Titel)"))
                 time.sleep(API_DELAY_SECONDS)
                 continue
 
             story_title = result.get("title", "")
 
-            # 5. Generate and upload image (non-blocking: store story even if image fails)
-            image_url: str | None = None
-            image_prompt = result.get("image_prompt", "")
-            if image_prompt:
-                try:
-                    image_url = generate_and_upload_image(image_prompt, story_title)
-                except Exception as exc:
-                    log.error("  Image pipeline failed for '%s': %s", story_title, exc)
-                    errors += 1
-                    if first_error is None:
-                        first_error = str(exc)
-                    # Continue — we still want to insert the story without an image
-                time.sleep(IMAGE_API_DELAY_SECONDS)
-            else:
-                log.info("  No image_prompt in AI response — skipping image generation.")
+            # 6. In-memory near-duplicate check (same-run deduplication)
+            # Normalize title for comparison: lowercase, strip punctuation, collapse whitespace
+            import re as _re  # noqa: PLC0415
+            normalized = _re.sub(r"[^a-z0-9äöüß\s]", "", story_title.lower())
+            normalized = _re.sub(r"\s+", " ", normalized).strip()
 
-            # 6. Insert into Supabase
+            # Check against previously inserted titles in this run
+            # Simple heuristic: if >70% of words overlap with a previously seen title, skip
+            new_words = set(normalized.split())
+            is_duplicate = False
+            for seen_title in seen_titles_normalized:
+                seen_words = set(seen_title.split())
+                if new_words and seen_words:
+                    overlap = len(new_words & seen_words) / min(len(new_words), len(seen_words))
+                    if overlap > 0.7:
+                        log.info(
+                            "  Skipping near-duplicate (%.0f%% word overlap with '%s'): %s",
+                            overlap * 100,
+                            seen_title,
+                            story_title,
+                        )
+                        is_duplicate = True
+                        filter_reasons["near_duplicate"] = filter_reasons.get("near_duplicate", 0) + 1
+                        break
+
+            if is_duplicate:
+                time.sleep(API_DELAY_SECONDS)
+                continue
+
+            # Track for future dedup in this run
+            seen_titles_normalized.append(normalized)
+
+            # 7. Generate and upload image (non-blocking: store story even if image fails)
+            image_url: str | None = None
+            if IMAGE_GENERATION_ENABLED:
+                image_prompt = result.get("image_prompt", "")
+                if image_prompt:
+                    try:
+                        image_url = generate_and_upload_image(image_prompt, story_title)
+                    except Exception as exc:
+                        log.error("  Image pipeline failed for '%s': %s", story_title, exc)
+                        errors += 1
+                        if first_error is None:
+                            first_error = str(exc)
+                        # Continue — we still want to insert the story without an image
+                    time.sleep(IMAGE_API_DELAY_SECONDS)
+                else:
+                    log.info("  No image_prompt in AI response — skipping image generation.")
+            else:
+                log.info("  Image generation disabled (no FAL_KEY) — skipping.")
+
+            # 8. Insert into Supabase
             summary = result.get("summary", "")
             story_record: dict[str, Any] = {
                 "title": story_title,
@@ -616,6 +709,10 @@ def run() -> None:
 
             # Polite delay between AI calls
             time.sleep(API_DELAY_SECONDS)
+
+    # Log filter reason summary for auditing
+    if filter_reasons:
+        log.info("Filter reason summary: %s", dict(filter_reasons))
 
     # 6. Log completion
     elapsed = time.time() - start_time

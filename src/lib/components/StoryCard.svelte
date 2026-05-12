@@ -54,8 +54,8 @@
 
 <a
 	href={base + '/geschichte/' + story.slug}
-		class="group block paper rounded-md overflow-hidden transition-all duration-500 active:scale-[0.985]"
-	style="border: 1px solid var(--color-rule); will-change: transform;"
+		class="group block h-full paper rounded-md overflow-hidden transition-all duration-500 active:scale-[0.985]"
+	style="border: 1px solid var(--color-rule); will-change: transform; display: flex; flex-direction: column;"
 	onmouseenter={(e) => (e.currentTarget.style.borderColor = t.ring)}
 	onmouseleave={(e) => (e.currentTarget.style.borderColor = 'var(--color-rule)')}
 >
@@ -116,7 +116,7 @@
 			{/if}
 		</button>
 	</div>
-	<div class="p-4 sm:p-5 lg:p-6">
+	<div class="p-4 sm:p-5 lg:p-6 flex flex-col flex-1">
 		<div class="flex items-center gap-2 meta" style="color: var(--color-faint);">
 			<span>{story.country}</span>
 			<span>·</span>
@@ -125,7 +125,7 @@
 			<span>{story.readingMinutes} Min. Lesezeit</span>
 		</div>
 		<h3
-			class="serif mt-2 sm:mt-3 leading-[1.18] tracking-tight {size === 'lg'
+			class="serif mt-2 sm:mt-3 leading-[1.18] tracking-tight line-clamp-2 {size === 'lg'
 				? 'text-xl sm:text-2xl lg:text-3xl'
 				: 'card-heading'}"
 			style="color: var(--color-ink); font-weight: 500;"
@@ -138,19 +138,21 @@
 		>
 			{story.dek}
 		</p>
-		<div
-			class="meta mt-4 sm:mt-5 pt-3 sm:pt-4 flex items-center justify-between"
-			style="border-top: 1px solid var(--color-rule); color: var(--color-muted);"
-		>
-			<span class="flex items-center gap-2">
-				<span
-					class="inline-block w-1.5 h-1.5 rounded-full"
-					style="background: {t.fg};"
-					aria-hidden="true"
-				></span>
-				Wirkung {story.impactScore}/100
-			</span>
-			<span class="tnum">{story.impactNote}</span>
+		<div class="mt-auto">
+			<div
+				class="meta pt-3 sm:pt-4 flex items-center justify-between"
+				style="border-top: 1px solid var(--color-rule); color: var(--color-muted);"
+			>
+				<span class="flex items-center gap-2">
+					<span
+						class="inline-block w-1.5 h-1.5 rounded-full"
+						style="background: {t.fg};"
+						aria-hidden="true"
+					></span>
+					Wirkung {story.impactScore}/100
+				</span>
+				<span class="tnum">{story.impactNote}</span>
+			</div>
 		</div>
 	</div>
 </a>

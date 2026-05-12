@@ -1,0 +1,43 @@
+name: Generate OG Images
+
+on:
+  schedule:
+    # Runs 5 minutes after each fetch-stories cron (06/10/14/18 UTC)
+    - cron: '5 6,10,14,18 * * *'
+  workflow_dispatch:
+    inputs:
+      all:
+        description: 'Re-generate all OG images'
+        type: boolean
+        default: false
+
+jobs:
+  generate-og:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install system dependencies (fonts + Pillow deps)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-inter fonts-dejavu fonts-liberation2 libjpeg-dev zlib1g-dev
+
+      - name: Install Python dependencies
+        run: pip install requests python-dotenv Pillow
+
+      - name: Generate OG images for new stories
+        run: python scripts/generate_og_images.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+      - name: Regenerate all OG images (if --all selected)
+        if: ${{ github.event.inputs.all == 'true' }}
+        run: python scripts/generate_og_images.py --all
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

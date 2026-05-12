@@ -11,7 +11,7 @@
 
 	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
 	const featuredUrl = $derived(featured ? `${baseUrl}/geschichte/${featured.slug}` : baseUrl);
-	const ogImageUrl = $derived(featured ? `${baseUrl}/api/og/${featured.slug}` : `${baseUrl}/NurEine.svg`);
+	const ogImageUrl = $derived(featured?.ogImageUrl || (featured ? `${baseUrl}/api/og/${featured.slug}` : `${baseUrl}/NurEine.svg`));
 	const pageTitle = $derived(featured ? `${featured.title} — NurEine` : 'NurEine — Gute Nachrichten. Jeden Tag exakt eine.');
 	const pageDesc = $derived(featured ? featured.dek : 'NurEine filtert tausende Quellen mit KI auf das Wesentliche: Geschichten, die zeigen, dass die Welt voranschreitet.');
 

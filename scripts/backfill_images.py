@@ -191,6 +191,8 @@ IMAGE_STYLE = (
     "Minimalist 3D spot illustration, isolated on solid warm beige background #FAF8F5. "
     "Soft studio lighting, soft diffused shadows. "
     "High-end editorial, calming, 8K resolution. "
+    "The subject should be visually striking and centered, with generous space around it "
+    "for editorial text overlays in Open Graph share images. "
     "No text, no environment, no background elements."
 )
 

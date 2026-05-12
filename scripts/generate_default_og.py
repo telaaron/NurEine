@@ -1,81 +1,107 @@
 #!/usr/bin/env python3
 """
-Generates the default NurEine OG image (og-default.png) for use as fallback
-when no story-specific OG image is available.
+NurEine Default OG Image — bold, iconic, editorial.
 
-Output: scripts/../static/og-default.png (1200×630)
+Composition: Left-aligned editorial typography over a warm beige background,
+accented by an abstract rising sun (a single glowing amber orb) on the right
+to symbolize "Lichtblick" and the single daily good news.
+
+Output: static/og-default.png (1200x630)
 """
 from __future__ import annotations
 
-import io
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(__file__))
+_sd = os.path.dirname(__file__)
+sys.path.insert(0, _sd)
 
-# Reuse font loading from generate_og_images
-from generate_og_images import _ensure_fonts  # noqa: E402
+from generate_og_images import _discover_fonts, FONT_TITLE, FONT_BODY
+_discover_fonts()
 
-Image, ImageDraw, ImageFont, bold_path, regular_path, serif_path = _ensure_fonts()
+from PIL import Image, ImageDraw, ImageFont
 
 W, H = 1200, 630
-bg = (245, 241, 234)  # #f5f1ea
-accent = (200, 115, 64)  # amber accent
-ink = (26, 24, 21)  # #1a1815
 
-img = Image.new("RGB", (W, H), bg)
-draw = ImageDraw.Draw(img)
+# Colors — warm, editorial palette
+BG    = (245, 241, 234)  # #f5f1ea
+INK   = (26, 24, 21)     # #1a1815
+SOFT  = (107, 99, 89)    # #6b6359
+AMBER = (200, 115, 64)   # #c87340
 
-# Top glow gradient
-for y in range(int(H * 0.35)):
-    alpha = int(20 * (1 - y / (H * 0.35)))
-    for x in range(W):
-        draw.point((x, y), fill=accent + (alpha,))
+img = Image.new("RGB", (W, H), BG)
+draw = ImageDraw.Draw(img, "RGBA")
 
-# Center text
+# ------------------------------------------------------------------
+# Geometry: The "Lichtblick" (Sunburst/Halo)
+# ------------------------------------------------------------------
+# A large circle radiating warmth on the right side
+center_x = int(W * 0.75)
+center_y = int(H * 0.5)
+base_radius = 280
+
+# Draw subtle blooming halos
+for i in range(12, 0, -1):
+    r = base_radius + (i * 25)
+    alpha = int(40 * (1 - (i / 12)))
+    draw.ellipse([center_x - r, center_y - r, center_x + r, center_y + r], fill=AMBER + (alpha,))
+
+# Draw the solid sun
+draw.ellipse([center_x - base_radius, center_y - base_radius, center_x + base_radius, center_y + base_radius], fill=AMBER + (255,))
+
+# ------------------------------------------------------------------
+# Typography layout: Left side editorial 
+# ------------------------------------------------------------------
+left_margin = 100
+top_margin = 140
+
+# Wordmark
+wordmark_part_1 = "Nur"
+wordmark_part_2 = "Eine"
+wordmark_size = 130
 try:
-    title_font = ImageFont.truetype(serif_path, 56)
-    tagline_font = ImageFont.truetype(regular_path, 22)
+    wm_font = ImageFont.truetype(FONT_TITLE, wordmark_size) if FONT_TITLE else ImageFont.load_default()
 except Exception:
-    title_font = ImageFont.load_default()
-    tagline_font = ImageFont.load_default()
+    wm_font = ImageFont.load_default()
 
-# "NurEine" centered
-title_bbox = draw.textbbox((0, 0), "NurEine", font=title_font)
-title_w = title_bbox[2] - title_bbox[0]
-draw.text(((W - title_w) // 2, 200), "NurEine", fill=ink, font=title_font)
+p1_bbox = draw.textbbox((0, 0), wordmark_part_1, font=wm_font)
+p1_w = p1_bbox[2] - p1_bbox[0]
+wm_h = p1_bbox[3] - p1_bbox[1]
 
-# Taglines
-tagline1 = "Gute Nachrichten. Jeden Tag exakt eine."
-t1_bbox = draw.textbbox((0, 0), tagline1, font=tagline_font)
-t1_w = t1_bbox[2] - t1_bbox[0]
-draw.text(((W - t1_w) // 2, 290), tagline1, fill=(58, 52, 44), font=tagline_font)
+draw.text((left_margin, top_margin), wordmark_part_1, fill=INK, font=wm_font)
+draw.text((left_margin + p1_w, top_margin), wordmark_part_2, fill=BG, font=wm_font) # Contrast "Eine" against the sun if it overlaps, but it's on left. Wait, BG text might be invisible. Let's stick to INK for all, or maybe amber for 'Eine'.
 
-tagline2 = "nureine.de"
-t2_bbox = draw.textbbox((0, 0), tagline2, font=tagline_font)
-t2_w = t2_bbox[2] - t2_bbox[0]
-draw.text(((W - t2_w) // 2, 330), tagline2, fill=(154, 144, 135), font=tagline_font)
+# Let's use INK for all, but maybe highlight 'Eine' in AMBER where it's on BG, or just use INK.
+p2_color = INK
+draw.text((left_margin + p1_w, top_margin), wordmark_part_2, fill=p2_color, font=wm_font)
 
-# Bottom accent line
-line_y = H - 72
-for x in range(60, W - 60):
-    alpha = max(0, 60 - int(abs(x - W // 2) / (W // 2) * 60))
-    if alpha > 0:
-        draw.point((x, line_y), fill=accent + (alpha,))
 
-# Footer
+# Rule under wordmark
+rule_y = top_margin + wm_h + 30
+draw.line([(left_margin, rule_y), (left_margin + 60, rule_y)], fill=INK, width=6)
+
+# Tagline
+tagline = "Gute Nachrichten.\nJeden Tag exakt eine."
+tagline_size = 52
 try:
-    footer_font = ImageFont.truetype(regular_path, 14)
+    tag_font = ImageFont.truetype(FONT_TITLE, tagline_size) if FONT_TITLE else ImageFont.load_default()
 except Exception:
-    footer_font = ImageFont.load_default()
-draw.text((60, H - 36), "NurEine", fill=(107, 99, 89), font=footer_font)
-domain = "nureine.de"
-d_bbox = draw.textbbox((0, 0), domain, font=footer_font)
-d_w = d_bbox[2] - d_bbox[0]
-draw.text((W - 60 - d_w, H - 36), domain, fill=(154, 144, 135), font=footer_font)
+    tag_font = ImageFont.load_default()
 
+draw.text((left_margin, rule_y + 40), tagline, fill=INK, font=tag_font, spacing=20)
+
+# Bottom text: url
+try:
+    dom_font = ImageFont.truetype(FONT_BODY, 26) if FONT_BODY else ImageFont.load_default()
+except Exception:
+    dom_font = ImageFont.load_default()
+
+draw.text((left_margin, H - left_margin), "nureine.de", fill=SOFT, font=dom_font)
+
+# ------------------------------------------------------------------
 # Save
-out_path = os.path.join(os.path.dirname(__file__), "..", "static", "og-default.png")
-os.makedirs(os.path.dirname(out_path), exist_ok=True)
-img.save(out_path, format="PNG", optimize=True)
-print(f"Saved: {out_path} ({W}×{H})")
+# ------------------------------------------------------------------
+out = os.path.join(_sd, "..", "static", "og-default.png")
+os.makedirs(os.path.dirname(out), exist_ok=True)
+img.save(out, format="PNG", optimize=True)
+print(f"Default OG saved: {out}")

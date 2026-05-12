@@ -16,7 +16,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install feedparser requests python-dotenv
+        run: pip install feedparser requests python-dotenv trafilatura
 
       - name: Fetch and score stories
         run: python scripts/fetch_stories.py

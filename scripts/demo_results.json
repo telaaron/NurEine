@@ -1,0 +1,80 @@
+[
+  {
+    "variant": "demo_v1_white_bg_dandelion-clock-seeds",
+    "status": "success",
+    "url": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/demo/demo_v1_white_bg_dandelion-clock-seeds-8111eccb.png",
+    "prompt": "Minimalist 3D spot illustration of a single dandelion clock with seeds drifting away made of delicate translucent glass. hope spreading across the wind concept. Isolated completely on pure white background #ffffff. Soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K resolution. No text, no environment, no background elements. Subject centered exactly in the frame with equal empty space above and below.",
+    "background": {
+      "avg_background_hex": "#f2f3f2",
+      "whiteness_pct": 95.0,
+      "delta_from_card_paper_faf6ee": 9.4
+    },
+    "object": "Löwenzahn-Pusteblume",
+    "variant_desc": "Pure white (#ffffff) background, minimal changes"
+  },
+  {
+    "variant": "demo_v2_bright_white_dandelion-clock-seeds",
+    "status": "success",
+    "url": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/demo/demo_v2_bright_white_dandelion-clock-seeds-73ee37bb.png",
+    "prompt": "Minimalist 3D spot illustration, product photography style of a single dandelion clock with seeds drifting away made of delicate translucent glass. hope spreading across the wind concept. Photographed on a bright clean white studio backdrop, pure white #ffffff. Soft studio lighting from above and front, soft diffused shadows beneath the subject. High-end editorial, calming, 8K resolution. No text, no environment, no background elements. Subject perfectly centered in the frame with generous empty space above and below. Clean product-shot composition, subject occupies middle 60% of the frame.",
+    "background": {
+      "avg_background_hex": "#fdfdfd",
+      "whiteness_pct": 99.2,
+      "delta_from_card_paper_faf6ee": 16.8
+    },
+    "object": "Löwenzahn-Pusteblume",
+    "variant_desc": "Emphasizing bright clean white studio backdrop"
+  },
+  {
+    "variant": "demo_v3_seamless_paper_dandelion-clock-seeds",
+    "status": "success",
+    "url": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/demo/demo_v3_seamless_paper_dandelion-clock-seeds-886cacc2.png",
+    "prompt": "Minimalist 3D spot illustration on seamless white sweep of a single dandelion clock with seeds drifting away made of delicate translucent glass. hope spreading across the wind concept. Isolated on a seamless white sweep backdrop, pure white #ffffff, no horizon line visible. Soft diffused overhead lighting, subtle contact shadow beneath subject. High-end editorial product rendering, calming, photorealistic, 8K resolution. No text, no environment, no background elements. Subject centered in the middle of the frame with equal padding on all sides. Composition fills approximately 50-60% of the frame so subject is not cropped.",
+    "background": {
+      "avg_background_hex": "#f6f6f6",
+      "whiteness_pct": 96.5,
+      "delta_from_card_paper_faf6ee": 8.9
+    },
+    "object": "Löwenzahn-Pusteblume",
+    "variant_desc": "Seamless paper sweep backdrop, photorealistic reference"
+  },
+  {
+    "variant": "demo_v1_white_bg_ginkgo-leaf",
+    "status": "success",
+    "url": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/demo/demo_v1_white_bg_ginkgo-leaf-56aff698.png",
+    "prompt": "Minimalist 3D spot illustration of a single golden ginkgo leaf made of polished brass and silk. resilience and adaptation concept. Isolated completely on pure white background #ffffff. Soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K resolution. No text, no environment, no background elements. Subject centered exactly in the frame with equal empty space above and below.",
+    "background": {
+      "avg_background_hex": "#fefefe",
+      "whiteness_pct": 99.6,
+      "delta_from_card_paper_faf6ee": 18.3
+    },
+    "object": "Ginkgo-Blatt",
+    "variant_desc": "Pure white (#ffffff) background, minimal changes"
+  },
+  {
+    "variant": "demo_v2_bright_white_ginkgo-leaf",
+    "status": "success",
+    "url": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/demo/demo_v2_bright_white_ginkgo-leaf-61dd6bd1.png",
+    "prompt": "Minimalist 3D spot illustration, product photography style of a single golden ginkgo leaf made of polished brass and silk. resilience and adaptation concept. Photographed on a bright clean white studio backdrop, pure white #ffffff. Soft studio lighting from above and front, soft diffused shadows beneath the subject. High-end editorial, calming, 8K resolution. No text, no environment, no background elements. Subject perfectly centered in the frame with generous empty space above and below. Clean product-shot composition, subject occupies middle 60% of the frame.",
+    "background": {
+      "avg_background_hex": "#f8f8f7",
+      "whiteness_pct": 97.1,
+      "delta_from_card_paper_faf6ee": 9.4
+    },
+    "object": "Ginkgo-Blatt",
+    "variant_desc": "Emphasizing bright clean white studio backdrop"
+  },
+  {
+    "variant": "demo_v3_seamless_paper_ginkgo-leaf",
+    "status": "success",
+    "url": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/demo/demo_v3_seamless_paper_ginkgo-leaf-68ce31e7.png",
+    "prompt": "Minimalist 3D spot illustration on seamless white sweep of a single golden ginkgo leaf made of polished brass and silk. resilience and adaptation concept. Isolated on a seamless white sweep backdrop, pure white #ffffff, no horizon line visible. Soft diffused overhead lighting, subtle contact shadow beneath subject. High-end editorial product rendering, calming, photorealistic, 8K resolution. No text, no environment, no background elements. Subject centered in the middle of the frame with equal padding on all sides. Composition fills approximately 50-60% of the frame so subject is not cropped.",
+    "background": {
+      "avg_background_hex": "#f0f0f0",
+      "whiteness_pct": 94.1,
+      "delta_from_card_paper_faf6ee": 11.8
+    },
+    "object": "Ginkgo-Blatt",
+    "variant_desc": "Seamless paper sweep backdrop, photorealistic reference"
+  }
+]

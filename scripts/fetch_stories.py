@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 import sys
 import time
@@ -399,7 +400,7 @@ subtitle: Eine Zeile Kontext (max 120 Zeichen, sachlich)
 
 summary: 2-3 deutsche Sätze, was passiert ist und warum es strukturell wichtig ist. Das ist die Kurzfassung für Story-Cards und Teaser.
 
-body: Ein ausführlicher journalistischer Artikel in deutscher Sprache. Schreibe 12-18 Sätze mit Substanz: strukturiere den Text in die Abschnitte "Hintergrund", "Was ist passiert", "Warum das wichtig ist" und "Ausblick". Verwende konkrete Zahlen, Namen, Orte und Zitate aus dem Originaltext. Schreibe im Stil von ZEIT ONLINE oder brand eins — sachlich, präzise, aber zugänglich. Nicht werblich, nicht reißerisch. Zielgruppe: Entscheider in HR, Bildung und Gesundheitswesen, die in 3-5 Minuten echten Mehrwert erhalten.
+body: Ein ausführlicher journalistischer Artikel in deutscher Sprache. Schreibe 12-18 Sätze mit Substanz: strukturiere den Text in die Abschnitte "Hintergrund", "Was ist passiert", "Warum das wichtig ist" und "Ausblick". Jeder Abschnitt beginnt mit einer `## Abschnittsname`-Überschrift (Markdown-H2), gefolgt von einer Leerzeile und dann 2-4 Fließtext-Absätzen (durch Leerzeilen getrennt). Innerhalb der Absätze kannst du **fett** und *kursiv* für Betonung verwenden. Verwende konkrete Zahlen, Namen, Orte und Zitate aus dem Originaltext. Schreibe im Stil von ZEIT ONLINE oder brand eins — sachlich, präzise, aber zugänglich. Nicht werblich, nicht reißerisch. Zielgruppe: Entscheider in HR, Bildung und Gesundheitswesen, die in 3-5 Minuten echten Mehrwert erhalten.
 
 category: eine von [klima, gesundheit, wissenschaft, gemeinschaft, tiere, kultur, innovation]
 
@@ -411,7 +412,7 @@ lat: Breitengrad (float)
 
 lng: Längengrad (float)
 
-image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: Minimalist 3D spot illustration, isolated on pure white background (#ffffff), soft studio lighting, soft diffused shadows beneath the subject. High-end editorial, calming, 8K. The image will be used as a hero illustration on a news website AND composited into editorial Open Graph share images (1200x630) — so the main subject should be visually striking and EXACTLY centered in the middle of the frame, with generous equal empty space on all sides (top, bottom, left, right) to prevent cropping. The subject should occupy approximately 50-60% of the frame height. No text, no environment, no background elements. Format: "Minimalist 3D spot illustration of [OBJECT] made of [MATERIAL]. [CONCEPT] concept. Isolated completely on pure white background #ffffff. Soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K resolution. No text, no environment, no background elements. Subject centered in the middle of the frame with generous equal empty space above and below." Beispiel: "Minimalist 3D spot illustration of mangrove saplings made of glossy ceramic. Environmental restoration concept. Isolated completely on pure white background #ffffff. Soft studio lighting, soft diffused shadows. High-end editorial, calming, 8K resolution. No text, no environment, no background elements. Subject centered in the middle of the frame with generous equal empty space above and below."
+image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: Clean minimalist 3D spot illustration on pure white #ffffff backdrop (will be removed later — white is only for separation). Studio lighting, soft shadow. Editorial quality, 8K. No text, no environment. CRITICAL: Subject FULLY visible, NOT cropped at any edge. Subject small in center (~40% of frame), LOTS of white space on ALL sides. Format: "Clean minimalist 3D spot illustration of [OBJECT] made of [MATERIAL]. [CONCEPT] concept. Isolated on pure white background #ffffff. Soft studio lighting, soft shadows. 8K. No text. Subject small and centered with plenty of empty white space on all sides." Beispiel: "Clean minimalist 3D spot illustration of mangrove saplings made of glossy ceramic. Environmental restoration concept. Isolated on pure white background #ffffff. Soft studio lighting, soft shadows. 8K. No text. Subject small and centered with plenty of empty white space on all sides."
 
 impact_reach: geschätzte Anzahl direkt positiv betroffener Menschen (integer)
 
@@ -419,10 +420,9 @@ impact_durability: 0-100 (Wie lange hält der Effekt an? Strukturveränderung=10
 
 impact_evidence: 0-100 (Peer-reviewed=100, etablierte Redaktion=75, lokal=50)
 
-reading_time_min: geschätzte Lesezeit in Minuten
+impact_score: Integer 0-100. Formel: round(impact_reach_normalized * 0.4 + impact_durability * 0.35 + impact_evidence * 0.25) wobei impact_reach_normalized = min(100, log10(impact_reach + 1) * 20)
 
-Berechne impact_score = round(impact_reach_normalized * 0.4 + impact_durability * 0.35 + impact_evidence * 0.25)
-wobei impact_reach_normalized = min(100, log10(impact_reach + 1) * 20)
+reading_time_min: geschätzte Lesezeit in Minuten
 
 Antworte ausschließlich mit validem JSON. Kein Text davor oder danach."""
 
@@ -554,6 +554,32 @@ def build_prompt(entry: feedparser.FeedParserDict, source_name: str) -> str:
     )
 
 
+def _compute_impact_score(
+    score_from_ai: int | float | None,
+    reach: int | float | None,
+    durability: int | float | None,
+    evidence: int | float | None,
+) -> int | None:
+    """Compute impact_score with server-side fallback if AI didn't return it."""
+    if score_from_ai is not None:
+        try:
+            s = int(score_from_ai)
+            return max(1, min(100, s))
+        except (ValueError, TypeError):
+            pass
+
+    # Fallback: compute from sub-scores
+    if reach is None or durability is None or evidence is None:
+        return None
+
+    try:
+        reach_norm = min(100.0, math.log10(max(1, int(reach) + 1)) * 20)
+        raw = reach_norm * 0.4 + int(durability) * 0.35 + int(evidence) * 0.25
+        return max(1, min(100, round(raw)))
+    except (ValueError, TypeError):
+        return None
+
+
 def parse_ai_response(text: str | None) -> dict[str, Any] | None:
     """Parse the AI response text into a dict."""
     if not text:
@@ -651,8 +677,138 @@ def generate_image_fal(image_prompt: str) -> bytes | None:
         return None
 
 
+def remove_background(image_bytes: bytes) -> bytes | None:
+    """Remove the background from a FLUX.1 generated image using rembg.
+
+    Converts the image to RGBA with transparency where the background was.
+    Falls back gracefully if rembg is not available (e.g. in CI without the model).
+    Returns PNG bytes with alpha channel, or None on failure.
+    """
+    try:
+        from PIL import Image as PILImage
+        from rembg import remove
+    except ImportError:
+        log.warning("  rembg not available — skipping background removal.")
+        return None
+
+    try:
+        input_img = PILImage.open(BytesIO(image_bytes)).convert("RGBA")
+        output_img = remove(input_img, alpha_matting=True)
+
+        buf = BytesIO()
+        output_img.save(buf, format="PNG", optimize=True)
+        log.info("  Background removed (size: %d -> %d bytes)", len(image_bytes), buf.tell())
+        return buf.getvalue()
+    except Exception as exc:
+        log.warning("  Background removal failed: %s", exc)
+        return None
+
+
+def fit_object_in_frame(image_bytes: bytes, padding_pct: float = 0.20) -> bytes | None:
+    """Ensure the object is fully visible with generous padding.
+
+    Detects the bounding box of non-transparent pixels in an RGBA image,
+    crops to the object region, adds padding on all sides (as percentage
+    of the object's larger dimension), and resizes back to the original
+    square size. This guarantees the object is never cropped by the
+    object-cover display.
+
+    Returns PNG bytes, or None on failure (falls back to original).
+    """
+    try:
+        from PIL import Image as PILImage
+    except ImportError:
+        return None
+
+    try:
+        img = PILImage.open(BytesIO(image_bytes))
+        if img.mode != "RGBA":
+            return None  # Only process transparent images
+
+        w, h = img.size
+        alpha = img.split()[-1]
+
+        # Find the bounding box of non-transparent pixels
+        bbox = alpha.getbbox()
+        if bbox is None:
+            log.warning("  fit_object: no opaque pixels found — keeping original.")
+            return None
+
+        obj_x1, obj_y1, obj_x2, obj_y2 = bbox
+        obj_w = obj_x2 - obj_x1
+        obj_h = obj_y2 - obj_y1
+
+        # Calculate padding in pixels (20% of object's larger dimension)
+        pad_px = int(max(obj_w, obj_h) * padding_pct)
+
+        # The padded area should be square and fully contain the object with padding.
+        # Size = max(object_dimension) + 2*padding
+        padded_size = max(obj_w, obj_h) + 2 * pad_px
+
+        # Center the square crop on the object center
+        obj_cx = obj_x1 + obj_w // 2
+        obj_cy = obj_y1 + obj_h // 2
+
+        sq_x1 = obj_cx - padded_size // 2
+        sq_y1 = obj_cy - padded_size // 2
+        sq_x2 = sq_x1 + padded_size
+        sq_y2 = sq_y1 + padded_size
+
+        # Clamp to image bounds — may reduce size if object is at the edge
+        if sq_x1 < 0:
+            sq_x2 -= sq_x1
+            sq_x1 = 0
+        if sq_y1 < 0:
+            sq_y2 -= sq_y1
+            sq_y1 = 0
+        if sq_x2 > w:
+            sq_x1 -= (sq_x2 - w)
+            sq_x2 = w
+        if sq_y2 > h:
+            sq_y1 -= (sq_y2 - h)
+            sq_y2 = h
+
+        actual_w = sq_x2 - sq_x1
+        actual_h = sq_y2 - sq_y1
+
+        # Crop and resize back to original square size (with transparency preserved)
+        cropped = img.crop((sq_x1, sq_y1, sq_x2, sq_y2))
+        result = PILImage.new("RGBA", (w, h), (0, 0, 0, 0))
+
+        # Scale to 85% of the canvas to always have a minimum margin,
+        # regardless of whether the object touched an edge
+        margin_factor = 0.85
+        scale = min(w / actual_w, h / actual_h) * margin_factor
+        new_w = int(actual_w * scale)
+        new_h = int(actual_h * scale)
+        resized = cropped.resize((new_w, new_h), PILImage.LANCZOS)
+        paste_x = (w - new_w) // 2
+        paste_y = (h - new_h) // 2
+        result.paste(resized, (paste_x, paste_y))
+
+        log.info(
+            "  Auto-fit: object bbox=(%d,%d,%d,%d) padded=%dpx → square %d×%d → canvas %d×%d",
+            obj_x1, obj_y1, obj_x2, obj_y2, pad_px,
+            padded_size, padded_size, w, h,
+        )
+
+        buf = BytesIO()
+        result.save(buf, format="PNG", optimize=True)
+        return buf.getvalue()
+
+    except Exception as exc:
+        log.warning("  fit_object_in_frame failed: %s", exc)
+        return None
+
+
 def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None:
-    """Generate an image via FLUX.1 on fal.ai and upload to Supabase Storage.
+    """Generate an image via FLUX.1 on fal.ai, remove background, upload to Supabase.
+
+    The pipeline:
+      1. FLUX.1 [schnell] generates a square image with white background
+      2. rembg (u2net) removes the white background → transparent PNG
+      3. Auto-fit: detect object bounds, add padding, resize → object fully in frame
+      4. Upload to Supabase Storage as PNG with alpha channel
 
     Returns the public URL of the uploaded image, or None on failure.
     """
@@ -666,6 +822,18 @@ def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None
     if not image_bytes:
         log.warning("  Image generation failed for: %.60s", story_title)
         return None
+
+    # Remove background (white → transparent)
+    image_bytes_nobg = remove_background(image_bytes)
+    if image_bytes_nobg:
+        image_bytes = image_bytes_nobg
+
+        # Auto-fit: ensure object is fully in frame with padding (zoom-out)
+        image_bytes_fit = fit_object_in_frame(image_bytes, padding_pct=0.20)
+        if image_bytes_fit:
+            image_bytes = image_bytes_fit
+    else:
+        log.info("  Keeping original image (no background removal available).")
 
     # Build a clean filename: story-images/story-{slug}-{uuid12}.png
     short_id = uuid.uuid4().hex[:12]
@@ -938,7 +1106,12 @@ def run() -> None:
                 "impact_reach": result.get("impact_reach"),
                 "impact_durability": result.get("impact_durability"),
                 "impact_evidence": result.get("impact_evidence"),
-                "impact_score": result.get("impact_score"),
+                "impact_score": _compute_impact_score(
+                    result.get("impact_score"),
+                    result.get("impact_reach"),
+                    result.get("impact_durability"),
+                    result.get("impact_evidence"),
+                ),
                 "reading_time_min": result.get("reading_time_min") or actual_reading_time,
                 "published_at": entry.get("published", entry.get("updated", datetime.now(timezone.utc).isoformat())),
             }

@@ -27,8 +27,51 @@ export function paragraphs(body: string): string[] {
 }
 
 export function inline(text: string): string {
-	// **bold** -> <strong>
-	return text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+	// **bold** -> <strong>, *italic* -> <em>
+	return text
+		.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+		.replace(/\*(.+?)\*/g, '<em>$1</em>');
+}
+
+export type Section = {
+	heading: string;
+	paras: string[];
+};
+
+/** Parse body into structured sections. Detects `## Heading` (markdown h2)
+ *  or `**Heading**` (bold) followed by blank line as section boundaries.
+ *  Content before the first heading becomes a lead section with empty heading. */
+export function sections(body: string): Section[] {
+	const blocks = body.trim().split(/\n\n+/);
+	const result: Section[] = [];
+	let current: Section | null = null;
+
+	for (const block of blocks) {
+		const trimmed = block.trim();
+		// ## Heading or **Heading** (standalone line)
+		const h2Match = trimmed.match(/^##\s+(.+)$/);
+		const boldMatch = trimmed.match(/^\*\*(.+?)\*\*$/);
+
+		if (h2Match || boldMatch) {
+			const heading = (h2Match || boldMatch)![1];
+			if (current && current.heading === '') {
+				// Flush lead section
+				result.push(current);
+			} else if (current) {
+				result.push(current);
+			}
+			current = { heading, paras: [] };
+		} else if (current) {
+			current.paras.push(trimmed);
+		} else {
+			// Content before first heading: lead section
+			result.push({ heading: '', paras: [trimmed] });
+			current = { heading: '', paras: [] };
+		}
+	}
+
+	if (current) result.push(current);
+	return result;
 }
 
 export const toneStyles: Record<

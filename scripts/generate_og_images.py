@@ -277,7 +277,14 @@ def compose_og_image(
     # ---- 1) Story image panel (left, full-bleed height) ----
     if image_bytes:
         try:
-            story_img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+            story_img = Image.open(io.BytesIO(image_bytes))
+
+            # Handle alpha channel if present (rembg output)
+            has_alpha = story_img.mode == "RGBA"
+
+            # Prepare a beige background panel for the image
+            bg_panel = Image.new("RGBA", (IMAGE_W, IMAGE_H), BG + (255,))
+
             # Crop to 660:630 aspect ratio, then resize
             src_w, src_h = story_img.size
             target_ratio = IMAGE_W / IMAGE_H
@@ -296,16 +303,28 @@ def compose_og_image(
 
             story_img = story_img.resize((IMAGE_W, IMAGE_H), Image.LANCZOS)
 
-            # Apply a subtle dark gradient overlay on the right edge of the image
-            # to improve text readability (image transitions to text column)
-            overlay = Image.new("RGBA", (IMAGE_W, IMAGE_H), (0, 0, 0, 0))
-            overlay_draw = ImageDraw.Draw(overlay)
-            for x in range(IMAGE_W - 120, IMAGE_W):
-                alpha = int(80 * (x - (IMAGE_W - 120)) / 120)  # 0 to 80
-                overlay_draw.rectangle([(x, 0), (x + 1, IMAGE_H)], fill=(0, 0, 0, alpha))
-
-            img.paste(story_img, (0, 0))
-            img.paste(overlay, (0, 0), overlay)
+            if has_alpha:
+                # Composite transparent story image ONTO beige background panel
+                bg_panel.paste(story_img, (0, 0), story_img)
+                # Apply a subtle dark gradient overlay on the right edge
+                overlay = Image.new("RGBA", (IMAGE_W, IMAGE_H), (0, 0, 0, 0))
+                overlay_draw = ImageDraw.Draw(overlay)
+                for x in range(IMAGE_W - 120, IMAGE_W):
+                    alpha = int(80 * (x - (IMAGE_W - 120)) / 120)
+                    overlay_draw.rectangle([(x, 0), (x + 1, IMAGE_H)], fill=(0, 0, 0, alpha))
+                bg_panel.paste(overlay, (0, 0), overlay)
+                # Paste the combined result into the main RGB canvas
+                img.paste(bg_panel.convert("RGB"), (0, 0))
+            else:
+                # No alpha — paste RGB image directly (legacy behavior)
+                story_img = story_img.convert("RGB")
+                overlay = Image.new("RGBA", (IMAGE_W, IMAGE_H), (0, 0, 0, 0))
+                overlay_draw = ImageDraw.Draw(overlay)
+                for x in range(IMAGE_W - 120, IMAGE_W):
+                    alpha = int(80 * (x - (IMAGE_W - 120)) / 120)
+                    overlay_draw.rectangle([(x, 0), (x + 1, IMAGE_H)], fill=(0, 0, 0, alpha))
+                img.paste(story_img, (0, 0))
+                img.paste(overlay, (0, 0), overlay)
 
         except Exception as exc:
             log.warning("  Could not process story image: %s", exc)
@@ -330,11 +349,7 @@ def compose_og_image(
             font=wm_font,
         )
 
-    # ---- Divider line between image and text ----
-    # A subtle vertical accent line
-    for y in range(MARGIN_TOP, OG_HEIGHT - MARGIN_TOP):
-        intensity = 40 + int(20 * (1.0 - abs(y - OG_HEIGHT / 2) / (OG_HEIGHT / 2)))
-        draw.point((IMAGE_W, y), fill=accent + (min(intensity, 70),))
+    # No divider line — the object floats directly on the canvas background
 
     # ---- 2) Text column ----
     title_font_size = 56

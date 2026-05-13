@@ -59,26 +59,17 @@
 	onmouseenter={(e) => (e.currentTarget.style.borderColor = t.ring)}
 	onmouseleave={(e) => (e.currentTarget.style.borderColor = 'var(--color-rule)')}
 >
-	<div class="relative {size === 'lg' ? 'aspect-16/10' : 'aspect-5/3'} overflow-hidden">
-		<div
-			class="absolute inset-0 transition-transform duration-[900ms] group-hover:scale-[1.04]"
-			style="background:
-        radial-gradient(circle at 30% 30%, {t.fg}30 0%, transparent 50%),
-        radial-gradient(circle at 75% 70%, {t.fg}1f 0%, transparent 55%),
-        linear-gradient(160deg, {t.bg}, var(--color-paper));"
-		></div>
+	<div class="relative {size === 'lg' ? 'aspect-16/10' : 'aspect-5/3'} overflow-hidden"
+		style="background: var(--color-paper);"
+	>
 		{#if heroImageSrc}
 			<img
 				src={heroImageSrc}
 				alt=""
-				class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] group-hover:scale-[1.04]"
+				class="absolute inset-0 h-full w-full object-contain transition-transform duration-[900ms] group-hover:scale-[1.04]"
 				loading="lazy"
 				decoding="async"
 			/>
-			<div
-				class="absolute inset-0"
-				style="background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(245,241,234,0.2));"
-			></div>
 		{:else}
 			<div
 				class="absolute inset-0 flex items-center justify-center text-5xl sm:text-6xl lg:text-7xl"

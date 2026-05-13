@@ -123,8 +123,17 @@ export async function GET({ url }) {
 		);
 	}
 
-	// 2. Delete the subscriber (or deactivate)
-	// Using delete for complete removal per the spec
+	// 2. Verify token matches the subscriber's confirmation_token
+	// Prevents unauthorized unsubscribes (anyone could unsubscribe any email otherwise)
+	if (!token || token !== subscriber.confirmation_token) {
+		return htmlResponse(
+			'Abmeldung verweigert',
+			'Der Abmeldelink ist ung\u00fcltig oder abgelaufen. Bitte verwende den Abmeldelink aus dem Newsletter.',
+			true
+		);
+	}
+
+	// 3. Delete the subscriber
 	const { error: deleteError } = await supabaseAdmin
 		.from('nureine_subscribers')
 		.delete()
@@ -139,7 +148,7 @@ export async function GET({ url }) {
 		);
 	}
 
-	// 3. Return success HTML page
+	// 4. Return success HTML page
 	return htmlResponse(
 		'Erfolgreich abgemeldet',
 		'Du wurdest erfolgreich vom NurEine-Newsletter abgemeldet. Wir freuen uns, wenn du sp\u00e4ter wieder vorbeischaust!'

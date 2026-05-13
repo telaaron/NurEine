@@ -188,11 +188,10 @@ def generate_image_fal(prompt: str) -> bytes | None:
 # Image prompt builder
 # ---------------------------------------------------------------------------
 IMAGE_STYLE = (
-    "Minimalist 3D spot illustration, isolated on solid warm beige background #FAF8F5. "
-    "Soft studio lighting, soft diffused shadows. "
-    "High-end editorial, calming, 8K resolution. "
-    "The subject should be visually striking and centered, with generous space around it "
-    "for editorial text overlays in Open Graph share images. "
+    "Clean minimalist 3D spot illustration, isolated on pure white background #ffffff. "
+    "Soft studio lighting, soft shadows. "
+    "High-end editorial, 8K resolution. "
+    "Subject small and centered with plenty of empty white space on all sides. "
     "No text, no environment, no background elements."
 )
 
@@ -276,6 +275,62 @@ def run() -> None:
             log.warning("  Failed to generate image for: %s", title)
             failed += 1
             continue
+
+        # 3b. Remove background (white → transparent)
+        try:
+            from PIL import Image as PILImage
+            from rembg import remove
+            input_img = PILImage.open(BytesIO(image_bytes)).convert("RGBA")
+            output_img = remove(input_img, alpha_matting=True)
+            buf = BytesIO()
+            output_img.save(buf, format="PNG", optimize=True)
+            image_bytes = buf.getvalue()
+            log.info("  Background removed")
+
+            # 3c. Auto-fit: ensure object is fully in frame with padding
+            alpha = output_img.split()[-1]
+            bbox = alpha.getbbox()
+            if bbox:
+                w, h = output_img.size
+                obj_x1, obj_y1, obj_x2, obj_y2 = bbox
+                obj_w = obj_x2 - obj_x1
+                obj_h = obj_y2 - obj_y1
+                pad_px = int(max(obj_w, obj_h) * 0.20)
+                padded_size = max(obj_w, obj_h) + 2 * pad_px
+                obj_cx, obj_cy = obj_x1 + obj_w // 2, obj_y1 + obj_h // 2
+                sq_x1 = obj_cx - padded_size // 2
+                sq_y1 = obj_cy - padded_size // 2
+                sq_x2 = sq_x1 + padded_size
+                sq_y2 = sq_y1 + padded_size
+                if sq_x1 < 0:
+                    sq_x2 -= sq_x1; sq_x1 = 0
+                if sq_y1 < 0:
+                    sq_y2 -= sq_y1; sq_y1 = 0
+                if sq_x2 > w:
+                    sq_x1 -= (sq_x2 - w); sq_x2 = w
+                if sq_y2 > h:
+                    sq_y1 -= (sq_y2 - h); sq_y2 = h
+                actual_w = sq_x2 - sq_x1
+                actual_h = sq_y2 - sq_y1
+                cropped = output_img.crop((sq_x1, sq_y1, sq_x2, sq_y2))
+                result = PILImage.new("RGBA", (w, h), (0, 0, 0, 0))
+                margin_factor = 0.85  # always leave 15% margin
+                scale = min(w / actual_w, h / actual_h) * margin_factor
+                new_w = int(actual_w * scale)
+                new_h = int(actual_h * scale)
+                resized = cropped.resize((new_w, new_h), PILImage.LANCZOS)
+                paste_x = (w - new_w) // 2
+                paste_y = (h - new_h) // 2
+                result.paste(resized, (paste_x, paste_y))
+                fit_buf = BytesIO()
+                result.save(fit_buf, format="PNG", optimize=True)
+                image_bytes = fit_buf.getvalue()
+                log.info("  Auto-fit: object bbox=(%d,%d,%d,%d) +%dpx pad → %d×%d → canvas %d×%d (%.0f%% margin)",
+                         obj_x1, obj_y1, obj_x2, obj_y2, pad_px, padded_size, padded_size, w, h, (1-margin_factor)*100)
+        except ImportError:
+            log.info("  rembg not available — keeping original image.")
+        except Exception as exc:
+            log.warning("  Background removal/fit failed: %s — using original.", exc)
 
         # 4. Upload to Supabase Storage
         short_id = uuid.uuid4().hex[:12]

@@ -11,7 +11,7 @@
 
 	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
 	const featuredUrl = $derived(featured ? `${baseUrl}/geschichte/${featured.slug}` : baseUrl);
-			
+
 	const today = new Date();
 	const dateLong = today.toLocaleDateString('de-DE', {
 		weekday: 'long',
@@ -19,6 +19,40 @@
 		month: 'long',
 		year: 'numeric'
 	});
+
+	// Newsletter form state
+	let newsletterEmail = $state('');
+	let newsletterStatus = $state('');
+	let newsletterLoading = $state(false);
+
+	async function handleNewsletterSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		if (newsletterLoading) return;
+		if (!newsletterEmail.trim()) {
+			newsletterStatus = 'Bitte gib eine E-Mail-Adresse ein.';
+			return;
+		}
+		newsletterLoading = true;
+		newsletterStatus = '';
+		try {
+			const res = await fetch(`${base}/api/subscribe`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email: newsletterEmail.trim(), tier: 'free' })
+			});
+			const result = await res.json();
+			if (res.ok) {
+				newsletterStatus = result.message || 'Fast geschafft! Bitte überprüfe dein Postfach.';
+				newsletterEmail = '';
+			} else {
+				newsletterStatus = result.error || 'Ein Fehler ist aufgetreten. Bitte versuche es später erneut.';
+			}
+		} catch {
+			newsletterStatus = 'Ein Fehler ist aufgetreten. Bitte versuche es später erneut.';
+		} finally {
+			newsletterLoading = false;
+		}
+	}
 </script>
 
 <!-- Hero — daily story -->
@@ -230,26 +264,39 @@
 			</p>
 		</div>
 		<form
-			class="lg:col-span-5 flex flex-col sm:flex-row gap-3"
-			onsubmit={(e) => e.preventDefault()}
+			class="lg:col-span-5 flex flex-col gap-3"
+			onsubmit={handleNewsletterSubmit}
 		>
-			<label class="flex-1">
-				<span class="sr-only">E-Mail-Adresse</span>
-				<input
-					type="email"
-					required
-					placeholder="Deine beste E-Mail"
-					class="w-full px-4 py-3 rounded-full text-sm bg-transparent transition-all"
-					style="border: 1px solid var(--color-rule-strong); color: var(--color-ink);"
-				/>
-			</label>
-			<button
-				type="submit"
-				class="px-6 py-3 rounded-full text-sm font-medium transition-all whitespace-nowrap"
-				style="background: var(--color-amber); color: var(--color-paper);"
-			>
-				Abonnieren
-			</button>
+			<div class="flex flex-col sm:flex-row gap-3">
+				<label class="flex-1">
+					<span class="sr-only">E-Mail-Adresse</span>
+					<input
+						type="email"
+						required
+						placeholder="Deine beste E-Mail"
+						bind:value={newsletterEmail}
+						disabled={newsletterLoading}
+						class="w-full px-4 py-3 rounded-full text-sm bg-transparent transition-all"
+						style="border: 1px solid var(--color-rule-strong); color: var(--color-ink);"
+					/>
+				</label>
+				<button
+					type="submit"
+					disabled={newsletterLoading}
+					class="px-6 py-3 rounded-full text-sm font-medium transition-all whitespace-nowrap disabled:opacity-60"
+					style="background: var(--color-amber); color: var(--color-paper);"
+				>
+					{newsletterLoading ? 'Wird gesendet...' : 'Abonnieren'}
+				</button>
+			</div>
+			{#if newsletterStatus}
+				<p
+					class="text-sm"
+					style="color: var(--color-ink-soft); font-family: var(--font-serif);"
+				>
+					{newsletterStatus}
+				</p>
+			{/if}
 		</form>
 	</div>
 </section>

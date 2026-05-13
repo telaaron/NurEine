@@ -334,17 +334,42 @@ def send_email(to_email: str, subject: str, html_body: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
-def log_send(subscriber_id: str, story_id: str) -> None:
+def log_send(subscriber_id: str, story_id: str, b2b_client_id: str | None = None) -> None:
     """Insert a row into the newsletter_sends table."""
     record = {
         "subscriber_id": subscriber_id,
         "story_id": story_id,
         "sent_at": datetime.now(timezone.utc).isoformat(),
     }
+    if b2b_client_id:
+        record["b2b_client_id"] = b2b_client_id
     try:
         supabase_post("nureine_newsletter_sends", record)
     except requests.RequestException as exc:
         logger.error("Failed to log send for subscriber %s: %s", subscriber_id, exc)
+
+
+def log_delivery(b2b_client_id: str, story_id: str, integration_type: str,
+                 integration_target: str, status: str = "sent",
+                 status_code: int | None = None,
+                 error_message: str | None = None) -> None:
+    """Insert a row into the delivery_log table for B2B tracking."""
+    record = {
+        "b2b_client_id": b2b_client_id,
+        "story_id": story_id,
+        "integration_type": integration_type,
+        "integration_target": integration_target,
+        "status": status,
+        "sent_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if status_code is not None:
+        record["status_code"] = status_code
+    if error_message:
+        record["error_message"] = error_message
+    try:
+        supabase_post("nureine_delivery_log", record)
+    except requests.RequestException as exc:
+        logger.error("Failed to log delivery for client %s: %s", b2b_client_id, exc)
 
 
 def log_cron_run(newsletter_type: str, total_recipients: int,
@@ -362,6 +387,135 @@ def log_cron_run(newsletter_type: str, total_recipients: int,
         supabase_post("nureine_cron_runs", record)
     except requests.RequestException as exc:
         logger.error("Failed to log cron run: %s", exc)
+
+
+# ---------------------------------------------------------------------------
+# B2B Client helpers
+# ---------------------------------------------------------------------------
+
+
+def get_b2b_clients() -> list[dict]:
+    """Fetch active B2B clients (status = pilot or paid)."""
+    params = {
+        "status": "in.(pilot,paid)",
+        "select": "id,company_name,contact_email,integration_type,integration_target,mrr_value",
+    }
+    try:
+        result = supabase_get("nureine_b2b_clients", params=params)
+        if isinstance(result, dict):
+            logger.warning("Unexpected b2b_clients response shape: %s", result)
+            return []
+        return result  # list
+    except requests.RequestException as exc:
+        logger.error("Failed to fetch B2B clients: %s", exc)
+        return []
+
+
+def build_b2b_html_body(story: dict, company_name: str) -> str:
+    """Build a premium HTML email for B2B delivery."""
+    story_id = str(story.get("id", ""))
+    title = story.get("title", "")
+    slug = f"{title}-{story_id[:8]}".lower().replace(" ", "-")
+    story_url = f"{PUBLIC_BASE_URL}/geschichte/{slug}"
+
+    category = story.get("category", "Allgemein")
+    tone_map = {
+        "klima": "sage", "gesundheit": "rose", "wissenschaft": "sky",
+        "gemeinschaft": "amber", "tiere": "sage", "kultur": "amber",
+        "innovation": "sky",
+    }
+    tone = tone_map.get(category, "amber")
+    category_color = {
+        "amber": "#c87340", "sage": "#5a7a52",
+        "rose": "#b87a7a", "sky": "#6c8aa8",
+    }.get(tone, "#c87340")
+
+    summary = story.get("summary", "")
+    image_url = story.get("image_url", "")
+    if image_url:
+        header_html = f'<td style="padding:0;"><img src="{image_url}" alt="" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;border-radius:8px 8px 0 0;" /></td>'
+    else:
+        header_html = ''
+
+    # B2B branding: custom header mentioning the company
+    b2b_header = f'<tr><td style="padding:24px 36px 0;"><p style="margin:0;font-family:\'Inter\',\'Helvetica Neue\',Arial,sans-serif;font-size:11px;color:#9a9087;text-transform:uppercase;letter-spacing:0.16em;">Gute Nachrichten – powered by {company_name}</p></td></tr>'
+
+    return f"""<!DOCTYPE html>
+<html lang="de">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background-color:#f5f1ea;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;">
+<tr><td align="center" style="padding:40px 16px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:8px;overflow:hidden;border:1px solid rgba(26,24,21,0.12);">
+{b2b_header}
+{header_html}
+<tr><td style="padding:20px 36px 28px;">
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>
+<span style="display:inline-block;background-color:{category_color};color:#faf6ee;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.16em;padding:3px 10px;border-radius:9999px;">{category}</span>
+</td></tr></table>
+<h2 style="margin:0 0 12px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:26px;font-weight:500;color:#1a1815;line-height:1.18;letter-spacing:-0.01em;">{title}</h2>
+<p style="margin:0 0 24px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.65;">{summary}</p>
+</td></tr>
+<tr><td style="padding:0 36px 28px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="background-color:#1a1815;border-radius:9999px;text-align:center;">
+<a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 36px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:500;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen →</a>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:0 36px 32px;">
+<p style="margin:0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.5;">
+NurEine – Eine Geschichte am Tag. Mehr nicht.<br/>
+Bereitgestellt für <strong>{company_name}</strong>.
+</p>
+</td></tr>
+</table>
+</td></tr></table></body></html>"""
+
+
+def build_b2b_webhook_payload(story: dict) -> dict:
+    """Build a Slack/Teams compatible JSON payload for webhook delivery."""
+    story_id = str(story.get("id", ""))
+    title = story.get("title", "")
+    slug = f"{title}-{story_id[:8]}".lower().replace(" ", "-")
+    story_url = f"{PUBLIC_BASE_URL}/geschichte/{slug}"
+    summary = story.get("summary", "")
+    category = story.get("category", "")
+    image_url = story.get("image_url", "")
+
+    return {
+        "text": title,
+        "blocks": [
+            {
+                "type": "header",
+                "text": {"type": "plain_text", "text": title}
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": summary or "(Keine Zusammenfassung)"
+                }
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {"type": "mrkdwn", "text": f"*Kategorie:* {category}"},
+                    {"type": "mrkdwn", "text": f"*Impact:* {story.get('impact_score', '?')}/100"}
+                ]
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {"type": "plain_text", "text": "Geschichte lesen"},
+                        "url": story_url,
+                        "style": "primary"
+                    }
+                ]
+            }
+        ]
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -468,13 +622,90 @@ def main() -> None:
     except Exception as exc:
         logger.error("Failed to log cron run (non-fatal): %s", exc)
 
+    # ---- Deliver to B2B clients (after B2C subscriber loop) -----------------
+    b2b_success = 0
+    b2b_failure = 0
+
+    try:
+        b2b_clients = get_b2b_clients()
+    except Exception as exc:
+        logger.warning("Could not fetch B2B clients (non-fatal): %s", exc)
+        b2b_clients = []
+
+    if b2b_clients:
+        logger.info("Delivering to %d B2B client(s)", len(b2b_clients))
+        for client in b2b_clients:
+            client_id = str(client.get("id", ""))
+            company = client.get("company_name", "Unbekannt")
+            integration_type = client.get("integration_type", "email")
+            target = client.get("integration_target", "")
+
+            if not target:
+                logger.warning("B2B client '%s' has no integration_target, skipping", company)
+                log_delivery(client_id, story_id, integration_type, target,
+                           status="failed", error_message="Missing integration_target")
+                b2b_failure += 1
+                continue
+
+            try:
+                if integration_type == "email":
+                    b2b_html = build_b2b_html_body(story, company)
+                    result = send_email(target, f"NurEine – {title}", b2b_html)
+                    logger.info("B2B email sent to '%s' at %s (messageId=%s)",
+                              company, target, result.get("messageId"))
+                    log_delivery(client_id, story_id, "email", target, status="sent")
+
+                    # Also log to newsletter_sends for the B2B subscriber account
+                    b2b_success += 1
+
+                elif integration_type == "webhook":
+                    payload = build_b2b_webhook_payload(story)
+                    resp = requests.post(target, json=payload, timeout=15,
+                                        headers={"Content-Type": "application/json"})
+                    if resp.ok:
+                        logger.info("B2B webhook sent to '%s' (status=%d)", company, resp.status_code)
+                        log_delivery(client_id, story_id, "webhook", target,
+                                   status="sent", status_code=resp.status_code)
+                        b2b_success += 1
+                    else:
+                        logger.error("B2B webhook to '%s' failed (status=%d): %s",
+                                   company, resp.status_code, resp.text[:200])
+                        log_delivery(client_id, story_id, "webhook", target,
+                                   status="failed", status_code=resp.status_code,
+                                   error_message=f"HTTP {resp.status_code}: {resp.text[:200]}")
+                        b2b_failure += 1
+
+                elif integration_type == "iframe":
+                    # iFrame is passive - just log it as pending/delivered
+                    logger.info("B2B iFrame client '%s' acknowledged (no push delivery)", company)
+                    log_delivery(client_id, story_id, "iframe", target, status="sent")
+                    b2b_success += 1
+
+                else:
+                    logger.warning("B2B client '%s' has unknown integration_type: %s", company, integration_type)
+                    log_delivery(client_id, story_id, integration_type, target,
+                               status="failed", error_message=f"Unknown integration_type: {integration_type}")
+                    b2b_failure += 1
+
+            except requests.RequestException as exc:
+                logger.error("B2B delivery failed for '%s' (%s): %s", company, integration_type, exc)
+                log_delivery(client_id, story_id, integration_type, target,
+                           status="failed", error_message=str(exc))
+                b2b_failure += 1
+            except Exception as exc:
+                logger.error("Unexpected B2B error for '%s': %s", company, exc)
+                log_delivery(client_id, story_id, integration_type, target,
+                           status="failed", error_message=str(exc))
+                b2b_failure += 1
+
+        logger.info("B2B delivery complete: %d success, %d failure", b2b_success, b2b_failure)
+
     # ---- Summary ------------------------------------------------------------
     logger.info(
-        "Run complete: %s | total=%d  success=%d  failure=%d",
+        "Run complete: %s | B2C total=%d success=%d failure=%d | B2B success=%d failure=%d",
         newsletter_type,
-        len(subscribers),
-        success_count,
-        failure_count,
+        len(subscribers), success_count, failure_count,
+        b2b_success, b2b_failure,
     )
 
     if failure_count > 0:

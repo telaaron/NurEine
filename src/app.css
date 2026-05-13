@@ -205,6 +205,50 @@ body {
 	.prose-nureine p { font-size: 1.18rem; line-height: 1.75; margin: 0 0 1.4em 0; }
 }
 
+/* Lead paragraph — first paragraph after section heading, slightly larger */
+.prose-nureine .lead-p {
+	font-size: 1.12rem;
+	line-height: 1.65;
+	margin-bottom: 1.5em;
+}
+@media (min-width: 640px) {
+	.prose-nureine .lead-p { font-size: 1.22rem; line-height: 1.68; }
+}
+@media (min-width: 1024px) {
+	.prose-nureine .lead-p { font-size: 1.3rem; line-height: 1.7; margin-bottom: 1.6em; }
+}
+
+/* Section heading — refined editorial h2 with amber accent line */
+.prose-nureine .section-h2 {
+	font-family: var(--font-serif);
+	font-size: 1.35rem;
+	line-height: 1.15;
+	font-weight: 550;
+	color: var(--color-ink);
+	margin: 2em 0 0.3em;
+	padding-left: 0.55em;
+	border-left: 2px solid var(--color-amber);
+	letter-spacing: -0.01em;
+}
+@media (min-width: 640px) {
+	.prose-nureine .section-h2 { font-size: 1.55rem; margin: 2.5em 0 0.35em; padding-left: 0.6em; }
+}
+@media (min-width: 1024px) {
+	.prose-nureine .section-h2 { font-size: 1.75rem; margin: 3em 0 0.4em; padding-left: 0.65em; }
+}
+
+/* First section heading — less top margin (follows dek closer) */
+.prose-nureine .section-h2:first-of-type {
+	margin-top: 1.4em;
+}
+@media (min-width: 640px) {
+	.prose-nureine .section-h2:first-of-type { margin-top: 1.8em; }
+}
+@media (min-width: 1024px) {
+	.prose-nureine .section-h2:first-of-type { margin-top: 2.2em; }
+}
+
+/* Keep base h2 for backward compatibility (generic prose) */
 .prose-nureine h2 {
 	font-family: var(--font-serif);
 	font-size: 1.45rem;
@@ -241,7 +285,7 @@ body {
 
 /* ── Touch-friendly tap targets ───────────────────── */
 @media (max-width: 767px) {
-	a, button, [role='button'], summary, input[type='submit'] {
+	button, [role='button'], summary, input[type='submit'] {
 		min-height: 44px;
 		min-width: 44px;
 	}

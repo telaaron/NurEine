@@ -75,6 +75,16 @@
 			<a href={base + '/admin'} class="px-3 py-2 rounded-[4px] hover:opacity-70" style="color: var(--color-ink-soft);">
 				Dashboard
 			</a>
+			<a href={base + '/admin/b2b'} class="px-3 py-2 rounded-[4px] hover:opacity-70" style="color: var(--color-ink-soft);">
+				B2B Pipeline
+			</a>
+			<a href={base + '/admin/audience'} class="px-3 py-2 rounded-[4px] hover:opacity-70" style="color: var(--color-ink-soft);">
+				Audience
+			</a>
+			<a href={base + '/admin/delivery'} class="px-3 py-2 rounded-[4px] hover:opacity-70" style="color: var(--color-ink-soft);">
+				Delivery Log
+			</a>
+			<div class="h-px my-1" style="background: var(--color-rule);"></div>
 			<a href={base + '/admin/stories'} class="px-3 py-2 rounded-[4px] hover:opacity-70" style="color: var(--color-ink-soft);">
 				Stories
 			</a>

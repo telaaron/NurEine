@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { formatDate, paragraphs, inline, toneStyles } from '$lib/utils';
+	import { formatDate, inline, sections, toneStyles } from '$lib/utils';
 	import StoryCard from '$lib/components/StoryCard.svelte';
 	import ShareBar from '$lib/components/ShareBar.svelte';
 
 	let { data } = $props();
 	const story = $derived(data.story);
 	const tone = $derived(toneStyles[story.tone]);
-	const paras = $derived(paragraphs(story.body));
+	const secs = $derived(sections(story.body));
 
 	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
 	const storyUrl = $derived(`${baseUrl}/geschichte/${story.slug}`);
@@ -42,7 +42,7 @@
 					{story.category}
 				</span>
 				<span class="text-xs" style="color: var(--color-muted);">
-					{story.country} · {story.region}
+					{story.country}{story.region && story.region !== story.country ? ` · ${story.region}` : ''}
 				</span>
 			</div>
 
@@ -70,10 +70,10 @@
 					href={story.sourceUrl}
 					rel="noopener noreferrer"
 					target="_blank"
-					class="hover:opacity-70"
-					style="color: var(--color-ink-soft); border-bottom: 1px solid var(--color-rule-strong);"
+					class="hover:opacity-70 no-underline"
+					style="color: var(--color-ink-soft);"
 				>
-					Quelle: {story.source}
+					<span style="border-bottom: 1px solid var(--color-rule-strong);">Quelle: {story.source}</span>
 				</a>
 				<span class="hidden sm:inline" style="color: var(--color-rule-strong);" aria-hidden="true">|</span>
 				<ShareBar url={storyUrl} title={story.title} text={story.dek} showLabel={true} />
@@ -83,14 +83,21 @@
 
 	<!-- Body -->
 	<div class="relative mx-auto max-w-[680px] px-4 sm:px-6 lg:px-0 prose-nureine">
-		{#each paras as para, i (i)}
-			{#if i === 0}
-				<p class="dropcap" style="font-size: 1.28rem !important;">
+		{#each secs as section, si (si)}
+			{#if section.heading}
+				<h2 class="section-h2">{section.heading}</h2>
+			{/if}
+			{#each section.paras as para, pi (pi)}
+				{@const isFirstPara = si === 0 && pi === 0}
+				{@const isLead = pi === 0 && section.paras.length > 0}
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
+				<p
+					class:dropcap={isFirstPara}
+					class:lead-p={isLead && !isFirstPara}
+				>
 					{@html inline(para)}
 				</p>
-			{:else}
-				<p>{@html inline(para)}</p>
-			{/if}
+			{/each}
 		{/each}
 
 		<!-- Impact callout -->

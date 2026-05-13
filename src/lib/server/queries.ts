@@ -94,7 +94,7 @@ function mapStory(row: SupabaseStory): StoryResult {
     dek: row.subtitle || '',
     body: row.body_markdown,
     category: row.category,
-    region: row.region || '',
+    region: row.region_code || '',
     country: row.region || '',
     coords: [lat, lng] as [number, number],
     coordsX: lat,
@@ -150,10 +150,29 @@ export async function getAllStories(): Promise<StoryResult[]> {
 }
 
 export async function getStoryBySlug(slug: string): Promise<StoryResult | undefined> {
-  // Stories are identified by UUID, not slug. We need to decode the slug to find the story.
-  // We fetch all and match by slug.
-  const stories = await getAllStories();
-  return stories.find((s) => s.slug === slug);
+  // Slug format: slugify(title)-8charUUIDprefix
+  // Extract the UUID prefix and query by id directly (instead of fetching ALL stories)
+  const uuidPrefix = slug.slice(-8);
+  if (!uuidPrefix || uuidPrefix.length !== 8) {
+    // Fallback: full scan for malformed slugs
+    const stories = await getAllStories();
+    return stories.find((s) => s.slug === slug);
+  }
+
+  // Use ILIKE on id::text to find matching UUID prefix — this uses the PK index
+  const { data, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('*')
+    .ilike('id', `${uuidPrefix}%`)
+    .limit(10); // UUID prefix collision is astronomically unlikely, but safe
+
+  if (error || !data?.length) {
+    console.error('getStoryBySlug error:', error);
+    return undefined;
+  }
+
+  const candidates = (data as SupabaseStory[]).map(mapStory);
+  return candidates.find((s) => s.slug === slug);
 }
 
 export async function getStoryById(id: string): Promise<StoryResult | undefined> {
@@ -508,4 +527,241 @@ export async function verifyAdminLogin(username: string, password: string): Prom
     timingSafeEqual(Buffer.from(password), Buffer.from(ADMIN_PASSWORD));
 
   return userOk && passOk;
+}
+
+// ---- B2B Client Queries ----
+
+export type B2BClient = {
+  id: string;
+  company_name: string;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  status: 'lead' | 'pilot' | 'paid' | 'churned';
+  pilot_ends_at: string | null;
+  mrr_value: number;
+  integration_type: 'email' | 'webhook' | 'iframe';
+  integration_target: string;
+  invoice_status: 'bezahlt' | 'offen' | 'storniert';
+  notes: string | null;
+  created_at: string;
+};
+
+export type DeliveryLogEntry = {
+  id: string;
+  b2b_client_id: string | null;
+  story_id: string | null;
+  integration_type: string;
+  integration_target: string;
+  status: 'pending' | 'sent' | 'failed';
+  status_code: number | null;
+  error_message: string | null;
+  sent_at: string;
+  company_name?: string;
+  story_title?: string;
+};
+
+export type B2BDashboardStats = {
+  mrr: number;
+  activeClients: number;
+  pilotCount: number;
+  payingCount: number;
+  churnedCount: number;
+  pilotsExpiringSoon: number;
+};
+
+export async function getB2BDashboardStats(): Promise<B2BDashboardStats> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_b2b_clients')
+    .select('status, mrr_value, pilot_ends_at');
+
+  if (error || !data) {
+    console.error('getB2BDashboardStats error:', error);
+    return { mrr: 0, activeClients: 0, pilotCount: 0, payingCount: 0, churnedCount: 0, pilotsExpiringSoon: 0 };
+  }
+
+  const rows = data as { status: string; mrr_value: number; pilot_ends_at: string | null }[];
+  const now = new Date();
+  const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+  return {
+    mrr: rows
+      .filter(r => r.status === 'paid')
+      .reduce((sum, r) => sum + (r.mrr_value || 0), 0),
+    activeClients: rows.filter(r => r.status === 'pilot' || r.status === 'paid').length,
+    pilotCount: rows.filter(r => r.status === 'pilot').length,
+    payingCount: rows.filter(r => r.status === 'paid').length,
+    churnedCount: rows.filter(r => r.status === 'churned').length,
+    pilotsExpiringSoon: rows.filter(r => {
+      if (r.status !== 'pilot' || !r.pilot_ends_at) return false;
+      const end = new Date(r.pilot_ends_at);
+      return end <= threeDaysFromNow && end >= now;
+    }).length
+  };
+}
+
+export async function getAllB2BClients(): Promise<B2BClient[]> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_b2b_clients')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('getAllB2BClients error:', error);
+    return [];
+  }
+  return data as B2BClient[];
+}
+
+export async function getB2BClientById(id: string): Promise<B2BClient | undefined> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_b2b_clients')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) return undefined;
+  return data as B2BClient;
+}
+
+export async function createB2BClient(client: Omit<B2BClient, 'id' | 'created_at'>): Promise<string> {
+  const insertData: Record<string, unknown> = {
+    company_name: client.company_name,
+    contact_name: client.contact_name,
+    contact_email: client.contact_email,
+    contact_phone: client.contact_phone,
+    status: client.status,
+    mrr_value: client.mrr_value,
+    integration_type: client.integration_type,
+    integration_target: client.integration_target,
+    invoice_status: client.invoice_status,
+    notes: client.notes
+  };
+
+  // Auto-set pilot_ends_at to +30 days if status is pilot
+  if (client.status === 'pilot') {
+    const now = new Date();
+    now.setDate(now.getDate() + 30);
+    insertData.pilot_ends_at = now.toISOString();
+  } else if (client.pilot_ends_at) {
+    insertData.pilot_ends_at = client.pilot_ends_at;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('nureine_b2b_clients')
+    .insert(insertData)
+    .select('id')
+    .single();
+
+  if (error) {
+    console.error('createB2BClient error:', error);
+    throw new Error(`Failed to create B2B client: ${error.message}`);
+  }
+  return data.id as string;
+}
+
+export async function updateB2BClient(id: string, updates: Partial<B2BClient> & { pilot_ends_at?: string | null }): Promise<void> {
+  const updateData: Record<string, unknown> = {};
+
+  if (updates.company_name !== undefined) updateData.company_name = updates.company_name;
+  if (updates.contact_name !== undefined) updateData.contact_name = updates.contact_name;
+  if (updates.contact_email !== undefined) updateData.contact_email = updates.contact_email;
+  if (updates.contact_phone !== undefined) updateData.contact_phone = updates.contact_phone;
+  if (updates.status !== undefined) updateData.status = updates.status;
+  if (updates.mrr_value !== undefined) updateData.mrr_value = updates.mrr_value;
+  if (updates.integration_type !== undefined) updateData.integration_type = updates.integration_type;
+  if (updates.integration_target !== undefined) updateData.integration_target = updates.integration_target;
+  if (updates.invoice_status !== undefined) updateData.invoice_status = updates.invoice_status;
+  if (updates.notes !== undefined) updateData.notes = updates.notes;
+
+  // Handle pilot_ends_at explicitly
+  if ('pilot_ends_at' in updates) {
+    updateData.pilot_ends_at = updates.pilot_ends_at;
+  } else if (updates.status === 'pilot') {
+    // If transitioning to pilot, auto-set to +30 days
+    const existing = await getB2BClientById(id);
+    if (existing && existing.status !== 'pilot') {
+      const now = new Date();
+      now.setDate(now.getDate() + 30);
+      updateData.pilot_ends_at = now.toISOString();
+    }
+  }
+
+  const { error } = await supabaseAdmin
+    .from('nureine_b2b_clients')
+    .update(updateData)
+    .eq('id', id);
+
+  if (error) {
+    console.error('updateB2BClient error:', error);
+    throw new Error(`Failed to update B2B client: ${error.message}`);
+  }
+}
+
+export async function deleteB2BClient(id: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('nureine_b2b_clients')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('deleteB2BClient error:', error);
+    throw new Error(`Failed to delete B2B client: ${error.message}`);
+  }
+}
+
+// ---- B2C Subscriber Queries (Admin) ----
+
+export type SubscriberRow = {
+  id: string;
+  email: string;
+  tier: string;
+  confirmed: boolean;
+  lat: number | null;
+  lng: number | null;
+  region: string | null;
+  region_code: string | null;
+  created_at: string;
+};
+
+export async function getAllSubscribers(): Promise<SubscriberRow[]> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_subscribers')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('getAllSubscribers error:', error);
+    return [];
+  }
+  return data as SubscriberRow[];
+}
+
+// ---- Delivery Log Queries ----
+
+export async function getDeliveryLog(limit = 50): Promise<DeliveryLogEntry[]> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_delivery_log')
+    .select('*, nureine_b2b_clients(company_name), nureine_stories(title)')
+    .order('sent_at', { ascending: false })
+    .limit(limit);
+
+  if (error || !data) {
+    console.error('getDeliveryLog error:', error);
+    return [];
+  }
+
+  return (data as any[]).map(entry => ({
+    id: entry.id,
+    b2b_client_id: entry.b2b_client_id,
+    story_id: entry.story_id,
+    integration_type: entry.integration_type,
+    integration_target: entry.integration_target,
+    status: entry.status,
+    status_code: entry.status_code,
+    error_message: entry.error_message,
+    sent_at: entry.sent_at,
+    company_name: entry.nureine_b2b_clients?.company_name || null,
+    story_title: entry.nureine_stories?.title || null
+  }));
 }

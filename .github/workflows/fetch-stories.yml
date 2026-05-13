@@ -15,8 +15,13 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+
       - name: Install dependencies
-        run: pip install feedparser requests python-dotenv trafilatura
+        run: pip install feedparser requests python-dotenv trafilatura Pillow rembg
 
       - name: Fetch and score stories
         run: python scripts/fetch_stories.py

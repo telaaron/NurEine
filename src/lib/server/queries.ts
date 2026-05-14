@@ -151,28 +151,12 @@ export async function getAllStories(): Promise<StoryResult[]> {
 
 export async function getStoryBySlug(slug: string): Promise<StoryResult | undefined> {
   // Slug format: slugify(title)-8charUUIDprefix
-  // Extract the UUID prefix and query by id directly (instead of fetching ALL stories)
-  const uuidPrefix = slug.slice(-8);
-  if (!uuidPrefix || uuidPrefix.length !== 8) {
-    // Fallback: full scan for malformed slugs
-    const stories = await getAllStories();
-    return stories.find((s) => s.slug === slug);
-  }
-
-  // Use ILIKE on id::text to find matching UUID prefix — this uses the PK index
-  const { data, error } = await supabaseAdmin
-    .from('nureine_stories')
-    .select('*')
-    .ilike('id', `${uuidPrefix}%`)
-    .limit(10); // UUID prefix collision is astronomically unlikely, but safe
-
-  if (error || !data?.length) {
-    console.error('getStoryBySlug error:', error);
-    return undefined;
-  }
-
-  const candidates = (data as SupabaseStory[]).map(mapStory);
-  return candidates.find((s) => s.slug === slug);
+  // We fetch all stories and filter by slug in memory.
+  // Note: ILIKE on UUID columns doesn't work in PostgreSQL/PostgREST,
+  // and adding a slug column requires a DB migration. For the current
+  // story volume (< 1000), an in-memory filter is perfectly fine.
+  const stories = await getAllStories();
+  return stories.find((s) => s.slug === slug);
 }
 
 export async function getStoryById(id: string): Promise<StoryResult | undefined> {

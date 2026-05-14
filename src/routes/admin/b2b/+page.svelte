@@ -9,6 +9,28 @@
 	let editId = $state<string | null>(null);
 	let saving = $state(false);
 	let confirmDelete = $state<string | null>(null);
+	let sendingWelcome = $state<string | null>(null);
+	let welcomeMessage = $state('');
+
+	async function sendWelcomeEmail(client: any) {
+		sendingWelcome = client.id;
+		welcomeMessage = '';
+		try {
+			const res = await fetch(`/api/admin/b2b/${client.id}/welcome`, { method: 'POST' });
+			const result = await res.json();
+			if (result.success) {
+				welcomeMessage = `Willkommens-Mail gesendet an ${result.recipient}`;
+			} else {
+				alert(result.error || 'Unbekannter Fehler');
+				welcomeMessage = '';
+			}
+		} catch (err) {
+			alert('Fehler: ' + String(err));
+			welcomeMessage = '';
+		} finally {
+			sendingWelcome = null;
+		}
+	}
 
 	let form = $state({
 		company_name: '',
@@ -321,7 +343,15 @@
 							<br/><span style="font-size: 10px;">{client.integration_target.slice(0, 40)}{client.integration_target.length > 40 ? '...' : ''}</span>
 						</td>
 						<td class="p-3 text-right">
-							<div class="flex justify-end gap-2">
+							<div class="flex justify-end gap-2 flex-wrap">
+								<button type="button" onclick={() => sendWelcomeEmail(client)}
+									disabled={sendingWelcome === client.id}
+									class="text-xs px-2 py-1 rounded-[4px] hover:opacity-70 disabled:opacity-40"
+									style="color: var(--color-sage); border: 1px solid var(--color-sage);"
+									title="Willkommens-Mail an {client.contact_email || client.integration_target}"
+								>
+									{sendingWelcome === client.id ? '...' : 'Mail'}
+								</button>
 								<button type="button" onclick={() => openEdit(client)}
 									class="text-xs px-2 py-1 rounded-[4px] hover:opacity-70"
 									style="color: var(--color-ink-soft); border: 1px solid var(--color-rule);"

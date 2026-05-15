@@ -2,16 +2,21 @@
 """
 NurEine — OG Image Generator
 
-Generates editorial-style Open Graph images (1200×630 PNG) for stories.
-Layout: Full-bleed story illustration (left 55%) with bold typography overlay
-on a warm editorial background. Inspired by The New Yorker / The Atlantic
-share cards: strong image, large readable headline, minimal branding.
+Generates minimalist Open Graph images (1200x900 PNG) for stories.
+Layout: Full-bleed story illustration with a subtle bottom brand bar.
+No title overlay — og:title in meta tags handles that without visual duplication.
+
+Design: The FLUX.1 illustration (transparent PNG, object on #f5f1ea canvas)
+fills the entire frame. A 72px bottom bar with semi-transparent dark
+gradient carries just the category label and "NurEine" brand mark.
+Clean, premium, 2026 editorial — no clutter, no text walls.
 
 For each story without an og_image_url:
   1. Downloads the story's FLUX.1 illustration
-  2. Composites it with editorial typography
-  3. Uploads to Supabase Storage bucket 'og_images'
-  4. Updates the story record with the og_image_url
+  2. Composites it onto the warm canvas background
+  3. Adds the bottom brand bar with category + logo
+  4. Uploads to Supabase Storage bucket 'og_images'
+  5. Updates the story record with the og_image_url
 
 Usage:
     SUPABASE_URL=https://... SUPABASE_SERVICE_KEY=... python scripts/generate_og_images.py [--all] [--slug SLUG]
@@ -189,42 +194,7 @@ CATEGORY_LABELS: dict[str, str] = {
 
 
 # ---------------------------------------------------------------------------
-# Typography helpers
-# ---------------------------------------------------------------------------
-def _wrap_title(text: str, font, draw, max_width: int) -> list[str]:
-    """Wrap text into lines that fit within max_width pixels."""
-    words = text.split()
-    lines: list[str] = []
-    current = ""
-    for word in words:
-        test = f"{current} {word}".strip()
-        bbox = draw.textbbox((0, 0), test, font=font)
-        if bbox[2] - bbox[0] > max_width and current:
-            lines.append(current)
-            current = word
-        else:
-            current = test
-    if current:
-        lines.append(current)
-    return lines
-
-
-def _draw_text_with_shadow(
-    draw,
-    xy: tuple[int, int],
-    text: str,
-    font,
-    fill: tuple[int, int, int],
-    shadow_color: tuple[int, int, int] = (0, 0, 0),
-    shadow_alpha: int = 30,
-):
-    """Draw text with a subtle single-pixel offset shadow for readability on images."""
-    draw.text((xy[0] + 1, xy[1] + 1), text, fill=shadow_color + (shadow_alpha,), font=font)
-    draw.text(xy, text, fill=fill, font=font)
-
-
-# ---------------------------------------------------------------------------
-# OG Image composer — editorial layout
+# OG Image composer — full-bleed illustration + bottom brand bar
 # ---------------------------------------------------------------------------
 def compose_og_image(
     story_title: str,
@@ -233,31 +203,34 @@ def compose_og_image(
     image_bytes: bytes | None,
 ) -> bytes:
     """
-    Composite a 1200x900 (4:3) editorial OG image.
+    Composite a 1200x900 (4:3) minimalist OG image.
 
-    Layout:
+    Layout: Full-bleed story illustration + 72px bottom brand bar.
+
     ┌──────────────────────────────────────┐
-    │ ┌────────────────────┐              │
-    │ │                    │  WISSENSCHAFT│  ← category badge
-    │ │                    │              │
-    │ │   STORY IMAGE      │  Große Head- │  ← bold 56px title
-    │ │   660 x 900        │  line über   │
-    │ │   (full height)    │  zwei Zeilen │
-    │ │                    │              │
-    │ │                    │  Subtitle /  │  ← 22px dek
-    │ │                    │  Kontext     │
-    │ │                    │              │
-    │ │                    │              │
-    │ └────────────────────┘  NurEine ▸   │  ← subtle branding footer
+    │                                      │
+    │                                      │
+    │          STORY ILLUSTRATION          │
+    │          (full bleed)                │
+    │                                      │
+    │                                      │
+    │                                      │
+    │                                      │
+    │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │
+    │  ▓ KATEGORIE           NurEine ▓   │  ← 72px bottom bar
+    │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │
     └──────────────────────────────────────┘
+
+    No title or dek — those come from og:title / og:description meta tags.
+    The image is a pure visual brand moment: the illustration does the work.
     """
     from PIL import Image, ImageDraw, ImageFont  # noqa: PLC0415
 
-    # Canvas — warm off-white
+    # Canvas — warm off-white (visible through transparent illustration)
     BG = (245, 241, 234)  # #f5f1ea
     INK = (26, 24, 21)    # #1a1815
-    SOFT = (58, 52, 44)   # #3a342c
     MUTED = (107, 99, 89) # #6b6359
+    FAINT = (154, 144, 135)  # #9a9087
 
     img = Image.new("RGB", (OG_WIDTH, OG_HEIGHT), BG)
     draw = ImageDraw.Draw(img, "RGBA")
@@ -268,27 +241,22 @@ def compose_og_image(
 
     category_label = CATEGORY_LABELS.get(category, category.title())
 
-    # ---- Layout constants ----
-    IMAGE_W = 660          # left image panel width
-    IMAGE_H = OG_HEIGHT    # full canvas height (900px for 4:3)
-    TEXT_X = IMAGE_W + 56  # text starts here (716)
-    TEXT_W = OG_WIDTH - TEXT_X - 60  # ~424px for text
-    MARGIN_TOP = 84
+    # ---- Bottom bar constants ----
+    BAR_HEIGHT = 72
+    BAR_Y = OG_HEIGHT - BAR_HEIGHT
+    BAR_PADDING_X = 48
 
-    # ---- 1) Story image panel (left, full-bleed height) ----
+    # ---- 1) Full-bleed story illustration ----
     if image_bytes:
         try:
             story_img = Image.open(io.BytesIO(image_bytes))
 
-            # Handle alpha channel if present (rembg output)
+            # Handle alpha channel (rembg output)
             has_alpha = story_img.mode == "RGBA"
 
-            # Prepare a beige background panel for the image
-            bg_panel = Image.new("RGBA", (IMAGE_W, IMAGE_H), BG + (255,))
-
-            # Crop to 660:630 aspect ratio, then resize
+            # Crop to 1200:900 (4:3) aspect ratio, then resize
             src_w, src_h = story_img.size
-            target_ratio = IMAGE_W / IMAGE_H
+            target_ratio = OG_WIDTH / OG_HEIGHT
             src_ratio = src_w / src_h
 
             if src_ratio > target_ratio:
@@ -302,171 +270,85 @@ def compose_og_image(
                 offset = (src_h - new_h) // 2
                 story_img = story_img.crop((0, offset, src_w, offset + new_h))
 
-            story_img = story_img.resize((IMAGE_W, IMAGE_H), Image.LANCZOS)
+            story_img = story_img.resize((OG_WIDTH, OG_HEIGHT), Image.LANCZOS)
 
             if has_alpha:
-                # Composite transparent story image ONTO beige background panel
-                bg_panel.paste(story_img, (0, 0), story_img)
-                # Apply a subtle dark gradient overlay on the right edge
-                overlay = Image.new("RGBA", (IMAGE_W, IMAGE_H), (0, 0, 0, 0))
-                overlay_draw = ImageDraw.Draw(overlay)
-                for x in range(IMAGE_W - 120, IMAGE_W):
-                    alpha = int(80 * (x - (IMAGE_W - 120)) / 120)
-                    overlay_draw.rectangle([(x, 0), (x + 1, IMAGE_H)], fill=(0, 0, 0, alpha))
-                bg_panel.paste(overlay, (0, 0), overlay)
-                # Paste the combined result into the main RGB canvas
-                img.paste(bg_panel.convert("RGB"), (0, 0))
+                # Composite transparent story image onto canvas background
+                canvas_rgba = Image.new("RGBA", (OG_WIDTH, OG_HEIGHT), BG + (255,))
+                canvas_rgba.paste(story_img, (0, 0), story_img)
+                img.paste(canvas_rgba.convert("RGB"), (0, 0))
             else:
-                # No alpha — paste RGB image directly (legacy behavior)
+                # No alpha — paste RGB image directly
                 story_img = story_img.convert("RGB")
-                overlay = Image.new("RGBA", (IMAGE_W, IMAGE_H), (0, 0, 0, 0))
-                overlay_draw = ImageDraw.Draw(overlay)
-                for x in range(IMAGE_W - 120, IMAGE_W):
-                    alpha = int(80 * (x - (IMAGE_W - 120)) / 120)
-                    overlay_draw.rectangle([(x, 0), (x + 1, IMAGE_H)], fill=(0, 0, 0, alpha))
                 img.paste(story_img, (0, 0))
-                img.paste(overlay, (0, 0), overlay)
 
         except Exception as exc:
             log.warning("  Could not process story image: %s", exc)
             image_bytes = None
 
     if not image_bytes:
-        # Placeholder: accent-tinted panel with subtle pattern
-        placeholder = Image.new("RGB", (IMAGE_W, IMAGE_H), accent + (40,))
-        img.paste(placeholder, (0, 0))
+        # Placeholder: accent-tinted canvas with subtle category word
+        tinted = Image.new("RGB", (OG_WIDTH, OG_HEIGHT), accent + (15,))
+        img.paste(tinted, (0, 0))
 
-        # Draw category word as large watermark
-        try:
-            wm_font = ImageFont.truetype(FONT_TITLE, 72) if FONT_TITLE else ImageFont.load_default()
-        except Exception:
-            wm_font = ImageFont.load_default()
-        wm_bbox = draw.textbbox((0, 0), category_label.upper(), font=wm_font)
-        wm_w = wm_bbox[2] - wm_bbox[0]
-        draw.text(
-            ((IMAGE_W - wm_w) // 2, (IMAGE_H - 72) // 2),
-            category_label.upper(),
-            fill=accent + (80,),
-            font=wm_font,
+    # ---- 2) Bottom bar — semi-transparent dark gradient ----
+    # Create a gradient overlay: solid at bottom, fading upward
+    bar_overlay = Image.new("RGBA", (OG_WIDTH, BAR_HEIGHT), (0, 0, 0, 0))
+    bar_draw = ImageDraw.Draw(bar_overlay)
+
+    # Draw gradient: rows of pixels with increasing alpha toward bottom
+    for y in range(BAR_HEIGHT):
+        # Ease-in curve: most opacity at the bottom, fading up
+        t = y / BAR_HEIGHT
+        alpha = int(180 * (t ** 2))  # quadratic ease → heavier at bottom
+        bar_draw.rectangle(
+            [(0, y), (OG_WIDTH, y + 1)],
+            fill=(26, 24, 21, alpha),  # INK with variable alpha
         )
 
-    # No divider line — the object floats directly on the canvas background
+    img.paste(bar_overlay, (0, BAR_Y), bar_overlay)
 
-    # ---- 2) Text column ----
-    title_font_size = 56
-    dek_font_size = 22
-    badge_font_size = 13
-    caption_font_size = 14
+    # ---- 3) Bottom bar typography ----
+    bar_font_size = 20
+    bar_small_size = 16
 
     try:
-        title_font = ImageFont.truetype(FONT_TITLE, title_font_size) if FONT_TITLE else ImageFont.load_default()
-        dek_font = ImageFont.truetype(FONT_BODY, dek_font_size) if FONT_BODY else ImageFont.load_default()
-        badge_font = ImageFont.truetype(FONT_BODY_BOLD, badge_font_size) if FONT_BODY_BOLD else ImageFont.load_default()
-        caption_font = ImageFont.truetype(FONT_CAPTION, caption_font_size) if FONT_CAPTION else ImageFont.load_default()
+        bar_font = ImageFont.truetype(FONT_TITLE, bar_font_size) if FONT_TITLE else ImageFont.load_default()
+        bar_small = ImageFont.truetype(FONT_BODY, bar_small_size) if FONT_BODY else ImageFont.load_default()
     except Exception:
-        title_font = ImageFont.load_default()
-        dek_font = title_font
-        badge_font = title_font
-        caption_font = title_font
+        bar_font = ImageFont.load_default()
+        bar_small = bar_font
 
-    y = MARGIN_TOP
-
-    # ---- 2a) Category badge ----
-    badge_text = category_label.upper()
-    badge_pad_x = 16
-    badge_pad_y = 7
-    badge_bbox = draw.textbbox((0, 0), badge_text, font=badge_font)
-    badge_text_w = badge_bbox[2] - badge_bbox[0]
-    badge_text_h = badge_bbox[3] - badge_bbox[1]
-    badge_w = badge_text_w + badge_pad_x * 2
-    badge_h = badge_text_h + badge_pad_y * 2
-
-    # Pill badge background
-    draw.rounded_rectangle(
-        [(TEXT_X, y), (TEXT_X + badge_w, y + badge_h)],
-        radius=badge_h // 2,
-        fill=accent + (30,),
-        outline=accent + (70,),
-        width=1,
-    )
-    draw.text(
-        (TEXT_X + badge_pad_x, y + badge_pad_y - 1),
-        badge_text,
+    # Category label (left side)
+    cat_text = category_label.upper()
+    # Small amber dot before category
+    dot_r = 4
+    dot_x = BAR_PADDING_X
+    dot_y = BAR_Y + BAR_HEIGHT // 2
+    draw.ellipse(
+        [(dot_x - dot_r, dot_y - dot_r), (dot_x + dot_r, dot_y + dot_r)],
         fill=accent,
-        font=badge_font,
     )
-    y += badge_h + 36
 
-    # ---- 2b) Headline — large, bold, tightly tracked ----
-    # Reserve 180px below title for dek + footer spacing
-    # Footer sits at OG_HEIGHT-52, so dek can extend down to OG_HEIGHT-82
-    max_title_y = OG_HEIGHT - 52 - 160
+    cat_x = dot_x + dot_r + 12
+    cat_bbox = draw.textbbox((0, 0), cat_text, font=bar_font)
+    cat_text_y = BAR_Y + (BAR_HEIGHT - (cat_bbox[3] - cat_bbox[1])) // 2 - 2
+    draw.text((cat_x, cat_text_y), cat_text, fill=(245, 241, 234), font=bar_font)
 
-    # Try to fit title: start at 56px, reduce if needed
-    current_title_size = title_font_size
-    title_lines: list[str] = []
-    title_font_current = title_font
+    # Brand name (right side) — NurEine in serif
+    brand_text = "NurEine"
+    brand_bbox = draw.textbbox((0, 0), brand_text, font=bar_small)
+    brand_w = brand_bbox[2] - brand_bbox[0]
+    brand_x = OG_WIDTH - BAR_PADDING_X - brand_w
+    brand_text_y = BAR_Y + (BAR_HEIGHT - (brand_bbox[3] - brand_bbox[1])) // 2 - 2
+    draw.text((brand_x, brand_text_y), brand_text, fill=FAINT, font=bar_small)
 
-    while current_title_size >= 32:
-        try:
-            title_font_current = (
-                ImageFont.truetype(FONT_TITLE, current_title_size)
-                if FONT_TITLE
-                else ImageFont.load_default()
-            )
-        except Exception:
-            title_font_current = ImageFont.load_default()
-
-        title_lines = _wrap_title(story_title, title_font_current, draw, TEXT_W)
-        title_h = len(title_lines) * int(current_title_size * 1.3)
-        if y + title_h <= max_title_y:
-            break
-        current_title_size -= 4
-
-    for i, line in enumerate(title_lines[:5]):  # max 5 lines
-        draw.text(
-            (TEXT_X, y + i * int(current_title_size * 1.3)),
-            line,
-            fill=INK,
-            font=title_font_current,
-        )
-
-    y += len(title_lines) * int(current_title_size * 1.3) + 28
-
-    # ---- 2c) Dek / subtitle — lighter, smaller ----
-    if story_dek:
-        # Use pixel-based wrapping (like title) instead of character count
-        # since German compound words are much longer than English
-        dek_lines = _wrap_title(story_dek, dek_font, draw, TEXT_W)
-        dek_line_h = int(dek_font_size * 1.6)
-        for i, line in enumerate(dek_lines[:5]):
-            draw.text(
-                (TEXT_X, y + i * dek_line_h),
-                line,
-                fill=SOFT,
-                font=dek_font,
-            )
-
-    # ---- 3) Footer branding — pinned to bottom ----
-    brand_y = OG_HEIGHT - 52
-
-    # Subtle horizontal accent line
-    for x in range(TEXT_X, OG_WIDTH - 60):
-        alpha = max(0, 40 - int(abs(x - (TEXT_X + TEXT_W // 2)) / (TEXT_W // 2) * 40))
-        if alpha > 0:
-            draw.point((x, brand_y - 12), fill=accent + (alpha,))
-
-    draw.text((TEXT_X, brand_y), "NurEine", fill=MUTED, font=caption_font)
-
-    domain = "nureine.de"
-    dom_bbox = draw.textbbox((0, 0), domain, font=caption_font)
-    dom_w = dom_bbox[2] - dom_bbox[0]
-    draw.text(
-        (OG_WIDTH - 60 - dom_w, brand_y),
-        domain,
-        fill=MUTED,
-        font=caption_font,
-    )
+    # ---- 4) Subtle top accent line ----
+    # A thin 1px line at the top of the bar in accent color
+    for x in range(BAR_PADDING_X, OG_WIDTH - BAR_PADDING_X):
+        alpha_line = max(0, 80 - int(abs(x - OG_WIDTH // 2) / (OG_WIDTH // 2) * 80))
+        if alpha_line > 0:
+            draw.point((x, BAR_Y), fill=accent + (alpha_line,))
 
     # Output
     buf = io.BytesIO()

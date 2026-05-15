@@ -59,7 +59,7 @@ Willkommen bei NurEine,<br/>${name}!
 Hallo ${greeting},
 </p>
 <p style="margin:0 0 24px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a342c;">
-wir freuen uns sehr, <strong style="color:#1a1815;">${client.company_name}</strong> an Bord zu haben! Ab sofort bekommt ihr jeden Tag eine handverlesene, positive Nachricht &mdash; kein doomscrolling, kein Clickbait, kein L&auml;rm. Nur eine Geschichte, die wirklich Hoffnung macht.
+wir freuen uns sehr, <strong style="color:#1a1815;">${client.company_name}</strong> an Bord zu haben! Ab sofort bekommt ihr jeden Tag eine positive Nachricht &mdash; kein doomscrolling, kein Clickbait, kein L&auml;rm. Nur eine Geschichte, die wirklich Hoffnung macht.
 </p>
 
 <!-- Eckdaten Box -->
@@ -84,7 +84,7 @@ ${price}
 
 <h2 style="margin:28px 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:400;color:#1a1815;">Fragen?</h2>
 <p style="margin:0 0 28px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#3a342c;line-height:1.7;">
-Antworte einfach auf diese Mail oder ruf an unter ${client.contact_phone ? client.contact_phone : '&ndash;'} &mdash; Aaron ist pers&ouml;nlich f&uuml;r dich da.
+Antworte einfach auf diese Mail &mdash; Aaron ist pers&ouml;nlich f&uuml;r dich da.
 </p>
 
 </td></tr>

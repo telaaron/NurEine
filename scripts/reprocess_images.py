@@ -182,7 +182,6 @@ def regenerate_og(story: dict, image_bytes: bytes) -> str | None:
         story_dek=dek,
         category=category,
         image_bytes=image_bytes,
-        category_label=label,
     )
     if not og_bytes:
         return None

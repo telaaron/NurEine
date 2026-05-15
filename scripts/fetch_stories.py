@@ -64,7 +64,7 @@ DEEPSEEK_ENDPOINT = "https://api.deepseek.com/chat/completions"
 
 # fal.ai FLUX.1 [schnell]
 FAL_ENDPOINT = "https://fal.run/fal-ai/flux/schnell"
-FAL_IMAGE_SIZE = "square"  # 1024x1024
+FAL_IMAGE_SIZE = "landscape_4_3"  # 1024x768
 FAL_NUM_IMAGES = 1
 FAL_POLL_INTERVAL = 2  # seconds between status polls
 FAL_POLL_TIMEOUT = 120  # max seconds to wait for generation
@@ -687,8 +687,8 @@ def remove_background(image_bytes: bytes) -> bytes | None:
     try:
         from PIL import Image as PILImage
         from rembg import remove
-    except ImportError:
-        log.warning("  rembg not available — skipping background removal.")
+    except (ImportError, SystemExit) as exc:
+        log.warning("  rembg not available — skipping background removal. (%s)", exc)
         return None
 
     try:
@@ -699,7 +699,7 @@ def remove_background(image_bytes: bytes) -> bytes | None:
         output_img.save(buf, format="PNG", optimize=True)
         log.info("  Background removed (size: %d -> %d bytes)", len(image_bytes), buf.tell())
         return buf.getvalue()
-    except Exception as exc:
+    except (SystemExit, Exception) as exc:
         log.warning("  Background removal failed: %s", exc)
         return None
 
@@ -710,8 +710,8 @@ def fit_object_in_frame(image_bytes: bytes, padding_pct: float = 0.20) -> bytes 
     Detects the bounding box of non-transparent pixels in an RGBA image,
     crops to the object region, adds padding on all sides (as percentage
     of the object's larger dimension), and resizes back to the original
-    square size. This guarantees the object is never cropped by the
-    object-cover display.
+    canvas size (preserving aspect ratio, e.g. 4:3). This guarantees the
+    object is never cropped by the object-cover display.
 
     Returns PNG bytes, or None on failure (falls back to original).
     """
@@ -741,42 +741,48 @@ def fit_object_in_frame(image_bytes: bytes, padding_pct: float = 0.20) -> bytes 
         # Calculate padding in pixels (20% of object's larger dimension)
         pad_px = int(max(obj_w, obj_h) * padding_pct)
 
-        # The padded area should be square and fully contain the object with padding.
-        # Size = max(object_dimension) + 2*padding
-        padded_size = max(obj_w, obj_h) + 2 * pad_px
-
-        # Center the square crop on the object center
+        # The padded area preserves the original canvas aspect ratio
+        # but is scaled to fully contain the object with padding
         obj_cx = obj_x1 + obj_w // 2
         obj_cy = obj_y1 + obj_h // 2
 
-        sq_x1 = obj_cx - padded_size // 2
-        sq_y1 = obj_cy - padded_size // 2
-        sq_x2 = sq_x1 + padded_size
-        sq_y2 = sq_y1 + padded_size
+        # Size the crop region to match the canvas aspect ratio (w:h)
+        padded_dim = max(obj_w, obj_h) + 2 * pad_px
+        crop_w = max(int(padded_dim), int(padded_dim * w / h * 0.9))
+        crop_h = int(crop_w * h / w)
 
-        # Clamp to image bounds — may reduce size if object is at the edge
-        if sq_x1 < 0:
-            sq_x2 -= sq_x1
-            sq_x1 = 0
-        if sq_y1 < 0:
-            sq_y2 -= sq_y1
-            sq_y1 = 0
-        if sq_x2 > w:
-            sq_x1 -= (sq_x2 - w)
-            sq_x2 = w
-        if sq_y2 > h:
-            sq_y1 -= (sq_y2 - h)
-            sq_y2 = h
+        # Ensure object fits
+        if crop_w < obj_w + 2 * pad_px or crop_h < obj_h + 2 * pad_px:
+            crop_w = int(max(obj_w + 2 * pad_px, (obj_h + 2 * pad_px) * w / h))
+            crop_h = int(max(obj_h + 2 * pad_px, (obj_w + 2 * pad_px) * h / w))
 
-        actual_w = sq_x2 - sq_x1
-        actual_h = sq_y2 - sq_y1
+        cx1 = obj_cx - crop_w // 2
+        cy1 = obj_cy - crop_h // 2
+        cx2 = cx1 + crop_w
+        cy2 = cy1 + crop_h
 
-        # Crop and resize back to original square size (with transparency preserved)
-        cropped = img.crop((sq_x1, sq_y1, sq_x2, sq_y2))
+        # Clamp to image bounds
+        if cx1 < 0:
+            cx2 -= cx1
+            cx1 = 0
+        if cy1 < 0:
+            cy2 -= cy1
+            cy1 = 0
+        if cx2 > w:
+            cx1 -= (cx2 - w)
+            cx2 = w
+        if cy2 > h:
+            cy1 -= (cy2 - h)
+            cy2 = h
+
+        actual_w = cx2 - cx1
+        actual_h = cy2 - cy1
+
+        # Crop and resize back to original canvas size (transparency preserved)
+        cropped = img.crop((cx1, cy1, cx2, cy2))
         result = PILImage.new("RGBA", (w, h), (0, 0, 0, 0))
 
-        # Scale to 85% of the canvas to always have a minimum margin,
-        # regardless of whether the object touched an edge
+        # Scale to 85% of the canvas to always have a minimum margin
         margin_factor = 0.85
         scale = min(w / actual_w, h / actual_h) * margin_factor
         new_w = int(actual_w * scale)
@@ -787,9 +793,9 @@ def fit_object_in_frame(image_bytes: bytes, padding_pct: float = 0.20) -> bytes 
         result.paste(resized, (paste_x, paste_y))
 
         log.info(
-            "  Auto-fit: object bbox=(%d,%d,%d,%d) padded=%dpx → square %d×%d → canvas %d×%d",
+            "  Auto-fit: object bbox=(%d,%d,%d,%d) padded=%dpx → crop %d×%d → canvas %d×%d",
             obj_x1, obj_y1, obj_x2, obj_y2, pad_px,
-            padded_size, padded_size, w, h,
+            actual_w, actual_h, w, h,
         )
 
         buf = BytesIO()
@@ -805,7 +811,7 @@ def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None
     """Generate an image via FLUX.1 on fal.ai, remove background, upload to Supabase.
 
     The pipeline:
-      1. FLUX.1 [schnell] generates a square image with white background
+      1. FLUX.1 [schnell] generates a 4:3 landscape image with white background
       2. rembg (u2net) removes the white background → transparent PNG
       3. Auto-fit: detect object bounds, add padding, resize → object fully in frame
       4. Upload to Supabase Storage as PNG with alpha channel

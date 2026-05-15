@@ -376,7 +376,7 @@ export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSen
   // Get the hero story
   const { data: storyData, error: storyError } = await supabaseAdmin
     .from('nureine_stories')
-    .select('id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min')
+    .select('id,title,subtitle,summary,category,image_url,impact_score,reading_time_min,published_at')
     .eq('is_hero', true)
     .order('published_at', { ascending: false })
     .limit(1)
@@ -391,10 +391,6 @@ export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSen
   const dek = (story.subtitle as string) || '';
   const summary = (story.summary as string) || '';
   const imageUrl = (story.image_url as string) || '';
-  const emojiData = (story.emoji as string) || '';
-  const emojiHeader = emojiData
-    ? `<div style="margin:0;font-size:72px;line-height:1;text-align:center;padding:32px 36px 0;filter:saturate(0.85);">${emojiData}</div>`
-    : `<div style="margin:0;font-size:72px;line-height:1;text-align:center;padding:32px 36px 0;filter:saturate(0.85);">\u2728</div>`;
   const impactScore = story.impact_score || '?';
   const readingMinutes = story.reading_time_min || '?';
   const category = (story.category as string) || 'Allgemein';
@@ -413,53 +409,95 @@ export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSen
   };
   const color = categoryColor[tone] || '#c87340';
 
+  // Build header: hero image if available, otherwise emoji fallback
+  const headerHtml = imageUrl
+    ? `<tr><td style="padding:0;"><img src="${imageUrl}" alt="" width="600" height="320" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;border-radius:10px 10px 0 0;" /></td></tr>`
+    : `<tr><td style="padding:32px 40px 0;"><div style="font-size:64px;line-height:1;text-align:center;">\u2728</div></td></tr>`;
+
   const html = `<!DOCTYPE html>
 <html lang="de">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
-<body style="margin:0;padding:0;background-color:#f5f1ea;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;">
-<tr><td align="center" style="padding:40px 16px;">
-<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:8px;overflow:hidden;border:1px solid rgba(26,24,21,0.12);">
-<tr><td style="padding:0;">
-${emojiHeader}
-</td></tr>
-<tr><td style="padding:20px 36px 28px;">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/><meta name="supported-color-schemes" content="light"/><!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting"/><!--<![endif]--></head>
+<body style="margin:0;padding:0;background-color:#f5f1ea;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;">
+<tr><td align="center" style="padding:40px 16px 32px;">
+
+<!-- Brand header -->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
+<tr><td style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
+<tr><td style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td></tr>
+</table>
+
+<!-- Main card -->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);">
+
+<!-- Hero -->
+${headerHtml}
+
+<!-- Body -->
+<tr><td style="padding:28px 40px 24px;">
+
 <!-- Test badge -->
-<table cellpadding="0" cellspacing="0" style="margin-bottom:16px;"><tr><td>
-<span style="display:inline-block;background-color:#c87340;color:#faf6ee;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.16em;padding:3px 10px;border-radius:9999px;">TEST</span>
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:14px;"><tr><td>
+<span style="display:inline-block;background-color:#c87340;color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;padding:4px 10px;border-radius:4px;">TEST</span>
 </td></tr></table>
-<!-- Category -->
-<table cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>
-<span style="display:inline-block;background-color:${color};color:#faf6ee;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.16em;padding:3px 10px;border-radius:9999px;">${category}</span>
+
+<!-- Category pill -->
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>
+<span style="display:inline-block;background-color:${color};color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;padding:3px 12px;border-radius:9999px;">${category}</span>
 </td></tr></table>
-<h2 style="margin:0 0 12px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:26px;font-weight:500;color:#1a1815;line-height:1.18;letter-spacing:-0.01em;">${title}</h2>
-${dek ? `<p style="margin:0 0 20px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:17px;color:#3a342c;line-height:1.45;">${dek}</p>` : ''}
-<p style="margin:0 0 24px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.65;">${summary || '<em>Keine Zusammenfassung vorhanden.</em>'}</p>
+
+<!-- Title -->
+<h2 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">${title}</h2>
+
+<!-- Dek -->
+${dek ? `<p style="margin:0 0 22px;font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#4a3f35;line-height:1.5;letter-spacing:-0.005em;">${dek}</p>` : ''}
+
+<!-- Summary -->
+<p style="margin:0 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">${summary || '<em>Keine Zusammenfassung vorhanden.</em>'}</p>
+
 </td></tr>
+
 <!-- Meta strip -->
-<tr><td style="padding:0 36px 0;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0;"/></td></tr>
-<tr><td style="padding:16px 36px 0;">
-<table cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-<tr><td style="padding-right:24px;"><span style="font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;"><strong style="color:#1a1815;">Wirkung</strong> ${impactScore}/100</span></td>
-<td><span style="font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;"><strong style="color:#1a1815;">Lesezeit</strong> ${readingMinutes} Min.</span></td></tr>
+<tr><td style="padding:0 40px;">
+<hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;"/>
+</td></tr>
+<tr><td style="padding:18px 40px 0;">
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
+<tr>
+<td style="padding-right:28px;"><span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;"><strong style="font-weight:600;color:#1a1815;">Wirkung</strong> ${impactScore}/100</span></td>
+<td><span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;"><strong style="font-weight:600;color:#1a1815;">Lesezeit</strong> ${readingMinutes} Min.</span></td>
+</tr>
 </table>
 </td></tr>
+
 <!-- CTA -->
-<tr><td style="padding:0 36px 28px;">
-<table cellpadding="0" cellspacing="0"><tr>
+<tr><td style="padding:0 40px 32px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
 <td style="background-color:#1a1815;border-radius:9999px;text-align:center;">
-<a href="${storyUrl}" target="_blank" style="display:inline-block;padding:14px 36px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:500;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen &rarr;</a>
+<a href="${storyUrl}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen &rarr;</a>
 </td>
 </tr></table>
 </td></tr>
+
 <!-- Divider -->
-<tr><td style="padding:0 36px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0;"/></td></tr>
-<!-- Footer -->
-<tr><td style="padding:24px 36px 32px;">
-<p style="margin:0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.5;">Test-Newsletter, gesendet aus dem Admin-Dashboard.</p>
+<tr><td style="padding:0 40px;">
+<hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;"/>
 </td></tr>
+
+<!-- Footer -->
+<tr><td style="padding:22px 40px 30px;">
+<p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
+Dies ist ein Test-Newsletter aus dem Admin-Dashboard.<br/>Kein automatischer Versand.
+</p>
+</td></tr>
+
 </table>
-<p style="margin:16px 0 0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;">NurEine &mdash; Eine Geschichte am Tag. Mehr nicht.</p>
+
+<!-- Site footer -->
+<p style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">
+NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.
+</p>
+
 </td></tr></table></body></html>`;
 
   try {

@@ -8,6 +8,7 @@ function buildWelcomeEmail(client: {
   company_name: string;
   contact_name: string | null;
   contact_email: string | null;
+  contact_phone: string | null;
   status: string;
   integration_type: string;
   integration_target: string;
@@ -33,74 +34,88 @@ function buildWelcomeEmail(client: {
 
   return `<!DOCTYPE html>
 <html lang="de">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
-<body style="margin:0;padding:0;background-color:#f5f1ea;">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/><meta name="supported-color-schemes" content="light"/><!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting"/><!--<![endif]--></head>
+<body style="margin:0;padding:0;background-color:#f5f1ea;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;">
-<tr><td align="center" style="padding:48px 16px;">
-<table role="presentation" width="580" cellpadding="0" cellspacing="0" style="max-width:580px;width:100%;background-color:#faf6ee;border-radius:8px;overflow:hidden;border:1px solid rgba(26,24,21,0.12);">
+<tr><td align="center" style="padding:40px 16px 32px;">
 
-<!-- Header -->
-<tr><td style="padding:36px 36px 24px;">
-<h1 style="margin:0;font-family:'Fraunces','Cambria',Georgia,serif;font-size:28px;font-weight:500;color:#1a1815;line-height:1.2;">
-Willkommen bei NurEine,<br/>${name}!
-</h1>
-</td></tr>
+<!-- Brand header -->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
+<tr><td style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
+<tr><td style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td></tr>
+</table>
+
+<!-- Main card -->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);">
 
 <!-- Body -->
-<tr><td style="padding:0 36px 24px;">
-<p style="margin:0 0 16px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.65;">
+<tr><td style="padding:36px 40px 28px;">
+
+<h2 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">
+Willkommen bei NurEine,<br/>${name}!
+</h2>
+
+<p style="margin:0 0 16px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a342c;">
 Hallo ${greeting},
 </p>
-<p style="margin:0 0 16px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.65;">
-wir freuen uns sehr, <strong style="color:#1a1815;">${client.company_name}</strong> an Bord zu haben! Ab sofort bekommt ihr jeden Tag eine handverlesene, positive Nachricht – kein doomscrolling, kein Clickbait, kein Lärm. Nur eine Geschichte, die wirklich Hoffnung macht.
+<p style="margin:0 0 24px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a342c;">
+wir freuen uns sehr, <strong style="color:#1a1815;">${client.company_name}</strong> an Bord zu haben! Ab sofort bekommt ihr jeden Tag eine handverlesene, positive Nachricht &mdash; kein doomscrolling, kein Clickbait, kein L&auml;rm. Nur eine Geschichte, die wirklich Hoffnung macht.
 </p>
 
-<!-- Deine Details Box -->
-<div style="background-color:#ffffff;border-radius:6px;border:1px solid rgba(26,24,21,0.1);padding:20px 24px;margin:24px 0;">
-<p style="margin:0 0 12px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:18px;font-weight:500;color:#1a1815;">Deine Eckdaten</p>
-<table role="presentation" cellpadding="0" cellspacing="0" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:14px;color:#3a342c;line-height:1.6;">
-<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">Unternehmen:</strong> ${client.company_name}</td></tr>
-<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">Status:</strong> ${client.status === 'pilot' ? '30-Tage-Pilot (kostenlos)' : 'Aktiver Kunde'}</td></tr>
+<!-- Eckdaten Box -->
+<div style="background-color:#ffffff;border-radius:8px;border:1px solid rgba(26,24,21,0.08);padding:24px;margin:24px 0;">
+<p style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:400;color:#1a1815;">Deine Eckdaten</p>
+<table role="presentation" cellpadding="0" cellspacing="0" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#3a342c;line-height:1.7;">
+<tr><td style="padding:6px 0;"><strong style="font-weight:600;color:#1a1815;">Unternehmen:</strong> ${client.company_name}</td></tr>
+<tr><td style="padding:6px 0;"><strong style="font-weight:600;color:#1a1815;">Status:</strong> ${client.status === 'pilot' ? '30-Tage-Pilot (kostenlos)' : 'Aktiver Kunde'}</td></tr>
 ${pilotDate}
-<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">Auslieferung:</strong> ${deliveryInfo}</td></tr>
+<tr><td style="padding:6px 0;"><strong style="font-weight:600;color:#1a1815;">Auslieferung:</strong> ${deliveryInfo}</td></tr>
 ${price}
 </table>
 </div>
 
-<h2 style="margin:24px 0 12px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:18px;font-weight:500;color:#1a1815;">So läuft es ab</h2>
-<table role="presentation" cellpadding="0" cellspacing="0" style="font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:14px;color:#3a342c;line-height:1.7;">
-<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">1. Jeden Morgen um 06:30 Uhr</strong> — Eine neue Geschichte erscheint auf <a href="${PUBLIC_BASE_URL}" style="color:#c87340;">nureine.de</a>.</td></tr>
-<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">2. Automatische Auslieferung</strong> — Zur gleichen Zeit bekommt ${client.company_name} die Geschichte in euren gewählten Kanal.</td></tr>
-<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">3. Euer Branding</strong> — In jeder Mail steht "Gute Nachrichten – powered by ${client.company_name}".</td></tr>
-<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">4. Keine Arbeit für euch</strong> — Das System läuft vollautomatisch. Ihr müsst nichts konfigurieren, nichts kuratieren.</td></tr>
+<h2 style="margin:28px 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:400;color:#1a1815;">So l&auml;uft es ab</h2>
+<table role="presentation" cellpadding="0" cellspacing="0" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#3a342c;line-height:1.8;">
+<tr><td style="padding:6px 0;"><strong style="font-weight:600;color:#1a1815;">1. Jeden Morgen um 06:30 Uhr</strong> &mdash; Eine neue Geschichte erscheint auf <a href="${PUBLIC_BASE_URL}" style="color:#c87340;">nureine.de</a>.</td></tr>
+<tr><td style="padding:6px 0;"><strong style="font-weight:600;color:#1a1815;">2. Automatische Auslieferung</strong> &mdash; Zur gleichen Zeit bekommt ${client.company_name} die Geschichte in euren gew&auml;hlten Kanal.</td></tr>
+<tr><td style="padding:6px 0;"><strong style="font-weight:600;color:#1a1815;">3. Euer Branding</strong> &mdash; In jeder Mail steht &raquo;Gute Nachrichten &ndash; powered by ${client.company_name}&laquo;.</td></tr>
+<tr><td style="padding:6px 0;"><strong style="font-weight:600;color:#1a1815;">4. Keine Arbeit f&uuml;r euch</strong> &mdash; Das System l&auml;uft vollautomatisch. Ihr m&uuml;sst nichts konfigurieren, nichts kuratieren.</td></tr>
 </table>
 
-<h2 style="margin:24px 0 12px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:18px;font-weight:500;color:#1a1815;">Fragen?</h2>
-<p style="margin:0 0 24px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:14px;color:#3a342c;line-height:1.65;">
-Antworte einfach auf diese Mail oder ruf an unter ${client.contact_phone ? client.contact_phone : '–'} — Aaron ist persönlich für dich da.
+<h2 style="margin:28px 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:400;color:#1a1815;">Fragen?</h2>
+<p style="margin:0 0 28px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#3a342c;line-height:1.7;">
+Antworte einfach auf diese Mail oder ruf an unter ${client.contact_phone ? client.contact_phone : '&ndash;'} &mdash; Aaron ist pers&ouml;nlich f&uuml;r dich da.
 </p>
 
 </td></tr>
 
 <!-- CTA -->
-<tr><td style="padding:0 36px 32px;">
+<tr><td style="padding:0 40px 32px;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
 <td style="background-color:#1a1815;border-radius:9999px;text-align:center;">
-<a href="${PUBLIC_BASE_URL}" target="_blank" style="display:inline-block;padding:14px 36px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:500;color:#faf6ee;text-decoration:none;border-radius:9999px;">Zu NurEine →</a>
+<a href="${PUBLIC_BASE_URL}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Zu NurEine &rarr;</a>
 </td></tr></table>
 </td></tr>
 
+<!-- Divider -->
+<tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;"/></td></tr>
+
 <!-- Footer -->
-<tr><td style="padding:0 36px 36px;">
-<hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0 0 16px;"/>
-<p style="margin:0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
-NurEine — Eine Geschichte am Tag. Mehr nicht.<br/>
-Teltow, Brandenburg. Gegründet 2026.<br/>
+<tr><td style="padding:22px 40px 30px;">
+<p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
+NurEine &mdash; Eine Geschichte am Tag. Mehr nicht.<br/>
+Teltow, Brandenburg. Gegr&uuml;ndet 2026.<br/>
 <a href="mailto:${BREVO_FROM_EMAIL}" style="color:#9a9087;">${BREVO_FROM_EMAIL}</a>
 </p>
 </td></tr>
 
 </table>
+
+<!-- Site footer -->
+<p style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">
+NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.
+</p>
+
 </td></tr></table></body></html>`;
 }
 

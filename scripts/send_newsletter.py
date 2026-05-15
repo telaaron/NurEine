@@ -73,24 +73,40 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NurEine</title>
+  <meta name="color-scheme" content="light" />
+  <meta name="supported-color-schemes" content="light" />
+  <!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting" /><!--<![endif]-->
 </head>
-<body style="margin:0;padding:0;background-color:#f5f1ea;">
+<body style="margin:0;padding:0;background-color:#f5f1ea;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;">
     <tr>
-      <td align="center" style="padding:40px 16px;">
+      <td align="center" style="padding:40px 16px 32px;">
+
+        <!-- Brand header -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
+          <tr>
+            <td style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td>
+          </tr>
+          <tr>
+            <td style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td>
+          </tr>
+        </table>
+
         <!-- Main card -->
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:8px;overflow:hidden;border:1px solid rgba(26,24,21,0.12);">
-          <!-- Image header -->
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);">
+
+          <!-- Hero image -->
           {header}
+
           <!-- Body -->
           <tr>
-            <td style="padding:20px 36px 28px;">
-              <!-- Category + date row -->
+            <td style="padding:28px 40px 24px;">
+
+              <!-- Category pill -->
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
                 <tr>
                   <td>
-                    <span style="display:inline-block;background-color:{category_color};color:#faf6ee;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.16em;padding:3px 10px;border-radius:9999px;">
+                    <span style="display:inline-block;background-color:{category_color};color:#ffffff;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;padding:3px 12px;border-radius:9999px;">
                       {category}
                     </span>
                   </td>
@@ -98,52 +114,54 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               </table>
 
               <!-- Title -->
-              <h2 style="margin:0 0 12px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:26px;font-weight:500;color:#1a1815;line-height:1.18;letter-spacing:-0.01em;">
+              <h2 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">
                 {title}
               </h2>
 
               <!-- Dek -->
-              <p style="margin:0 0 20px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:17px;color:#3a342c;line-height:1.45;">
+              <p style="margin:0 0 22px;font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#4a3f35;line-height:1.5;letter-spacing:-0.005em;">
                 {dek}
               </p>
 
               <!-- Summary -->
-              <p style="margin:0 0 24px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.65;">
+              <p style="margin:0 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">
                 {summary}
               </p>
             </td>
           </tr>
+
           <!-- Meta strip -->
           <tr>
-            <td style="padding:0 36px 0;">
-              <hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0;" />
+            <td style="padding:0 40px;">
+              <hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;" />
             </td>
           </tr>
           <tr>
-            <td style="padding:16px 36px 0;">
+            <td style="padding:18px 40px 0;">
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
                 <tr>
-                  <td style="padding-right:24px;">
-                    <span style="font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;">
-                      <strong style="color:#1a1815;">Wirkung</strong> {impact_score}/100
+                  <td style="padding-right:28px;">
+                    <span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;">
+                      <strong style="font-weight:600;color:#1a1815;">Wirkung</strong> {impact_score}/100
                     </span>
                   </td>
                   <td>
-                    <span style="font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;">
-                      <strong style="color:#1a1815;">Lesezeit</strong> {reading_minutes} Min.
+                    <span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;">
+                      <strong style="font-weight:600;color:#1a1815;">Lesezeit</strong> {reading_minutes} Min.
                     </span>
                   </td>
                 </tr>
               </table>
             </td>
           </tr>
+
           <!-- CTA -->
           <tr>
-            <td style="padding:0 36px 28px;">
+            <td style="padding:0 40px 32px;">
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="background-color:#1a1815;border-radius:9999px;text-align:center;">
-                    <a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 36px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:500;color:#faf6ee;text-decoration:none;border-radius:9999px;">
+                    <a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">
                       Geschichte lesen &rarr;
                     </a>
                   </td>
@@ -151,19 +169,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               </table>
             </td>
           </tr>
+
           <!-- Divider -->
           <tr>
-            <td style="padding:0 36px;">
-              <hr style="border:none;border-top:1px solid rgba(26,24,21,0.12);margin:0;" />
+            <td style="padding:0 40px;">
+              <hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;" />
             </td>
           </tr>
+
           <!-- Footer -->
           <tr>
-            <td style="padding:24px 36px 32px;">
-              <p style="margin:0 0 8px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.5;">
+            <td style="padding:22px 40px 30px;">
+              <p style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
                 Du erh&auml;ltst diese E-Mail, weil du den NurEine-Newsletter abonniert hast.
               </p>
-              <p style="margin:0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.5;">
+              <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
                 <a href="{unsubscribe_url}" target="_blank" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">
                   Abmelden
                 </a>
@@ -171,9 +191,10 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             </td>
           </tr>
         </table>
+
         <!-- Site footer -->
-        <p style="margin:16px 0 0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;">
-          NurEine &mdash; Eine Geschichte am Tag. Mehr nicht.
+        <p style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">
+          NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.
         </p>
       </td>
     </tr>
@@ -211,14 +232,11 @@ def build_html_body(story: dict, subscriber_email: str, confirmation_token: str)
 
     summary = story.get("summary", "")
     image_url = story.get("image_url", "")
-    emoji = story.get("emoji", "")
-    # Build header: use <img> if image_url is set, else emoji
+    # Build header: use <img> if image_url is set, else sparkle fallback
     if image_url:
-        header_html = f'<td style="padding:0;"><img src="{image_url}" alt="" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;border-radius:8px 8px 0 0;" /></td>'
-    elif emoji:
-        header_html = f'<td style="padding:0;"><div style="margin:0;font-size:72px;line-height:1;text-align:center;padding:20px 36px 0;filter:saturate(0.85);">{emoji}</div></td>'
+        header_html = f'<tr><td style="padding:0;"><img src="{image_url}" alt="" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;border-radius:10px 10px 0 0;" /></td></tr>'
     else:
-        header_html = ''
+        header_html = '<tr><td style="padding:32px 40px 0;"><div style="font-size:64px;line-height:1;text-align:center;">&#10024;</div></td></tr>'
 
     return HTML_TEMPLATE.format(
         header=header_html,
@@ -297,7 +315,7 @@ def get_hero_story(is_hero: bool = True, limit: int = 1) -> dict | None:
     params = {
         "is_hero": f"eq.{str(is_hero).lower()}",
         "limit": str(limit),
-        "select": "id,title,subtitle,body_markdown,summary,category,emoji,image_url,impact_score,reading_time_min",
+        "select": "id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min",
     }
     results = supabase_get("nureine_stories", params=params)
     if isinstance(results, list) and results:
@@ -433,42 +451,62 @@ def build_b2b_html_body(story: dict, company_name: str) -> str:
     summary = story.get("summary", "")
     image_url = story.get("image_url", "")
     if image_url:
-        header_html = f'<td style="padding:0;"><img src="{image_url}" alt="" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;border-radius:8px 8px 0 0;" /></td>'
+        header_html = f'<tr><td style="padding:0;"><img src="{image_url}" alt="" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;border-radius:10px 10px 0 0;" /></td></tr>'
     else:
-        header_html = ''
+        header_html = '<tr><td style="padding:32px 40px 0;"><div style="font-size:64px;line-height:1;text-align:center;">&#10024;</div></td></tr>'
 
-    # B2B branding: custom header mentioning the company
-    b2b_header = f'<tr><td style="padding:24px 36px 0;"><p style="margin:0;font-family:\'Inter\',\'Helvetica Neue\',Arial,sans-serif;font-size:11px;color:#9a9087;text-transform:uppercase;letter-spacing:0.16em;">Gute Nachrichten – powered by {company_name}</p></td></tr>'
+    # B2B branding line below the brand header
+    b2b_header = f'<tr><td style="font-family:\'Helvetica Neue\',Arial,sans-serif;font-size:10px;color:#b0a79e;text-align:center;text-transform:uppercase;letter-spacing:0.16em;padding-top:2px;">Gute Nachrichten &mdash; powered by {company_name}</td></tr>'
 
     return f"""<!DOCTYPE html>
 <html lang="de">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
-<body style="margin:0;padding:0;background-color:#f5f1ea;">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/><meta name="supported-color-schemes" content="light"/><!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting"/><!--<![endif]--></head>
+<body style="margin:0;padding:0;background-color:#f5f1ea;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;">
-<tr><td align="center" style="padding:40px 16px;">
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:8px;overflow:hidden;border:1px solid rgba(26,24,21,0.12);">
+<tr><td align="center" style="padding:40px 16px 32px;">
+
+<!-- Brand header -->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
+<tr><td style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
+<tr><td style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td></tr>
 {b2b_header}
+</table>
+
+<!-- Main card -->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);">
 {header_html}
-<tr><td style="padding:20px 36px 28px;">
+<tr><td style="padding:28px 40px 24px;">
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>
-<span style="display:inline-block;background-color:{category_color};color:#faf6ee;font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.16em;padding:3px 10px;border-radius:9999px;">{category}</span>
+<span style="display:inline-block;background-color:{category_color};color:#ffffff;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;padding:3px 12px;border-radius:9999px;">{category}</span>
 </td></tr></table>
-<h2 style="margin:0 0 12px;font-family:'Fraunces','Cambria',Georgia,serif;font-size:26px;font-weight:500;color:#1a1815;line-height:1.18;letter-spacing:-0.01em;">{title}</h2>
-<p style="margin:0 0 24px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.65;">{summary}</p>
+<h2 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">{title}</h2>
+<p style="margin:0 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">{summary}</p>
 </td></tr>
-<tr><td style="padding:0 36px 28px;">
+
+<!-- CTA -->
+<tr><td style="padding:0 40px 32px;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
 <td style="background-color:#1a1815;border-radius:9999px;text-align:center;">
-<a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 36px;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:500;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen →</a>
+<a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen &rarr;</a>
 </td></tr></table>
 </td></tr>
-<tr><td style="padding:0 36px 32px;">
-<p style="margin:0;font-family:'Inter','Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.5;">
-NurEine – Eine Geschichte am Tag. Mehr nicht.<br/>
-Bereitgestellt für <strong>{company_name}</strong>.
+
+<!-- Divider -->
+<tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;"/></td></tr>
+
+<!-- Footer -->
+<tr><td style="padding:22px 40px 30px;">
+<p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
+Bereitgestellt f&uuml;r <strong>{company_name}</strong>.
 </p>
 </td></tr>
 </table>
+
+<!-- Site footer -->
+<p style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">
+NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.
+</p>
+
 </td></tr></table></body></html>"""
 
 

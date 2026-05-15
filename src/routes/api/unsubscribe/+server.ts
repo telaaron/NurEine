@@ -25,7 +25,7 @@ export async function GET({ url }) {
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background-color: #f5f1ea;
-      font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      font-family: Georgia, 'Times New Roman', serif;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -34,8 +34,9 @@ export async function GET({ url }) {
     }
     .card {
       background-color: #faf6ee;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px rgba(26,24,21,0.08);
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(26,24,21,0.04);
+      border: 1px solid rgba(26,24,21,0.10);
       padding: 48px 40px;
       max-width: 480px;
       width: 100%;
@@ -43,36 +44,49 @@ export async function GET({ url }) {
     }
     .icon { font-size: 48px; margin-bottom: 16px; }
     h1 {
-      font-family: 'Fraunces', 'Georgia', serif;
+      font-family: Georgia, 'Times New Roman', serif;
       font-size: 24px;
-      font-weight: 600;
+      font-weight: 400;
       color: #1a1815;
       margin-bottom: 12px;
+      letter-spacing: -0.01em;
     }
     p {
-      font-size: 16px;
-      line-height: 1.6;
-      color: #4a4845;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #3a342c;
       margin-bottom: 24px;
     }
-    a {
+    a.button {
       display: inline-block;
-      background-color: ${accentColor};
+      background-color: #1a1815;
       color: #ffffff;
       text-decoration: none;
-      padding: 12px 28px;
-      border-radius: 8px;
+      padding: 14px 40px;
+      border-radius: 9999px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
       font-size: 15px;
-      font-weight: 500;
+      font-weight: 600;
       transition: opacity 0.2s;
     }
-    a:hover { opacity: 0.9; }
+    a.button:hover { opacity: 0.9; }
     .footer {
       margin-top: 32px;
-      font-size: 13px;
-      color: #9a9895;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      font-size: 12px;
+      color: #9a9087;
     }
-    .footer a { all: revert; background: none; color: #e67e22; padding: 0; font-size: 13px; text-decoration: underline; display: inline; }
+    .footer a {
+      all: revert;
+      background: none;
+      color: #c87340;
+      padding: 0;
+      font-size: 12px;
+      text-decoration: none;
+      display: inline;
+      border-bottom: 1px solid rgba(200,115,64,0.3);
+    }
   </style>
 </head>
 <body>
@@ -80,7 +94,7 @@ export async function GET({ url }) {
     <div class="icon">${icon}</div>
     <h1>${title}</h1>
     <p>${message}</p>
-    <a href="/newsletter">Zur\u00fcck zum Newsletter</a>
+    <a class="button" href="/newsletter">Zur\u00fcck zum Newsletter</a>
     <p class="footer"><a href="/">NurEine &mdash; Startseite</a></p>
   </div>
 </body>

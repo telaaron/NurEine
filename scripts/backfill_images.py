@@ -52,7 +52,7 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
 
 FAL_ENDPOINT = "https://fal.run/fal-ai/flux/schnell"
-FAL_IMAGE_SIZE = "square"
+FAL_IMAGE_SIZE = "landscape_4_3"  # 1024x768
 FAL_NUM_IMAGES = 1
 FAL_POLL_INTERVAL = 2
 FAL_POLL_TIMEOUT = 120
@@ -287,7 +287,7 @@ def run() -> None:
             image_bytes = buf.getvalue()
             log.info("  Background removed")
 
-            # 3c. Auto-fit: ensure object is fully in frame with padding
+            # 3c. Auto-fit: ensure object is fully in frame with padding (preserving aspect ratio)
             alpha = output_img.split()[-1]
             bbox = alpha.getbbox()
             if bbox:
@@ -296,23 +296,33 @@ def run() -> None:
                 obj_w = obj_x2 - obj_x1
                 obj_h = obj_y2 - obj_y1
                 pad_px = int(max(obj_w, obj_h) * 0.20)
-                padded_size = max(obj_w, obj_h) + 2 * pad_px
                 obj_cx, obj_cy = obj_x1 + obj_w // 2, obj_y1 + obj_h // 2
-                sq_x1 = obj_cx - padded_size // 2
-                sq_y1 = obj_cy - padded_size // 2
-                sq_x2 = sq_x1 + padded_size
-                sq_y2 = sq_y1 + padded_size
-                if sq_x1 < 0:
-                    sq_x2 -= sq_x1; sq_x1 = 0
-                if sq_y1 < 0:
-                    sq_y2 -= sq_y1; sq_y1 = 0
-                if sq_x2 > w:
-                    sq_x1 -= (sq_x2 - w); sq_x2 = w
-                if sq_y2 > h:
-                    sq_y1 -= (sq_y2 - h); sq_y2 = h
-                actual_w = sq_x2 - sq_x1
-                actual_h = sq_y2 - sq_y1
-                cropped = output_img.crop((sq_x1, sq_y1, sq_x2, sq_y2))
+
+                # Size the crop region to match the canvas aspect ratio (w:h)
+                padded_dim = max(obj_w, obj_h) + 2 * pad_px
+                crop_w = max(int(padded_dim), int(padded_dim * w / h * 0.9))
+                crop_h = int(crop_w * h / w)
+
+                # Ensure object fits
+                if crop_w < obj_w + 2 * pad_px or crop_h < obj_h + 2 * pad_px:
+                    crop_w = int(max(obj_w + 2 * pad_px, (obj_h + 2 * pad_px) * w / h))
+                    crop_h = int(max(obj_h + 2 * pad_px, (obj_w + 2 * pad_px) * h / w))
+
+                cx1 = obj_cx - crop_w // 2
+                cy1 = obj_cy - crop_h // 2
+                cx2 = cx1 + crop_w
+                cy2 = cy1 + crop_h
+                if cx1 < 0:
+                    cx2 -= cx1; cx1 = 0
+                if cy1 < 0:
+                    cy2 -= cy1; cy1 = 0
+                if cx2 > w:
+                    cx1 -= (cx2 - w); cx2 = w
+                if cy2 > h:
+                    cy1 -= (cy2 - h); cy2 = h
+                actual_w = cx2 - cx1
+                actual_h = cy2 - cy1
+                cropped = output_img.crop((cx1, cy1, cx2, cy2))
                 result = PILImage.new("RGBA", (w, h), (0, 0, 0, 0))
                 margin_factor = 0.85  # always leave 15% margin
                 scale = min(w / actual_w, h / actual_h) * margin_factor
@@ -325,9 +335,9 @@ def run() -> None:
                 fit_buf = BytesIO()
                 result.save(fit_buf, format="PNG", optimize=True)
                 image_bytes = fit_buf.getvalue()
-                log.info("  Auto-fit: object bbox=(%d,%d,%d,%d) +%dpx pad → %d×%d → canvas %d×%d (%.0f%% margin)",
-                         obj_x1, obj_y1, obj_x2, obj_y2, pad_px, padded_size, padded_size, w, h, (1-margin_factor)*100)
-        except ImportError:
+                log.info("  Auto-fit: object bbox=(%d,%d,%d,%d) +%dpx pad → crop %d×%d → canvas %d×%d (%.0f%% margin)",
+                         obj_x1, obj_y1, obj_x2, obj_y2, pad_px, actual_w, actual_h, w, h, (1-margin_factor)*100)
+        except (ImportError, SystemExit):
             log.info("  rembg not available — keeping original image.")
         except Exception as exc:
             log.warning("  Background removal/fit failed: %s — using original.", exc)

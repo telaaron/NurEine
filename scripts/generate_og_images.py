@@ -54,7 +54,7 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 
 STORAGE_BUCKET = "og_images"
 OG_WIDTH = 1200
-OG_HEIGHT = 630
+OG_HEIGHT = 900  # 4:3 aspect ratio
 
 MISSING: list[str] = []
 if not SUPABASE_URL:
@@ -233,7 +233,7 @@ def compose_og_image(
     image_bytes: bytes | None,
 ) -> bytes:
     """
-    Composite a 1200x630 editorial OG image.
+    Composite a 1200x900 (4:3) editorial OG image.
 
     Layout:
     ┌──────────────────────────────────────┐
@@ -241,11 +241,12 @@ def compose_og_image(
     │ │                    │  WISSENSCHAFT│  ← category badge
     │ │                    │              │
     │ │   STORY IMAGE      │  Große Head- │  ← bold 56px title
-    │ │   660 x 630        │  line über   │
+    │ │   660 x 900        │  line über   │
     │ │   (full height)    │  zwei Zeilen │
     │ │                    │              │
     │ │                    │  Subtitle /  │  ← 22px dek
     │ │                    │  Kontext     │
+    │ │                    │              │
     │ │                    │              │
     │ └────────────────────┘  NurEine ▸   │  ← subtle branding footer
     └──────────────────────────────────────┘
@@ -269,7 +270,7 @@ def compose_og_image(
 
     # ---- Layout constants ----
     IMAGE_W = 660          # left image panel width
-    IMAGE_H = 630          # full height
+    IMAGE_H = OG_HEIGHT    # full canvas height (900px for 4:3)
     TEXT_X = IMAGE_W + 56  # text starts here (716)
     TEXT_W = OG_WIDTH - TEXT_X - 60  # ~424px for text
     MARGIN_TOP = 84

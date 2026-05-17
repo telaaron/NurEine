@@ -30,7 +30,7 @@
 	}
 </script>
 
-<h1 class="serif text-2xl" style="color: var(--color-ink);">B2C Audience Panel</h1>
+<h1 class="serif text-2xl" style="color: var(--color-ink);">Audience Panel</h1>
 <p class="mt-1 text-sm" style="color: var(--color-muted);">Einfache Listenansicht aller Abonnenten. Ideal als Lookalike Audience Export.</p>
 
 <div class="mt-6 flex flex-wrap gap-3 items-center justify-between">
@@ -47,13 +47,7 @@
 				Total: {stats.total}
 			</span>
 			<span class="paper px-3 py-1 rounded-full text-xs" style="border: 1px solid var(--color-rule); color: var(--color-ink);">
-				Bestätigt: {stats.confirmed}
-			</span>
-			<span class="paper px-3 py-1 rounded-full text-xs" style="border: 1px solid var(--color-rule); color: var(--color-ink);">
-				Free: {stats.free}
-			</span>
-			<span class="paper px-3 py-1 rounded-full text-xs" style="border: 1px solid var(--color-rule); color: var(--color-ink);">
-				Plus: {stats.plus}
+				Bestaetigt: {stats.confirmed}
 			</span>
 			<span class="paper px-3 py-1 rounded-full text-xs" style="border: 1px solid var(--color-rule); color: var(--color-ink);">
 				B2B: {stats.b2b}
@@ -104,7 +98,7 @@
 						<td class="p-3" style="color: var(--color-ink);">{sub.email}</td>
 						<td class="p-3">
 							<span class="text-xs px-2 py-0.5 rounded-full" style="
-								background: {sub.tier === 'plus' ? 'var(--color-amber)' : sub.tier === 'b2b' ? 'var(--color-sky)' : 'var(--color-muted)'};
+								background: {sub.tier === 'b2b' ? 'var(--color-sky)' : 'var(--color-muted)'};
 								color: var(--color-paper);
 							">
 								{sub.tier}

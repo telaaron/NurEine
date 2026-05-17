@@ -62,7 +62,7 @@ text
 | Spalte | Typ | Beschreibung |
 |---|---|---|
 | email | TEXT UNIQUE | Email-Adresse |
-| tier | TEXT | free / plus / b2b |
+| tier | TEXT | free / b2b |
 | confirmed | BOOLEAN | Double-Opt-In bestätigt |
 | confirmation_token | TEXT | UUID für Bestätigungs-Link |
 | lat / lng | FLOAT | Standort (optional, für Bei-dir) |
@@ -88,7 +88,7 @@ src/routes/
 ├── karte/+page.svelte # Leaflet, CartoDB Positron Tiles
 ├── bei-dir/+page.svelte # Geolokation + Haversine-Distanz
 ├── manifest/+page.svelte # 6 Prinzipien, statisch
-├── newsletter/+page.svelte # Pricing + Subscribe-Form
+├── newsletter/+page.svelte # Kostenlos + B2B Subscribe-Form
 └── api/
 ├── subscribe/ # POST: Eintragen + Confirmation senden
 ├── confirm/ # GET: Double-Opt-In

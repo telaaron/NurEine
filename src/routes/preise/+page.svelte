@@ -4,54 +4,36 @@
 	const tiers = [
 		{
 			name: 'Browser',
-			tagline: 'Für den täglichen Blick',
+			tagline: 'Fuer den taeglichen Blick',
 			price: '0',
-			cadence: '€ / Monat',
+			cadence: 'EUR / Monat',
 			features: [
-				'Tägliche Hauptgeschichte',
-				'Zugang zum vollständigen Archiv',
-				'Karte der Hoffnung (Basis)',
+				'Taegliche Hauptgeschichte',
+				'Taeglicher Newsletter per E-Mail',
+				'Zugang zum vollstaendigen Archiv',
+				'Karte der Hoffnung',
 				'Werbefreies Leseerlebnis'
 			],
 			transformation: 'Bleib informiert, ohne dich zu belasten.',
 			cta: 'Jetzt lesen',
-			highlight: false,
+			highlight: true,
 			url: base + '/'
 		},
 		{
-			name: 'NurEine Plus',
-			tagline: 'Dein tägliches 5-Minuten-Ritual',
-			price: '29',
-			cadence: '€ / Jahr',
-			note: 'nur 2,42 € pro Monat',
-			features: [
-				'Alles aus dem Browser-Zugang',
-				'Tägliche Audio-Variante (5 Min.)',
-				'Sonntags-Brief als Newsletter',
-				'Wöchentlicher Deep-Dive zu globalen Bewegungen',
-				'Karte der Hoffnung in Hi-Res (druckbar)',
-				'Frühzugang zu neuen Features'
-			],
-			transformation: 'Jeden Tag eine gute Nachricht — vertont, kuratiert, in deinem Rhythmus.',
-			cta: 'Plus abonnieren',
-			highlight: true,
-			url: base + '/newsletter'
-		},
-		{
-			name: 'Für Teams',
+			name: 'Fuer Teams',
 			tagline: 'Gute Nachrichten als Arbeitsumfeld',
 			price: '49',
-			cadence: '€ / Monat',
-			note: 'pro Standort, Bildungsstätte oder Praxis',
+			cadence: 'EUR / Monat',
+			note: 'pro Standort, Bildungsstaette oder Praxis',
 			features: [
-				'Alles aus NurEine Plus',
+				'Alles aus dem Browser-Zugang',
 				'Wartezimmer- / Klassenraum-Display-Lizenz',
-				'Whitelabel-Newsletter für deine Organisation',
+				'Whitelabel-Newsletter fuer deine Organisation',
 				'API-Zugriff auf alle Inhalte & Wirkungsdaten',
 				'Monatliche Auswertung zur Teammoral',
-				'Persönlicher Ansprechpartner & Onboarding'
+				'Persoenlicher Ansprechpartner & Onboarding'
 			],
-			transformation: 'Schaffe ein Umfeld, das Hoffnung statt Angst verstärkt — für Patienten, Schüler und Teams.',
+			transformation: 'Schaffe ein Umfeld, das Hoffnung statt Angst verstaerkt — fuer Patienten, Schueler und Teams.',
 			cta: 'Beratung anfragen',
 			highlight: false,
 			url: '#b2b-form'
@@ -59,40 +41,25 @@
 	];
 
 	const comparisonFeatures = [
-		{ name: 'Tägliche Hauptgeschichte', free: true, plus: true, teams: true },
-		{ name: 'Vollständiges Archiv', free: true, plus: true, teams: true },
-		{ name: 'Karte der Hoffnung', free: 'Basis', plus: 'Hi-Res', teams: 'Hi-Res' },
-		{ name: 'Audio-Version (5 Min.)', free: false, plus: true, teams: true },
-		{ name: 'Sonntags-Brief (Newsletter)', free: false, plus: true, teams: true },
-		{ name: 'Wöchentlicher Deep-Dive', free: false, plus: true, teams: true },
-		{ name: 'Wartezimmer- / Display-Lizenz', free: false, plus: false, teams: true },
-		{ name: 'Whitelabel-Newsletter', free: false, plus: false, teams: true },
-		{ name: 'API-Zugriff', free: false, plus: false, teams: true },
-		{ name: 'Persönlicher Support', free: false, plus: false, teams: true }
+		{ name: 'Taegliche Hauptgeschichte', free: true, teams: true },
+		{ name: 'Taeglicher Newsletter', free: true, teams: true },
+		{ name: 'Vollstaendiges Archiv', free: true, teams: true },
+		{ name: 'Karte der Hoffnung', free: true, teams: true },
+		{ name: 'Wartezimmer- / Display-Lizenz', free: false, teams: true },
+		{ name: 'Whitelabel-Newsletter', free: false, teams: true },
+		{ name: 'API-Zugriff', free: false, teams: true },
+		{ name: 'Persoenlicher Support', free: false, teams: true }
 	];
 
 	function formatCell(val: boolean | string): string {
-		if (val === true) return '✓';
-		if (val === false) return '—';
+		if (val === true) return '\u2713';
+		if (val === false) return '\u2014';
 		return String(val);
 	}
 
 	function isHighlight(val: boolean | string): boolean {
 		return val === true;
 	}
-
-	const testimonials = [
-		{
-			quote: 'Ich habe den Newsletter meiner Praxis aufgegeben und ersetze ihn jetzt durch den NurEine-Sonntagsbrief. Die Patienten lieben es.',
-			author: 'Dr. Sabine Lorenz',
-			role: 'Allgemeinmedizinerin, München'
-		},
-		{
-			quote: 'Die Audio-Version ist mein täglicher Begleiter beim Joggen. 5 Minuten, die meinen Tag verändern. Beste 29 Euro im Jahr.',
-			author: 'Markus B.',
-			role: 'Abonnent seit Januar 2026'
-		}
-	];
 
 	let b2bName = $state('');
 	let b2bEmail = $state('');
@@ -118,20 +85,20 @@
 	>
 		Hoffnung ist kein Luxus.
 		<br />
-		<span style="color: var(--color-amber);">Sie ist die Basis.</span>
+		<span style="color: var(--color-amber);">Sie ist kostenlos.</span>
 	</h1>
 	<p
 		class="page-dek mt-5 max-w-[55ch] leading-relaxed"
 		style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 	>
-		Wir glauben, dass jeder Zugang zu konstruktiven Nachrichten haben sollte — ob privat, im
-		Wartezimmer oder im Klassenzimmer.
+		Der taegliche Newsletter ist kostenlos. Nur wer NurEine in seiner Organisation einsetzen
+		will — im Wartezimmer, Klassenzimmer oder Team-Channel — zahlt eine Team-Lizenz.
 	</p>
 </section>
 
 <!-- Pricing cards -->
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-12 sm:pb-16">
-	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8" style="max-width: 800px; margin: 0 auto;">
 		{#each tiers as tier}
 			<div
 				class="p-6 sm:p-8 rounded-[8px] flex flex-col"
@@ -147,7 +114,7 @@
 						class="badge inline-block px-3 py-1 rounded-full mb-4"
 						style="background: var(--color-amber); color: var(--color-ink); font-weight: 600; width: fit-content;"
 					>
-						Empfohlen
+						Kostenlos
 					</span>
 				{/if}
 				<p
@@ -232,7 +199,7 @@
 	>
 		Was ist in welchem Plan enthalten?
 	</h2>
-	<div class="overflow-x-auto">
+	<div class="overflow-x-auto" style="max-width: 700px; margin: 0 auto;">
 		<table class="w-full text-sm">
 			<thead>
 				<tr style="border-bottom: 1px solid var(--color-rule);">
@@ -243,16 +210,10 @@
 						Feature
 					</th>
 					<th
-						class="py-3 px-4 text-center text-xs uppercase tracking-[0.16em]"
-						style="color: var(--color-faint); font-weight: 500;"
-					>
-						Browser
-					</th>
-					<th
 						class="py-3 px-4 text-center text-xs uppercase tracking-[0.16em] rounded-t-[6px]"
 						style="background: var(--color-ink); color: var(--color-paper); font-weight: 600;"
 					>
-						Plus ⭐
+						Browser
 					</th>
 					<th
 						class="py-3 px-4 text-center text-xs uppercase tracking-[0.16em]"
@@ -271,15 +232,9 @@
 						<td class="py-3 pr-6" style="color: var(--color-ink);">{feat.name}</td>
 						<td
 							class="py-3 px-4 text-center"
-							style="color: {isHighlight(feat.free) ? 'var(--color-amber)' : 'var(--color-faint)'};"
+							style="background: rgba(38, 35, 30, 0.03); color: {isHighlight(feat.free) ? 'var(--color-amber)' : 'var(--color-faint)'};"
 						>
 							{formatCell(feat.free)}
-						</td>
-						<td
-							class="py-3 px-4 text-center"
-							style="background: rgba(38, 35, 30, 0.03); color: {isHighlight(feat.plus) ? 'var(--color-amber)' : 'var(--color-faint)'};"
-						>
-							{formatCell(feat.plus)}
 						</td>
 						<td
 							class="py-3 px-4 text-center"
@@ -291,31 +246,6 @@
 				{/each}
 			</tbody>
 		</table>
-	</div>
-</section>
-
-<!-- Testimonials -->
-<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20">
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-		{#each testimonials as t}
-			<div
-				class="p-6 sm:p-8 rounded-[8px]"
-				style="border: 1px solid var(--color-rule); background: var(--color-paper);"
-			>
-				<blockquote>
-					<p
-						class="text-base leading-relaxed italic"
-						style="color: var(--color-ink); font-family: var(--font-serif);"
-					>
-						„{t.quote}"
-					</p>
-				</blockquote>
-				<div class="mt-6">
-					<p class="text-sm font-medium" style="color: var(--color-ink);">{t.author}</p>
-					<p class="text-xs mt-0.5" style="color: var(--color-muted);">{t.role}</p>
-				</div>
-			</div>
-		{/each}
 	</div>
 </section>
 
@@ -343,7 +273,7 @@
 		>
 			Ob Wartezimmer, Klassenraum oder Teampause — NurEine verwandelt Bildschirme in
 			Hoffnungsmomente. Praxen berichten von entspannteren Patienten, Schulen von
-			aufmerksameren Schülern. Sprecht mit uns über eine maßgeschneiderte Lösung.
+			aufmerksameren Schuelern. Sprecht mit uns ueber eine massgeschneiderte Loesung.
 		</p>
 
 		{#if b2bSent}
@@ -351,7 +281,7 @@
 				class="mt-8 p-4 rounded-[4px] text-sm"
 				style="background: var(--color-sage); color: var(--color-paper);"
 			>
-				Danke für deine Anfrage. Wir melden uns innerhalb von 48 Stunden.
+				Danke fuer deine Anfrage. Wir melden uns innerhalb von 48 Stunden.
 			</div>
 		{:else}
 			<form onsubmit={submitB2B} class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
@@ -399,7 +329,7 @@
 						rows="3"
 						class="w-full px-4 py-2.5 rounded-[6px] text-sm"
 						style="border: 1px solid var(--color-rule); background: var(--color-canvas); color: var(--color-ink);"
-						placeholder="Wieviele Standorte? Display-Größe? Wunsch-Features?"
+						placeholder="Wieviele Standorte? Display-Groesse? Wunsch-Features?"
 					></textarea>
 				</div>
 				<div class="md:col-span-2">
@@ -422,7 +352,7 @@
 		class="serif text-xl sm:text-2xl text-center mb-10"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
-		Häufige Fragen
+		Haeufige Fragen
 	</h2>
 	<div class="max-w-2xl mx-auto space-y-4">
 		<details
@@ -430,11 +360,11 @@
 			style="border: 1px solid var(--color-rule); background: var(--color-paper);"
 		>
 			<summary class="text-sm font-medium cursor-pointer" style="color: var(--color-ink);">
-				Kann ich jederzeit kündigen?
+				Kostet der Newsletter wirklich nichts?
 			</summary>
 			<p class="mt-3 text-sm leading-relaxed" style="color: var(--color-ink-soft);">
-				Ja. NurEine Plus ist ein Jahresabo und kann jederzeit zum Ende des Abrechnungszeitraums
-				gekündigt werden. Keine Mindestlaufzeit, kein Ärger.
+				Ja. Der taegliche Newsletter ist komplett kostenlos und werbefrei. Wir finanzieren uns
+				ausschliesslich ueber die Team-Lizenzen fuer Organisationen — nicht ueber deine Daten.
 			</p>
 		</details>
 		<details
@@ -442,12 +372,11 @@
 			style="border: 1px solid var(--color-rule); background: var(--color-paper);"
 		>
 			<summary class="text-sm font-medium cursor-pointer" style="color: var(--color-ink);">
-				Wie unterscheidet sich der kostenlose Zugang vom Plus-Abo?
+				Kann ich jederzeit kuendigen?
 			</summary>
 			<p class="mt-3 text-sm leading-relaxed" style="color: var(--color-ink-soft);">
-				Im Browser-Zugang siehst du täglich die aktuelle Hauptgeschichte und kannst im Archiv
-				stöbern. Mit Plus bekommst du die tägliche Audio-Version (5 Min.), den Sonntags-Brief
-				als Newsletter und exklusive Deep-Dives — plus die Karte der Hoffnung in Druckqualität.
+				Fuer den kostenlosen Newsletter: Einfach auf "Abmelden" klicken — du bist sofort raus.
+				Fuer die Team-Lizenz: Monatlich kuendbar, keine Mindestlaufzeit.
 			</p>
 		</details>
 		<details
@@ -458,9 +387,9 @@
 				Ich bin Lehrerin / Arzt. Welche Lizenz brauche ich?
 			</summary>
 			<p class="mt-3 text-sm leading-relaxed" style="color: var(--color-ink-soft);">
-				Die Team-Lizenz ist genau für euch gemacht. Sie erlaubt die Anzeige auf Bildschirmen im
+				Die Team-Lizenz ist genau fuer euch gemacht. Sie erlaubt die Anzeige auf Bildschirmen im
 				Klassenraum oder Wartezimmer, inklusive Whitelabel-Option und monatlicher Auswertung.
-				Schreibt uns — wir finden die passende Lösung für eure Einrichtung.
+				Schreibt uns — wir finden die passende Loesung fuer eure Einrichtung.
 			</p>
 		</details>
 		<details
@@ -472,7 +401,7 @@
 			</summary>
 			<p class="mt-3 text-sm leading-relaxed" style="color: var(--color-ink-soft);">
 				Nein. Wir verkaufen keine Daten, platzieren keine Tracking-Pixel und personalisieren keine
-				Werbung. Deine E-Mail-Adresse wird ausschließlich für den von dir gewählten Dienst verwendet.
+				Werbung. Deine E-Mail-Adresse wird ausschliesslich fuer den Newsletter verwendet.
 			</p>
 		</details>
 	</div>

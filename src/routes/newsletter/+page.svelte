@@ -38,33 +38,18 @@
 
 	const tiers = [
 		{
-			name: 'Sonntags-Brief',
+			name: 'Taeglicher Brief',
 			price: 'kostenlos',
-			cadence: 'woechentlich',
+			cadence: 'taeglich',
 			features: [
-				'Eine kuratierte Geschichte pro Woche',
+				'Eine kuratierte Geschichte pro Tag',
 				'Hintergrund + Quellen',
 				'Ein Brief der Redaktion',
 				'Werbefrei, jederzeit kuendbar'
 			],
 			cta: 'Abonnieren',
-			highlight: false,
-			tier: 'free'
-		},
-		{
-			name: 'NurEine Plus',
-			price: '29 \u20ac',
-			cadence: '/ Jahr (≈ 2,42 €/Monat)',
-			features: [
-				'Alles aus dem Sonntags-Brief',
-				'Taegliche Audio-Variante (5 Min.)',
-				'Woechentlicher Deep-Dive zu globalen Bewegungen',
-				'Zugang zur Karte der Hoffnung in Hi-Res',
-				'Fruehzugang neue Features'
-			],
-			cta: 'Plus abonnieren',
 			highlight: true,
-			tier: 'plus'
+			tier: 'free'
 		},
 		{
 			name: 'Redaktionen & Schulen',
@@ -105,19 +90,19 @@
 		class="serif page-h1 mt-3 max-w-[18ch]"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
-		Eine Geschichte. Sonntag morgens. Mehr nicht.
+		Eine Geschichte. Taeglich. Mehr nicht.
 	</h1>
 	<p
 		class="page-dek mt-5 max-w-[55ch] leading-relaxed"
 		style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 	>
-		Wir verschicken keine Push-Nachrichten, keine Daily-Mails, keine "Breaking News". Nur einen
-		Brief pro Woche, kuratiert und tief.
+		Wir verschicken keine Push-Nachrichten, keine "Breaking News", keinen Algorithmus-Feed. Nur
+		eine Geschichte pro Tag, kuratiert und tief.
 	</p>
 </section>
 
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20">
-	<div class="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 lg:gap-8" style="max-width: 800px; margin: 0 auto;">
 		{#each tiers as tier}
 			{@const isB2B = tier.name === 'Redaktionen & Schulen'}
 			<div

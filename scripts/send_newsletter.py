@@ -287,15 +287,14 @@ def get_subscribers(tier_filter: str | list[str] | None = None) -> list[dict]:
 
     Args:
         tier_filter:
-            - None      → all confirmed (tier = 'free' or 'plus')
-            - "plus"    → only confirmed 'plus' tier
+            - None      → all confirmed non-B2B (tier = 'free')
             - string    → single tier value
             - list[str] → multiple tier values via 'in.(...)'
     """
     params = {"confirmed": "eq.true", "select": "id,email,confirmation_token,tier"}
 
     if tier_filter is None:
-        params["tier"] = "in.(free,plus)"
+        params["tier"] = "eq.free"
     elif isinstance(tier_filter, list):
         tiers = ",".join(tier_filter)
         params["tier"] = f"in.({tiers})"

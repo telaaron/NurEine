@@ -77,9 +77,9 @@
 		{/if}
 	</div>
 
-	<!-- B2C Abonnenten -->
+	<!-- Abonnenten -->
 	<div class="paper p-4 sm:p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
-		<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-sky);">B2C Abonnenten</p>
+		<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-sky);">Abonnenten</p>
 		<p class="serif text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">{subscribers.total}</p>
 		<p class="text-xs mt-1" style="color: var(--color-muted);">{subscribers.confirmed} bestätigt</p>
 	</div>
@@ -218,11 +218,11 @@
 	</div>
 </div>
 
-<!-- ===== MODUL 3: B2C Audience Mini ===== -->
+<!-- ===== MODUL 3: Audience Mini ===== -->
 <div class="mt-10">
 	<div class="paper p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
 		<div class="flex items-center justify-between">
-			<h2 class="serif text-lg" style="color: var(--color-ink);">B2C Audience</h2>
+			<h2 class="serif text-lg" style="color: var(--color-ink);">Audience</h2>
 			<a
 				href={base + '/admin/audience'}
 				class="text-xs px-3 py-1 rounded-full"
@@ -231,22 +231,18 @@
 				CSV Export →
 			</a>
 		</div>
-		<div class="mt-4 grid grid-cols-4 gap-3">
+		<div class="mt-4 grid grid-cols-3 gap-3">
 			<div class="paper p-3 rounded-[4px] text-center" style="border: 1px solid var(--color-rule);">
 				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Total</p>
 				<p class="serif text-xl mt-1" style="color: var(--color-ink);">{subscribers.total}</p>
 			</div>
 			<div class="paper p-3 rounded-[4px] text-center" style="border: 1px solid var(--color-rule);">
-				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Bestätigt</p>
+				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Bestaetigt</p>
 				<p class="serif text-xl mt-1" style="color: var(--color-ink);">{subscribers.confirmed}</p>
 			</div>
 			<div class="paper p-3 rounded-[4px] text-center" style="border: 1px solid var(--color-rule);">
-				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Free</p>
-				<p class="serif text-xl mt-1" style="color: var(--color-ink);">{subscribers.free}</p>
-			</div>
-			<div class="paper p-3 rounded-[4px] text-center" style="border: 1px solid var(--color-rule);">
-				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Plus</p>
-				<p class="serif text-xl mt-1" style="color: var(--color-ink);">{subscribers.plus}</p>
+				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">B2B</p>
+				<p class="serif text-xl mt-1" style="color: var(--color-ink);">{subscribers.b2b}</p>
 			</div>
 		</div>
 	</div>

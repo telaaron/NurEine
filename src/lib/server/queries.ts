@@ -336,7 +336,6 @@ export async function getSubscriberStats(): Promise<{
   total: number;
   confirmed: number;
   free: number;
-  plus: number;
   b2b: number;
 }> {
   const { data, error } = await supabaseAdmin
@@ -345,7 +344,7 @@ export async function getSubscriberStats(): Promise<{
 
   if (error || !data) {
     console.error('getSubscriberStats error:', error);
-    return { total: 0, confirmed: 0, free: 0, plus: 0, b2b: 0 };
+    return { total: 0, confirmed: 0, free: 0, b2b: 0 };
   }
 
   const rows = data as { confirmed: boolean; tier: string }[];
@@ -353,7 +352,6 @@ export async function getSubscriberStats(): Promise<{
     total: rows.length,
     confirmed: rows.filter(r => r.confirmed).length,
     free: rows.filter(r => r.tier === 'free').length,
-    plus: rows.filter(r => r.tier === 'plus').length,
     b2b: rows.filter(r => r.tier === 'b2b').length
   };
 }

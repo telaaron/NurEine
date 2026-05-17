@@ -76,8 +76,8 @@ Verbinde das GitHub-Repository mit Vercel. Setze alle Environment-Variablen in d
 |---|---|---|
 | `fetch-stories.yml` | 4× täglich (06, 10, 14, 18 UTC) | RSS-Feeds parsen, DeepSeek-Scoring, Stories speichern |
 | `select-hero.yml` | Täglich 05:30 UTC | Höchst-bewertete Story als Hero setzen |
-| `newsletter-sunday.yml` | Sonntags 07:00 UTC | Wochenbrief an Free + Plus Subscriber |
-| `newsletter-daily-plus.yml` | Täglich 07:30 UTC | Tägliches Update an Plus-Subscriber |
+| `newsletter-sunday.yml` | Sonntags 07:00 UTC | Sonntags-Brief an alle Abonnenten |
+| `newsletter-daily.yml` | Taeglich 07:30 UTC | Taeglicher Brief an alle Abonnenten |
 
 ### Secrets in GitHub setzen
 

@@ -55,7 +55,7 @@ INSERT INTO rss_sources (name, url, language, region, region_code) VALUES (...);
 → scripts/fetch_stories.py, ANALYSIS_PROMPT_TEMPLATE, image_prompt-Definition
 
 ### Neues Newsletter-Template
-→ scripts/send_newsletter.py, Funktion build_html()
+→ scripts/send_newsletter.py, Funktion build_html_body()
 
 ### Neue Route hinzufügen
 → src/routes/[name]/+page.svelte + ggf. +page.server.ts

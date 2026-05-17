@@ -1,4 +1,4 @@
-name: Daily Plus Newsletter
+name: Daily Newsletter
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  send-daily-plus:
+  send-daily:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,8 +18,8 @@ jobs:
       - name: Install dependencies
         run: pip install requests python-dotenv
 
-      - name: Send daily Plus newsletter
-        run: python scripts/send_newsletter.py daily_plus
+      - name: Send daily newsletter
+        run: python scripts/send_newsletter.py daily
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

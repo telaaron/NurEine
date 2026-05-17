@@ -3,8 +3,8 @@
 NurEine Newsletter Sender
 
 Called from GitHub Actions with one argument:
-  sunday       — send to all confirmed subscribers (free + plus tiers)
-  daily_plus   — send to confirmed 'plus' tier subscribers only
+  sunday  — send to all confirmed subscribers
+  daily   — send to all confirmed subscribers (daily hero story)
 
 Requires the following environment variables:
   SUPABASE_URL
@@ -564,13 +564,13 @@ def build_b2b_webhook_payload(story: dict) -> dict:
 def main() -> None:
     # ---- Validate arguments -------------------------------------------------
     if len(sys.argv) < 2:
-        logger.error("Missing argument. Usage: send_newsletter.py [sunday|daily_plus]")
+        logger.error("Missing argument. Usage: send_newsletter.py [sunday|daily]")
         sys.exit(1)
 
     newsletter_type = sys.argv[1].lower()
-    if newsletter_type not in ("sunday", "daily_plus"):
+    if newsletter_type not in ("sunday", "daily"):
         logger.error(
-            "Invalid argument '%s'. Must be 'sunday' or 'daily_plus'.", newsletter_type
+            "Invalid argument '%s'. Must be 'sunday' or 'daily'.", newsletter_type
         )
         sys.exit(1)
 
@@ -585,14 +585,15 @@ def main() -> None:
         sys.exit(1)
 
     # ---- Fetch subscribers --------------------------------------------------
+    # Both sunday and daily send to all confirmed non-B2B subscribers
     if newsletter_type == "sunday":
-        tier_filter = None  # free + plus
         subject = "NurEine Wochenendausgabe"
     else:
-        tier_filter = "plus"
-        subject = "NurEine Plus – Gute Nachrichten. Jeden Tag exakt eine."
+        subject = "NurEine – Gute Nachrichten. Jeden Tag exakt eine."
 
-    logger.info("Fetching subscribers (filter=%s)", tier_filter or "free+plus")
+    tier_filter = None  # free tier (all non-B2B)
+
+    logger.info("Fetching subscribers (filter=%s)", tier_filter or "free")
 
     try:
         subscribers = get_subscribers(tier_filter=tier_filter)

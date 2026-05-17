@@ -5,7 +5,7 @@ import { PUBLIC_BASE_URL } from '$env/static/public';
 import crypto from 'node:crypto';
 
 // POST /api/subscribe
-// Body: { email: string, tier?: 'free' | 'plus' | 'b2b', lat?: number, lng?: number, region?: string, region_code?: string }
+// Body: { email: string, name?: string, tier?: 'free' | 'b2b', lat?: number, lng?: number, region?: string, region_code?: string }
 //
 // 1. Validate email format
 // 2. Check if email already exists in subscribers table
@@ -119,7 +119,7 @@ async function sendConfirmationEmail(email: string, token: string): Promise<void
 
 export async function POST({ request }) {
 	try {
-		const { email, tier, lat, lng, region, region_code } = await request.json();
+		const { email, name, tier, lat, lng, region, region_code } = await request.json();
 
 		// 1. Validate email format
 		if (!email || typeof email !== 'string') {
@@ -130,9 +130,12 @@ export async function POST({ request }) {
 			return json({ error: 'Bitte gib eine gültige E-Mail-Adresse ein.' }, { status: 400 });
 		}
 
-		// Validate tier if provided
-		const validTiers = ['free', 'plus', 'b2b'];
+		// Validate tier if provided — B2C is always free
+		const validTiers = ['free', 'b2b'];
 		const subscriberTier = tier && validTiers.includes(tier) ? tier : 'free';
+
+		// Sanitize name
+		const subscriberName = name && typeof name === 'string' ? name.trim().slice(0, 100) || null : null;
 
 		// 2. Check if email already exists
 		const { data: existing, error: lookupError } = await supabaseAdmin
@@ -189,6 +192,7 @@ export async function POST({ request }) {
 			.insert({
 				email: email.toLowerCase().trim(),
 				tier: subscriberTier,
+					name: subscriberName,
 				confirmed: false,
 				confirmation_token: confirmationToken,
 				lat: lat ?? null,

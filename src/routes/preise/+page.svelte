@@ -4,13 +4,13 @@
 	const tiers = [
 		{
 			name: 'Browser',
-			tagline: 'Fuer den taeglichen Blick',
+			tagline: 'Für den täglichen Blick',
 			price: '0',
 			cadence: 'EUR / Monat',
 			features: [
-				'Taegliche Hauptgeschichte',
-				'Taeglicher Newsletter per E-Mail',
-				'Zugang zum vollstaendigen Archiv',
+				'Tägliche Hauptgeschichte',
+				'Täglicher Newsletter per E-Mail',
+				'Zugang zum vollständigen Archiv',
 				'Karte der Hoffnung',
 				'Werbefreies Leseerlebnis'
 			],
@@ -20,20 +20,20 @@
 			url: base + '/'
 		},
 		{
-			name: 'Fuer Teams',
+			name: 'Für Teams',
 			tagline: 'Gute Nachrichten als Arbeitsumfeld',
 			price: '49',
 			cadence: 'EUR / Monat',
-			note: 'pro Standort, Bildungsstaette oder Praxis',
+			note: 'pro Standort, Bildungsstätte oder Praxis',
 			features: [
 				'Alles aus dem Browser-Zugang',
 				'Wartezimmer- / Klassenraum-Display-Lizenz',
-				'Whitelabel-Newsletter fuer deine Organisation',
+				'Whitelabel-Newsletter für deine Organisation',
 				'API-Zugriff auf alle Inhalte & Wirkungsdaten',
 				'Monatliche Auswertung zur Teammoral',
-				'Persoenlicher Ansprechpartner & Onboarding'
+				'Persönlicher Ansprechpartner & Onboarding'
 			],
-			transformation: 'Schaffe ein Umfeld, das Hoffnung statt Angst verstaerkt — fuer Patienten, Schueler und Teams.',
+			transformation: 'Schaffe ein Umfeld, das Hoffnung statt Angst verstärkt — für Patienten, Schüler und Teams.',
 			cta: 'Beratung anfragen',
 			highlight: false,
 			url: '#b2b-form'
@@ -41,14 +41,14 @@
 	];
 
 	const comparisonFeatures = [
-		{ name: 'Taegliche Hauptgeschichte', free: true, teams: true },
-		{ name: 'Taeglicher Newsletter', free: true, teams: true },
-		{ name: 'Vollstaendiges Archiv', free: true, teams: true },
+		{ name: 'Tägliche Hauptgeschichte', free: true, teams: true },
+		{ name: 'Täglicher Newsletter', free: true, teams: true },
+		{ name: 'Vollständiges Archiv', free: true, teams: true },
 		{ name: 'Karte der Hoffnung', free: true, teams: true },
 		{ name: 'Wartezimmer- / Display-Lizenz', free: false, teams: true },
 		{ name: 'Whitelabel-Newsletter', free: false, teams: true },
 		{ name: 'API-Zugriff', free: false, teams: true },
-		{ name: 'Persoenlicher Support', free: false, teams: true }
+		{ name: 'Persönlicher Support', free: false, teams: true }
 	];
 
 	function formatCell(val: boolean | string): string {
@@ -91,7 +91,7 @@
 		class="page-dek mt-5 max-w-[55ch] leading-relaxed"
 		style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 	>
-		Der taegliche Newsletter ist kostenlos. Nur wer NurEine in seiner Organisation einsetzen
+		Der tägliche Newsletter ist kostenlos. Nur wer NurEine in seiner Organisation einsetzen
 		will — im Wartezimmer, Klassenzimmer oder Team-Channel — zahlt eine Team-Lizenz.
 	</p>
 </section>
@@ -273,7 +273,7 @@
 		>
 			Ob Wartezimmer, Klassenraum oder Teampause — NurEine verwandelt Bildschirme in
 			Hoffnungsmomente. Praxen berichten von entspannteren Patienten, Schulen von
-			aufmerksameren Schuelern. Sprecht mit uns ueber eine massgeschneiderte Loesung.
+			aufmerksameren Schülern. Sprecht mit uns über eine maßgeschneiderte Lösung.
 		</p>
 
 		{#if b2bSent}
@@ -281,7 +281,7 @@
 				class="mt-8 p-4 rounded-[4px] text-sm"
 				style="background: var(--color-sage); color: var(--color-paper);"
 			>
-				Danke fuer deine Anfrage. Wir melden uns innerhalb von 48 Stunden.
+				Danke für deine Anfrage. Wir melden uns innerhalb von 48 Stunden.
 			</div>
 		{:else}
 			<form onsubmit={submitB2B} class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl">
@@ -329,7 +329,7 @@
 						rows="3"
 						class="w-full px-4 py-2.5 rounded-[6px] text-sm"
 						style="border: 1px solid var(--color-rule); background: var(--color-canvas); color: var(--color-ink);"
-						placeholder="Wieviele Standorte? Display-Groesse? Wunsch-Features?"
+						placeholder="Wieviele Standorte? Display-Größe? Wunsch-Features?"
 					></textarea>
 				</div>
 				<div class="md:col-span-2">
@@ -352,7 +352,7 @@
 		class="serif text-xl sm:text-2xl text-center mb-10"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
-		Haeufige Fragen
+		Häufige Fragen
 	</h2>
 	<div class="max-w-2xl mx-auto space-y-4">
 		<details
@@ -363,8 +363,8 @@
 				Kostet der Newsletter wirklich nichts?
 			</summary>
 			<p class="mt-3 text-sm leading-relaxed" style="color: var(--color-ink-soft);">
-				Ja. Der taegliche Newsletter ist komplett kostenlos und werbefrei. Wir finanzieren uns
-				ausschliesslich ueber die Team-Lizenzen fuer Organisationen — nicht ueber deine Daten.
+				Ja. Der tägliche Newsletter ist komplett kostenlos und werbefrei. Wir finanzieren uns
+				ausschließlich über die Team-Lizenzen für Organisationen — nicht über deine Daten.
 			</p>
 		</details>
 		<details
@@ -372,11 +372,11 @@
 			style="border: 1px solid var(--color-rule); background: var(--color-paper);"
 		>
 			<summary class="text-sm font-medium cursor-pointer" style="color: var(--color-ink);">
-				Kann ich jederzeit kuendigen?
+				Kann ich jederzeit kündigen?
 			</summary>
 			<p class="mt-3 text-sm leading-relaxed" style="color: var(--color-ink-soft);">
-				Fuer den kostenlosen Newsletter: Einfach auf "Abmelden" klicken — du bist sofort raus.
-				Fuer die Team-Lizenz: Monatlich kuendbar, keine Mindestlaufzeit.
+				Für den kostenlosen Newsletter: Einfach auf "Abmelden" klicken — du bist sofort raus.
+				Für die Team-Lizenz: Monatlich kündbar, keine Mindestlaufzeit.
 			</p>
 		</details>
 		<details
@@ -387,9 +387,9 @@
 				Ich bin Lehrerin / Arzt. Welche Lizenz brauche ich?
 			</summary>
 			<p class="mt-3 text-sm leading-relaxed" style="color: var(--color-ink-soft);">
-				Die Team-Lizenz ist genau fuer euch gemacht. Sie erlaubt die Anzeige auf Bildschirmen im
+				Die Team-Lizenz ist genau für euch gemacht. Sie erlaubt die Anzeige auf Bildschirmen im
 				Klassenraum oder Wartezimmer, inklusive Whitelabel-Option und monatlicher Auswertung.
-				Schreibt uns — wir finden die passende Loesung fuer eure Einrichtung.
+				Schreibt uns — wir finden die passende Lösung für eure Einrichtung.
 			</p>
 		</details>
 		<details
@@ -401,7 +401,7 @@
 			</summary>
 			<p class="mt-3 text-sm leading-relaxed" style="color: var(--color-ink-soft);">
 				Nein. Wir verkaufen keine Daten, platzieren keine Tracking-Pixel und personalisieren keine
-				Werbung. Deine E-Mail-Adresse wird ausschliesslich fuer den Newsletter verwendet.
+				Werbung. Deine E-Mail-Adresse wird ausschließlich für den Newsletter verwendet.
 			</p>
 		</details>
 	</div>

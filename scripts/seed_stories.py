@@ -114,7 +114,7 @@ def call_deepseek(prompt: str) -> str | None:
 
 
 ANALYSIS_PROMPT_TEMPLATE = """\
-Du bist Redakteur bei NurEine, einer Plattform fuer bedeutsame Good News.
+Du bist Redakteur bei NurEine, einer Plattform für bedeutsame Good News.
 
 Analysiere diesen Artikel und antworte NUR mit einem JSON-Objekt:
 
@@ -129,38 +129,38 @@ Ist das eine bedeutsame positive Nachricht (nicht bloss "nett", sondern mit echt
 
 Falls ja, extrahiere:
 
-title: Deutscher Titel (max 80 Zeichen, praegnant)
+title: Deutscher Titel (max 80 Zeichen, prägnant)
 
 subtitle: Eine Zeile Kontext (max 120 Zeichen)
 
-summary: 2-3 deutsche Saetze, was passiert ist und warum es wichtig ist
+summary: 2-3 deutsche Sätze, was passiert ist und warum es wichtig ist
 
-body_markdown: 3-5 kurze Absaetze in Deutsch, die den Artikel erzaehlen (wie ein kleiner redaktioneller Text, kein copy-paste)
+body_markdown: 3-5 kurze Absätze in Deutsch, die den Artikel erzählen (wie ein kleiner redaktioneller Text, kein copy-paste)
 
 category: eine von [klima, gesundheit, wissenschaft, gemeinschaft, tiere, kultur, innovation]
 
-region: Laendername auf Deutsch
+region: Ländername auf Deutsch
 
 region_code: ISO 3166-1 alpha-2
 
-lat: Breitengrad (float, ungefaehr)
+lat: Breitengrad (float, ungefähr)
 
-lng: Laengengrad (float, ungefaehr)
+lng: Längengrad (float, ungefähr)
 
-image_prompt: Ein kurzer englischer Prompt fuer eine Bild-KI (DALL-E 3). Stil: Minimalist vector art, isometric, flat colors, soft lighting, no text, clean composition. Der Prompt soll das zentrale Thema der Nachricht visuell beschreiben. Beispiel: "Minimalist vector art, isometric view of a mangrove forest with people planting saplings, flat earth tones, soft golden lighting, clean composition, no text"
+image_prompt: Ein kurzer englischer Prompt für eine Bild-KI (DALL-E 3). Stil: Minimalist vector art, isometric, flat colors, soft lighting, no text, clean composition. Der Prompt soll das zentrale Thema der Nachricht visuell beschreiben. Beispiel: "Minimalist vector art, isometric view of a mangrove forest with people planting saplings, flat earth tones, soft golden lighting, clean composition, no text"
 
-impact_reach: geschaetzte Anzahl direkt positiv betroffener Menschen (integer)
+impact_reach: geschätzte Anzahl direkt positiv betroffener Menschen (integer)
 
-impact_durability: 0-100 (Wie lange haelt der Effekt an? Strukturveraenderung=100, Einzelereignis=20)
+impact_durability: 0-100 (Wie lange hält der Effekt an? Strukturveränderung=100, Einzelereignis=20)
 
 impact_evidence: 0-100 (Peer-reviewed=100, etablierte Redaktion=75, lokal=50)
 
-reading_time_min: geschaetzte Lesezeit in Minuten
+reading_time_min: geschätzte Lesezeit in Minuten
 
 Berechne impact_score = round(impact_reach_normalized * 0.4 + impact_durability * 0.35 + impact_evidence * 0.25)
 wobei impact_reach_normalized = min(100, log10(impact_reach + 1) * 20)
 
-Antworte ausschliesslich mit validem JSON. Kein Text davor oder danach."""
+Antworte ausschließlich mit validem JSON. Kein Text davor oder danach."""
 
 
 def build_prompt(entry: Any, source_name: str) -> str:

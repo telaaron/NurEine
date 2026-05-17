@@ -237,7 +237,7 @@
 				<p class="serif text-xl mt-1" style="color: var(--color-ink);">{subscribers.total}</p>
 			</div>
 			<div class="paper p-3 rounded-[4px] text-center" style="border: 1px solid var(--color-rule);">
-				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Bestaetigt</p>
+				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Bestätigt</p>
 				<p class="serif text-xl mt-1" style="color: var(--color-ink);">{subscribers.confirmed}</p>
 			</div>
 			<div class="paper p-3 rounded-[4px] text-center" style="border: 1px solid var(--color-rule);">

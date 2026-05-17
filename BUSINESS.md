@@ -28,21 +28,21 @@ was zeigt, dass Menschen vorankommen: bauen, heilen, einigen, erfinden, schütze
 ### Tier-Struktur (Stand: Mai 2026)
 | Tier | Preis | Kanal | Inhalt |
 |---|---|---|---|
-| Taeglicher Brief (Free) | €0 | Email + Web | Taeglich, voller Zugang — kein Paywall-Produkt, treibt Reichweite |
-| B2B Screen-Lizenz | €499/Monat | API + Screen | API-Feed fuer Office-Bildschirme, Whitelabel-Option, Wartezimmer/Kantine |
+| Täglicher Brief (Free) | €0 | Email + Web | Täglich, voller Zugang — kein Paywall-Produkt, treibt Reichweite |
+| B2B Screen-Lizenz | €499/Monat | API + Screen | API-Feed für Office-Bildschirme, Whitelabel-Option, Wartezimmer/Kantine |
 | B2B Whitelabel / Enterprise | €799–999/Monat | API + Newsletter | Custom Branding, Firmen-Newsletter-Integration, Multi-Standort |
 
-> **B2C ist komplett kostenlos.** Der taegliche Newsletter mit voller Funktionalitaet ist das Wachstumsprodukt. Die Monetarisierung erfolgt ausschliesslich ueber B2B.
+> **B2C ist komplett kostenlos.** Der tägliche Newsletter mit voller Funktionalität ist das Wachstumsprodukt. Die Monetarisierung erfolgt ausschließlich über B2B.
 
 > **Warum €499 statt €99–299 B2B?** Unter €499 kauft kein Entscheider — zu billig signalisiert
 > kein ernstes Produkt. Vergleich: Obstkorb/Monat = €80–150, Team-Mindfulness-App = €300–600/Monat.
-> €499 ist "guenstig" im Vergleich, aber professionell in der Wahrnehmung.
+> €499 ist "günstig" im Vergleich, aber professionell in der Wahrnehmung.
 
 ---
 
 ### Pricing-Review-Trigger
 - [ ] Nach 3 B2B-Piloten mit Testimonials: Preis auf €699 anheben
-- [ ] Nach 10 B2B-Kunden: Enterprise-Tier €999 einfuehren
+- [ ] Nach 10 B2B-Kunden: Enterprise-Tier €999 einführen
 
 ---
 
@@ -55,7 +55,7 @@ was zeigt, dass Menschen vorankommen: bauen, heilen, einigen, erfinden, schütze
 | **Gesamt-MRR** | **~€1.500** | **~€10.000–15.000** |
 
 > **Weg zu €100k MRR**: 200 B2B-Kunden a €499 = €99.800 MRR.
-> Kein Ad-Budget noetig bis €50k MRR — reines Cold Outreach + Affiliates.
+> Kein Ad-Budget nötig bis €50k MRR — reines Cold Outreach + Affiliates.
 
 > Realistischer Break-Even bei 5 B2B-Kunden (€499).
 
@@ -64,7 +64,7 @@ was zeigt, dass Menschen vorankommen: bauen, heilen, einigen, erfinden, schütze
 ## Go-to-Market Strategie
 
 ### Phase 1 — Proof (Woche 1–4)
-- **Warm Outreach**: 20 Calls mit Bekannten aus HR, Bildung, Unternehmensfuehrung
+- **Warm Outreach**: 20 Calls mit Bekannten aus HR, Bildung, Unternehmensführung
 - **B2B-Pilot-Angebot**: *"30 Tage kostenlos auf euren Bildschirmen. Wenn eure Leute es ignorieren — zahlt ihr nichts."*
 - **Ziel**: 3 aktive B2B-Piloten + 1 Testimonial von HR-Manager
 
@@ -88,9 +88,9 @@ was zeigt, dass Menschen vorankommen: bauen, heilen, einigen, erfinden, schütze
 ---
 
 ## Conversion-Mechaniken
-1. **Free -> Viralitaet**: Kostenloser, voller Zugang maximiert Reichweite und organische Weiterempfehlung
+1. **Free -> Viralität**: Kostenloser, voller Zugang maximiert Reichweite und organische Weiterempfehlung
 2. **B2B-Einstieg**: Pilot-Garantie eliminiert den einzigen Grund nein zu sagen
-3. **B2B-Referral**: Jeder Pilot-Kunde bekommt Incentive fuer Weiterempfehlung im eigenen Netzwerk
+3. **B2B-Referral**: Jeder Pilot-Kunde bekommt Incentive für Weiterempfehlung im eigenen Netzwerk
 
 ---
 
@@ -113,7 +113,7 @@ was zeigt, dass Menschen vorankommen: bauen, heilen, einigen, erfinden, schütze
 |---|---|---|
 | Gemini API-Qualität sinkt | Mittel | Prompt-Tuning, Fallback auf GPT-4o mini |
 | RSS-Quellen liefern wenig positives | Mittel | Quellenpool erweitern, manuelle Ergänzung |
-| B2B-Sales dauert zu lang (Entscheider-Zyklen) | Hoch | Pilot-Garantie + Schulen zuerst (kuerzere Zyklen) |
+| B2B-Sales dauert zu lang (Entscheider-Zyklen) | Hoch | Pilot-Garantie + Schulen zuerst (kürzere Zyklen) |
 | Newsletter-Zustellbarkeit | Niedrig | Brevo + eigene Domain + DKIM/SPF konfiguriert |
 | Datenschutz (DSGVO) | Niedrig | Double-Opt-In implementiert, kein Tracking |
 
@@ -131,7 +131,7 @@ was zeigt, dass Menschen vorankommen: bauen, heilen, einigen, erfinden, schütze
 
 ### Monat 2–3
 - [ ] Cold Outreach System: 50 LinkedIn-Messages/Tag
-- [ ] Erste Affiliate-Gespraeche mit BGM-Beratern
+- [ ] Erste Affiliate-Gespräche mit BGM-Beratern
 
 ### Monat 4–6
 - [ ] 10 zahlende B2B-Kunden → Preis auf €699 anheben

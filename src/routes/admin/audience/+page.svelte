@@ -47,7 +47,7 @@
 				Total: {stats.total}
 			</span>
 			<span class="paper px-3 py-1 rounded-full text-xs" style="border: 1px solid var(--color-rule); color: var(--color-ink);">
-				Bestaetigt: {stats.confirmed}
+				Bestätigt: {stats.confirmed}
 			</span>
 			<span class="paper px-3 py-1 rounded-full text-xs" style="border: 1px solid var(--color-rule); color: var(--color-ink);">
 				B2B: {stats.b2b}

@@ -30,7 +30,7 @@
 				emailInput = '';
 			}
 		} catch {
-			status = 'Ein Fehler ist aufgetreten. Bitte versuche es spaeter erneut.';
+			status = 'Ein Fehler ist aufgetreten. Bitte versuche es später erneut.';
 		} finally {
 			loading = false;
 		}
@@ -38,14 +38,14 @@
 
 	const tiers = [
 		{
-			name: 'Taeglicher Brief',
+			name: 'Täglicher Brief',
 			price: 'kostenlos',
-			cadence: 'taeglich',
+			cadence: 'täglich',
 			features: [
 				'Eine kuratierte Geschichte pro Tag',
 				'Hintergrund + Quellen',
 				'Ein Brief der Redaktion',
-				'Werbefrei, jederzeit kuendbar'
+				'Werbefrei, jederzeit kündbar'
 			],
 			cta: 'Abonnieren',
 			highlight: true,
@@ -53,16 +53,16 @@
 		},
 		{
 			name: 'Redaktionen & Schulen',
-			price: 'ab 49 \u20ac',
+			price: 'ab 49 €',
 			cadence: '/ Monat (Team-Lizenz)',
 			features: [
 				'API-Zugriff zu Wirkungsindex-Daten',
 				'Wartezimmer- und Klassenraum-Display-Lizenz',
 				'Whitelabel-Newsletter',
 				'Monatliche Team-Auswertung',
-				'Persoenlicher Ansprechpartner'
+				'Persönlicher Ansprechpartner'
 			],
-			cta: 'Mehr erfahren \u2192',
+			cta: 'Mehr erfahren →',
 			highlight: false,
 			tier: 'b2b'
 		}
@@ -90,7 +90,7 @@
 		class="serif page-h1 mt-3 max-w-[18ch]"
 		style="color: var(--color-ink); font-weight: 500;"
 	>
-		Eine Geschichte. Taeglich. Mehr nicht.
+		Eine Geschichte. Täglich. Mehr nicht.
 	</h1>
 	<p
 		class="page-dek mt-5 max-w-[55ch] leading-relaxed"
@@ -220,7 +220,7 @@
 	</div>
 
 	<p class="mt-8 sm:mt-10 text-xs text-center" style="color: var(--color-muted);">
-		Wir senden ausschliesslich, was du angefordert hast. Kein Tracking-Pixel, kein Verkauf von
+		Wir senden ausschließlich, was du angefordert hast. Kein Tracking-Pixel, kein Verkauf von
 		E-Mail-Adressen.
 	</p>
 </section>

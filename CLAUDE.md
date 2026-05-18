@@ -32,11 +32,14 @@ Benötigt: PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY,
 SUPABASE_SERVICE_KEY, DEEPSEEK_API_KEY,
 BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME
 
-## Cronjob-Zeiten (UTC → CET)
-- 04:00 UTC (06:30 CET) — Hero-Story wählen (select-hero.yml)
+## Cronjob-Zeiten (UTC → CET/CEST)
+- 03:00 UTC (05:00 CET / 05:00 CEST) — Hero-Story wählen (select-hero.yml)
+- 04:00 UTC (06:00 CET / 06:00 CEST) täglich — Daily-Newsletter (newsletter-daily.yml)
 - 06/10/14/18 UTC — Stories fetchen & scoren (fetch-stories.yml)
-- 05:00 UTC (07:00 CET) täglich — Plus-Newsletter (newsletter-daily-plus.yml)
 - 07:00 UTC sonntags — Sonntags-Brief (newsletter-sunday.yml)
+
+Newsletter kommt durch GitHub-Queue-Verzögerung (~15-30 Min) und Brevo-Delivery (~2-5 Min)
+realistisch um ~06:30 CEST bei Lesern an.
 
 ## Aktueller Status
 Alle 16 Tasks der initialen Architektur sind implementiert.

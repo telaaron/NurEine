@@ -2,7 +2,7 @@ name: Daily Newsletter
 
 on:
   schedule:
-    - cron: '0 5 * * *'  # 05:00 UTC = 07:00 CET daily
+    - cron: '0 4 * * *'  # 04:00 UTC = 06:00 CET / 06:00 CEST daily
   workflow_dispatch:
 
 jobs:

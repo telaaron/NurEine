@@ -3,6 +3,9 @@ Select Daily Hero Story
 =======================
 Sets the story with the highest impact_score from the last 24 hours
 as today's hero story. All other stories get is_hero=false.
+
+Fallback: If no stories in the last 24h, checks the last 48h instead.
+If still nothing found, exits gracefully without selecting a hero.
 """
 
 import os
@@ -56,9 +59,11 @@ def main():
     })
 
     if resp.status_code != 200 or not resp.json():
-        # Fallback: get highest-impact story overall
-        print("[hero] No stories from last 24h, using highest impact overall")
+        # Fallback: try last 48h instead of all-time
+        two_days_ago = (datetime.now(timezone.utc) - timedelta(hours=48)).isoformat()
+        print(f"[hero] No stories from last 24h, trying last 48h")
         resp = supabase_get('nureine_stories', {
+            'published_at': f'gte.{two_days_ago}',
             'order': 'impact_score.desc',
             'limit': '1',
             'select': 'id,title,impact_score,published_at'
@@ -66,7 +71,19 @@ def main():
 
     stories = resp.json()
     if not stories:
-        print("[hero] No stories found at all")
+        print("[hero] No stories found at all (not even in last 48h)")
+        # Log failure to cron_runs for monitoring
+        log = {
+            'type': 'select_hero',
+            'stories_found': 0,
+            'stories_inserted': 0,
+            'error': 'No stories in last 48h'
+        }
+        requests.post(
+            f"{SUPABASE_URL}/rest/v1/nureine_cron_runs",
+            headers=HEADERS,
+            json=log
+        )
         return
 
     hero = stories[0]

@@ -76,24 +76,40 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
   <!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting" /><!--<![endif]-->
+  <style type="text/css">
+    /* Force light backgrounds even in Gmail/Outlook dark mode */
+    :root {{ color-scheme: light; supported-color-schemes: light; }}
+    [data-ogsc] .nur-eine-bg,
+    [data-ogsb] .nur-eine-bg {{ background-color: #f5f1ea !important; }}
+    [data-ogsc] .nur-eine-card,
+    [data-ogsb] .nur-eine-card {{ background-color: #faf6ee !important; }}
+    [data-ogsc] .nur-eine-text-primary,
+    [data-ogsb] .nur-eine-text-primary {{ color: #1a1815 !important; }}
+    [data-ogsc] .nur-eine-text-dek,
+    [data-ogsb] .nur-eine-text-dek {{ color: #4a3f35 !important; }}
+    [data-ogsc] .nur-eine-text-body,
+    [data-ogsb] .nur-eine-text-body {{ color: #3a342c !important; }}
+    [data-ogsc] .nur-eine-cta,
+    [data-ogsb] .nur-eine-cta {{ background-color: #1a1815 !important; }}
+  </style>
 </head>
 <body style="margin:0;padding:0;background-color:#f5f1ea;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background-color:#f5f1ea;" class="nur-eine-bg">
     <tr>
       <td align="center" style="padding:40px 16px 32px;">
 
         <!-- Brand header -->
         <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
           <tr>
-            <td style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td>
+            <td class="nur-eine-text-primary" style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td>
           </tr>
           <tr>
-            <td style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td>
+            <td class="nur-eine-text-subtle" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td>
           </tr>
         </table>
 
         <!-- Main card -->
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#faf6ee" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
 
           <!-- Hero image -->
           {header}
@@ -119,12 +135,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               </h2>
 
               <!-- Dek -->
-              <p style="margin:0 0 22px;font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#4a3f35;line-height:1.5;letter-spacing:-0.005em;">
+              <p class="nur-eine-text-dek" style="margin:0 0 22px;font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#4a3f35;line-height:1.5;letter-spacing:-0.005em;">
                 {dek}
               </p>
 
               <!-- Summary -->
-              <p style="margin:0 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">
+              <p class="nur-eine-text-body" style="margin:0 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">
                 {summary}
               </p>
             </td>
@@ -160,7 +176,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <td style="padding:0 40px 32px;">
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td style="background-color:#1a1815;border-radius:9999px;text-align:center;">
+                  <td class="nur-eine-cta" style="background-color:#1a1815;border-radius:9999px;text-align:center;">
                     <a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">
                       Geschichte lesen &rarr;
                     </a>
@@ -203,9 +219,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </html>"""
 
 
+def slugify(text: str) -> str:
+    """Create a URL-safe slug (must match src/lib/server/queries.ts slugify())."""
+    import re
+    s = text.lower()
+    s = s.replace('\xe4', 'ae').replace('\xf6', 'oe').replace('\xfc', 'ue').replace('\xdf', 'ss')
+    s = re.sub(r'[^a-z0-9]+', '-', s)
+    s = s.strip('-')
+    return s[:80]
+
+
 def build_html_body(story: dict, subscriber_email: str, confirmation_token: str) -> str:
     """Render the HTML template with story and subscriber data."""
-    slug = f"{story.get('title', 'story')}-{story.get('id', '')[:8]}"
+    raw_title = story.get('title', 'story')
+    story_id = str(story.get('id', ''))
+    slug = f"{slugify(raw_title)}-{story_id[:8]}"
     story_url = f"{PUBLIC_BASE_URL}/geschichte/{slug}"
     unsubscribe_url = (
         f"{PUBLIC_BASE_URL}/api/unsubscribe"
@@ -432,7 +460,7 @@ def build_b2b_html_body(story: dict, company_name: str) -> str:
     """Build a premium HTML email for B2B delivery."""
     story_id = str(story.get("id", ""))
     title = story.get("title", "")
-    slug = f"{title}-{story_id[:8]}".lower().replace(" ", "-")
+    slug = f"{slugify(title)}-{story_id[:8]}"
     story_url = f"{PUBLIC_BASE_URL}/geschichte/{slug}"
 
     category = story.get("category", "Allgemein")
@@ -459,20 +487,22 @@ def build_b2b_html_body(story: dict, company_name: str) -> str:
 
     return f"""<!DOCTYPE html>
 <html lang="de">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/><meta name="supported-color-schemes" content="light"/><!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting"/><!--<![endif]--></head>
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/><meta name="supported-color-schemes" content="light"/><!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting"/><!--<![endif]-->
+<style type="text/css">:root{{color-scheme:light;supported-color-schemes:light;}}[data-ogsc] .nur-eine-bg,[data-ogsb] .nur-eine-bg{{background-color:#f5f1ea!important;}}[data-ogsc] .nur-eine-card,[data-ogsb] .nur-eine-card{{background-color:#faf6ee!important;}}[data-ogsc] .nur-eine-text-primary,[data-ogsb] .nur-eine-text-primary{{color:#1a1815!important;}}[data-ogsc] .nur-eine-text-dek,[data-ogsb] .nur-eine-text-dek{{color:#4a3f35!important;}}[data-ogsc] .nur-eine-text-body,[data-ogsb] .nur-eine-text-body{{color:#3a342c!important;}}[data-ogsc] .nur-eine-cta,[data-ogsb] .nur-eine-cta{{background-color:#1a1815!important;}}</style>
+</head>
 <body style="margin:0;padding:0;background-color:#f5f1ea;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background-color:#f5f1ea;" class="nur-eine-bg">
 <tr><td align="center" style="padding:40px 16px 32px;">
 
 <!-- Brand header -->
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
-<tr><td style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
+<tr><td class="nur-eine-text-primary" style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
 <tr><td style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td></tr>
 {b2b_header}
 </table>
 
 <!-- Main card -->
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#faf6ee" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
 {header_html}
 <tr><td style="padding:28px 40px 24px;">
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>
@@ -485,7 +515,7 @@ def build_b2b_html_body(story: dict, company_name: str) -> str:
 <!-- CTA -->
 <tr><td style="padding:0 40px 32px;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td style="background-color:#1a1815;border-radius:9999px;text-align:center;">
+<td class="nur-eine-cta" style="background-color:#1a1815;border-radius:9999px;text-align:center;">
 <a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen &rarr;</a>
 </td></tr></table>
 </td></tr>
@@ -513,7 +543,7 @@ def build_b2b_webhook_payload(story: dict) -> dict:
     """Build a Slack/Teams compatible JSON payload for webhook delivery."""
     story_id = str(story.get("id", ""))
     title = story.get("title", "")
-    slug = f"{title}-{story_id[:8]}".lower().replace(" ", "-")
+    slug = f"{slugify(title)}-{story_id[:8]}"
     story_url = f"{PUBLIC_BASE_URL}/geschichte/{slug}"
     summary = story.get("summary", "")
     category = story.get("category", "")

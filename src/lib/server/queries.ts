@@ -393,7 +393,7 @@ export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSen
   const readingMinutes = story.reading_time_min || '?';
   const category = (story.category as string) || 'Allgemein';
   const storyId = story.id as string;
-  const slug = `${title}-${storyId.slice(0, 8)}`.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const slug = slugify(title) + '-' + storyId.slice(0, 8);
   const storyUrl = `${PUBLIC_BASE_URL || 'https://nureine.de'}/geschichte/${slug}`;
 
   // Category -> Tone mapping (matches website toneStyles)

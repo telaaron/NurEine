@@ -190,7 +190,21 @@
 						</div>
 
 						<div class="mt-5 flex items-start gap-3">
-							<span class="text-2xl flex-shrink-0 mt-0.5">{activeStory.hero || '&#x1F4F0;'}</span>
+							{#if activeStory.hero?.startsWith('http')}
+								<div
+									class="w-10 h-10 flex-shrink-0 rounded-full overflow-hidden"
+									style="border: 1px solid var(--color-rule);"
+								>
+									<img
+										src={activeStory.hero}
+										alt=""
+										class="w-full h-full object-cover"
+										loading="lazy"
+									/>
+								</div>
+							{:else}
+								<span class="text-2xl flex-shrink-0 mt-0.5">{activeStory.hero || '&#x1F4F0;'}</span>
+							{/if}
 							<h2
 								class="serif leading-snug text-[1.2rem] sm:text-[1.35rem] lg:text-[1.5rem]"
 								style="color: var(--color-ink); font-weight: 500;"

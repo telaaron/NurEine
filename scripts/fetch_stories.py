@@ -400,7 +400,7 @@ subtitle: Eine Zeile Kontext (max 120 Zeichen, sachlich)
 
 summary: 2-3 deutsche Sätze, was passiert ist und warum es strukturell wichtig ist. Das ist die Kurzfassung für Story-Cards und Teaser.
 
-body: Ein ausführlicher journalistischer Artikel in deutscher Sprache. Schreibe 12-18 Sätze mit Substanz: strukturiere den Text in die Abschnitte "Hintergrund", "Was ist passiert", "Warum das wichtig ist" und "Ausblick". Jeder Abschnitt beginnt mit einer `## Abschnittsname`-Überschrift (Markdown-H2), gefolgt von einer Leerzeile und dann 2-4 Fließtext-Absätzen (durch Leerzeilen getrennt). Innerhalb der Absätze kannst du **fett** und *kursiv* für Betonung verwenden. Verwende konkrete Zahlen, Namen, Orte und Zitate aus dem Originaltext. Schreibe im Stil von ZEIT ONLINE oder brand eins — sachlich, präzise, aber zugänglich. Nicht werblich, nicht reißerisch. Zielgruppe: Entscheider in HR, Bildung und Gesundheitswesen, die in 3-5 Minuten echten Mehrwert erhalten.
+body: Ein ausführlicher journalistischer Artikel in deutscher Sprache. Schreibe 12-18 Sätze mit Substanz als einen einzigen, fließenden redaktionellen Text ohne Zwischenüberschriften. Nutze ausschließlich weiche Übergänge zwischen den Absätzen — natürliche Linebreaks (Leerzeilen) trennen die gedanklichen Abschnitte. Der Text soll von der Faktenlage organisch zur Einordnung übergehen, ohne dass Überschriften den Lesefluss unterbrechen. Innerhalb der Absätze kannst du **fett** und *kursiv* für Betonung verwenden. Verwende konkrete Zahlen, Namen, Orte und Zitate aus dem Originaltext. Schreibe im Stil von ZEIT ONLINE oder brand eins — sachlich, präzise, aber zugänglich. Nicht werblich, nicht reißerisch. Zielgruppe: Entscheider in HR, Bildung und Gesundheitswesen.
 
 category: eine von [klima, gesundheit, wissenschaft, gemeinschaft, tiere, kultur, innovation]
 
@@ -412,7 +412,7 @@ lat: Breitengrad (float)
 
 lng: Längengrad (float)
 
-image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: Clean minimalist 3D spot illustration on pure white #ffffff backdrop (will be removed later — white is only for separation). Studio lighting, soft shadow. Editorial quality, 8K. No text, no environment. CRITICAL: Subject FULLY visible, NOT cropped at any edge. Subject small in center (~40% of frame), LOTS of white space on ALL sides. Format: "Clean minimalist 3D spot illustration of [OBJECT] made of [MATERIAL]. [CONCEPT] concept. Isolated on pure white background #ffffff. Soft studio lighting, soft shadows. 8K. No text. Subject small and centered with plenty of empty white space on all sides." Beispiel: "Clean minimalist 3D spot illustration of mangrove saplings made of glossy ceramic. Environmental restoration concept. Isolated on pure white background #ffffff. Soft studio lighting, soft shadows. 8K. No text. Subject small and centered with plenty of empty white space on all sides."
+image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: Minimalist flat 2D vector art, highly abstract geometric shapes ONLY. Absolutely NO realistic objects, NO 3D renders, NO glossy or plastic textures. Bauhaus-inspired design language with clean lines and geometric abstraction. Warm beige or off-white background (similar to #FBF6EE). High-end editorial aesthetic like New York Times or Monocle. No text, no environment. CRITICAL: Subject fully visible, NOT cropped at any edge. Subject centered with generous padding on all sides. The illustration should feel like an artistic metaphor, not a literal depiction. Format: "Minimalist flat 2D vector art of [ABSTRACT GEOMETRIC CONCEPT representing the topic]. Bauhaus style, geometric abstraction, warm beige background #FBF6EE. Clean lines, no gradients, no 3D. High-end editorial. No text." Beispiel: "Minimalist flat 2D vector art of overlapping translucent circles and squares suggesting mangrove roots. Bauhaus style, geometric abstraction, warm beige background #FBF6EE. Clean lines, no 3D. No text."
 
 impact_reach: geschätzte Anzahl direkt positiv betroffener Menschen (integer)
 
@@ -421,8 +421,6 @@ impact_durability: 0-100 (Wie lange hält der Effekt an? Strukturveränderung=10
 impact_evidence: 0-100 (Peer-reviewed=100, etablierte Redaktion=75, lokal=50)
 
 impact_score: Integer 0-100. Formel: round(impact_reach_normalized * 0.4 + impact_durability * 0.35 + impact_evidence * 0.25) wobei impact_reach_normalized = min(100, log10(impact_reach + 1) * 20)
-
-reading_time_min: geschätzte Lesezeit in Minuten
 
 Antworte ausschließlich mit validem JSON. Kein Text davor oder danach."""
 
@@ -1095,7 +1093,7 @@ def run() -> None:
             # ---- STAGE 7: Insert into Supabase ----
             summary = result.get("summary", "")
             body = result.get("body", summary)
-            actual_reading_time = max(1, round(len(body) / (200 * 5)))
+            actual_reading_time = max(1, round(len(body.split()) / 200))
             story_record: dict[str, Any] = {
                 "title": story_title,
                 "subtitle": result.get("subtitle", ""),
@@ -1118,7 +1116,7 @@ def run() -> None:
                     result.get("impact_durability"),
                     result.get("impact_evidence"),
                 ),
-                "reading_time_min": result.get("reading_time_min") or actual_reading_time,
+                "reading_time_min": actual_reading_time,
                 "published_at": entry.get("published", entry.get("updated", datetime.now(timezone.utc).isoformat())),
             }
 

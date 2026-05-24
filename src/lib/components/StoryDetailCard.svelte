@@ -23,7 +23,8 @@
 
 	let { story, toneFg = '#c87340', mode = 'sidebar', onClose }: Props = $props();
 
-	const heroImageSrc = $derived(getStoryHeroImageSrc(story.title, base));
+	const localHeroSrc = $derived(getStoryHeroImageSrc(story.title, base));
+	const heroImageSrc = $derived(localHeroSrc || (story.imageUrl?.startsWith('http') ? story.imageUrl : null));
 	const storyUrl = $derived(`${base}/geschichte/${story.slug}`);
 </script>
 

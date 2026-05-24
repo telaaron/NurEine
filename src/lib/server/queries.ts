@@ -757,6 +757,32 @@ export async function getAllSubscribers(): Promise<SubscriberRow[]> {
   return data as SubscriberRow[];
 }
 
+export async function deleteSubscriber(id: string): Promise<boolean> {
+  const { error } = await supabaseAdmin
+    .from('nureine_subscribers')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('deleteSubscriber error:', error);
+    return false;
+  }
+  return true;
+}
+
+export async function deleteSubscribers(ids: string[]): Promise<boolean> {
+  const { error } = await supabaseAdmin
+    .from('nureine_subscribers')
+    .delete()
+    .in('id', ids);
+
+  if (error) {
+    console.error('deleteSubscribers error:', error);
+    return false;
+  }
+  return true;
+}
+
 // ---- Delivery Log Queries ----
 
 export async function getDeliveryLog(limit = 50): Promise<DeliveryLogEntry[]> {

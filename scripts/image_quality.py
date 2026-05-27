@@ -2,8 +2,8 @@
 """
 NurEine — Image Quality Review Layer
 
-Uses GPT-4o-mini vision to evaluate FLUX.1 generated images against
-the "Warm Paper Collage Editorial" style requirements.
+Uses fal.ai LLaVA-NeXT (existing FAL_KEY) to evaluate FLUX.1 generated
+images against the "Warm Paper Collage Editorial" style requirements.
 
 Usage (from other scripts):
     from image_quality import review_image, review_and_retry
@@ -19,10 +19,11 @@ Usage (from other scripts):
 """
 from __future__ import annotations
 
-import base64
 import json
 import logging
 import os
+import time
+import uuid
 from typing import Any, Callable
 
 import requests
@@ -32,105 +33,177 @@ load_dotenv()
 
 log = logging.getLogger("image_quality")
 
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions"
+# ---------------------------------------------------------------------------
+# Configuration (uses existing FAL_KEY + Supabase for temp uploads)
+# ---------------------------------------------------------------------------
+FAL_KEY: str | None = os.environ.get("FAL_KEY")
+SUPABASE_URL: str | None = os.environ.get("SUPABASE_URL")
+SUPABASE_SERVICE_KEY: str | None = os.environ.get("SUPABASE_SERVICE_KEY")
 
-REVIEW_MODEL = "gpt-4o-mini"
+LLAVA_ENDPOINT = "https://fal.run/fal-ai/llava-next"
+STORAGE_BUCKET = "story_images"
+TEMP_PREFIX = "quality-review"
+
 PASS_THRESHOLD = 7.0
 MAX_RETRIES = 3
 
 # ---------------------------------------------------------------------------
 # Review prompt
 # ---------------------------------------------------------------------------
-REVIEW_SYSTEM = (
-    "You are an experienced art director reviewing AI-generated editorial "
-    "illustrations for a premium magazine. You evaluate images against "
-    "strict style guidelines. Respond ONLY with the requested JSON — "
-    "no markdown, no explanation outside the JSON."
-)
+REVIEW_PROMPT = """\
+You are an art director. Evaluate this illustration against these "Warm Paper Collage" rules.
+Respond with ONLY valid JSON, no markdown, no extra text.
 
-REVIEW_USER = """\
-Evaluate this AI-generated illustration against the "Warm Paper Collage Editorial" style.
+Rate 1-10 (10=perfect):
+1. STYLE: Flat paper collage with visible layers+shadows? NOT 3D/photorealistic/glossy?
+2. PALETTE: Warm off-white paper background (#f5f1ea)? ONE accent color? No shiny materials?
+3. MOTIF: Clear simple iconographic central symbol? Not cluttered?
+4. TEXT: No text visible anywhere? 10=no text, 1=text clearly visible.
 
-Rate each criterion from 1-10 (10 = perfect, 1 = completely wrong):
+JSON format:
+{"style": int, "palette": int, "motif": int, "text_free": int, "overall": float, "passed": "yes"|"no", "feedback": "1 German sentence"}
 
-1. STYLE (1-10): Is this a flat paper collage illustration? Visible paper layers
-   with cast shadows? Paper grain texture? NOT 3D rendered, NOT photorealistic,
-   NOT glossy/plastic? 10 = perfect paper collage, 1 = photorealistic/3D render.
+overall = average of 4 scores. passed = "yes" if overall >= 7.
+feedback: 1 SHORT German sentence about what to improve or what works.
 
-2. PALETTE (1-10): Warm off-white paper background (#f5f1ea tone)? ONE accent
-   colour (terracotta orange / sage green / rose red / sky blue)? No shiny
-   or glossy materials? 10 = perfect palette, 1 = completely wrong colours.
+Story: {title} | Category: {category}"""
 
-3. MOTIF (1-10): Clear, simple, iconographic central symbol? Abstracted but
-   recognizable? Not cluttered or confusing? 10 = perfect clear motif,
-   1 = chaotic/unrecognizable.
 
-4. TEXT (1-10): Is the image free of text? 10 = absolutely no text visible
-   anywhere. 1 = text is clearly visible in the image.
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+def _temp_upload(image_bytes: bytes) -> str | None:
+    """Upload image bytes to Supabase temp location, return public URL."""
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        return None
 
-OVERALL: Average of the 4 scores above, rounded to 1 decimal.
-PASSED: "yes" if overall >= 7.0, "no" if below.
-FEEDBACK: One SHORT sentence in German. If passed: what works well. If failed:
-what specifically needs improvement (e.g. "zu fotorealistisch", "fehlende
-Papiertextur", "falsche Farbpalette", "Text im Bild").
+    filename = f"{TEMP_PREFIX}/review-{uuid.uuid4().hex[:12]}.png"
+    url = f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{filename}"
+    headers = {
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": "image/png",
+        "x-upsert": "true",
+    }
+    try:
+        resp = requests.post(url, headers=headers, data=image_bytes, timeout=30)
+        resp.raise_for_status()
+        return f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{filename}"
+    except Exception as exc:
+        log.warning("  Temp upload failed: %s", exc)
+        return None
 
-Story: {title}
-Category: {category}
 
-Respond with ONLY this JSON, nothing else:
-{{"style": <int>, "palette": <int>, "motif": <int>, "text_free": <int>, "overall": <float>, "passed": "<yes/no>", "feedback": "<string>"}}"""
+def _temp_delete(image_url: str) -> None:
+    """Delete a temp image from Supabase storage."""
+    if not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        return
+    try:
+        # Extract path from public URL
+        prefix = f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/"
+        if image_url.startswith(prefix):
+            path = image_url[len(prefix):]
+            delete_url = f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{path}"
+            requests.delete(delete_url, headers={
+                "apikey": SUPABASE_SERVICE_KEY,
+                "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+            }, timeout=10)
+    except Exception:
+        pass  # cleanup is best-effort
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 def review_image(image_bytes: bytes, title: str, category: str) -> tuple[float, bool, str]:
-    """Send an image to GPT-4o-mini for style quality review.
+    """Send an image to LLaVA-NeXT (via fal.ai) for style quality review.
+
+    The image is temporarily uploaded to Supabase to get a public URL
+    for LLaVA, then deleted after review.
 
     Returns:
         (overall_score, passed, feedback)
-        - overall_score: float 1-10
-        - passed: True if score >= PASS_THRESHOLD
-        - feedback: German feedback string
     """
-    if not OPENAI_API_KEY:
-        log.warning("OPENAI_API_KEY not set — image quality review skipped")
-        return 10.0, True, "Kein API-Key — Review uebersprungen"
+    if not FAL_KEY:
+        log.warning("FAL_KEY not set — image quality review skipped")
+        return 10.0, True, "Kein FAL_KEY — Review uebersprungen"
 
-    img_b64 = base64.b64encode(image_bytes).decode("utf-8")
-    user_content = REVIEW_USER.format(title=title, category=category)
+    # Upload image to temp location for LLaVA URL access
+    image_url = _temp_upload(image_bytes)
+    if not image_url:
+        log.warning("  Temp upload failed — review skipped")
+        return 8.0, True, "Upload fehlgeschlagen — akzeptiert"
+
+    prompt = REVIEW_PROMPT.format(title=title, category=category)
 
     headers = {
-        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Authorization": f"Key {FAL_KEY}",
         "Content-Type": "application/json",
     }
     payload: dict[str, Any] = {
-        "model": REVIEW_MODEL,
-        "messages": [
-            {"role": "system", "content": REVIEW_SYSTEM},
-            {"role": "user", "content": [
-                {"type": "text", "text": user_content},
-                {"type": "image_url", "image_url": {
-                    "url": f"data:image/png;base64,{img_b64}",
-                    "detail": "low",
-                }},
-            ]},
-        ],
-        "temperature": 0.2,
+        "prompt": prompt,
+        "image_url": image_url,
         "max_tokens": 200,
+        "temperature": 0.2,
     }
 
     try:
-        resp = requests.post(OPENAI_ENDPOINT, json=payload, headers=headers, timeout=30)
+        resp = requests.post(LLAVA_ENDPOINT, json=payload, headers=headers, timeout=30)
         resp.raise_for_status()
-        data = resp.json()
-        raw = data["choices"][0]["message"]["content"].strip()
+        submission = resp.json()
 
+        # LLaVA might return directly or via async queue
+        status_url = submission.get("status_url")
+        if status_url:
+            elapsed = 0
+            while elapsed < 60:
+                time.sleep(2)
+                elapsed += 2
+                sr = requests.get(status_url, headers=headers, timeout=30)
+                sr.raise_for_status()
+                sd = sr.json()
+                if sd.get("status") == "COMPLETED":
+                    submission = sd
+                    break
+                if sd.get("status") in ("FAILED", "CANCELLED"):
+                    log.warning("  LLaVA review failed: %s", sd)
+                    _temp_delete(image_url)
+                    return 7.5, True, "LLaVA fehlgeschlagen — akzeptiert"
+            else:
+                log.warning("  LLaVA review timed out")
+                _temp_delete(image_url)
+                return 7.5, True, "LLaVA timeout — akzeptiert"
+
+        # Extract text response
+        raw_text = ""
+        output = submission.get("output", "")
+        if isinstance(output, str):
+            raw_text = output
+        elif isinstance(output, dict):
+            raw_text = output.get("text", output.get("response", ""))
+        elif isinstance(output, list) and output:
+            raw_text = str(output[0])
+
+        # Also try top-level fields
+        if not raw_text:
+            raw_text = submission.get("text", submission.get("response", ""))
+
+        if not raw_text:
+            log.warning("  LLaVA returned empty response")
+            _temp_delete(image_url)
+            return 7.5, True, "Leere Antwort — akzeptiert"
+
+        # Parse JSON from LLaVA response
+        raw_text = raw_text.strip()
         # Strip markdown fences
-        raw = raw.strip("`").strip("json").strip()
+        if raw_text.startswith("```"):
+            lines = raw_text.split("\n")
+            raw_text = "\n".join(lines[1:]) if len(lines) > 1 else raw_text
+            if raw_text.endswith("```"):
+                raw_text = raw_text[:-3]
+        raw_text = raw_text.strip()
 
-        result = json.loads(raw)
+        result = json.loads(raw_text)
         score = float(result.get("overall", 7.0))
         passed = result.get("passed", "yes") == "yes"
         feedback = result.get("feedback", "Kein Feedback")
@@ -141,16 +214,17 @@ def review_image(image_bytes: bytes, title: str, category: str) -> tuple[float, 
                  result.get("motif", 0), result.get("text_free", 0))
         log.info("    Feedback: %s", feedback)
 
+        _temp_delete(image_url)
         return score, passed, feedback
 
     except (requests.RequestException, json.JSONDecodeError, KeyError, IndexError) as exc:
         log.warning("  Review fehlgeschlagen: %s — Bild wird durchgelassen", exc)
+        _temp_delete(image_url)
         return 7.5, True, f"Review-Fehler: {exc}"
 
 
 def enhance_prompt_for_retry(original_prompt: str, feedback: str, attempt: int) -> str:
     """Add quality feedback to the prompt for a retry generation."""
-    # Get more aggressive with each retry
     emphasis = [
         "",
         "CRITICAL QUALITY FIX REQUIRED:",
@@ -194,7 +268,6 @@ def review_and_retry(
         return image_bytes, score, 0, feedback
 
     # Retry loop
-    current_bytes = image_bytes
     best_score = score
     best_bytes = image_bytes
     best_feedback = feedback

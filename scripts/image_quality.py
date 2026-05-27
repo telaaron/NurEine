@@ -1,16 +1,21 @@
 #!/usr/bin/env python3
 """
-NurEine — Image Quality Review Layer (NO-GO Guard)
+NurEine — 2-Stage Image Quality Review Layer (NO-GO Guard)
 
-Uses fal.ai LLaVA-NeXT (existing FAL_KEY) to enforce the 4 REJECT rules
-for the "Warm Paper Collage Editorial" image style.
+Stage 1 — Prompt Review (DeepSeek, ~1s, cheap):
+    Checks the image prompt TEXT for NO-GO violations BEFORE FLUX generation.
+    Catches Frankenstein, Zoo, Medical, Kitsch early. Saves FLUX credits.
 
-Binary rejection logic: If any NO-GO is triggered, the image is rejected
-and the pipeline regenerates with a targeted fix prompt.
+Stage 2 — Visual Review (fal.ai LLaVA-NeXT, ~90s):
+    Final visual quality check on generated images. Runs only if Stage 1 passed.
 
 Usage (from other scripts):
-    from image_quality import review_image, review_and_retry
+    from image_quality import review_image_prompt, review_image, review_and_retry
 
+    # Stage 1: Fast text review (before generating)
+    passed, reject_reason, flags = review_image_prompt(image_prompt, title, category)
+
+    # Stage 2: Visual review (after generating)
     passed, reject_reason, score, feedback = review_image(image_bytes, title, category)
 
     final_bytes, final_score, retries = review_and_retry(
@@ -35,13 +40,15 @@ load_dotenv()
 log = logging.getLogger("image_quality")
 
 # ---------------------------------------------------------------------------
-# Configuration (uses existing FAL_KEY + Supabase for temp uploads)
+# Configuration (uses existing keys: FAL_KEY for vision, DEEPSEEK for prompt check)
 # ---------------------------------------------------------------------------
 FAL_KEY: str | None = os.environ.get("FAL_KEY")
+DEEPSEEK_API_KEY: str | None = os.environ.get("DEEPSEEK_API_KEY")
 SUPABASE_URL: str | None = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY: str | None = os.environ.get("SUPABASE_SERVICE_KEY")
 
 LLAVA_ENDPOINT = "https://fal.run/fal-ai/llava-next"
+DEEPSEEK_ENDPOINT = "https://api.deepseek.com/chat/completions"
 STORAGE_BUCKET = "story_images"
 TEMP_PREFIX = "quality-review"
 
@@ -97,6 +104,68 @@ Respond ONLY with this exact JSON — no markdown, no extra text:
 }}
 
 Story: {title} | Category: {category}"""
+
+
+# ---------------------------------------------------------------------------
+# Stage 1 — Prompt text review (DeepSeek, fast/cheap, catches NO-GOs early)
+# ---------------------------------------------------------------------------
+PROMPT_REVIEW_SYSTEM = """\
+You are an art director screening image prompts BEFORE generation.
+Your job: Check if the prompt violates any of 4 NO-GO rules.
+Be STRICT — if it's borderline, reject it. We want only abstract, elegant prompts.
+
+=== 4 NO-GO RULES ===
+1. FRANKENSTEIN: Prompt asks to MERGE two incompatible objects into one hybrid
+   (e.g. "DNA with animal inside", "stethoscope fused with clock")
+2. ZOO MODE: Prompt asks for a LITERAL recognizable animal, person, car, artwork
+   (e.g. "a lion", "Mona Lisa", "a turtle")
+3. MEDICAL HORROR: Prompt mentions organs, meat, blood, parasites, worms
+   (e.g. "internal organs", "bloody texture")
+4. KITSCH: Prompt uses overused PowerPoint metaphors
+   (e.g. "puzzle pieces", "calendar pages", "handshake", "heart")
+
+Reject if the prompt explicitly asks for these things.
+If it says "abstract" or "stylized" or "geometric" — that's good, approve."""
+
+PROMPT_REVIEW_USER = """\
+Check this image prompt for NO-GO violations:
+
+PROMPT: {prompt}
+
+STORY: {title}
+CATEGORY: {category}
+
+Respond ONLY with this JSON (no markdown):
+{{
+  "rejected": true/false,
+  "no_go_frankenstein": true/false,
+  "no_go_zoo": true/false,
+  "no_go_medical": true/false,
+  "no_go_kitsch": true/false,
+  "reason": "if rejected: ONE German sentence"
+}}"""
+
+# System prompt for regenerating prompts after NO-GO rejection
+PROMPT_REGENERATE_SYSTEM = """\
+You are a creative director fixing bad image prompts.
+The prompt below was REJECTED for violating style rules.
+Rewrite it to be abstract, elegant, paper collage style.
+Respond ONLY with the corrected prompt — no JSON, no explanation."""
+
+PROMPT_REGENERATE_USER = """\
+REJECTED prompt: {prompt}
+REJECT REASON: {reason}
+FIX INSTRUCTION: {fix_instruction}
+
+Rewrite the prompt. Must be:
+- A SINGLE abstract symbol (not a complex scene)
+- Warm paper collage style, #f5f1ea background
+- Flat 2D, NO 3D, NO photorealism
+- NO text in the image
+- Use only geometric/shape-based abstraction
+- One accent colour
+
+Respond ONLY with the corrected English prompt text."""
 
 
 # ---------------------------------------------------------------------------
@@ -192,7 +261,196 @@ def _temp_delete(image_url: str) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Public API
+# Stage 1 — Prompt text review (DeepSeek, fast ~1-2s, cheap)
+# ---------------------------------------------------------------------------
+def review_image_prompt(
+    image_prompt: str, title: str, category: str
+) -> tuple[bool, str, dict[str, bool]]:
+    """Check an image prompt TEXT for NO-GO violations using DeepSeek.
+
+    This runs BEFORE FLUX generation — saves credits by catching bad prompts early.
+    Response time: ~1-2 seconds (text-only).
+
+    Returns:
+        (passed, reject_reason, flags_dict)
+        - passed: True if prompt is clean
+        - reject_reason: German explanation (empty if passed)
+        - flags_dict: {{"frankenstein": bool, "zoo": bool, "medical": bool, "kitsch": bool}}
+    """
+    if not DEEPSEEK_API_KEY:
+        log.warning("DEEPSEEK_API_KEY not set — prompt review skipped")
+        return True, "", {}
+
+    headers = {
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    user_content = PROMPT_REVIEW_USER.format(
+        prompt=image_prompt, title=title, category=category
+    )
+    payload = {
+        "model": "deepseek-chat",
+        "messages": [
+            {"role": "system", "content": PROMPT_REVIEW_SYSTEM},
+            {"role": "user", "content": user_content},
+        ],
+        "temperature": 0.1,
+        "max_tokens": 200,
+    }
+
+    try:
+        resp = requests.post(DEEPSEEK_ENDPOINT, json=payload, headers=headers, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        raw_text = data["choices"][0]["message"]["content"].strip()
+
+        # Parse JSON
+        if raw_text.startswith("```"):
+            lines = raw_text.split("\n")
+            raw_text = "\n".join(lines[1:]) if len(lines) > 1 else raw_text
+            if raw_text.endswith("```"):
+                raw_text = raw_text[:-3]
+        raw_text = raw_text.strip()
+
+        result = json.loads(raw_text)
+        rejected = bool(result.get("rejected", False))
+        reason = result.get("reason", "")
+
+        flags = {
+            "frankenstein": bool(result.get("no_go_frankenstein", False)),
+            "zoo": bool(result.get("no_go_zoo", False)),
+            "medical": bool(result.get("no_go_medical", False)),
+            "kitsch": bool(result.get("no_go_kitsch", False)),
+        }
+
+        if rejected:
+            flagged = [k for k, v in flags.items() if v]
+            flag_str = ", ".join(flagged) if flagged else "unknown"
+            log.warning("  Prompt-Review: REJECTED — %s (%s)", reason, flag_str)
+        else:
+            log.info("  Prompt-Review: BESTANDEN")
+
+        return not rejected, reason, flags
+
+    except (requests.RequestException, json.JSONDecodeError, KeyError, IndexError) as exc:
+        log.warning("  Prompt-Review fehlgeschlagen: %s — Prompt wird durchgelassen", exc)
+        return True, "", {}
+
+
+def review_prompt_and_retry(
+    image_prompt: str,
+    title: str,
+    category: str,
+    max_retries: int = 2,
+) -> tuple[str, bool, str]:
+    """Stage 1: Review prompt + retry via DeepSeek regeneration if rejected.
+
+    Args:
+        image_prompt: The image prompt to review
+        title: Story title
+        category: Story category
+        max_retries: Max prompt regeneration attempts
+
+    Returns:
+        (final_prompt, was_clean_initially, reject_reason_of_final_attempt)
+    """
+    passed, reject_reason, flags = review_image_prompt(
+        image_prompt, title, category
+    )
+
+    if passed:
+        return image_prompt, True, ""
+
+    # Retry: regenerate prompt with fix instructions
+    current_prompt = image_prompt
+    for attempt in range(1, max_retries + 1):
+        log.info("  Prompt retry %d/%d — %s", attempt, max_retries, reject_reason)
+
+        # Build fix instruction from flags
+        fix_parts: list[str] = []
+        if flags.get("frankenstein"):
+            fix_parts.append(FIX_INSTRUCTIONS["no_go_frankenstein"])
+        if flags.get("zoo"):
+            fix_parts.append(FIX_INSTRUCTIONS["no_go_zoo"])
+        if flags.get("medical"):
+            fix_parts.append(FIX_INSTRUCTIONS["no_go_medical"])
+        if flags.get("kitsch"):
+            fix_parts.append(FIX_INSTRUCTIONS["no_go_kitsch"])
+
+        fix_instruction = " ".join(fix_parts) if fix_parts else (
+            "Create an ABSTRACT, elegant paper collage symbol. "
+            "No literal objects, no hybrid mashups."
+        )
+
+        new_prompt = _regenerate_prompt_via_deepseek(
+            current_prompt, reject_reason, fix_instruction
+        )
+
+        if not new_prompt:
+            log.warning("  Prompt regeneration failed — using original")
+            return current_prompt, False, reject_reason
+
+        log.info("  Regenerated prompt: %.120s...", new_prompt)
+
+        # Review the new prompt
+        new_passed, new_reason, new_flags = review_image_prompt(
+            new_prompt, title, category
+        )
+
+        if new_passed:
+            log.info("  Prompt retry %d: PASSED", attempt)
+            return new_prompt, False, ""
+
+        # Update for next retry
+        reject_reason = new_reason
+        flags = new_flags
+        current_prompt = new_prompt
+
+    log.warning("  Max prompt retries — using last regenerated prompt")
+    return current_prompt, False, reject_reason
+
+
+def _regenerate_prompt_via_deepseek(
+    bad_prompt: str, reject_reason: str, fix_instruction: str
+) -> str | None:
+    """Ask DeepSeek to rewrite a rejected image prompt with fix instructions."""
+    if not DEEPSEEK_API_KEY:
+        return None
+
+    headers = {
+        "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    user_content = PROMPT_REGENERATE_USER.format(
+        prompt=bad_prompt, reason=reject_reason, fix_instruction=fix_instruction
+    )
+    payload = {
+        "model": "deepseek-chat",
+        "messages": [
+            {"role": "system", "content": PROMPT_REGENERATE_SYSTEM},
+            {"role": "user", "content": user_content},
+        ],
+        "temperature": 0.5,
+    }
+
+    try:
+        resp = requests.post(DEEPSEEK_ENDPOINT, json=payload, headers=headers, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        content = data["choices"][0]["message"]["content"].strip()
+        # Strip quotes or markdown fences
+        content = content.strip('"').strip("'")
+        if content.startswith("```") and content.endswith("```"):
+            lines = content.split("\n")
+            content = "\n".join(lines[1:-1]).strip()
+        return content
+    except Exception as exc:
+        log.warning("  DeepSeek prompt regeneration failed: %s", exc)
+        return None
+
+
+# ---------------------------------------------------------------------------
+# Stage 2 — Visual quality review (LLaVA-NeXT via fal.ai)
 # ---------------------------------------------------------------------------
 def review_image(
     image_bytes: bytes, title: str, category: str

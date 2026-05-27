@@ -22,11 +22,14 @@ load_dotenv()
 # Try to import image quality review (graceful fallback)
 try:
     from image_quality import review_and_retry
+    from image_quality import review_prompt_and_retry
     HAS_QUALITY_REVIEW = True
 except ImportError:
     HAS_QUALITY_REVIEW = False
     def review_and_retry(*args, **kwargs):
         return args[0], 10.0, 0, "Review not available"
+    def review_prompt_and_retry(image_prompt, title, category, max_retries=2):
+        return image_prompt, True, ""
 
 logging.basicConfig(
     level=logging.INFO,
@@ -221,6 +224,14 @@ def run() -> None:
             log.error("  SKIP — no prompt generated")
             continue
         log.info("  Prompt: %s", prompt)
+
+        # 2b. Stage 1: Prompt quality review (DeepSeek, fast text check)
+        if HAS_QUALITY_REVIEW:
+            prompt, was_clean, retry_reason = review_prompt_and_retry(
+                prompt, story["title"], story.get("category", "gemeinschaft"), max_retries=2
+            )
+            if not was_clean:
+                log.info("  Prompt fixed: %s", prompt)
 
         # 3. Generate image via FLUX.1 [pro]
         raw = generate_image_fal(prompt)

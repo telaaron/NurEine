@@ -46,11 +46,14 @@ from dotenv import load_dotenv
 # Try to import image quality review (graceful fallback if not available)
 try:
     from image_quality import review_and_retry as review_image_with_retry
+    from image_quality import review_prompt_and_retry as prompt_quality_check
     HAS_QUALITY_REVIEW = True
 except ImportError:
     HAS_QUALITY_REVIEW = False
     def review_image_with_retry(image_bytes, title, category, prompt, generate_fn, max_retries=3):
         return image_bytes, 10.0, 0, "Review not available"
+    def prompt_quality_check(image_prompt, title, category, max_retries=2):
+        return image_prompt, True, ""
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -425,6 +428,14 @@ def run(limit: int | None = None, story_ids: list[str] | None = None) -> None:
             failed += 1
             continue
         log.info("    Prompt: %.120s...", image_prompt)
+
+        # 1b. Stage 1: Prompt quality review (DeepSeek, fast text check)
+        if HAS_QUALITY_REVIEW:
+            image_prompt, was_clean, retry_reason = prompt_quality_check(
+                image_prompt, title, category, max_retries=2
+            )
+            if not was_clean:
+                log.info("    Prompt fixed: %.120s...", image_prompt)
 
         # 2. Generate image via FLUX.1 [pro]
         raw_image = generate_image_fal(image_prompt)

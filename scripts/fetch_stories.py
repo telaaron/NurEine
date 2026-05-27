@@ -54,11 +54,14 @@ load_dotenv()
 # Try to import image quality review (graceful fallback if not available)
 try:
     from image_quality import review_and_retry as image_quality_review
+    from image_quality import review_prompt_and_retry as prompt_quality_check
     HAS_QUALITY_REVIEW = True
 except ImportError:
     HAS_QUALITY_REVIEW = False
     def image_quality_review(*args, **kwargs):
         return args[0], 10.0, 0, "Review not available"
+    def prompt_quality_check(image_prompt, title, category, max_retries=2):
+        return image_prompt, True, ""
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -819,9 +822,10 @@ def generate_and_upload_image(image_prompt: str, story_title: str, category: str
 
     The pipeline:
       1. FLUX.1 [pro] generates a 4:3 paper collage illustration
-      2. Quality review with GPT-4o-mini (retry up to 2x if score < 7)
-      3. Composite onto exact brand canvas colour #F5F1EA for consistent look
-      4. Upload to Supabase Storage as PNG
+      2. Stage 1: Prompt quality review (DeepSeek, fast text check)
+      3. Stage 2: Visual quality review with LLaVA-NeXT (retry up to 2x)
+      4. Composite onto exact brand canvas colour #F5F1EA for consistent look
+      5. Upload to Supabase Storage as PNG
 
     Returns the public URL of the uploaded image, or None on failure.
     """
@@ -830,6 +834,14 @@ def generate_and_upload_image(image_prompt: str, story_title: str, category: str
         return None
 
     log.info("  Generating image: %.100s...", image_prompt)
+
+    # Stage 1: Prompt quality review (DeepSeek, fast text check)
+    if HAS_QUALITY_REVIEW:
+        image_prompt, was_clean, retry_reason = prompt_quality_check(
+            image_prompt, story_title, category, max_retries=2
+        )
+        if not was_clean:
+            log.info("  Prompt fixed: %.100s...", image_prompt)
 
     image_bytes = generate_image_fal(image_prompt)
     if not image_bytes:

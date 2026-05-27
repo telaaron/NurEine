@@ -51,7 +51,7 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
 
-FAL_ENDPOINT = "https://fal.run/fal-ai/flux/schnell"
+FAL_ENDPOINT = "https://fal.run/fal-ai/flux-pro"
 FAL_IMAGE_SIZE = "landscape_4_3"  # 1024x768
 FAL_NUM_IMAGES = 1
 FAL_POLL_INTERVAL = 2
@@ -188,12 +188,24 @@ def generate_image_fal(prompt: str) -> bytes | None:
 # Image prompt builder
 # ---------------------------------------------------------------------------
 IMAGE_STYLE = (
-    "Clean minimalist 3D spot illustration, isolated on pure white background #ffffff. "
-    "Soft studio lighting, soft shadows. "
-    "High-end editorial, 8K resolution. "
-    "Subject small and centered with plenty of empty white space on all sides. "
-    "No text, no environment, no background elements."
+    "Warm paper collage editorial illustration. "
+    "Handcrafted paper cutout technique with overlapping matte paper layers. "
+    "Visible paper grain texture, soft cast shadows between each layer. "
+    "Flat semi-abstract illustrative style — NO 3D rendering, NO photorealism, NO glossy materials. "
+    "Warm off-white paper background #f5f1ea. "
+    "Single central iconographic symbol as the subject. "
+    "No text, no environment, no background elements beyond the paper canvas."
 )
+
+CATEGORY_ACCENT_COLOURS: dict[str, str] = {
+    "klima": "sage green",
+    "gesundheit": "rose red",
+    "wissenschaft": "sky blue",
+    "gemeinschaft": "terracotta orange",
+    "tiere": "sage green",
+    "kultur": "terracotta orange",
+    "innovation": "sky blue",
+}
 
 
 def build_image_prompt(story: dict[str, Any]) -> str:
@@ -202,37 +214,27 @@ def build_image_prompt(story: dict[str, Any]) -> str:
     category = story.get("category", "")
     region = story.get("region", "")
 
-    # Map categories to visual concepts
-    category_objects: dict[str, str] = {
-        "klima": "a glowing globe with fresh leaves sprouting",
-        "gesundheit": "a stylized heart pulse with healing light",
-        "wissenschaft": "a microscope lens with a DNA helix glowing inside",
-        "gemeinschaft": "diverse hands joining together in a circle",
-        "tiere": "a protected animal with a gentle guardian silhouette",
-        "kultur": "an open book with musical notes and paint splashes rising",
-        "innovation": "a lightbulb with circuit board patterns and gears",
+    # Map categories to simple iconographic symbols for paper collage
+    category_symbols: dict[str, str] = {
+        "klima": "a layered paper leaf growing from folded earth layers",
+        "gesundheit": "a paper-cut heart shape with healing light rays",
+        "wissenschaft": "a paper DNA helix with microscopic paper cells",
+        "gemeinschaft": "two overlapping paper hands meeting in a circle",
+        "tiere": "a paper-cut animal silhouette with layered habitat shapes",
+        "kultur": "an open paper book with folded musical notes floating up",
+        "innovation": "a paper lightbulb with layered gear wheel cutouts",
     }
 
-    # Map categories to materials
-    category_materials: dict[str, str] = {
-        "klima": "translucent recycled glass",
-        "gesundheit": "soft matte silicone",
-        "wissenschaft": "polished obsidian with gold inlay",
-        "gemeinschaft": "warm terracotta clay",
-        "tiere": "smooth carved wood",
-        "kultur": "handmade paper and silk thread",
-        "innovation": "brushed aluminum and frosted glass",
-    }
-
-    obj = category_objects.get(category, "a radiant sphere of positive energy")
-    mat = category_materials.get(category, "glossy ceramic")
+    accent = CATEGORY_ACCENT_COLOURS.get(category, "terracotta orange")
+    symbol = category_symbols.get(category, "a paper-cut symbol of positive change")
 
     keyword = title.split(" – ")[0].split(": ")[0].split(" in ")[0].strip()
     if len(keyword) > 100:
         keyword = title[:100]
 
     prompt = (
-        f"Minimalist 3D spot illustration of {obj} made of {mat}. "
+        f"Warm paper collage editorial illustration of {symbol} made of layered matte paper cutouts "
+        f"on warm off-white #f5f1ea canvas. Accented in {accent}. "
         f'Inspired by: "{keyword}". '
         f"{IMAGE_STYLE}"
     )
@@ -276,71 +278,32 @@ def run() -> None:
             failed += 1
             continue
 
-        # 3b. Remove background (white → transparent)
+        # 3b. Composite onto brand canvas colour for consistency
         try:
             from PIL import Image as PILImage
-            from rembg import remove
-            input_img = PILImage.open(BytesIO(image_bytes)).convert("RGBA")
-            output_img = remove(input_img, alpha_matting=True)
+            img = PILImage.open(BytesIO(image_bytes)).convert("RGBA")
+            w, h = img.size
+            pixels = img.load()
+            CANVAS = (245, 241, 234)  # #F5F1EA
+            THRESHOLD = 225
+            for y in range(h):
+                for x in range(w):
+                    r, g, b, a = pixels[x, y]
+                    if a > 0 and r >= THRESHOLD and g >= THRESHOLD and b >= THRESHOLD:
+                        whiteness = min(r, g, b) / 255.0
+                        blend = whiteness ** 1.5
+                        nr = int(CANVAS[0] * blend + r * (1 - blend))
+                        ng = int(CANVAS[1] * blend + g * (1 - blend))
+                        nb = int(CANVAS[2] * blend + b * (1 - blend))
+                        pixels[x, y] = (nr, ng, nb, a)
             buf = BytesIO()
-            output_img.save(buf, format="PNG", optimize=True)
+            img.save(buf, format="PNG", optimize=True)
             image_bytes = buf.getvalue()
-            log.info("  Background removed")
-
-            # 3c. Auto-fit: ensure object is fully in frame with padding (preserving aspect ratio)
-            alpha = output_img.split()[-1]
-            bbox = alpha.getbbox()
-            if bbox:
-                w, h = output_img.size
-                obj_x1, obj_y1, obj_x2, obj_y2 = bbox
-                obj_w = obj_x2 - obj_x1
-                obj_h = obj_y2 - obj_y1
-                pad_px = int(max(obj_w, obj_h) * 0.20)
-                obj_cx, obj_cy = obj_x1 + obj_w // 2, obj_y1 + obj_h // 2
-
-                # Size the crop region to match the canvas aspect ratio (w:h)
-                padded_dim = max(obj_w, obj_h) + 2 * pad_px
-                crop_w = max(int(padded_dim), int(padded_dim * w / h * 0.9))
-                crop_h = int(crop_w * h / w)
-
-                # Ensure object fits
-                if crop_w < obj_w + 2 * pad_px or crop_h < obj_h + 2 * pad_px:
-                    crop_w = int(max(obj_w + 2 * pad_px, (obj_h + 2 * pad_px) * w / h))
-                    crop_h = int(max(obj_h + 2 * pad_px, (obj_w + 2 * pad_px) * h / w))
-
-                cx1 = obj_cx - crop_w // 2
-                cy1 = obj_cy - crop_h // 2
-                cx2 = cx1 + crop_w
-                cy2 = cy1 + crop_h
-                if cx1 < 0:
-                    cx2 -= cx1; cx1 = 0
-                if cy1 < 0:
-                    cy2 -= cy1; cy1 = 0
-                if cx2 > w:
-                    cx1 -= (cx2 - w); cx2 = w
-                if cy2 > h:
-                    cy1 -= (cy2 - h); cy2 = h
-                actual_w = cx2 - cx1
-                actual_h = cy2 - cy1
-                cropped = output_img.crop((cx1, cy1, cx2, cy2))
-                result = PILImage.new("RGBA", (w, h), (0, 0, 0, 0))
-                margin_factor = 0.85  # always leave 15% margin
-                scale = min(w / actual_w, h / actual_h) * margin_factor
-                new_w = int(actual_w * scale)
-                new_h = int(actual_h * scale)
-                resized = cropped.resize((new_w, new_h), PILImage.LANCZOS)
-                paste_x = (w - new_w) // 2
-                paste_y = (h - new_h) // 2
-                result.paste(resized, (paste_x, paste_y))
-                fit_buf = BytesIO()
-                result.save(fit_buf, format="PNG", optimize=True)
-                image_bytes = fit_buf.getvalue()
-                log.info("  Auto-fit: object bbox=(%d,%d,%d,%d) +%dpx pad → crop %d×%d → canvas %d×%d (%.0f%% margin)",
-                         obj_x1, obj_y1, obj_x2, obj_y2, pad_px, actual_w, actual_h, w, h, (1-margin_factor)*100)
+            log.info("  Canvas composite applied")
         except (ImportError, SystemExit):
-            log.info("  rembg not available — keeping original image.")
+            log.info("  PIL not available — keeping original image.")
         except Exception as exc:
-            log.warning("  Background removal/fit failed: %s — using original.", exc)
+            log.warning("  Canvas composite failed: %s — using original.", exc)
 
         # 4. Upload to Supabase Storage
         short_id = uuid.uuid4().hex[:12]

@@ -15,6 +15,11 @@ import crypto from 'node:crypto';
 
 const BASE_URL = PUBLIC_BASE_URL || 'https://nureine.de';
 
+// 1x1 pixel PNG data URIs — Gmail never inverts actual images, making this bulletproof against dark mode
+const PNG_CANVAS = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4+vEVAAWvAtF1qGwPAAAAAElFTkSuQmCC';
+const PNG_CARD   = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP49e0dAAXMAt9NjFIKAAAAAElFTkSuQmCC';
+const PNG_INK    = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGOQkhAFAACXAEiRX1b9AAAAAElFTkSuQmCC';
+
 function isValidEmail(email: string): boolean {
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -25,49 +30,72 @@ function buildConfirmationEmailHtml(token: string): string {
 	return `<!DOCTYPE html>
 <html lang="de">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/><meta name="supported-color-schemes" content="light"/><!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting"/><!--<![endif]--></head>
-<body style="margin:0;padding:0;background-color:#f5f1ea;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f1ea;">
+<body style="margin:0;padding:0;background:#f5f1ea url('${PNG_CANVAS}');-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;" class="nur-eine-bg">
+<style type="text/css">
+:root{color-scheme:light;supported-color-schemes:light;}
+[data-ogsc] .nur-eine-bg,[data-ogsb] .nur-eine-bg{background:#f5f1ea url('${PNG_CANVAS}')!important;}
+[data-ogsc] .nur-eine-card,[data-ogsb] .nur-eine-card{background:#faf6ee url('${PNG_CARD}')!important;}
+[data-ogsc] .nur-eine-cta,[data-ogsb] .nur-eine-cta{background:#1a1815 url('${PNG_INK}')!important;}
+[data-ogsc] .nur-eine-text-primary,[data-ogsb] .nur-eine-text-primary{color:#1a1815!important;}
+[data-ogsc] .nur-eine-text-body,[data-ogsb] .nur-eine-text-body{color:#3a342c!important;}
+[data-ogsc] .nur-eine-text-muted,[data-ogsb] .nur-eine-text-muted{color:#6b6359!important;}
+[data-ogsc] .nur-eine-text-faint,[data-ogsb] .nur-eine-text-faint{color:#9a9087!important;}
+[data-ogsc] .nur-eine-text-sitefooter,[data-ogsb] .nur-eine-text-sitefooter{color:#b0a79e!important;}
+[data-ogsc] .nur-eine-link,[data-ogsb] .nur-eine-link{color:#c87340!important;}
+@media (prefers-color-scheme:dark){
+.nur-eine-bg{background:#f5f1ea url('${PNG_CANVAS}')!important;}
+.nur-eine-card{background:#faf6ee url('${PNG_CARD}')!important;}
+.nur-eine-cta{background:#1a1815 url('${PNG_INK}')!important;}
+.nur-eine-text-primary{color:#1a1815!important;}
+.nur-eine-text-body{color:#3a342c!important;}
+.nur-eine-text-muted{color:#6b6359!important;}
+.nur-eine-text-faint{color:#9a9087!important;}
+.nur-eine-text-sitefooter{color:#b0a79e!important;}
+.nur-eine-link{color:#c87340!important;}
+}
+</style>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background:#f5f1ea url('${PNG_CANVAS}');" class="nur-eine-bg">
 <tr><td align="center" style="padding:40px 16px 32px;">
 
 <!-- Brand header -->
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
-<tr><td style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
-<tr><td style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td></tr>
+<tr><td style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;" class="nur-eine-text-primary">NurEine</td></tr>
+<tr><td style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;" class="nur-eine-text-faint">Eine Geschichte am Tag. Mehr nicht.</td></tr>
 </table>
 
 <!-- Main card -->
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#faf6ee url('${PNG_CARD}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
 
 <!-- Body -->
 <tr><td style="padding:36px 40px 28px;">
 
-<h2 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">
+<h2 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;" class="nur-eine-text-primary">
 Fast geschafft!
 </h2>
 
-<p style="margin:0 0 16px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a342c;">
+<p style="margin:0 0 16px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a342c;" class="nur-eine-text-body">
 Danke f&uuml;r deine Anmeldung zum NurEine-Newsletter. Wir freuen uns, dass du dabei bist!
 </p>
 
-<p style="margin:0 0 32px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a342c;">
+<p style="margin:0 0 32px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a342c;" class="nur-eine-text-body">
 Bitte best&auml;tige deine E-Mail-Adresse, damit wir dir ab sofort gute Nachrichten schicken k&ouml;nnen.
 </p>
 
 <!-- CTA Button -->
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
 <tr>
-<td style="background-color:#1a1815;border-radius:9999px;text-align:center;">
+<td style="background:#1a1815 url('${PNG_INK}');border-radius:9999px;text-align:center;" class="nur-eine-cta">
 <a href="${confirmUrl}" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">E-Mail best&auml;tigen &rarr;</a>
 </td>
 </tr>
 </table>
 
 <!-- Fallback link -->
-<p style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.6;color:#6b6359;">
+<p style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.6;color:#6b6359;" class="nur-eine-text-muted">
 Falls der Button nicht funktioniert, kopiere bitte diesen Link in deinen Browser:
 </p>
-<p style="margin:0 0 32px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;line-height:1.6;color:#6b6359;word-break:break-all;background-color:#f5f1ea;padding:12px 16px;border-radius:6px;border:1px solid rgba(26,24,21,0.08);">
-<a href="${confirmUrl}" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">${confirmUrl}</a>
+<p style="margin:0 0 32px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;line-height:1.6;color:#6b6359;word-break:break-all;background-color:#f5f1ea;padding:12px 16px;border-radius:6px;border:1px solid rgba(26,24,21,0.08);" class="nur-eine-text-muted">
+<a href="${confirmUrl}" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);" class="nur-eine-link">${confirmUrl}</a>
 </p>
 
 </td></tr>
@@ -77,14 +105,14 @@ Falls der Button nicht funktioniert, kopiere bitte diesen Link in deinen Browser
 
 <!-- Footer -->
 <tr><td style="padding:22px 40px 30px;">
-<p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
+<p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;" class="nur-eine-text-faint">
 Du hast dich nicht angemeldet? Ignoriere einfach diese E-Mail. Deine Adresse wird automatisch gel&ouml;scht, falls du nicht best&auml;tigst.
 </p>
 </td></tr>
 </table>
 
 <!-- Site footer -->
-<p style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">
+<p style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;" class="nur-eine-text-sitefooter">
 NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.
 </p>
 

@@ -21,7 +21,7 @@
 	let { story, size = 'md', baseUrl = 'https://nureine.de' }: Props = $props();
 
 	const t = $derived(toneStyles[story.tone]);
-	const staticImageSrc = $derived(getStoryHeroImageSrc(story.title, base));
+	const staticImageSrc = $derived(getStoryHeroImageSrc(story.category, base));
 	const heroImageSrc = $derived(
 		story.hero && story.hero.startsWith('http') ? story.hero : staticImageSrc
 	);
@@ -66,7 +66,7 @@
 			<img
 				src={heroImageSrc}
 				alt=""
-				class="absolute inset-0 h-full w-full object-contain transition-transform duration-[900ms] group-hover:scale-[1.04]"
+				class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] group-hover:scale-[1.04]"
 				loading="lazy"
 				decoding="async"
 			/>

@@ -68,6 +68,14 @@ BREVO_URL = "https://api.brevo.com/v3/smtp/email"
 # HTML Email Template
 # ---------------------------------------------------------------------------
 
+# 1x1 pixel PNG data URIs for each background color.
+# Gmail dark mode NEVER inverts real images (including data URIs),
+# so using PNG backgrounds prevents dark-mode color inversion completely.
+_PNG_CANVAS = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4+vEVAAWvAtF1qGwPAAAAAElFTkSuQmCC"
+_PNG_CARD   = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP49e0dAAXMAt9NjFIKAAAAAElFTkSuQmCC"
+_PNG_WHITE  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"
+_PNG_INK    = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGOQkhAFAACXAEiRX1b9AAAAAElFTkSuQmCC"
+
 HTML_TEMPLATE = """<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -76,25 +84,48 @@ HTML_TEMPLATE = """<!DOCTYPE html>
   <meta name="color-scheme" content="light" />
   <meta name="supported-color-schemes" content="light" />
   <!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting" /><!--<![endif]-->
-  <style type="text/css">
-    /* Force light backgrounds even in Gmail/Outlook dark mode */
-    :root {{ color-scheme: light; supported-color-schemes: light; }}
-    [data-ogsc] .nur-eine-bg,
-    [data-ogsb] .nur-eine-bg {{ background-color: #f5f1ea !important; }}
-    [data-ogsc] .nur-eine-card,
-    [data-ogsb] .nur-eine-card {{ background-color: #faf6ee !important; }}
-    [data-ogsc] .nur-eine-text-primary,
-    [data-ogsb] .nur-eine-text-primary {{ color: #1a1815 !important; }}
-    [data-ogsc] .nur-eine-text-dek,
-    [data-ogsb] .nur-eine-text-dek {{ color: #4a3f35 !important; }}
-    [data-ogsc] .nur-eine-text-body,
-    [data-ogsb] .nur-eine-text-body {{ color: #3a342c !important; }}
-    [data-ogsc] .nur-eine-cta,
-    [data-ogsb] .nur-eine-cta {{ background-color: #1a1815 !important; }}
-  </style>
 </head>
-<body style="margin:0;padding:0;background-color:#f5f1ea;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background-color:#f5f1ea;" class="nur-eine-bg">
+<body style="margin:0;padding:0;background:#f5f1ea url('{png_canvas}');-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  <!-- Gmail dark-mode shield: 1x1 PNG data URIs (images are never inverted), CSS selectors for all dark-mode mechanisms -->
+  <style type="text/css">
+    :root {{ color-scheme: light; supported-color-schemes: light; }}
+
+    /* Gmail web dark mode */
+    [data-ogsc] .nur-eine-bg {{ background: #f5f1ea url('{png_canvas}') !important; }}
+    [data-ogsc] .nur-eine-card {{ background: #faf6ee url('{png_card}') !important; }}
+    [data-ogsc] .nur-eine-cta {{ background: #1a1815 url('{png_ink}') !important; }}
+    [data-ogsc] .nur-eine-text-primary {{ color: #1a1815 !important; }}
+    [data-ogsc] .nur-eine-text-dek {{ color: #4a3f35 !important; }}
+    [data-ogsc] .nur-eine-text-body {{ color: #3a342c !important; }}
+    [data-ogsc] .nur-eine-text-muted {{ color: #6b6359 !important; }}
+    [data-ogsc] .nur-eine-text-faint {{ color: #9a9087 !important; }}
+    [data-ogsc] .nur-eine-link {{ color: #c87340 !important; }}
+
+    /* Outlook dark mode */
+    [data-ogsb] .nur-eine-bg {{ background: #f5f1ea url('{png_canvas}') !important; }}
+    [data-ogsb] .nur-eine-card {{ background: #faf6ee url('{png_card}') !important; }}
+    [data-ogsb] .nur-eine-cta {{ background: #1a1815 url('{png_ink}') !important; }}
+    [data-ogsb] .nur-eine-text-primary {{ color: #1a1815 !important; }}
+    [data-ogsb] .nur-eine-text-dek {{ color: #4a3f35 !important; }}
+    [data-ogsb] .nur-eine-text-body {{ color: #3a342c !important; }}
+    [data-ogsb] .nur-eine-text-muted {{ color: #6b6359 !important; }}
+    [data-ogsb] .nur-eine-text-faint {{ color: #9a9087 !important; }}
+    [data-ogsb] .nur-eine-link {{ color: #c87340 !important; }}
+
+    /* Native system dark mode */
+    @media (prefers-color-scheme: dark) {{
+      .nur-eine-bg {{ background: #f5f1ea url('{png_canvas}') !important; }}
+      .nur-eine-card {{ background: #faf6ee url('{png_card}') !important; }}
+      .nur-eine-cta {{ background: #1a1815 url('{png_ink}') !important; }}
+      .nur-eine-text-primary {{ color: #1a1815 !important; }}
+      .nur-eine-text-dek {{ color: #4a3f35 !important; }}
+      .nur-eine-text-body {{ color: #3a342c !important; }}
+      .nur-eine-text-muted {{ color: #6b6359 !important; }}
+      .nur-eine-text-faint {{ color: #9a9087 !important; }}
+      .nur-eine-link {{ color: #c87340 !important; }}
+    }}
+  </style>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background:#f5f1ea url('{png_canvas}');" class="nur-eine-bg">
     <tr>
       <td align="center" style="padding:40px 16px 32px;">
 
@@ -104,12 +135,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <td class="nur-eine-text-primary" style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td>
           </tr>
           <tr>
-            <td class="nur-eine-text-subtle" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td>
+            <td class="nur-eine-text-faint" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td>
           </tr>
         </table>
 
         <!-- Main card -->
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#faf6ee" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#faf6ee" style="max-width:600px;width:100%;background:#faf6ee url('{png_card}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
 
           <!-- Hero image -->
           {header}
@@ -130,7 +161,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               </table>
 
               <!-- Title -->
-              <h2 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">
+              <h2 class="nur-eine-text-primary" style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">
                 {title}
               </h2>
 
@@ -157,12 +188,12 @@ HTML_TEMPLATE = """<!DOCTYPE html>
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
                 <tr>
                   <td style="padding-right:28px;">
-                    <span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;">
+                    <span class="nur-eine-text-muted" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;">
                       <strong style="font-weight:600;color:#1a1815;">Wirkung</strong> {impact_score}/100
                     </span>
                   </td>
                   <td>
-                    <span style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;">
+                    <span class="nur-eine-text-muted" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;">
                       <strong style="font-weight:600;color:#1a1815;">Lesezeit</strong> {reading_minutes} Min.
                     </span>
                   </td>
@@ -176,7 +207,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             <td style="padding:0 40px 32px;">
               <table role="presentation" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td class="nur-eine-cta" style="background-color:#1a1815;border-radius:9999px;text-align:center;">
+                  <td class="nur-eine-cta" style="background:#1a1815 url('{png_ink}');border-radius:9999px;text-align:center;">
                     <a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">
                       Geschichte lesen &rarr;
                     </a>
@@ -196,11 +227,11 @@ HTML_TEMPLATE = """<!DOCTYPE html>
           <!-- Footer -->
           <tr>
             <td style="padding:22px 40px 30px;">
-              <p style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
+              <p class="nur-eine-text-faint" style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
                 Du erh&auml;ltst diese E-Mail, weil du den NurEine-Newsletter abonniert hast.
               </p>
-              <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
-                <a href="{unsubscribe_url}" target="_blank" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">
+              <p class="nur-eine-text-faint" style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
+                <a href="{unsubscribe_url}" target="_blank" class="nur-eine-link" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">
                   Abmelden
                 </a>
               </p>
@@ -209,7 +240,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         </table>
 
         <!-- Site footer -->
-        <p style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">
+        <p class="nur-eine-text-faint" style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">
           NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.
         </p>
       </td>
@@ -277,6 +308,10 @@ def build_html_body(story: dict, subscriber_email: str, confirmation_token: str)
         reading_minutes=story.get("reading_time_min", "?"),
         story_url=story_url,
         unsubscribe_url=unsubscribe_url,
+        png_canvas=_PNG_CANVAS,
+        png_card=_PNG_CARD,
+        png_white=_PNG_WHITE,
+        png_ink=_PNG_INK,
     )
 
 
@@ -488,34 +523,48 @@ def build_b2b_html_body(story: dict, company_name: str) -> str:
     return f"""<!DOCTYPE html>
 <html lang="de">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/><meta name="supported-color-schemes" content="light"/><!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting"/><!--<![endif]-->
-<style type="text/css">:root{{color-scheme:light;supported-color-schemes:light;}}[data-ogsc] .nur-eine-bg,[data-ogsb] .nur-eine-bg{{background-color:#f5f1ea!important;}}[data-ogsc] .nur-eine-card,[data-ogsb] .nur-eine-card{{background-color:#faf6ee!important;}}[data-ogsc] .nur-eine-text-primary,[data-ogsb] .nur-eine-text-primary{{color:#1a1815!important;}}[data-ogsc] .nur-eine-text-dek,[data-ogsb] .nur-eine-text-dek{{color:#4a3f35!important;}}[data-ogsc] .nur-eine-text-body,[data-ogsb] .nur-eine-text-body{{color:#3a342c!important;}}[data-ogsc] .nur-eine-cta,[data-ogsb] .nur-eine-cta{{background-color:#1a1815!important;}}</style>
 </head>
-<body style="margin:0;padding:0;background-color:#f5f1ea;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background-color:#f5f1ea;" class="nur-eine-bg">
+<body style="margin:0;padding:0;background:#f5f1ea url('{_PNG_CANVAS}');-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<style type="text/css">:root{{color-scheme:light;supported-color-schemes:light;}}
+[data-ogsc] .nur-eine-bg{{background:#f5f1ea url('{_PNG_CANVAS}')!important;}}
+[data-ogsc] .nur-eine-card{{background:#faf6ee url('{_PNG_CARD}')!important;}}
+[data-ogsc] .nur-eine-cta{{background:#1a1815 url('{_PNG_INK}')!important;}}
+[data-ogsc] .nur-eine-text-primary{{color:#1a1815!important;}}
+[data-ogsc] .nur-eine-text-body{{color:#3a342c!important;}}
+[data-ogsc] .nur-eine-text-faint{{color:#9a9087!important;}}
+[data-ogsb] .nur-eine-bg{{background:#f5f1ea url('{_PNG_CANVAS}')!important;}}
+[data-ogsb] .nur-eine-card{{background:#faf6ee url('{_PNG_CARD}')!important;}}
+[data-ogsb] .nur-eine-cta{{background:#1a1815 url('{_PNG_INK}')!important;}}
+[data-ogsb] .nur-eine-text-primary{{color:#1a1815!important;}}
+[data-ogsb] .nur-eine-text-body{{color:#3a342c!important;}}
+[data-ogsb] .nur-eine-text-faint{{color:#9a9087!important;}}
+@media (prefers-color-scheme:dark){{.nur-eine-bg{{background:#f5f1ea url('{_PNG_CANVAS}')!important;}}.nur-eine-card{{background:#faf6ee url('{_PNG_CARD}')!important;}}.nur-eine-cta{{background:#1a1815 url('{_PNG_INK}')!important;}}.nur-eine-text-primary{{color:#1a1815!important;}}.nur-eine-text-body{{color:#3a342c!important;}}.nur-eine-text-faint{{color:#9a9087!important;}}}}
+</style>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background:#f5f1ea url('{_PNG_CANVAS}');" class="nur-eine-bg">
 <tr><td align="center" style="padding:40px 16px 32px;">
 
 <!-- Brand header -->
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
 <tr><td class="nur-eine-text-primary" style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
-<tr><td style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td></tr>
+<tr><td class="nur-eine-text-faint" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td></tr>
 {b2b_header}
 </table>
 
 <!-- Main card -->
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#faf6ee" style="max-width:600px;width:100%;background-color:#faf6ee;border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#faf6ee" style="max-width:600px;width:100%;background:#faf6ee url('{_PNG_CARD}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
 {header_html}
 <tr><td style="padding:28px 40px 24px;">
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>
 <span style="display:inline-block;background-color:{category_color};color:#ffffff;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;padding:3px 12px;border-radius:9999px;">{category}</span>
 </td></tr></table>
-<h2 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">{title}</h2>
-<p style="margin:0 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">{summary}</p>
+<h2 class="nur-eine-text-primary" style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">{title}</h2>
+<p class="nur-eine-text-body" style="margin:0 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">{summary}</p>
 </td></tr>
 
 <!-- CTA -->
 <tr><td style="padding:0 40px 32px;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td class="nur-eine-cta" style="background-color:#1a1815;border-radius:9999px;text-align:center;">
+<td class="nur-eine-cta" style="background:#1a1815 url('{_PNG_INK}');border-radius:9999px;text-align:center;">
 <a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen &rarr;</a>
 </td></tr></table>
 </td></tr>
@@ -525,14 +574,14 @@ def build_b2b_html_body(story: dict, company_name: str) -> str:
 
 <!-- Footer -->
 <tr><td style="padding:22px 40px 30px;">
-<p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
+<p class="nur-eine-text-faint" style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
 Bereitgestellt f&uuml;r <strong>{company_name}</strong>.
 </p>
 </td></tr>
 </table>
 
 <!-- Site footer -->
-<p style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">
+<p class="nur-eine-text-faint" style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">
 NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.
 </p>
 
@@ -653,6 +702,7 @@ def main() -> None:
     logger.info(
         "Hero story: '%s' (id=%s)", story.get("title", "?"), story.get("id", "?")
     )
+    title = story.get("title", "")
 
     # ---- Send emails --------------------------------------------------------
     success_count = 0

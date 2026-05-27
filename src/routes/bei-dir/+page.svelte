@@ -452,7 +452,7 @@
 			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
 				{#each displayStories as story (story.slug)}
 					{@const t = toneStyles[story.tone]}
-					{@const heroImageSrc = getStoryHeroImageSrc(story.title, base)}
+					{@const heroImageSrc = story.hero && story.hero.startsWith('http') ? story.hero : getStoryHeroImageSrc(story.category, base)}
 					<a href={base + '/geschichte/' + story.slug}
 						class="group block paper rounded-[6px] overflow-hidden transition-all duration-500"
 						style="border: 1px solid var(--color-rule); will-change: transform;"
@@ -460,7 +460,7 @@
 						onmouseleave={(e) => (e.currentTarget.style.borderColor = 'var(--color-rule)')}>
 						<div class="relative aspect-[5/3] overflow-hidden" style="background: var(--color-paper);">
 							{#if heroImageSrc}
-								<img src={heroImageSrc} alt="" class="absolute inset-0 h-full w-full object-contain transition-transform duration-[900ms] group-hover:scale-[1.04]" loading="lazy" decoding="async" />
+								<img src={heroImageSrc} alt="" class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] group-hover:scale-[1.04]" loading="lazy" decoding="async" />
 							{:else}
 								<div class="absolute inset-0 flex items-center justify-center text-7xl" style="filter: saturate(0.85);">{story.hero}</div>
 							{/if}

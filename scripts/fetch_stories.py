@@ -3,7 +3,7 @@
 NurEine — Story Fetcher
 
 Fetches RSS feeds, analyzes articles with DeepSeek Chat,
-generates images with FLUX.1 [schnell] via fal.ai,
+generates images with FLUX.1 [pro] via fal.ai,
 uploads to Supabase Storage, and inserts stories into Supabase.
 
 Usage:
@@ -62,12 +62,12 @@ FAL_KEY = os.environ.get("FAL_KEY")
 DEEPSEEK_MODEL = "deepseek-chat"
 DEEPSEEK_ENDPOINT = "https://api.deepseek.com/chat/completions"
 
-# fal.ai FLUX.1 [schnell]
-FAL_ENDPOINT = "https://fal.run/fal-ai/flux/schnell"
+# fal.ai FLUX.1 [pro]
+FAL_ENDPOINT = "https://fal.run/fal-ai/flux-pro"
 FAL_IMAGE_SIZE = "landscape_4_3"  # 1024x768
 FAL_NUM_IMAGES = 1
-FAL_POLL_INTERVAL = 2  # seconds between status polls
-FAL_POLL_TIMEOUT = 120  # max seconds to wait for generation
+FAL_POLL_INTERVAL = 3  # seconds between status polls (pro is slower)
+FAL_POLL_TIMEOUT = 180  # max seconds to wait for generation
 
 # Supabase Storage bucket for story images
 STORAGE_BUCKET = "story_images"
@@ -412,7 +412,7 @@ lat: Breitengrad (float)
 
 lng: Längengrad (float)
 
-image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: Minimalist flat 2D vector art, highly abstract geometric shapes ONLY. Absolutely NO realistic objects, NO 3D renders, NO glossy or plastic textures. Bauhaus-inspired design language with clean lines and geometric abstraction. Warm beige or off-white background (similar to #FBF6EE). High-end editorial aesthetic like New York Times or Monocle. No text, no environment. CRITICAL: Subject fully visible, NOT cropped at any edge. Subject centered with generous padding on all sides. The illustration should feel like an artistic metaphor, not a literal depiction. Format: "Minimalist flat 2D vector art of [ABSTRACT GEOMETRIC CONCEPT representing the topic]. Bauhaus style, geometric abstraction, warm beige background #FBF6EE. Clean lines, no gradients, no 3D. High-end editorial. No text." Beispiel: "Minimalist flat 2D vector art of overlapping translucent circles and squares suggesting mangrove roots. Bauhaus style, geometric abstraction, warm beige background #FBF6EE. Clean lines, no 3D. No text."
+image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: "Warm editorial paper collage illustration". Das Bild sieht aus wie eine handgefertigte Papiercollage aus mehreren überlappenden Papier-Ebenen, mit sichtbaren Kanten, feiner Papierfaser-Textur und subtilem Schattenwurf zwischen den Ebenen. Der Stil ist flach-illustrativ (KEIN 3D-Render, KEIN Fotorealismus, KEIN Glanz, KEIN Plastik). Ein zentrales, abstrahiertes Motiv symbolisiert das Thema als einfache, ikonische Form. Farbpalette: Heller warmer Off-White-Kartonhintergrund in #f5f1ea (wie ungebleichte Pappe), Akzente in EINER warmen Kontrastfarbe, die zum Thema passt — wähle aus: Terracotta-Orange, Salbei-Grün, Rosen-Rot oder Himmel-Blau. Das Motiv ist aus farbigem Papier gestaltet, die Tiefe entsteht allein durch Papier-Überlappung und -Schatten. Format: "Warm paper collage editorial illustration of [EINFACHES SYMBOL FÜR DAS THEMA], made of layered matte paper cutouts on warm off-white #f5f1ea canvas. Accented in [GEWÄHLTE FARBE]. Visible paper grain texture, soft cast shadows between paper layers. Flat semi-abstract premium magazine style. No text. No 3D, no photorealism, no glossy materials." Beispiel: "Warm paper collage editorial illustration of mangrove branches growing from layered leaves, made of layered matte paper cutouts on warm off-white #f5f1ea canvas. Accented in sage green. Visible paper grain texture, soft cast shadows between paper layers. Flat semi-abstract premium magazine style. No text. No 3D, no photorealism, no glossy materials."
 
 impact_reach: geschätzte Anzahl direkt positiv betroffener Menschen (integer)
 
@@ -608,7 +608,7 @@ def parse_ai_response(text: str | None) -> dict[str, Any] | None:
 # Image pipeline: generate + upload
 # ---------------------------------------------------------------------------
 def generate_image_fal(image_prompt: str) -> bytes | None:
-    """Generate an image using FLUX.1 [schnell] via fal.ai.
+    """Generate an image using FLUX.1 [pro] via fal.ai.
 
     Returns raw image bytes, or None on failure.
     """
@@ -806,13 +806,12 @@ def fit_object_in_frame(image_bytes: bytes, padding_pct: float = 0.20) -> bytes 
 
 
 def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None:
-    """Generate an image via FLUX.1 on fal.ai, remove background, upload to Supabase.
+    """Generate an image via FLUX.1 [pro] on fal.ai, composite onto NurEine canvas, upload to Supabase.
 
     The pipeline:
-      1. FLUX.1 [schnell] generates a 4:3 landscape image with white background
-      2. rembg (u2net) removes the white background → transparent PNG
-      3. Auto-fit: detect object bounds, add padding, resize → object fully in frame
-      4. Upload to Supabase Storage as PNG with alpha channel
+      1. FLUX.1 [pro] generates a 4:3 paper collage illustration
+      2. Composite onto exact brand canvas colour #F5F1EA for consistent look
+      3. Upload to Supabase Storage as PNG
 
     Returns the public URL of the uploaded image, or None on failure.
     """
@@ -827,17 +826,8 @@ def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None
         log.warning("  Image generation failed for: %.60s", story_title)
         return None
 
-    # Remove background (white → transparent)
-    image_bytes_nobg = remove_background(image_bytes)
-    if image_bytes_nobg:
-        image_bytes = image_bytes_nobg
-
-        # Auto-fit: ensure object is fully in frame with padding (zoom-out)
-        image_bytes_fit = fit_object_in_frame(image_bytes, padding_pct=0.20)
-        if image_bytes_fit:
-            image_bytes = image_bytes_fit
-    else:
-        log.info("  Keeping original image (no background removal available).")
+    # Composite onto exact brand canvas colour for consistency
+    image_bytes = composite_on_canvas(image_bytes)
 
     # Build a clean filename: story-images/story-{slug}-{uuid12}.png
     short_id = uuid.uuid4().hex[:12]
@@ -852,6 +842,45 @@ def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None
 
     public_url = supabase_upload_image(image_bytes, filename)
     return public_url
+
+
+def composite_on_canvas(image_bytes: bytes) -> bytes:
+    """Soft-composite the generated image onto the exact brand canvas #F5F1EA.
+
+    Replaces near-white backgrounds with the brand canvas colour using
+    a soft edge blend to avoid harsh transitions. For paper collage
+    images this is a light touch — edges keep their organic feel.
+    """
+    try:
+        from PIL import Image as PILImage
+    except ImportError:
+        return image_bytes
+
+    try:
+        img = PILImage.open(BytesIO(image_bytes)).convert("RGBA")
+        w, h = img.size
+        pixels = img.load()
+
+        CANVAS = (245, 241, 234)  # #F5F1EA
+        THRESHOLD = 225            # pixels with all channels >= this get replaced
+
+        for y in range(h):
+            for x in range(w):
+                r, g, b, a = pixels[x, y]
+                if a > 0 and r >= THRESHOLD and g >= THRESHOLD and b >= THRESHOLD:
+                    # Soft blend: how "white" the pixel is
+                    whiteness = min(r, g, b) / 255.0
+                    blend = whiteness ** 1.5  # bias toward replacing white
+                    nr = int(CANVAS[0] * blend + r * (1 - blend))
+                    ng = int(CANVAS[1] * blend + g * (1 - blend))
+                    nb = int(CANVAS[2] * blend + b * (1 - blend))
+                    pixels[x, y] = (nr, ng, nb, a)
+
+        buf = BytesIO()
+        img.save(buf, format="PNG", optimize=True)
+        return buf.getvalue()
+    except Exception:
+        return image_bytes
 
 
 # ---------------------------------------------------------------------------

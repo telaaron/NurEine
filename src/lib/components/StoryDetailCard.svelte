@@ -23,8 +23,8 @@
 
 	let { story, toneFg = '#c87340', mode = 'sidebar', onClose }: Props = $props();
 
-	const localHeroSrc = $derived(getStoryHeroImageSrc(story.title, base));
-	const heroImageSrc = $derived(localHeroSrc || (story.imageUrl?.startsWith('http') ? story.imageUrl : null));
+	const localHeroSrc = $derived(getStoryHeroImageSrc(story.category, base));
+	const heroImageSrc = $derived(story.imageUrl?.startsWith('http') ? story.imageUrl : localHeroSrc);
 	const storyUrl = $derived(`${base}/geschichte/${story.slug}`);
 </script>
 
@@ -75,7 +75,7 @@
 				<img
 					src={heroImageSrc}
 					alt=""
-					class="absolute inset-0 h-full w-full object-contain"
+					class="absolute inset-0 h-full w-full object-cover"
 					loading="lazy"
 					decoding="async"
 				/>

@@ -293,7 +293,7 @@ def build_html_body(story: dict, subscriber_email: str, confirmation_token: str)
     image_url = story.get("image_url", "")
     # Build header: use <img> if image_url is set, else sparkle fallback
     if image_url:
-        header_html = f'<tr><td style="padding:0;"><img src="{image_url}" alt="" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;border-radius:10px 10px 0 0;" /></td></tr>'
+        header_html = f'<tr><td style="padding:0;"><img src="{image_url}" alt="" style="display:block;width:100%;height:auto;object-fit:cover;aspect-ratio:4/3;border-radius:10px 10px 0 0;" /></td></tr>'
     else:
         header_html = '<tr><td style="padding:32px 40px 0;"><div style="font-size:64px;line-height:1;text-align:center;">&#10024;</div></td></tr>'
 
@@ -491,8 +491,47 @@ def get_b2b_clients() -> list[dict]:
         return []
 
 
+def _format_body_html(body_markdown: str) -> str:
+    """Convert markdown body text (plain paragraphs separated by blank lines)
+    into HTML <p> tags styled for the B2B email card."""
+    if not body_markdown:
+        return ""
+
+    # Split on double-newline to get paragraphs; strip each one
+    paragraphs = [p.strip() for p in body_markdown.split("\n\n") if p.strip()]
+    if not paragraphs:
+        return ""
+
+    html_parts = []
+    for para in paragraphs:
+        html_parts.append(
+            f'<p class="nur-eine-text-body" style="margin:0 0 18px;font-family:\'Helvetica Neue\',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">'
+            f"{para}"
+            f"</p>"
+        )
+    # Remove bottom margin from last paragraph
+    if html_parts:
+        html_parts[-1] = html_parts[-1].replace("margin:0 0 18px;", "margin:0;")
+
+    return "\n".join(html_parts)
+
+
+# Impressum / legal data (German law requires this in every commercial email)
+_COMPANY_NAME_FULL = "NurEine"
+_COMPANY_ADDRESS = "Teltow, Brandenburg"
+_COMPANY_EMAIL = "newsletter@nureine.de"
+
+
 def build_b2b_html_body(story: dict, company_name: str) -> str:
-    """Build a premium HTML email for B2B delivery."""
+    """Build a premium B2B HTML email.
+
+    Designed after CEO review (May 2026):
+      - Full article body (body_markdown) instead of a teaser
+      - Greeting line: "Guten Morgen, Team COMPANY,"
+      - Employer-branding footer: "Ermöglicht durch die Leitung des ..."
+      - No forced click-out CTA (soft share button only)
+      - Legal footer: Impressum + unsubscribe note
+    """
     story_id = str(story.get("id", ""))
     title = story.get("title", "")
     slug = f"{slugify(title)}-{story_id[:8]}"
@@ -510,15 +549,35 @@ def build_b2b_html_body(story: dict, company_name: str) -> str:
         "rose": "#b87a7a", "sky": "#6c8aa8",
     }.get(tone, "#c87340")
 
-    summary = story.get("summary", "")
+    # Body text: prefer body_markdown (3+ paragraphs), fallback to summary
+    body_markdown = story.get("body_markdown", "")
+    body_html = _format_body_html(body_markdown)
+    if not body_html:
+        summary = story.get("summary", "")
+        if summary:
+            body_html = (
+                f'<p class="nur-eine-text-body" style="margin:0;font-family:\'Helvetica Neue\','
+                f'Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">'
+                f"{summary}"
+                f"</p>"
+            )
+
+    # Image or placeholder
     image_url = story.get("image_url", "")
     if image_url:
-        header_html = f'<tr><td style="padding:0;"><img src="{image_url}" alt="" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;border-radius:10px 10px 0 0;" /></td></tr>'
+        header_html = (
+            f'<tr><td style="padding:0;">'
+            f'<img src="{image_url}" alt="" '
+            f'style="display:block;width:100%;height:auto;object-fit:cover;'
+            f'aspect-ratio:4/3;border-radius:10px 10px 0 0;" />'
+            f'</td></tr>'
+        )
     else:
-        header_html = '<tr><td style="padding:32px 40px 0;"><div style="font-size:64px;line-height:1;text-align:center;">&#10024;</div></td></tr>'
-
-    # B2B branding line below the brand header
-    b2b_header = f'<tr><td style="font-family:\'Helvetica Neue\',Arial,sans-serif;font-size:10px;color:#b0a79e;text-align:center;text-transform:uppercase;letter-spacing:0.16em;padding-top:2px;">Gute Nachrichten &mdash; powered by {company_name}</td></tr>'
+        header_html = (
+            '<tr><td style="padding:32px 40px 0;">'
+            '<div style="font-size:64px;line-height:1;text-align:center;">&#10024;</div>'
+            '</td></tr>'
+        )
 
     return f"""<!DOCTYPE html>
 <html lang="de">
@@ -532,58 +591,101 @@ def build_b2b_html_body(story: dict, company_name: str) -> str:
 [data-ogsc] .nur-eine-text-primary{{color:#1a1815!important;}}
 [data-ogsc] .nur-eine-text-body{{color:#3a342c!important;}}
 [data-ogsc] .nur-eine-text-faint{{color:#9a9087!important;}}
+[data-ogsc] .nur-eine-text-muted{{color:#6b6359!important;}}
 [data-ogsb] .nur-eine-bg{{background:#f5f1ea url('{_PNG_CANVAS}')!important;}}
 [data-ogsb] .nur-eine-card{{background:#faf6ee url('{_PNG_CARD}')!important;}}
 [data-ogsb] .nur-eine-cta{{background:#1a1815 url('{_PNG_INK}')!important;}}
 [data-ogsb] .nur-eine-text-primary{{color:#1a1815!important;}}
 [data-ogsb] .nur-eine-text-body{{color:#3a342c!important;}}
 [data-ogsb] .nur-eine-text-faint{{color:#9a9087!important;}}
-@media (prefers-color-scheme:dark){{.nur-eine-bg{{background:#f5f1ea url('{_PNG_CANVAS}')!important;}}.nur-eine-card{{background:#faf6ee url('{_PNG_CARD}')!important;}}.nur-eine-cta{{background:#1a1815 url('{_PNG_INK}')!important;}}.nur-eine-text-primary{{color:#1a1815!important;}}.nur-eine-text-body{{color:#3a342c!important;}}.nur-eine-text-faint{{color:#9a9087!important;}}}}
+[data-ogsb] .nur-eine-text-muted{{color:#6b6359!important;}}
+@media (prefers-color-scheme:dark){{.nur-eine-bg{{background:#f5f1ea url('{_PNG_CANVAS}')!important;}}.nur-eine-card{{background:#faf6ee url('{_PNG_CARD}')!important;}}.nur-eine-cta{{background:#1a1815 url('{_PNG_INK}')!important;}}.nur-eine-text-primary{{color:#1a1815!important;}}.nur-eine-text-body{{color:#3a342c!important;}}.nur-eine-text-faint{{color:#9a9087!important;}}.nur-eine-text-muted{{color:#6b6359!important;}}}}
 </style>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background:#f5f1ea url('{_PNG_CANVAS}');" class="nur-eine-bg">
 <tr><td align="center" style="padding:40px 16px 32px;">
 
-<!-- Brand header -->
+<!--
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BRAND HEADER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-->
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
 <tr><td class="nur-eine-text-primary" style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
 <tr><td class="nur-eine-text-faint" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td></tr>
-{b2b_header}
 </table>
 
-<!-- Main card -->
+<!--
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MAIN CARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-->
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#faf6ee" style="max-width:600px;width:100%;background:#faf6ee url('{_PNG_CARD}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
+
 {header_html}
-<tr><td style="padding:28px 40px 24px;">
+
+<!-- ── Greeting ── -->
+<tr><td style="padding:28px 40px 12px;">
+<p class="nur-eine-text-primary" style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:21px;color:#1a1815;line-height:1.4;letter-spacing:-0.005em;">
+Guten Morgen, Team {company_name},
+</p>
+</td></tr>
+
+<!-- ── Category badge ── -->
+<tr><td style="padding:10px 40px 0;">
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>
 <span style="display:inline-block;background-color:{category_color};color:#ffffff;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;padding:3px 12px;border-radius:9999px;">{category}</span>
 </td></tr></table>
-<h2 class="nur-eine-text-primary" style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">{title}</h2>
-<p class="nur-eine-text-body" style="margin:0 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">{summary}</p>
 </td></tr>
 
-<!-- CTA -->
-<tr><td style="padding:0 40px 32px;">
+<!-- ── Title ── -->
+<tr><td style="padding:0 40px;">
+<h2 class="nur-eine-text-primary" style="margin:0 0 24px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">{title}</h2>
+</td></tr>
+
+<!-- ── Full body ── -->
+<tr><td style="padding:0 40px 24px;">
+{body_html}
+</td></tr>
+
+<!-- ── Employer Branding ── -->
+<tr><td style="padding:0 40px 24px;">
+<p class="nur-eine-text-muted" style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:14px;color:#6b6359;line-height:1.6;text-align:center;font-style:italic;">
+Ein Moment des Fokus.<br/>Erm&ouml;glicht durch die Leitung des {company_name}.
+</p>
+</td></tr>
+
+<!-- ── Divider ── -->
+<tr><td style="padding:0 40px;">
+<hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;"/>
+</td></tr>
+
+<!-- ── Share CTA ── -->
+<tr><td style="padding:24px 40px 32px;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
 <td class="nur-eine-cta" style="background:#1a1815 url('{_PNG_INK}');border-radius:9999px;text-align:center;">
-<a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen &rarr;</a>
+<a href="{story_url}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Hat dir das den Morgen versch&ouml;nert? Teile diese Story &rarr;</a>
 </td></tr></table>
 </td></tr>
 
-<!-- Divider -->
-<tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;"/></td></tr>
+</table>
+<!-- / end main card -->
 
-<!-- Footer -->
-<tr><td style="padding:22px 40px 30px;">
-<p class="nur-eine-text-faint" style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
-Bereitgestellt f&uuml;r <strong>{company_name}</strong>.
+<!--
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+LEGAL FOOTER  (Impressum + Unsubscribe — required by German law)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+-->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-top:20px;">
+<tr><td style="padding:0 16px;">
+<p class="nur-eine-text-faint" style="margin:0 0 6px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;line-height:1.6;text-align:center;">
+{_COMPANY_NAME_FULL} &mdash; {_COMPANY_ADDRESS}. Gegr&uuml;ndet 2026. <a href="mailto:{_COMPANY_EMAIL}" style="color:#b0a79e;text-decoration:underline;">{_COMPANY_EMAIL}</a>
+</p>
+<p class="nur-eine-text-faint" style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;line-height:1.6;text-align:center;">
+Du erh&auml;ltst diese E-Mail, weil dein Arbeitgeber NurEine nutzt.
+<a href="mailto:{_COMPANY_EMAIL}?subject=B2B%20Abmeldung%20{company_name}" style="color:#b0a79e;text-decoration:underline;">Hier abmelden</a>
 </p>
 </td></tr>
 </table>
-
-<!-- Site footer -->
-<p class="nur-eine-text-faint" style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">
-NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.
-</p>
 
 </td></tr></table></body></html>"""
 

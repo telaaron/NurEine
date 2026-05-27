@@ -409,7 +409,7 @@ export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSen
 
   // Build header: hero image if available, otherwise emoji fallback
   const headerHtml = imageUrl
-    ? `<tr><td style="padding:0;"><img src="${imageUrl}" alt="" width="600" height="320" style="display:block;width:100%;height:auto;max-height:320px;object-fit:cover;border-radius:10px 10px 0 0;" /></td></tr>`
+    ? `<tr><td style="padding:0;"><img src="${imageUrl}" alt="" width="600" height="450" style="display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:10px 10px 0 0;" /></td></tr>`
     : `<tr><td style="padding:32px 40px 0;"><div style="font-size:64px;line-height:1;text-align:center;">\u2728</div></td></tr>`;
 
   // 1x1 pixel PNG data URIs – Gmail never inverts actual images

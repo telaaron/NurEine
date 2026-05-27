@@ -51,6 +51,15 @@ log = logging.getLogger("fetch_stories")
 # ---------------------------------------------------------------------------
 load_dotenv()
 
+# Try to import image quality review (graceful fallback if not available)
+try:
+    from image_quality import review_and_retry as image_quality_review
+    HAS_QUALITY_REVIEW = True
+except ImportError:
+    HAS_QUALITY_REVIEW = False
+    def image_quality_review(*args, **kwargs):
+        return args[0], 10.0, 0, "Review not available"
+
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
@@ -805,13 +814,14 @@ def fit_object_in_frame(image_bytes: bytes, padding_pct: float = 0.20) -> bytes 
         return None
 
 
-def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None:
+def generate_and_upload_image(image_prompt: str, story_title: str, category: str = "gemeinschaft") -> str | None:
     """Generate an image via FLUX.1 [pro] on fal.ai, composite onto NurEine canvas, upload to Supabase.
 
     The pipeline:
       1. FLUX.1 [pro] generates a 4:3 paper collage illustration
-      2. Composite onto exact brand canvas colour #F5F1EA for consistent look
-      3. Upload to Supabase Storage as PNG
+      2. Quality review with GPT-4o-mini (retry up to 2x if score < 7)
+      3. Composite onto exact brand canvas colour #F5F1EA for consistent look
+      4. Upload to Supabase Storage as PNG
 
     Returns the public URL of the uploaded image, or None on failure.
     """
@@ -825,6 +835,13 @@ def generate_and_upload_image(image_prompt: str, story_title: str) -> str | None
     if not image_bytes:
         log.warning("  Image generation failed for: %.60s", story_title)
         return None
+
+    # Quality review with GPT-4o-mini (retry up to 2x if score < 7)
+    if HAS_QUALITY_REVIEW:
+        image_bytes, qscore, qretries, qfeedback = image_quality_review(
+            image_bytes, story_title, category, image_prompt, generate_image_fal, max_retries=2
+        )
+        log.info("  Quality: %.1f/10 (%d retries) — %s", qscore, qretries, qfeedback)
 
     # Composite onto exact brand canvas colour for consistency
     image_bytes = composite_on_canvas(image_bytes)
@@ -1107,7 +1124,7 @@ def run() -> None:
                 image_prompt = result.get("image_prompt", "")
                 if image_prompt:
                     try:
-                        image_url = generate_and_upload_image(image_prompt, story_title)
+                        image_url = generate_and_upload_image(image_prompt, story_title, result.get("category", "gemeinschaft"))
                     except Exception as exc:
                         log.error("  Image pipeline failed for '%s': %s", story_title, exc)
                         errors += 1

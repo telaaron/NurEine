@@ -19,6 +19,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Try to import image quality review (graceful fallback)
+try:
+    from image_quality import review_and_retry
+    HAS_QUALITY_REVIEW = True
+except ImportError:
+    HAS_QUALITY_REVIEW = False
+    def review_and_retry(*args, **kwargs):
+        return args[0], 10.0, 0, "Review not available"
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s  %(levelname)-8s  %(message)s",
@@ -87,7 +96,7 @@ def call_deepseek_for_prompt(story: dict[str, Any]) -> str | None:
             {"role": "system", "content": "You are a creative director. Generate FLUX.1 image prompts."},
             {"role": "user", "content": user},
         ],
-        "temperature": 0.7,
+        "temperature": 0.5,
     }
 
     try:
@@ -213,12 +222,20 @@ def run() -> None:
             continue
         log.info("  Prompt: %s", prompt)
 
-        # 3. Generate image via FLUX.1 [schnell]
+        # 3. Generate image via FLUX.1 [pro]
         raw = generate_image_fal(prompt)
         if not raw:
             log.error("  SKIP — generation failed")
             continue
         log.info("  Raw image: %d bytes", len(raw))
+
+        # 3b. Quality review with GPT-4o-mini (retry up to 2x if score < 7)
+        if HAS_QUALITY_REVIEW:
+            raw, qscore, qretries, qfeedback = review_and_retry(
+                raw, story["title"], story.get("category", "gemeinschaft"),
+                prompt, generate_image_fal, max_retries=2
+            )
+            log.info("  Quality: %.1f/10 (%d retries) — %s", qscore, qretries, qfeedback)
 
         # 4. Composite onto brand canvas
         processed = composite_on_canvas(raw)

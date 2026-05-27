@@ -43,6 +43,15 @@ from typing import Any
 import requests
 from dotenv import load_dotenv
 
+# Try to import image quality review (graceful fallback if not available)
+try:
+    from image_quality import review_and_retry as review_image_with_retry
+    HAS_QUALITY_REVIEW = True
+except ImportError:
+    HAS_QUALITY_REVIEW = False
+    def review_image_with_retry(image_bytes, title, category, prompt, generate_fn, max_retries=3):
+        return image_bytes, 10.0, 0, "Review not available"
+
 # ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
@@ -100,6 +109,17 @@ CATEGORY_LABELS: dict[str, str] = {
     "innovation": "Innovation",
 }
 
+# Fallback symbols per category (used if DeepSeek prompt is too vague)
+CATEGORY_SYMBOLS: dict[str, str] = {
+    "klima": "a paper tree with layered leaves",
+    "gesundheit": "a paper heart with healing hands",
+    "wissenschaft": "a paper microscope or DNA helix",
+    "gemeinschaft": "two overlapping paper hands or people",
+    "tiere": "a paper animal silhouette with habitat elements",
+    "kultur": "an open paper book with creative elements",
+    "innovation": "a paper lightbulb with geometric gear shapes",
+}
+
 # ---------------------------------------------------------------------------
 # DeepSeek prompt for image generation
 # ---------------------------------------------------------------------------
@@ -120,6 +140,7 @@ Story title: {title}
 Story category: {category}
 Accent colour: {accent}
 Category label: {category_label}
+Suggested symbol: {fallback_symbol}
 
 Style: "Warm paper collage editorial illustration". The image looks like a handcrafted paper cutout collage. Multiple overlapping paper layers with visible edges, paper fibre texture, and soft drop shadows between each layer. ONE central iconographic motif — a SIMPLE, abstracted symbol that represents the story's topic.
 
@@ -128,6 +149,12 @@ Technique: Flat illustrative style. Depth comes ONLY from paper overlap and cast
 Colours: Warm off-white paper background (#f5f1ea canvas). ONE accent colour: {accent}. The symbol is the ONLY coloured element — everything else is warm off-white paper tones.
 
 Texture: Visible paper grain / fibre texture. Slight irregularity at cut edges. Organic, handmade feel.
+
+CRITICAL RULES:
+- ABSOLUTELY NO TEXT in the image (no letters, no words, no labels)
+- MUST be flat 2D paper style — NOT 3D, NOT realistic photography, NOT glossy
+- Background MUST be plain warm off-white paper (#f5f1ea) — NO environments, NO skies, NO landscapes
+- ONLY one simple iconographic symbol, not a complex scene
 
 Format: "Warm paper collage editorial illustration of [SIMPLE SYMBOL], made of layered matte paper cutouts on warm off-white #f5f1ea canvas. Accented in {accent}. Visible paper grain texture, soft cast shadows between paper layers. Flat semi-abstract premium magazine style. No text. No 3D, no photorealism, no glossy materials."
 
@@ -188,12 +215,14 @@ def generate_image_prompt(title: str, category: str) -> str | None:
     """Ask DeepSeek to generate a paper collage image prompt for a story."""
     accent = CATEGORY_ACCENT.get(category, "terracotta orange")
     category_label = CATEGORY_LABELS.get(category, category.title())
+    fallback_symbol = CATEGORY_SYMBOLS.get(category, "a symbolic paper cutout")
 
     user_content = IMAGE_PROMPT_USER.format(
         title=title,
         category=category,
         accent=accent,
         category_label=category_label,
+        fallback_symbol=fallback_symbol,
     )
 
     headers = {
@@ -206,7 +235,7 @@ def generate_image_prompt(title: str, category: str) -> str | None:
             {"role": "system", "content": IMAGE_PROMPT_SYSTEM},
             {"role": "user", "content": user_content},
         ],
-        "temperature": 0.8,
+        "temperature": 0.5,
     }
 
     try:
@@ -404,6 +433,13 @@ def run(limit: int | None = None, story_ids: list[str] | None = None) -> None:
             failed += 1
             continue
         log.info("    Image generated: %d bytes", len(raw_image))
+
+        # 2b. Quality review with GPT-4o-mini (retry up to 2x if score < 7)
+        if HAS_QUALITY_REVIEW:
+            raw_image, qscore, qretries, qfeedback = review_image_with_retry(
+                raw_image, title, category, image_prompt, generate_image_fal, max_retries=2
+            )
+            log.info("    Quality: %.1f/10 (%d retries) — %s", qscore, qretries, qfeedback)
 
         # 3. Composite onto canvas
         processed = composite_on_canvas(raw_image)

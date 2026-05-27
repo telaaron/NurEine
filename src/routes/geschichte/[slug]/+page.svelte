@@ -60,6 +60,14 @@
 				{story.dek}
 			</p>
 
+			{#if story.imageUrl}
+				<div class="mt-8 rise rise-d4">
+					<div class="aspect-[4/3] rounded-[6px] overflow-hidden" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
+						<img src={story.imageUrl} alt="" class="w-full h-full object-cover" loading="eager" />
+					</div>
+				</div>
+			{/if}
+
 			<div
 				class="mt-8 sm:mt-10 pt-4 sm:pt-6 flex flex-wrap items-center gap-4 sm:gap-6 text-xs rise rise-d4"
 				style="border-top: 1px solid var(--color-rule); color: var(--color-muted);"

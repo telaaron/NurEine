@@ -69,7 +69,7 @@
 
 		{#if heroImageSrc}
 			<div
-				class="relative aspect-[2/1] rounded-[6px] overflow-hidden mb-3"
+				class="relative aspect-[4/3] rounded-[6px] overflow-hidden mb-3"
 				style="background: var(--color-paper); border: 1px solid var(--color-rule);"
 			>
 				<img

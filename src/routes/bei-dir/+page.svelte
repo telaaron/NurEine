@@ -458,7 +458,7 @@
 						style="border: 1px solid var(--color-rule); will-change: transform;"
 						onmouseenter={(e) => (e.currentTarget.style.borderColor = t.ring)}
 						onmouseleave={(e) => (e.currentTarget.style.borderColor = 'var(--color-rule)')}>
-						<div class="relative aspect-[5/3] overflow-hidden" style="background: var(--color-paper);">
+						<div class="relative aspect-[4/3] overflow-hidden" style="background: var(--color-paper);">
 							{#if heroImageSrc}
 								<img src={heroImageSrc} alt="" class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] group-hover:scale-[1.04]" loading="lazy" decoding="async" />
 							{:else}

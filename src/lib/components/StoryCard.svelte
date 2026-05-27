@@ -59,7 +59,7 @@
 	onmouseenter={(e) => (e.currentTarget.style.borderColor = t.ring)}
 	onmouseleave={(e) => (e.currentTarget.style.borderColor = 'var(--color-rule)')}
 >
-	<div class="relative {size === 'lg' ? 'aspect-16/10' : 'aspect-5/3'} overflow-hidden"
+	<div class="relative aspect-[4/3] overflow-hidden"
 		style="background: var(--color-paper);"
 	>
 		{#if heroImageSrc}

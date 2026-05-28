@@ -575,6 +575,18 @@ export async function verifyAdminLogin(username: string, password: string): Prom
 
 // ---- B2B Client Queries ----
 
+export type B2BBrandingConfig = {
+  show_logo: boolean;
+  show_branding: boolean;
+  branding_text: string | null;
+};
+
+export const DEFAULT_BRANDING_CONFIG: B2BBrandingConfig = {
+  show_logo: true,
+  show_branding: true,
+  branding_text: null
+};
+
 export type B2BClient = {
   id: string;
   company_name: string;
@@ -588,6 +600,7 @@ export type B2BClient = {
   integration_target: string;
   invoice_status: 'bezahlt' | 'offen' | 'storniert';
   notes: string | null;
+  branding_config: B2BBrandingConfig | null;
   created_at: string;
 };
 
@@ -679,7 +692,8 @@ export async function createB2BClient(client: Omit<B2BClient, 'id' | 'created_at
     integration_type: client.integration_type,
     integration_target: client.integration_target,
     invoice_status: client.invoice_status,
-    notes: client.notes
+    notes: client.notes,
+    branding_config: client.branding_config ?? DEFAULT_BRANDING_CONFIG
   };
 
   // Auto-set pilot_ends_at to +30 days if status is pilot
@@ -717,6 +731,7 @@ export async function updateB2BClient(id: string, updates: Partial<B2BClient> & 
   if (updates.integration_target !== undefined) updateData.integration_target = updates.integration_target;
   if (updates.invoice_status !== undefined) updateData.invoice_status = updates.invoice_status;
   if (updates.notes !== undefined) updateData.notes = updates.notes;
+  if (updates.branding_config !== undefined) updateData.branding_config = updates.branding_config;
 
   // Handle pilot_ends_at explicitly
   if ('pilot_ends_at' in updates) {

@@ -53,6 +53,8 @@ STORAGE_BUCKET = "story_images"
 TEMP_PREFIX = "quality-review"
 
 MAX_RETRIES = 3
+MIN_QUALITY_SCORE = 5.0  # Hard-fail threshold: if best image scores below this after all retries,
+                         # signal to the caller that a fresh prompt is needed
 
 # ---------------------------------------------------------------------------
 # Review prompt — 4 binary NO-GOs + GOLD criteria
@@ -689,5 +691,12 @@ def review_and_retry(
         current_bytes = new_bytes
         current_prompt = enhanced_prompt
 
-    log.info("  Max retries reached — using best image (score=%.1f)", best_score)
+    log.info("  Max retries reached — best score %.1f", best_score)
+    if best_score < MIN_QUALITY_SCORE:
+        log.warning(
+            "  HARD FAIL: best image score %.1f < %.1f — returning None to trigger fresh prompt",
+            best_score, MIN_QUALITY_SCORE,
+        )
+        return None, best_score, max_retries, best_feedback
+    log.info("  Using best image (score=%.1f)", best_score)
     return best_bytes, best_score, max_retries, best_feedback

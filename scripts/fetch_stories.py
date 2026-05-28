@@ -55,6 +55,7 @@ load_dotenv()
 try:
     from image_quality import review_and_retry as image_quality_review
     from image_quality import review_prompt_and_retry as prompt_quality_check
+    from image_quality import _regenerate_prompt_via_deepseek
     HAS_QUALITY_REVIEW = True
 except ImportError:
     HAS_QUALITY_REVIEW = False
@@ -62,6 +63,8 @@ except ImportError:
         return args[0], 10.0, 0, "Review not available"
     def prompt_quality_check(image_prompt, title, category, max_retries=2):
         return image_prompt, True, ""
+    def _regenerate_prompt_via_deepseek(bad_prompt, reject_reason, fix_instruction):
+        return None
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -406,9 +409,9 @@ gut_filter_reason: null (wenn is_nureine=true) ODER einer von ["history_trap", "
 
 NUR wenn is_nureine=true, fülle zusätzlich:
 
-title: Deutscher Titel (max 80 Zeichen, prägnant, keine Clickbait-Formulierungen)
+title: Ein einfacher Satz, den jeder versteht (max 80 Zeichen). Keine journalistische Schlagzeile — sag einfach, was passiert ist und warum es gut ist.
 
-subtitle: Eine Zeile Kontext (max 120 Zeichen, sachlich)
+subtitle: Ein Satz mit den konkreten Fakten und Zahlen (max 120 Zeichen).
 
 summary: 2-3 deutsche Sätze, was passiert ist und warum es strukturell wichtig ist. Das ist die Kurzfassung für Story-Cards und Teaser.
 
@@ -821,11 +824,12 @@ def generate_and_upload_image(image_prompt: str, story_title: str, category: str
     """Generate an image via FLUX.1 [pro] on fal.ai, composite onto NurEine canvas, upload to Supabase.
 
     The pipeline:
-      1. FLUX.1 [pro] generates a 4:3 paper collage illustration
-      2. Stage 1: Prompt quality review (DeepSeek, fast text check)
-      3. Stage 2: Visual quality review with LLaVA-NeXT (retry up to 2x)
-      4. Composite onto exact brand canvas colour #F5F1EA for consistent look
-      5. Upload to Supabase Storage as PNG
+      1. Stage 1: Prompt quality review (DeepSeek, fast text check)
+      2. FLUX.1 [pro] generates a 4:3 paper collage illustration (with retry)
+      3. Stage 2: Visual quality review with LLaVA-NeXT (retry up to 3x)
+      4. Fresh-prompt regenerate (up to 2x) if quality still too low
+      5. Composite onto exact brand canvas colour #F5F1EA for consistent look
+      6. Upload to Supabase Storage as PNG
 
     Returns the public URL of the uploaded image, or None on failure.
     """
@@ -833,9 +837,7 @@ def generate_and_upload_image(image_prompt: str, story_title: str, category: str
         log.warning("  Empty image prompt — skipping image generation.")
         return None
 
-    log.info("  Generating image: %.100s...", image_prompt)
-
-    # Stage 1: Prompt quality review (DeepSeek, fast text check)
+    # ---- Stage 1: Prompt quality review (DeepSeek, fast text check) ----
     if HAS_QUALITY_REVIEW:
         image_prompt, was_clean, retry_reason = prompt_quality_check(
             image_prompt, story_title, category, max_retries=2
@@ -843,22 +845,78 @@ def generate_and_upload_image(image_prompt: str, story_title: str, category: str
         if not was_clean:
             log.info("  Prompt fixed: %.100s...", image_prompt)
 
-    image_bytes = generate_image_fal(image_prompt)
-    if not image_bytes:
-        log.warning("  Image generation failed for: %.60s", story_title)
-        return None
+    # ---- Stage 2: Generate + quality review (with fresh-prompt regenerate) ----
+    FRESH_PROMPT_MAX = 2  # Max fresh-prompt regenerations
+    best_image_bytes: bytes | None = None
+    best_qscore: float = 0.0
 
-    # Quality review with GPT-4o-mini (retry up to 2x if score < 7)
-    if HAS_QUALITY_REVIEW:
-        image_bytes, qscore, qretries, qfeedback = image_quality_review(
-            image_bytes, story_title, category, image_prompt, generate_image_fal, max_retries=2
-        )
-        log.info("  Quality: %.1f/10 (%d retries) — %s", qscore, qretries, qfeedback)
+    for fresh_attempt in range(FRESH_PROMPT_MAX + 1):  # 0 = first run, 1..N = fresh prompts
+        if fresh_attempt > 0:
+            # ---- Fresh-prompt regenerate via DeepSeek ----
+            log.info("  Fresh-prompt regenerate %d/%d for '%.60s'", fresh_attempt, FRESH_PROMPT_MAX, story_title)
+            reason = f"Niedrige Bildqualität (Score {best_qscore:.1f}/10) für Story '{story_title}'"
+            fix_instruction = (
+                "Create a COMPLETELY DIFFERENT abstract symbol for this topic. "
+                "Use a new metaphor. Avoid any shapes or concepts from the previous failed attempt. "
+                "The image MUST be flat, elegant paper collage. Maximum editorial quality."
+            )
+            new_prompt = _regenerate_prompt_via_deepseek(image_prompt, reason, fix_instruction)
+            if not new_prompt:
+                log.warning("  Fresh prompt generation failed — falling back to original prompt")
+                new_prompt = image_prompt
+            image_prompt = new_prompt
+            log.info("  New prompt: %.120s...", image_prompt)
 
-    # Composite onto exact brand canvas colour for consistency
+        log.info("  Generating image: %.100s...", image_prompt)
+
+        # Generate with retry on transient FAL failures
+        image_bytes = generate_image_fal(image_prompt)
+        if not image_bytes:
+            log.warning("  First generation attempt failed, retrying once...")
+            time.sleep(3)
+            image_bytes = generate_image_fal(image_prompt)
+            if not image_bytes:
+                log.warning("  Image generation failed completely for '%.60s'", story_title)
+                if fresh_attempt < FRESH_PROMPT_MAX:
+                    continue  # Try again with fresh prompt
+                return None
+
+        # Quality review with LLaVA-NeXT (retry up to 3x, returns None on hard fail)
+        if HAS_QUALITY_REVIEW:
+            image_bytes, qscore, qretries, qfeedback = image_quality_review(
+                image_bytes, story_title, category, image_prompt, generate_image_fal, max_retries=3
+            )
+            log.info("  Quality: %.1f/10 (%d retries) — %s", qscore, qretries, qfeedback)
+        else:
+            qscore, qfeedback = 10.0, "n/a"
+
+        if image_bytes is not None:
+            # Track best result
+            if qscore > best_qscore:
+                best_qscore = qscore
+                best_image_bytes = image_bytes
+
+            # Accept if quality is good enough
+            if qscore >= 5.0:
+                break
+
+            log.warning("  Quality %.1f still below threshold — will try fresh prompt", qscore)
+        else:
+            log.warning("  Quality review hard-failed (score %.1f) — will try fresh prompt", qscore)
+
+    else:
+        # For-loop exhausted — use best result if we have one
+        if best_image_bytes is None:
+            log.error("  All fresh-prompt regenerate attempts failed for '%.60s'", story_title)
+            return None
+        log.info("  Fresh-prompt regenerate loop exhausted — using best image (score=%.1f)", best_qscore)
+        image_bytes = best_image_bytes
+        qscore = best_qscore
+
+    # ---- Stage 3: Composite onto exact brand canvas colour ----
     image_bytes = composite_on_canvas(image_bytes)
 
-    # Build a clean filename: story-images/story-{slug}-{uuid12}.png
+    # ---- Stage 4: Upload to Supabase Storage ----
     short_id = uuid.uuid4().hex[:12]
     safe_title = (
         story_title.lower()

@@ -159,8 +159,11 @@ export const POST: RequestHandler = async ({ params, cookies }) => {
     return json({ error: 'B2B-Kunde nicht gefunden' }, { status: 404 });
   }
 
-  const recipient = client.contact_email || client.integration_target;
-  if (!recipient || !recipient.includes('@')) {
+  // Parse comma-separated contact_emails (support multiple)
+  const recipients = client.contact_email
+    ? client.contact_email.split(/[,\s]+/).filter(e => e && e.includes('@'))
+    : [];
+  if (recipients.length === 0) {
     return json({
       error: 'Keine gültige E-Mail-Adresse für diesen Kunden. Bitte zuerst contact_email setzen.'
     }, { status: 400 });
@@ -182,7 +185,7 @@ export const POST: RequestHandler = async ({ params, cookies }) => {
       },
       body: JSON.stringify({
         sender: { name: BREVO_FROM_NAME || 'NurEine', email: BREVO_FROM_EMAIL },
-        to: [{ email: recipient }],
+        to: recipients.map((email: string) => ({ email })),
         subject: `Willkommen bei NurEine, ${client.company_name}!`,
         htmlContent: html
       })
@@ -194,7 +197,7 @@ export const POST: RequestHandler = async ({ params, cookies }) => {
     }
 
     const result = await response.json();
-    return json({ success: true, messageId: result.messageId, recipient });
+    return json({ success: true, messageId: result.messageId, recipient: recipients.join(', ') });
   } catch (err) {
     return json({ error: String(err) }, { status: 500 });
   }

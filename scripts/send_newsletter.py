@@ -478,7 +478,7 @@ def get_b2b_clients() -> list[dict]:
     """Fetch active B2B clients (status = pilot or paid)."""
     params = {
         "status": "in.(pilot,paid)",
-        "select": "id,company_name,contact_email,integration_type,integration_target,mrr_value",
+        "select": "id,company_name,contact_email,integration_type,integration_target,mrr_value,logo_url,branding_config",
     }
     try:
         result = supabase_get("nureine_b2b_clients", params=params)
@@ -522,7 +522,7 @@ _COMPANY_ADDRESS = "Teltow, Brandenburg"
 _COMPANY_EMAIL = "newsletter@nureine.de"
 
 
-def build_b2b_html_body(story: dict, company_name: str) -> str:
+def build_b2b_html_body(story: dict, company_name: str, logo_url: str = "", branding_config: dict | None = None) -> str:
     """Build a premium B2B HTML email.
 
     Designed after CEO review (May 2026):
@@ -531,9 +531,17 @@ def build_b2b_html_body(story: dict, company_name: str) -> str:
       - Employer-branding footer: "Ermöglicht durch die Leitung des ..."
       - No forced click-out CTA (soft share button only)
       - Legal footer: Impressum + unsubscribe note
+      - Optional company logo in the header
+      - Per-client white-label: show_logo, show_branding, custom branding_text
     """
+    # Defaults
+    cfg = branding_config or {}
+    show_logo = cfg.get("show_logo", True)
+    show_branding = cfg.get("show_branding", True)
+    branding_text = cfg.get("branding_text") or company_name
     story_id = str(story.get("id", ""))
     title = story.get("title", "")
+    subtitle = story.get("subtitle", "")
     slug = f"{slugify(title)}-{story_id[:8]}"
     story_url = f"{PUBLIC_BASE_URL}/geschichte/{slug}"
 
@@ -579,6 +587,27 @@ def build_b2b_html_body(story: dict, company_name: str) -> str:
             '</td></tr>'
         )
 
+    # Optional subtitle (factual lead-in below the impact title)
+    subtitle_html = ""
+    if subtitle:
+        subtitle_html = (
+            f'<tr><td style="padding:0 40px;">'
+            f'<p class="nur-eine-text-body" style="margin:0 0 18px;font-family:\'Helvetica Neue\','
+            f'Arial,sans-serif;font-size:15px;color:#4a3f35;line-height:1.55;">'
+            f'{subtitle}'
+            f'</p></td></tr>'
+        )
+
+    # Optional company logo (rendered below the NurEine tagline)
+    logo_html = ""
+    if show_logo and logo_url:
+        logo_html = (
+            f'<tr><td style="padding-top:16px;">'
+            f'<img src="{logo_url}" alt="{company_name}" '
+            f'style="display:block;margin:0 auto;max-height:34px;width:auto;" />'
+            f'</td></tr>'
+        )
+
     return f"""<!DOCTYPE html>
 <html lang="de">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/><meta name="supported-color-schemes" content="light"/><!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting"/><!--<![endif]-->
@@ -612,6 +641,7 @@ BRAND HEADER
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
 <tr><td class="nur-eine-text-primary" style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
 <tr><td class="nur-eine-text-faint" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td></tr>
+{logo_html}
 </table>
 
 <!--
@@ -639,8 +669,11 @@ Guten Morgen, Team {company_name},
 
 <!-- ── Title ── -->
 <tr><td style="padding:0 40px;">
-<h2 class="nur-eine-text-primary" style="margin:0 0 24px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">{title}</h2>
+<h2 class="nur-eine-text-primary" style="margin:0 0 10px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">{title}</h2>
 </td></tr>
+
+<!-- ── Subtitle (factual lead-in below the impact title) ── -->
+{subtitle_html}
 
 <!-- ── Full body ── -->
 <tr><td style="padding:0 40px 24px;">
@@ -648,11 +681,11 @@ Guten Morgen, Team {company_name},
 </td></tr>
 
 <!-- ── Employer Branding ── -->
-<tr><td style="padding:0 40px 24px;">
+{('''<tr><td style="padding:0 40px 24px;">
 <p class="nur-eine-text-muted" style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:14px;color:#6b6359;line-height:1.6;text-align:center;font-style:italic;">
-Ein Moment des Fokus.<br/>Erm&ouml;glicht durch die Leitung des {company_name}.
+Ein Moment des Fokus.<br/>Erm&ouml;glicht durch die Leitung des ''' + branding_text + '''.
 </p>
-</td></tr>
+</td></tr>''' if show_branding else '')}
 
 <!-- ── Divider ── -->
 <tr><td style="padding:0 40px;">
@@ -869,14 +902,29 @@ def main() -> None:
 
             try:
                 if integration_type == "email":
-                    b2b_html = build_b2b_html_body(story, company)
-                    result = send_email(target, f"NurEine – {title}", b2b_html)
-                    logger.info("B2B email sent to '%s' at %s (messageId=%s)",
-                              company, target, result.get("messageId"))
-                    log_delivery(client_id, story_id, "email", target, status="sent")
-
-                    # Also log to newsletter_sends for the B2B subscriber account
-                    b2b_success += 1
+                    logo = client.get("logo_url", "")
+                    bc = client.get("branding_config")
+                    b2b_html = build_b2b_html_body(story, company, logo, bc)
+                    # Support multiple comma-separated email addresses
+                    emails = [e.strip() for e in target.split(",") if e.strip() and "@" in e]
+                    if not emails:
+                        logger.warning("B2B client '%s' has no valid email in target: %s", company, target)
+                        log_delivery(client_id, story_id, "email", target,
+                                   status="failed", error_message="No valid email address found in target")
+                        b2b_failure += 1
+                        continue
+                    for email_addr in emails:
+                        try:
+                            result = send_email(email_addr, f"NurEine – {title}", b2b_html)
+                            logger.info("B2B email sent to '%s' at %s (messageId=%s)",
+                                      company, email_addr, result.get("messageId"))
+                            log_delivery(client_id, story_id, "email", email_addr, status="sent")
+                            b2b_success += 1
+                        except requests.RequestException as exc:
+                            logger.error("B2B email to '%s' (%s) failed: %s", company, email_addr, exc)
+                            log_delivery(client_id, story_id, "email", email_addr,
+                                       status="failed", error_message=str(exc))
+                            b2b_failure += 1
 
                 elif integration_type == "webhook":
                     payload = build_b2b_webhook_payload(story)

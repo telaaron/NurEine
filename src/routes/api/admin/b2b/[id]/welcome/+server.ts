@@ -115,7 +115,7 @@ ${price}
 <tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">1. Jeden Morgen um 06:30 Uhr</strong> &mdash; Eine neue Geschichte erscheint auf <a href="${PUBLIC_BASE_URL}" style="color:#c87340;" class="nur-eine-link">nureine.de</a>.</td></tr>
 <tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">2. Automatische Auslieferung</strong> &mdash; Zur gleichen Zeit bekommt ${client.company_name} die Geschichte in euren gew&auml;hlten Kanal.</td></tr>
 ${showBranding ? `<tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">3. Euer Branding</strong> &mdash; In jeder Mail steht &raquo;Gute Nachrichten &ndash; powered by ${brandingName}&laquo;.</td></tr>` : ''}
-<tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">4. Keine Arbeit f&uuml;r euch</strong> &mdash; Das System l&auml;uft vollautomatisch. Ihr m&uuml;sst nichts konfigurieren, nichts kuratieren.</td></tr>
+<tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">${showBranding ? '4' : '3'}. Keine Arbeit f&uuml;r euch</strong> &mdash; Das System l&auml;uft vollautomatisch. Ihr m&uuml;sst nichts konfigurieren, nichts kuratieren.</td></tr>
 </table>
 
 <h2 style="margin:28px 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:400;color:#1a1815;" class="nur-eine-text-primary">Fragen?</h2>
@@ -193,7 +193,25 @@ export const POST: RequestHandler = async ({ params, cookies, url }) => {
     }
   }
 
+  const subject = isTest
+    ? `[TEST] Willkommen bei NurEine, ${client.company_name}!`
+    : `Willkommen bei NurEine, ${client.company_name}!`;
+
   const html = buildWelcomeEmail(client);
+
+  // Inject test banner for demo purposes
+  const finalHtml = isTest
+    ? html.replace(
+        '<!-- Brand header -->',
+        `<!-- Brand header -->
+<!-- TEST BANNER -->
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:8px;">
+<tr><td style="padding:8px 16px;background:#c87340;border-radius:6px;text-align:center;">
+<p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;font-weight:600;color:#fff;letter-spacing:0.05em;">⚠️ DEMO / TESTMAIL — nicht an den Kunden senden</p>
+</td></tr></table>
+`
+      )
+    : html;
 
   try {
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -206,8 +224,8 @@ export const POST: RequestHandler = async ({ params, cookies, url }) => {
       body: JSON.stringify({
         sender: { name: BREVO_FROM_NAME || 'NurEine', email: BREVO_FROM_EMAIL },
         to: recipients.map((email: string) => ({ email })),
-        subject: `Willkommen bei NurEine, ${client.company_name}!`,
-        htmlContent: html
+        subject,
+        htmlContent: finalHtml
       })
     });
 

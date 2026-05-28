@@ -159,15 +159,22 @@ export const POST: RequestHandler = async ({ params, cookies }) => {
     return json({ error: 'B2B-Kunde nicht gefunden' }, { status: 404 });
   }
 
-  // Parse comma-separated contact_emails (support multiple)
-  const recipients = client.contact_email
-    ? client.contact_email.split(/[,\s]+/).filter(e => e && e.includes('@'))
+  // Parse recipients: contact_email(s) + delivery target (when email integration)
+  const parseEmails = (raw: string | null) =>
+    raw ? raw.split(/[,\s]+/).filter(e => e && e.includes('@')) : [];
+  const contactRecipients = parseEmails(client.contact_email);
+  const deliveryRecipients = client.integration_type === 'email'
+    ? parseEmails(client.integration_target)
     : [];
+  // Combine, deduplicate
+  const recipients = [...new Set([...contactRecipients, ...deliveryRecipients])];
+
   if (recipients.length === 0) {
     return json({
-      error: 'Keine gültige E-Mail-Adresse für diesen Kunden. Bitte zuerst contact_email setzen.'
+      error: 'Keine gültige E-Mail-Adresse für diesen Kunden. Bitte contact_email oder integration_target setzen.'
     }, { status: 400 });
   }
+
 
   if (!BREVO_API_KEY || !BREVO_FROM_EMAIL) {
     return json({ error: 'Brevo nicht konfiguriert' }, { status: 500 });

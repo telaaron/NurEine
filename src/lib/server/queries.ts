@@ -593,7 +593,7 @@ export type B2BClient = {
   contact_name: string | null;
   contact_email: string | null;
   contact_phone: string | null;
-  status: 'lead' | 'pilot' | 'paid' | 'churned';
+  status: 'lead' | 'pilot' | 'paid' | 'churned' | 'free';
   pilot_ends_at: string | null;
   mrr_value: number;
   integration_type: 'email' | 'webhook' | 'iframe';

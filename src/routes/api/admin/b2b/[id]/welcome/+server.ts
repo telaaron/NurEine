@@ -20,17 +20,24 @@ function buildWelcomeEmail(client: {
   integration_target: string;
   mrr_value: number;
   pilot_ends_at: string | null;
+  branding_config?: { show_logo?: boolean; show_branding?: boolean; branding_text?: string | null } | null;
 }) {
-  const name = client.contact_name || client.company_name;
-  const greeting = name.split(' ')[0];
+  const bc = client.branding_config || {};
+  const showBranding = bc.show_branding !== false; // default true
+  const brandingName = bc.branding_text || client.company_name;
+  const displayName = client.company_name;
 
-  const pilotDate = client.pilot_ends_at
+  const isFree = client.status === 'free';
+
+  const pilotDate = (!isFree && client.pilot_ends_at)
     ? `<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">Pilotphase:</strong> bis ${new Date(client.pilot_ends_at).toLocaleDateString('de-DE')}</td></tr>`
     : '';
 
-  const price = client.status === 'pilot'
-    ? `<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">Nach dem Pilot:</strong> ${client.mrr_value} €/Monat (jederzeit kündbar)</td></tr>`
-    : `<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">Preis:</strong> ${client.mrr_value} €/Monat</td></tr>`;
+  const price = isFree
+    ? `<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">Preis:</strong> Kostenlos &ndash; unbefristet</td></tr>`
+    : client.status === 'pilot'
+      ? `<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">Nach dem Pilot:</strong> ${client.mrr_value} €/Monat (jederzeit kündbar)</td></tr>`
+      : `<tr><td style="padding:6px 0;"><strong style="color:#1a1815;">Preis:</strong> ${client.mrr_value} €/Monat</td></tr>`;
 
   const deliveryInfo = client.integration_type === 'email'
     ? `Die tägliche Geschichte kommt als Premium-E-Mail an <strong>${client.integration_target}</strong>.`
@@ -81,11 +88,11 @@ function buildWelcomeEmail(client: {
 <tr><td style="padding:36px 40px 28px;">
 
 <h2 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;" class="nur-eine-text-primary">
-Willkommen bei NurEine,<br/>${name}!
+Willkommen bei NurEine,<br/>Team ${displayName}!
 </h2>
 
 <p style="margin:0 0 16px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a342c;" class="nur-eine-text-body">
-Hallo ${greeting},
+Hallo Team ${displayName},
 </p>
 <p style="margin:0 0 24px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a342c;" class="nur-eine-text-body">
 wir freuen uns sehr, <strong style="color:#1a1815;">${client.company_name}</strong> an Bord zu haben! Ab sofort bekommt ihr jeden Tag eine positive Nachricht &mdash; kein doomscrolling, kein Clickbait, kein L&auml;rm. Nur eine Geschichte, die wirklich Hoffnung macht.
@@ -96,7 +103,7 @@ wir freuen uns sehr, <strong style="color:#1a1815;">${client.company_name}</stro
 <p style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:400;color:#1a1815;" class="nur-eine-text-primary">Deine Eckdaten</p>
 <table role="presentation" cellpadding="0" cellspacing="0" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#3a342c;line-height:1.7;">
 <tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">Unternehmen:</strong> ${client.company_name}</td></tr>
-<tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">Status:</strong> ${client.status === 'pilot' ? '30-Tage-Pilot (kostenlos)' : 'Aktiver Kunde'}</td></tr>
+<tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">Status:</strong> ${client.status === 'free' ? 'Kostenlos &ndash; unbefristet' : client.status === 'pilot' ? '30-Tage-Pilot (kostenlos)' : 'Aktiver Kunde'}</td></tr>
 ${pilotDate}
 <tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">Auslieferung:</strong> ${deliveryInfo}</td></tr>
 ${price}
@@ -107,7 +114,7 @@ ${price}
 <table role="presentation" cellpadding="0" cellspacing="0" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#3a342c;line-height:1.8;">
 <tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">1. Jeden Morgen um 06:30 Uhr</strong> &mdash; Eine neue Geschichte erscheint auf <a href="${PUBLIC_BASE_URL}" style="color:#c87340;" class="nur-eine-link">nureine.de</a>.</td></tr>
 <tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">2. Automatische Auslieferung</strong> &mdash; Zur gleichen Zeit bekommt ${client.company_name} die Geschichte in euren gew&auml;hlten Kanal.</td></tr>
-<tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">3. Euer Branding</strong> &mdash; In jeder Mail steht &raquo;Gute Nachrichten &ndash; powered by ${client.company_name}&laquo;.</td></tr>
+${showBranding ? `<tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">3. Euer Branding</strong> &mdash; In jeder Mail steht &raquo;Gute Nachrichten &ndash; powered by ${brandingName}&laquo;.</td></tr>` : ''}
 <tr><td style="padding:6px 0;" class="nur-eine-text-body"><strong style="font-weight:600;color:#1a1815;" class="nur-eine-text-primary">4. Keine Arbeit f&uuml;r euch</strong> &mdash; Das System l&auml;uft vollautomatisch. Ihr m&uuml;sst nichts konfigurieren, nichts kuratieren.</td></tr>
 </table>
 
@@ -148,36 +155,42 @@ NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.
 </td></tr></table></body></html>`;
 }
 
-export const POST: RequestHandler = async ({ params, cookies }) => {
+export const POST: RequestHandler = async ({ params, cookies, url }) => {
   const token = cookies.get('admin_token');
   if (token !== 'admin-authenticated') {
     return json({ error: 'Nicht autorisiert' }, { status: 401 });
   }
+
+  const isTest = url.searchParams.get('test') === 'true';
+  const TEST_EMAIL = 'aaronpfuetzner@gmail.com';
 
   const client = await getB2BClientById(params.id);
   if (!client) {
     return json({ error: 'B2B-Kunde nicht gefunden' }, { status: 404 });
   }
 
-  // Parse recipients: contact_email(s) + delivery target (when email integration)
-  const parseEmails = (raw: string | null) =>
-    raw ? raw.split(/[,\s]+/).filter(e => e && e.includes('@')) : [];
-  const contactRecipients = parseEmails(client.contact_email);
-  const deliveryRecipients = client.integration_type === 'email'
-    ? parseEmails(client.integration_target)
-    : [];
-  // Combine, deduplicate
-  const recipients = [...new Set([...contactRecipients, ...deliveryRecipients])];
-
-  if (recipients.length === 0) {
-    return json({
-      error: 'Keine gültige E-Mail-Adresse für diesen Kunden. Bitte contact_email oder integration_target setzen.'
-    }, { status: 400 });
-  }
-
-
   if (!BREVO_API_KEY || !BREVO_FROM_EMAIL) {
     return json({ error: 'Brevo nicht konfiguriert' }, { status: 500 });
+  }
+
+  // Determine recipients
+  let recipients: string[];
+  if (isTest) {
+    recipients = [TEST_EMAIL];
+  } else {
+    const parseEmails = (raw: string | null) =>
+      raw ? raw.split(/[,\s]+/).filter(e => e && e.includes('@')) : [];
+    const contactRecipients = parseEmails(client.contact_email);
+    const deliveryRecipients = client.integration_type === 'email'
+      ? parseEmails(client.integration_target)
+      : [];
+    recipients = [...new Set([...contactRecipients, ...deliveryRecipients])];
+
+    if (recipients.length === 0) {
+      return json({
+        error: 'Keine gültige E-Mail-Adresse für diesen Kunden. Bitte contact_email oder integration_target setzen.'
+      }, { status: 400 });
+    }
   }
 
   const html = buildWelcomeEmail(client);

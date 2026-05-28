@@ -93,6 +93,25 @@
 		}
 	}
 
+	let sendingTest = $state<string | null>(null);
+
+	async function sendTestEmail(client: any) {
+		sendingTest = client.id;
+		try {
+			const res = await fetch(`/api/admin/b2b/${client.id}/welcome?test=true`, { method: 'POST' });
+			const result = await res.json();
+			if (result.success) {
+				alert(`Test-Mail gesendet an aaronpfuetzner@gmail.com`);
+			} else {
+				alert(result.error || 'Unbekannter Fehler');
+			}
+		} catch (err) {
+			alert('Fehler: ' + String(err));
+		} finally {
+			sendingTest = null;
+		}
+	}
+
 	type BrandingConfig = { show_logo: boolean; show_branding: boolean; branding_text: string };
 	let brandingConfig = $state<BrandingConfig>({ show_logo: true, show_branding: true, branding_text: '' });
 
@@ -209,6 +228,7 @@
 			case 'pilot': return 'color: var(--color-amber); font-weight: 700;';
 			case 'paid': return 'color: var(--color-sage); font-weight: 700;';
 			case 'churned': return 'color: var(--color-rose);';
+			case 'free': return 'color: var(--color-sage); font-weight: 700;';
 			default: return '';
 		}
 	}
@@ -334,6 +354,7 @@
 					<option value="lead">Lead</option>
 					<option value="pilot">Active Pilot</option>
 					<option value="paid">Paying Customer</option>
+					<option value="free">Free (kostenlos)</option>
 					<option value="churned">Churned</option>
 				</select>
 			</div>
@@ -567,7 +588,7 @@
 						</td>
 						<td class="p-3">
 							<span class="text-xs font-medium" style={statusStyle(client.status)}>
-								{client.status === 'lead' ? 'Lead' : client.status === 'pilot' ? 'Pilot' : client.status === 'paid' ? 'Paying' : 'Churned'}
+								{client.status === 'lead' ? 'Lead' : client.status === 'pilot' ? 'Pilot' : client.status === 'paid' ? 'Paying' : client.status === 'free' ? 'Free' : 'Churned'}
 							</span>
 						</td>
 						<td class="p-3 text-xs" style="color: {client.status === 'pilot' && client.pilot_ends_at ? 'var(--color-amber)' : 'var(--color-muted)'};">
@@ -617,7 +638,15 @@
 									style="color: var(--color-sage); border: 1px solid var(--color-sage);"
 									title="Willkommens-Mail an {contactEmails.join(', ') || client.integration_target}"
 								>
-									{sendingWelcome === client.id ? '...' : 'Mail'}
+									{sendingWelcome === client.id ? '...' : 'Willkommensmail'}
+								</button>
+								<button type="button" onclick={() => sendTestEmail(client)}
+									disabled={sendingTest === client.id}
+									class="text-xs px-2 py-1 rounded-[4px] hover:opacity-70 disabled:opacity-40"
+									style="color: var(--color-amber); border: 1px solid var(--color-amber);"
+									title="Test-Mail an aronpfuetzner@gmail.com"
+								>
+									{sendingTest === client.id ? '...' : 'Test'}
 								</button>
 								<button type="button" onclick={() => openEdit(client)}
 									class="text-xs px-2 py-1 rounded-[4px] hover:opacity-70"

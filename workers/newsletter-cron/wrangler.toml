@@ -1,0 +1,15 @@
+name = "nureine-newsletter-cron"
+main = "src/index.ts"
+compatibility_date = "2026-05-01"
+
+# Cron: 04:20 UTC every day (= 06:20 CEST). Matches the previous
+# GitHub Actions schedule from newsletter-daily.yml.
+[triggers]
+crons = ["20 4 * * *"]
+
+# Public vars (non-secret). Override per environment in the dashboard if needed.
+[vars]
+TARGET_URL = "https://nureine.de/api/cron/newsletter"
+
+# Secrets (set via `wrangler secret put <NAME>` — never commit):
+#   CRON_SECRET   shared bearer token, must match the SvelteKit env var

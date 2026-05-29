@@ -2,19 +2,21 @@
 """
 NurEine — OG Image Generator
 
-Generates minimalist Open Graph images (1200x900 PNG) for stories.
-Layout: Full-bleed story illustration with a subtle bottom brand bar.
-No title overlay — og:title in meta tags handles that without visual duplication.
+Generates editorial Open Graph images (1200x630 PNG, 1.91:1) for stories.
+Perfect for WhatsApp, iMessage, Twitter, Facebook, LinkedIn link previews.
+
+Layout: Full-bleed story illustration with a gradient overlay carrying the
+story headline plus a 60px bottom brand bar with category and "NurEine" mark.
 
 Design: The FLUX.1 illustration (transparent PNG, object on #f5f1ea canvas)
-fills the entire frame. A 72px bottom bar with semi-transparent dark
-gradient carries just the category label and "NurEine" brand mark.
-Clean, premium, 2026 editorial — no clutter, no text walls.
+fills the entire frame. A dark gradient overlay rises from the bottom ~140px,
+with the story headline in white serif centered above the solid brand bar.
+Clean, premium, 2026 editorial — one elegant line of text, no clutter.
 
 For each story without an og_image_url:
   1. Downloads the story's FLUX.1 illustration
   2. Composites it onto the warm canvas background
-  3. Adds the bottom brand bar with category + logo
+  3. Adds gradient overlay + headline text + bottom brand bar
   4. Uploads to Supabase Storage bucket 'og_images'
   5. Updates the story record with the og_image_url
 
@@ -59,7 +61,7 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 
 STORAGE_BUCKET = "og_images"
 OG_WIDTH = 1200
-OG_HEIGHT = 900  # 4:3 aspect ratio
+OG_HEIGHT = 630  # 1.91:1 — optimal for WhatsApp, Twitter, Facebook, LinkedIn
 
 MISSING: list[str] = []
 if not SUPABASE_URL:
@@ -196,6 +198,29 @@ CATEGORY_LABELS: dict[str, str] = {
 # ---------------------------------------------------------------------------
 # OG Image composer — full-bleed illustration + bottom brand bar
 # ---------------------------------------------------------------------------
+def _wrap_title(draw: "ImageDraw.ImageDraw", text: str, font: "ImageFont.FreeTypeFont", max_width: int) -> str:
+    """Wrap title text to fit within max_width pixels, returning the best single-line or two-line variant."""
+    # Try single line first
+    bbox = draw.textbbox((0, 0), text, font=font)
+    if bbox[2] - bbox[0] <= max_width:
+        return text
+
+    # Try two-line break at natural word boundaries
+    words = text.split()
+    best = text
+    best_over = 99999
+    for i in range(1, len(words)):
+        line1 = " ".join(words[:i])
+        line2 = " ".join(words[i:])
+        w1 = draw.textbbox((0, 0), line1, font=font)[2]
+        w2 = draw.textbbox((0, 0), line2, font=font)[2]
+        over = max(0, w1 - max_width) + max(0, w2 - max_width)
+        if over < best_over:
+            best_over = over
+            best = f"{line1}\n{line2}"
+    return best
+
+
 def compose_og_image(
     story_title: str,
     story_dek: str,
@@ -203,26 +228,23 @@ def compose_og_image(
     image_bytes: bytes | None,
 ) -> bytes:
     """
-    Composite a 1200x900 (4:3) minimalist OG image.
+    Composite a 1200x630 (1.91:1) editorial OG image.
 
-    Layout: Full-bleed story illustration + 72px bottom brand bar.
+    Layout: Full-bleed story illustration + gradient overlay with
+    centered headline + 60px bottom brand bar.
 
-    ┌──────────────────────────────────────┐
-    │                                      │
-    │                                      │
-    │          STORY ILLUSTRATION          │
-    │          (full bleed)                │
-    │                                      │
-    │                                      │
-    │                                      │
-    │                                      │
-    │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │
-    │  ▓ KATEGORIE           NurEine ▓   │  ← 72px bottom bar
-    │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │
-    └──────────────────────────────────────┘
-
-    No title or dek — those come from og:title / og:description meta tags.
-    The image is a pure visual brand moment: the illustration does the work.
+    ┌──────────────────────────────────────────────────────────┐
+    │                                                          │
+    │              STORY ILLUSTRATION                          │
+    │              (full bleed)                                │
+    │                                                          │
+    │                  ░░░░░░░░░░░░░░                          │
+    │                  ░  Headline  ░    ← gradient with text  │
+    │                  ░░░░░░░░░░░░░░                          │
+    │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │
+    │  ▓ ● KATEGORIE                        NurEine ▓   ← 60px│
+    │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │
+    └──────────────────────────────────────────────────────────┘
     """
     from PIL import Image, ImageDraw, ImageFont  # noqa: PLC0415
 
@@ -231,6 +253,7 @@ def compose_og_image(
     INK = (26, 24, 21)    # #1a1815
     MUTED = (107, 99, 89) # #6b6359
     FAINT = (154, 144, 135)  # #9a9087
+    WHITE = (245, 241, 234)
 
     img = Image.new("RGB", (OG_WIDTH, OG_HEIGHT), BG)
     draw = ImageDraw.Draw(img, "RGBA")
@@ -241,10 +264,12 @@ def compose_og_image(
 
     category_label = CATEGORY_LABELS.get(category, category.title())
 
-    # ---- Bottom bar constants ----
-    BAR_HEIGHT = 72
+    # ---- Layout constants ----
+    BAR_HEIGHT = 60
     BAR_Y = OG_HEIGHT - BAR_HEIGHT
     BAR_PADDING_X = 48
+    GRADIENT_HEIGHT = 140  # total overlay from bottom
+    HEADLINE_Y = BAR_Y - 56  # center of headline text zone
 
     # ---- 1) Full-bleed story illustration ----
     if image_bytes:
@@ -254,7 +279,7 @@ def compose_og_image(
             # Handle alpha channel (rembg output)
             has_alpha = story_img.mode == "RGBA"
 
-            # Crop to 1200:900 (4:3) aspect ratio, then resize
+            # Crop to 1200:630 (1.91:1) aspect ratio, then resize
             src_w, src_h = story_img.size
             target_ratio = OG_WIDTH / OG_HEIGHT
             src_ratio = src_w / src_h
@@ -291,24 +316,64 @@ def compose_og_image(
         tinted = Image.new("RGB", (OG_WIDTH, OG_HEIGHT), accent + (15,))
         img.paste(tinted, (0, 0))
 
-    # ---- 2) Bottom bar — semi-transparent dark gradient ----
-    # Create a gradient overlay: solid at bottom, fading upward
+    # ---- 2) Gradient overlay — dark from bottom, fading upward ----
+    gradient_start_y = OG_HEIGHT - GRADIENT_HEIGHT
+    overlay = Image.new("RGBA", (OG_WIDTH, GRADIENT_HEIGHT), (0, 0, 0, 0))
+    overlay_draw = ImageDraw.Draw(overlay)
+
+    for y in range(GRADIENT_HEIGHT):
+        t = y / GRADIENT_HEIGHT
+        # Ease-in-out curve: gentle start, stronger toward bottom
+        alpha = int(160 * (t ** 3))
+        overlay_draw.rectangle(
+            [(0, y), (OG_WIDTH, y + 1)],
+            fill=(26, 24, 21, alpha),
+        )
+
+    img.paste(overlay, (0, gradient_start_y), overlay)
+
+    # ---- 3) Headline text — centered in the gradient zone ----
+    headline_font_size = 28
+    headline_max_width = OG_WIDTH - 2 * BAR_PADDING_X
+
+    try:
+        headline_font = ImageFont.truetype(FONT_TITLE, headline_font_size) if FONT_TITLE else ImageFont.load_default()
+    except Exception:
+        headline_font = ImageFont.load_default()
+
+    # Clean and wrap the title
+    clean_title = story_title.strip()
+    wrapped = _wrap_title(draw, clean_title, headline_font, headline_max_width)
+
+    lines = wrapped.split("\n")
+    line_height = headline_font_size + 6
+    total_text_height = len(lines) * line_height
+
+    # Center the text block vertically at HEADLINE_Y
+    text_start_y = HEADLINE_Y - total_text_height // 2
+
+    for li, line in enumerate(lines):
+        bbox = draw.textbbox((0, 0), line, font=headline_font)
+        text_w = bbox[2] - bbox[0]
+        text_x = (OG_WIDTH - text_w) // 2
+        text_y = text_start_y + li * line_height
+        draw.text((text_x, text_y), line, fill=WHITE, font=headline_font)
+
+    # ---- 4) Bottom brand bar — solid gradient ----
     bar_overlay = Image.new("RGBA", (OG_WIDTH, BAR_HEIGHT), (0, 0, 0, 0))
     bar_draw = ImageDraw.Draw(bar_overlay)
 
-    # Draw gradient: rows of pixels with increasing alpha toward bottom
     for y in range(BAR_HEIGHT):
-        # Ease-in curve: most opacity at the bottom, fading up
         t = y / BAR_HEIGHT
         alpha = int(180 * (t ** 2))  # quadratic ease → heavier at bottom
         bar_draw.rectangle(
             [(0, y), (OG_WIDTH, y + 1)],
-            fill=(26, 24, 21, alpha),  # INK with variable alpha
+            fill=(26, 24, 21, alpha),
         )
 
     img.paste(bar_overlay, (0, BAR_Y), bar_overlay)
 
-    # ---- 3) Bottom bar typography ----
+    # ---- 5) Bottom bar typography ----
     bar_font_size = 20
     bar_small_size = 16
 
@@ -321,7 +386,6 @@ def compose_og_image(
 
     # Category label (left side)
     cat_text = category_label.upper()
-    # Small amber dot before category
     dot_r = 4
     dot_x = BAR_PADDING_X
     dot_y = BAR_Y + BAR_HEIGHT // 2
@@ -333,9 +397,9 @@ def compose_og_image(
     cat_x = dot_x + dot_r + 12
     cat_bbox = draw.textbbox((0, 0), cat_text, font=bar_font)
     cat_text_y = BAR_Y + (BAR_HEIGHT - (cat_bbox[3] - cat_bbox[1])) // 2 - 2
-    draw.text((cat_x, cat_text_y), cat_text, fill=(245, 241, 234), font=bar_font)
+    draw.text((cat_x, cat_text_y), cat_text, fill=WHITE, font=bar_font)
 
-    # Brand name (right side) — NurEine in serif
+    # Brand name (right side) — NurEine
     brand_text = "NurEine"
     brand_bbox = draw.textbbox((0, 0), brand_text, font=bar_small)
     brand_w = brand_bbox[2] - brand_bbox[0]
@@ -343,8 +407,7 @@ def compose_og_image(
     brand_text_y = BAR_Y + (BAR_HEIGHT - (brand_bbox[3] - brand_bbox[1])) // 2 - 2
     draw.text((brand_x, brand_text_y), brand_text, fill=FAINT, font=bar_small)
 
-    # ---- 4) Subtle top accent line ----
-    # A thin 1px line at the top of the bar in accent color
+    # ---- 6) Subtle accent line at top of bar ----
     for x in range(BAR_PADDING_X, OG_WIDTH - BAR_PADDING_X):
         alpha_line = max(0, 80 - int(abs(x - OG_WIDTH // 2) / (OG_WIDTH // 2) * 80))
         if alpha_line > 0:

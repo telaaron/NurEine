@@ -53,7 +53,7 @@
         <meta property="og:type" content={seoType} />
         <meta property="og:image" content={seoImage} />
         <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="900" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:site_name" content="NurEine" />
         <meta property="og:locale" content="de_DE" />

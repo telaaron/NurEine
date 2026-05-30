@@ -429,7 +429,7 @@ lng: Längengrad (float)
 
 image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: "Warm editorial paper collage illustration". Das Bild sieht aus wie eine handgefertigte Papiercollage aus mehreren überlappenden Papier-Ebenen, mit sichtbaren Kanten, feiner Papierfaser-Textur und subtilem Schattenwurf zwischen den Ebenen. Der Stil ist flach-illustrativ (KEIN 3D-Render, KEIN Fotorealismus, KEIN Glanz, KEIN Plastik). Ein zentrales, abstrahiertes Motiv symbolisiert das Thema als einfache, ikonische Form. Farbpalette: Heller warmer Off-White-Kartonhintergrund in #f5f1ea (wie ungebleichte Pappe), Akzente in EINER warmen Kontrastfarbe, die zum Thema passt — wähle aus: Terracotta-Orange, Salbei-Grün, Rosen-Rot oder Himmel-Blau. Das Motiv ist aus farbigem Papier gestaltet, die Tiefe entsteht allein durch Papier-Überlappung und -Schatten. Format: "Warm paper collage editorial illustration of [EINFACHES SYMBOL FÜR DAS THEMA], made of layered matte paper cutouts on warm off-white #f5f1ea canvas. Accented in [GEWÄHLTE FARBE]. Visible paper grain texture, soft cast shadows between paper layers. Flat semi-abstract premium magazine style. No text. No 3D, no photorealism, no glossy materials." Beispiel: "Warm paper collage editorial illustration of mangrove branches growing from layered leaves, made of layered matte paper cutouts on warm off-white #f5f1ea canvas. Accented in sage green. Visible paper grain texture, soft cast shadows between paper layers. Flat semi-abstract premium magazine style. No text. No 3D, no photorealism, no glossy materials."
 
-impact_reach: geschätzte Anzahl direkt positiv betroffener Menschen (integer)
+impact_reach: Geschätzte Anzahl direkt positiv betroffener Menschen (integer)
 
 impact_durability: 0-100 (Wie lange hält der Effekt an? Strukturveränderung=100, Einzelereignis=20)
 
@@ -635,7 +635,7 @@ def generate_image_fal(image_prompt: str) -> bytes | None:
         "prompt": image_prompt,
         "image_size": FAL_IMAGE_SIZE,
         "num_images": FAL_NUM_IMAGES,
-        "enable_safety_checker": True,
+        "enable_safety_checker": False,  # OFF: false positives block medical/health prompts (WHO etc.) → black images
     }
 
     try:

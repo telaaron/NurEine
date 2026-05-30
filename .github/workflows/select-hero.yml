@@ -2,7 +2,7 @@ name: Select Daily Hero Story
 
 on:
   schedule:
-    - cron: '0 3 * * *'  # 03:00 UTC = 05:00 CET / 05:00 CEST daily
+    - cron: '0 2 * * *'  # 02:00 UTC = 04:00 CEST — muss VOR Newsletter (04:20 UTC) fertig sein
   workflow_dispatch:
 
 jobs:

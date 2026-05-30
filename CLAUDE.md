@@ -33,7 +33,7 @@ SUPABASE_SERVICE_KEY, DEEPSEEK_API_KEY,
 BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME, CRON_SECRET
 
 ## Cronjob-Zeiten (UTC → CET/CEST)
-- 03:00 UTC (05:00 CEST) — Hero-Story wählen (`.github/workflows/select-hero.yml`)
+- 02:00 UTC (04:00 CEST) — Hero-Story wählen (`.github/workflows/select-hero.yml`) — MUSS vor Newsletter (04:20 UTC) fertig sein, sonst Race Condition
 - 04:20 UTC (06:20 CEST) täglich — Daily-Newsletter (**Cloudflare Worker** `workers/newsletter-cron`)
 - 06/10/14/18 UTC — Stories fetchen & scoren (`.github/workflows/fetch-stories.yml`)
 - 06:05/10:05/14:05/18:05 UTC — OG-Images (`.github/workflows/generate-og-images.yml`)

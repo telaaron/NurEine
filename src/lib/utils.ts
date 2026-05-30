@@ -64,9 +64,8 @@ export function sections(body: string): Section[] {
 		} else if (current) {
 			current.paras.push(trimmed);
 		} else {
-			// Content before first heading: lead section
-			result.push({ heading: '', paras: [trimmed] });
-			current = { heading: '', paras: [] };
+			// Content before first heading: start lead section (pushed when heading found or at end)
+			current = { heading: '', paras: [trimmed] };
 		}
 	}
 

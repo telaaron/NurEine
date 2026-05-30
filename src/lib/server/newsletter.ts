@@ -459,11 +459,11 @@ async function sendBrevoEmail(toEmail: string, subject: string, html: string): P
 // DB queries
 // ---------------------------------------------------------------------------
 
-async function fetchHeroStory(): Promise<HeroStory | null> {
+async function fetchHeroStory(): Promise<(HeroStory & { newsletter_sent_at: string | null }) | null> {
   const { data, error } = await supabaseAdmin
     .from('nureine_stories')
     .select(
-      'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min'
+      'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,newsletter_sent_at'
     )
     .eq('is_hero', true)
     .order('published_at', { ascending: false })
@@ -474,7 +474,35 @@ async function fetchHeroStory(): Promise<HeroStory | null> {
     console.error('[newsletter] fetchHeroStory error:', error);
     return null;
   }
-  return (data as HeroStory) ?? null;
+  return (data as (HeroStory & { newsletter_sent_at: string | null })) ?? null;
+}
+
+/**
+ * Returns true if the story was already sent as newsletter hero within the
+ * given number of hours.  Used as a safety net: if select_hero.py failed
+ * to run, we must not send the same story again.
+ */
+function wasSentRecently(
+  story: HeroStory & { newsletter_sent_at: string | null },
+  hours = 23
+): boolean {
+  if (!story.newsletter_sent_at) return false;
+  const sentAt = new Date(story.newsletter_sent_at).getTime();
+  const cutoff = Date.now() - hours * 60 * 60 * 1000;
+  return sentAt > cutoff;
+}
+
+/**
+ * Mark a story as having been sent as newsletter hero.
+ * Called after at least one successful send so select_hero.py
+ * can exclude this story tomorrow.
+ */
+async function markStorySent(storyId: string): Promise<void> {
+  const { error } = await supabaseAdmin
+    .from('nureine_stories')
+    .update({ newsletter_sent_at: new Date().toISOString() })
+    .eq('id', storyId);
+  if (error) console.error('[newsletter] markStorySent error:', error);
 }
 
 async function fetchConfirmedFreeSubscribers(): Promise<Subscriber[]> {
@@ -577,6 +605,19 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
     await logCronRun('daily', 0, 0, 0);
     return {
       story: null,
+      b2c: { total: 0, sent: 0, failed: 0 },
+      b2b: { total: 0, sent: 0, failed: 0 },
+      durationMs: Date.now() - startedAt
+    };
+  }
+
+  // Safety net: if select_hero.py didn't run and this story was already
+  // sent yesterday, don't send it again.
+  if (wasSentRecently(story)) {
+    console.warn('[newsletter] hero story was already sent recently, skipping duplicate:', story.id, story.title);
+    await logCronRun('daily', 0, 0, 0);
+    return {
+      story: { id: story.id, title: story.title },
       b2c: { total: 0, sent: 0, failed: 0 },
       b2b: { total: 0, sent: 0, failed: 0 },
       durationMs: Date.now() - startedAt
@@ -700,6 +741,11 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
   console.info(
     `[newsletter] done in ${durationMs}ms — B2C ${b2cSent}/${subscribers.length} (failed ${b2cFailed}), B2B ${b2bSent}/${clients.length} (failed ${b2bFailed})`
   );
+
+  // Mark story as sent so select_hero.py won't pick it again tomorrow
+  if (b2cSent > 0 || b2bSent > 0) {
+    await markStorySent(story.id);
+  }
 
   return {
     story: { id: story.id, title: story.title },

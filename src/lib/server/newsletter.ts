@@ -464,11 +464,13 @@ async function sendBrevoEmail(toEmail: string, subject: string, html: string): P
  *
  * Instead of relying on a separate 02:00 cron to set is_hero (which created a
  * cross-platform race and a 3-layer dedup mess), the newsletter picks its own
- * story at the moment of sending:
+ * story at the moment of sending. Selection is tiered by freshness:
  *
- *   highest impact_score among stories never sent before (newsletter_sent_at
- *   IS NULL), tie-broken by freshest created_at.
+ *   Tier 1 (24 h):  highest impact among unsent stories created in the last 24 h
+ *   Tier 2 (48 h):  fallback — same but 48 h window
+ *   Tier 3 (∞):     any unsent story, highest impact (last-resort fallback)
  *
+ * This prevents very old high-impact stories from blocking fresh content.
  * `created_at` (DB insert time), not `published_at` (RSS feed date, which can
  * lag by 24h+), is the freshness signal. Because every send marks the chosen
  * story's newsletter_sent_at, the next day automatically gets a different one —
@@ -476,11 +478,50 @@ async function sendBrevoEmail(toEmail: string, subject: string, html: string): P
  * story exists.
  */
 async function selectNewsletterStory(): Promise<HeroStory | null> {
-  const { data, error } = await supabaseAdmin
+  const BASE_SELECT =
+    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min';
+  const now = new Date();
+
+  // ── Tier 1: last 24 h ──────────────────────────────────────────────
+  const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: t1 } = await supabaseAdmin
     .from('nureine_stories')
-    .select(
-      'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min'
-    )
+    .select(BASE_SELECT)
+    .is('newsletter_sent_at', null)
+    .not('impact_score', 'is', null)
+    .gte('created_at', since24h)
+    .order('impact_score', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (t1) {
+    console.log('[newsletter] story selected from tier 1 (≤24 h)');
+    return t1 as HeroStory;
+  }
+
+  // ── Tier 2: last 48 h ──────────────────────────────────────────────
+  const since48h = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
+  const { data: t2 } = await supabaseAdmin
+    .from('nureine_stories')
+    .select(BASE_SELECT)
+    .is('newsletter_sent_at', null)
+    .not('impact_score', 'is', null)
+    .gte('created_at', since48h)
+    .order('impact_score', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (t2) {
+    console.log('[newsletter] story selected from tier 2 (≤48 h)');
+    return t2 as HeroStory;
+  }
+
+  // ── Tier 3: any unsent story ───────────────────────────────────────
+  const { data: t3, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select(BASE_SELECT)
     .is('newsletter_sent_at', null)
     .not('impact_score', 'is', null)
     .order('impact_score', { ascending: false })
@@ -492,7 +533,8 @@ async function selectNewsletterStory(): Promise<HeroStory | null> {
     console.error('[newsletter] selectNewsletterStory error:', error);
     return null;
   }
-  return (data as HeroStory) ?? null;
+  console.log('[newsletter] story selected from tier 3 (any unsent)');
+  return (t3 as HeroStory) ?? null;
 }
 
 /**

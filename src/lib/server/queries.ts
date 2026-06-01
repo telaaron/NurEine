@@ -184,17 +184,41 @@ export async function getStoryById(id: string): Promise<StoryResult | undefined>
  * which a separate 02:00 cron set; when that cron failed the homepage fell back
  * to the all-time top story (could be weeks old) or went blank.
  *
- * Selection: among the most recent stories, pick the highest impact_score.
+ * Selection: among the 30 most recently created stories, pick the one with the
+ * highest recency-weighted impact score. A decay curve prevents stories older
+ * than a few days from dominating the homepage (e.g. a 3-day-old 100-impact
+ * story would lose to a fresh 85-impact story).
+ *
+ * Decay curve by age:
+ *   0–6 h   → 1.00   (full weight)
+ *   6–12 h  → 0.95
+ *   12–24 h → 0.85
+ *   24–36 h → 0.70
+ *   36–48 h → 0.55
+ *   48–72 h → 0.40
+ *   >72 h   → 0.25
+ *
  * Uses created_at (true insert time), not published_at (RSS date, lags 24h+).
  */
 export async function getLatestFeatured(): Promise<StoryResult | undefined> {
-  // Look at the freshest window, then choose the strongest story within it.
+  const hour = 1000 * 60 * 60;
+  const decayForAge = (ageHours: number): number => {
+    if (ageHours < 6) return 1.0;
+    if (ageHours < 12) return 0.95;
+    if (ageHours < 24) return 0.85;
+    if (ageHours < 36) return 0.70;
+    if (ageHours < 48) return 0.55;
+    if (ageHours < 72) return 0.40;
+    return 0.25;
+  };
+
+  // Fetch the 30 most recently created stories with scores.
   const { data, error } = await supabaseAdmin
     .from('nureine_stories')
     .select('*')
     .not('impact_score', 'is', null)
     .order('created_at', { ascending: false })
-    .limit(12);
+    .limit(30);
 
   if (error || !data || data.length === 0) {
     // Last-resort fallback: highest-impact story overall.
@@ -202,11 +226,18 @@ export async function getLatestFeatured(): Promise<StoryResult | undefined> {
     return all[0];
   }
 
+  const now = Date.now();
   const rows = data as SupabaseStory[];
-  // Highest impact among the freshest 12; ties keep the newer one (already sorted).
-  const best = rows.reduce((top, s) =>
-    (s.impact_score ?? 0) > (top.impact_score ?? 0) ? s : top
-  , rows[0]);
+
+  // Pick the story with the highest recency-weighted impact score.
+  const best = rows.reduce((top, s) => {
+    const topAge = (now - new Date(top.created_at).getTime()) / hour;
+    const sAge = (now - new Date(s.created_at).getTime()) / hour;
+    const topScore = (top.impact_score ?? 0) * decayForAge(topAge);
+    const sScore = (s.impact_score ?? 0) * decayForAge(sAge);
+    return sScore > topScore ? s : top;
+  }, rows[0]);
+
   return mapStory(best);
 }
 

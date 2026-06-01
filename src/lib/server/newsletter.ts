@@ -459,43 +459,46 @@ async function sendBrevoEmail(toEmail: string, subject: string, html: string): P
 // DB queries
 // ---------------------------------------------------------------------------
 
-async function fetchHeroStory(): Promise<(HeroStory & { newsletter_sent_at: string | null }) | null> {
+/**
+ * Atomic send-time story selection — the core of the robust newsletter.
+ *
+ * Instead of relying on a separate 02:00 cron to set is_hero (which created a
+ * cross-platform race and a 3-layer dedup mess), the newsletter picks its own
+ * story at the moment of sending:
+ *
+ *   highest impact_score among stories never sent before (newsletter_sent_at
+ *   IS NULL), tie-broken by freshest created_at.
+ *
+ * `created_at` (DB insert time), not `published_at` (RSS feed date, which can
+ * lag by 24h+), is the freshness signal. Because every send marks the chosen
+ * story's newsletter_sent_at, the next day automatically gets a different one —
+ * no dedup window guessing, no race, no empty sends as long as any unsent
+ * story exists.
+ */
+async function selectNewsletterStory(): Promise<HeroStory | null> {
   const { data, error } = await supabaseAdmin
     .from('nureine_stories')
     .select(
-      'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,newsletter_sent_at'
+      'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min'
     )
-    .eq('is_hero', true)
-    .order('published_at', { ascending: false })
+    .is('newsletter_sent_at', null)
+    .not('impact_score', 'is', null)
+    .order('impact_score', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (error) {
-    console.error('[newsletter] fetchHeroStory error:', error);
+    console.error('[newsletter] selectNewsletterStory error:', error);
     return null;
   }
-  return (data as (HeroStory & { newsletter_sent_at: string | null })) ?? null;
-}
-
-/**
- * Returns true if the story was already sent as newsletter hero within the
- * given number of hours.  Used as a safety net: if select_hero.py failed
- * to run, we must not send the same story again.
- */
-function wasSentRecently(
-  story: HeroStory & { newsletter_sent_at: string | null },
-  hours = 23
-): boolean {
-  if (!story.newsletter_sent_at) return false;
-  const sentAt = new Date(story.newsletter_sent_at).getTime();
-  const cutoff = Date.now() - hours * 60 * 60 * 1000;
-  return sentAt > cutoff;
+  return (data as HeroStory) ?? null;
 }
 
 /**
  * Mark a story as having been sent as newsletter hero.
- * Called after at least one successful send so select_hero.py
- * can exclude this story tomorrow.
+ * Set BEFORE the send loop so the row is claimed atomically — even if the
+ * function crashes mid-send, the story will not be picked again tomorrow.
  */
 async function markStorySent(storyId: string): Promise<void> {
   const { error } = await supabaseAdmin
@@ -599,9 +602,11 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
     throw new Error('BREVO_API_KEY / BREVO_FROM_EMAIL not configured');
   }
 
-  const story = await fetchHeroStory();
+  const story = await selectNewsletterStory();
   if (!story) {
-    console.warn('[newsletter] no hero story found, aborting');
+    // No unsent story left. This is the only legitimate "send nothing" case and
+    // it means the fetch pipeline has produced nothing new — surface it loudly.
+    console.warn('[newsletter] no unsent story available, nothing to send');
     await logCronRun('daily', 0, 0, 0);
     return {
       story: null,
@@ -611,20 +616,11 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
     };
   }
 
-  // Safety net: if select_hero.py didn't run and this story was already
-  // sent yesterday, don't send it again.
-  if (wasSentRecently(story)) {
-    console.warn('[newsletter] hero story was already sent recently, skipping duplicate:', story.id, story.title);
-    await logCronRun('daily', 0, 0, 0);
-    return {
-      story: { id: story.id, title: story.title },
-      b2c: { total: 0, sent: 0, failed: 0 },
-      b2b: { total: 0, sent: 0, failed: 0 },
-      durationMs: Date.now() - startedAt
-    };
-  }
-
-  console.info('[newsletter] hero story:', story.id, story.title);
+  // Claim the story BEFORE sending: set newsletter_sent_at now so it can never
+  // be picked again — even if this run crashes mid-send. Atomic-by-construction
+  // dedup; replaces the old cross-platform 02:00-hero race + wasSentRecently net.
+  await markStorySent(story.id);
+  console.info('[newsletter] selected story:', story.id, story.title, `(impact ${story.impact_score})`);
 
   // ---- B2C ----
   const subscribers = await fetchConfirmedFreeSubscribers();
@@ -742,10 +738,8 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
     `[newsletter] done in ${durationMs}ms — B2C ${b2cSent}/${subscribers.length} (failed ${b2cFailed}), B2B ${b2bSent}/${clients.length} (failed ${b2bFailed})`
   );
 
-  // Mark story as sent so select_hero.py won't pick it again tomorrow
-  if (b2cSent > 0 || b2bSent > 0) {
-    await markStorySent(story.id);
-  }
+  // Story was already claimed (newsletter_sent_at set) before the send loop —
+  // nothing more to mark here.
 
   return {
     story: { id: story.id, title: story.title },

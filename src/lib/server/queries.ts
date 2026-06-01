@@ -170,21 +170,39 @@ export async function getStoryById(id: string): Promise<StoryResult | undefined>
   return mapStory(data as SupabaseStory);
 }
 
+/**
+ * The website front story.
+ *
+ * Decoupled from the newsletter: the homepage always shows the freshest
+ * high-impact story so the site feels alive and is never empty — independent
+ * of whether/what the newsletter sent. Previously this required is_hero=true,
+ * which a separate 02:00 cron set; when that cron failed the homepage fell back
+ * to the all-time top story (could be weeks old) or went blank.
+ *
+ * Selection: among the most recent stories, pick the highest impact_score.
+ * Uses created_at (true insert time), not published_at (RSS date, lags 24h+).
+ */
 export async function getLatestFeatured(): Promise<StoryResult | undefined> {
+  // Look at the freshest window, then choose the strongest story within it.
   const { data, error } = await supabaseAdmin
     .from('nureine_stories')
     .select('*')
-    .eq('is_hero', true)
-    .order('published_at', { ascending: false })
-    .limit(1)
-    .single();
+    .not('impact_score', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(12);
 
-  if (error || !data) {
-    // Fallback: get the highest-impact story
+  if (error || !data || data.length === 0) {
+    // Last-resort fallback: highest-impact story overall.
     const all = await getAllStories();
     return all[0];
   }
-  return mapStory(data as SupabaseStory);
+
+  const rows = data as SupabaseStory[];
+  // Highest impact among the freshest 12; ties keep the newer one (already sorted).
+  const best = rows.reduce((top, s) =>
+    (s.impact_score ?? 0) > (top.impact_score ?? 0) ? s : top
+  , rows[0]);
+  return mapStory(best);
 }
 
 export async function getLocalStories(): Promise<StoryResult[]> {

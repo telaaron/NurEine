@@ -295,7 +295,7 @@ def compose_og_image(
                 offset = (src_h - new_h) // 2
                 story_img = story_img.crop((0, offset, src_w, offset + new_h))
 
-            story_img = story_img.resize((OG_WIDTH, OG_HEIGHT), Image.LANCZOS)
+            story_img = story_img.resize((OG_WIDTH, OG_HEIGHT), Image.Resampling.LANCZOS)
 
             if has_alpha:
                 # Composite transparent story image onto canvas background
@@ -413,10 +413,79 @@ def compose_og_image(
         if alpha_line > 0:
             draw.point((x, BAR_Y), fill=accent + (alpha_line,))
 
-    # Output
+    # Output — aggressive compression for WhatsApp compatibility
     buf = io.BytesIO()
-    img.save(buf, format="PNG", optimize=True)
+    img.save(buf, format="PNG", optimize=True, compress_level=9)
     return buf.getvalue()
+
+
+# ---------------------------------------------------------------------------
+# Image format generation — PNG, WebP, AVIF + 2x variants
+# ---------------------------------------------------------------------------
+def generate_image_variants(og_bytes: bytes) -> dict[str, dict[str, bytes]]:
+    """
+    Generate multiple image formats and sizes from a base OG image.
+    
+    Returns dict with structure:
+    {
+        "1x": {"png": bytes, "webp": bytes, "avif": bytes},
+        "2x": {"png": bytes, "webp": bytes, "avif": bytes}
+    }
+    """
+    from PIL import Image  # noqa: PLC0415
+    
+    variants = {}
+    
+    # Base image (1x)
+    base_img = Image.open(io.BytesIO(og_bytes))
+    
+    # 1x formats (1200x630)
+    variants["1x"] = {}
+    
+    # PNG (original, already optimized)
+    variants["1x"]["png"] = og_bytes
+    
+    # WebP (modern format, ~60% smaller than PNG)
+    webp_buf = io.BytesIO()
+    base_img.save(webp_buf, format="WEBP", quality=80, method=6)
+    variants["1x"]["webp"] = webp_buf.getvalue()
+    
+    # AVIF (best compression, ~30% smaller than WebP, requires pillow-avif plugin)
+    try:
+        avif_buf = io.BytesIO()
+        base_img.save(avif_buf, format="AVIF", quality=80)
+        variants["1x"]["avif"] = avif_buf.getvalue()
+    except Exception as exc:
+        log.warning("  Could not generate AVIF (pillow-avif not installed?): %s", exc)
+        variants["1x"]["avif"] = None
+    
+    # 2x formats (2400x1260)
+    variants["2x"] = {}
+    
+    img_2x = base_img.resize(
+        (OG_WIDTH * 2, OG_HEIGHT * 2),
+        Image.Resampling.LANCZOS
+    )
+    
+    # PNG 2x
+    png_2x_buf = io.BytesIO()
+    img_2x.save(png_2x_buf, format="PNG", optimize=True, compress_level=9)
+    variants["2x"]["png"] = png_2x_buf.getvalue()
+    
+    # WebP 2x
+    webp_2x_buf = io.BytesIO()
+    img_2x.save(webp_2x_buf, format="WEBP", quality=80, method=6)
+    variants["2x"]["webp"] = webp_2x_buf.getvalue()
+    
+    # AVIF 2x
+    try:
+        avif_2x_buf = io.BytesIO()
+        img_2x.save(avif_2x_buf, format="AVIF", quality=80)
+        variants["2x"]["avif"] = avif_2x_buf.getvalue()
+    except Exception:
+        variants["2x"]["avif"] = None
+    
+    return variants
 
 
 # ---------------------------------------------------------------------------
@@ -467,6 +536,57 @@ def supabase_upload_image(image_bytes: bytes, filepath: str) -> str | None:
         log.error("  Failed to upload OG image: %s", exc)
         return None
     return f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{filepath}"
+
+
+def supabase_upload_image_variants(
+    variants: dict[str, dict[str, bytes | None]],
+    base_filename: str
+) -> dict[str, dict[str, str | None]] | None:
+    """
+    Upload all image variants (1x/2x in PNG/WebP/AVIF) and return URLs.
+    
+    Returns structure:
+    {
+        "1x": {"png": "url", "webp": "url", "avif": "url or None"},
+        "2x": {"png": "url", "webp": "url", "avif": "url or None"}
+    }
+    """
+    urls = {"1x": {}, "2x": {}}
+    content_types = {
+        "png": "image/png",
+        "webp": "image/webp",
+        "avif": "image/avif"
+    }
+    
+    for size_key in ["1x", "2x"]:
+        for fmt_key, image_bytes in variants[size_key].items():
+            if image_bytes is None:
+                log.debug(f"  Skipping {size_key} {fmt_key} (not available)")
+                urls[size_key][fmt_key] = None
+                continue
+            
+            # Construct filepath: og/og-<filename>-1x.png or og/og-<filename>-2x.webp
+            suffix = f"{size_key}.{fmt_key}"
+            filepath = f"og/{base_filename}-{suffix}"
+            content_type = content_types.get(fmt_key, "image/png")
+            
+            upload_url = f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{filepath}"
+            try:
+                resp = requests.post(
+                    upload_url,
+                    headers=supabase_storage_headers(content_type),
+                    data=image_bytes,
+                    timeout=60,
+                )
+                resp.raise_for_status()
+                url = f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{filepath}"
+                urls[size_key][fmt_key] = url
+                log.info(f"    Uploaded {size_key} {fmt_key}: {url[:80]}...")
+            except requests.RequestException as exc:
+                log.error(f"  Failed to upload {size_key} {fmt_key}: {exc}")
+                urls[size_key][fmt_key] = None
+    
+    return urls
 
 
 def download_story_image(image_url: str) -> bytes | None:
@@ -543,16 +663,43 @@ def run(slugs: list[str] | None = None, all_stories: bool = False) -> None:
             failed += 1
             continue
 
-        sf = safe_filename(title)
-        filepath = f"og/og-{sf}-{uuid.uuid4().hex[:8]}.png"
-        og_url = supabase_upload_image(og_bytes, filepath)
-        if not og_url:
+        # Generate all image variants (1x/2x in PNG/WebP/AVIF)
+        try:
+            variants = generate_image_variants(og_bytes)
+        except Exception as exc:
+            log.error("  Variant generation failed: %s", exc)
             failed += 1
             continue
 
+        sf = safe_filename(title)
+        base_filename = f"og-{sf}-{uuid.uuid4().hex[:8]}"
+        
+        # Upload all variants
+        urls = supabase_upload_image_variants(variants, base_filename)
+        if not urls or not urls["1x"]["png"]:
+            log.error("  Failed to upload image variants")
+            failed += 1
+            continue
+
+        # Store the primary (1x PNG) URL in the database for backward compatibility
+        # The 2x/WebP/AVIF URLs can be used by the frontend via srcset
+        primary_url = urls["1x"]["png"]
+        
         try:
-            supabase_patch("nureine_stories", {"og_image_url": og_url}, sid)
-            log.info("  Saved: %s", og_url)
+            # Update with primary URL + metadata about available variants
+            update_data = {
+                "og_image_url": primary_url,
+                "og_image_srcset": {
+                    "png_1x": urls["1x"]["png"],
+                    "png_2x": urls["2x"]["png"],
+                    "webp_1x": urls["1x"]["webp"],
+                    "webp_2x": urls["2x"]["webp"],
+                    "avif_1x": urls["1x"]["avif"],
+                    "avif_2x": urls["2x"]["avif"],
+                }
+            }
+            supabase_patch("nureine_stories", update_data, sid)
+            log.info("  Saved: %s (with 2x/WebP/AVIF variants)", primary_url)
             success += 1
         except requests.RequestException as exc:
             log.error("  DB update failed: %s", exc)

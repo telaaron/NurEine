@@ -113,6 +113,71 @@ SOURCE_CONFIG: dict[str, dict[str, int]] = {
 }
 DEFAULT_SOURCE_CONFIG = {"max_per_run": 10, "priority": 3}
 
+# ---------------------------------------------------------------------------
+# Category safety — the DB CHECK constraint only permits these seven values.
+# DeepSeek occasionally emits a near-miss ("umwelt", "gesellschaft", "technik",
+# English labels, etc.). An out-of-set value made Postgres reject the whole
+# INSERT with a 400 — historically wiping ~entire fetch runs (88 found / 0
+# inserted). We normalise to the closest allowed category instead of failing.
+# ---------------------------------------------------------------------------
+ALLOWED_CATEGORIES = {
+    "klima", "gesundheit", "wissenschaft", "gemeinschaft", "tiere", "kultur", "innovation",
+}
+
+# Map common DeepSeek near-misses onto an allowed category.
+CATEGORY_ALIASES: dict[str, str] = {
+    "umwelt": "klima",
+    "natur": "klima",
+    "energie": "klima",
+    "nachhaltigkeit": "klima",
+    "environment": "klima",
+    "climate": "klima",
+    "gesellschaft": "gemeinschaft",
+    "soziales": "gemeinschaft",
+    "sozial": "gemeinschaft",
+    "bildung": "gemeinschaft",
+    "community": "gemeinschaft",
+    "politik": "gemeinschaft",
+    "menschen": "gemeinschaft",
+    "technik": "innovation",
+    "technologie": "innovation",
+    "technology": "innovation",
+    "tech": "innovation",
+    "wirtschaft": "innovation",
+    "medizin": "gesundheit",
+    "health": "gesundheit",
+    "science": "wissenschaft",
+    "forschung": "wissenschaft",
+    "tier": "tiere",
+    "animals": "tiere",
+    "natur-tiere": "tiere",
+    "kunst": "kultur",
+    "culture": "kultur",
+}
+
+CATEGORY_FALLBACK = "gemeinschaft"
+
+
+def normalize_category(raw: Any) -> str:
+    """Coerce any DeepSeek category into an allowed DB value.
+
+    1. exact allowed -> keep
+    2. known alias    -> mapped allowed value
+    3. otherwise      -> CATEGORY_FALLBACK ('gemeinschaft')
+
+    Guarantees the value satisfies nureine_stories_category_check, so a stray
+    category can never again 400 the insert.
+    """
+    cat = (str(raw) if raw is not None else "").strip().lower()
+    if cat in ALLOWED_CATEGORIES:
+        return cat
+    if cat in CATEGORY_ALIASES:
+        mapped = CATEGORY_ALIASES[cat]
+        log.info("  Category '%s' -> '%s' (alias)", cat, mapped)
+        return mapped
+    log.warning("  Unknown category '%s' -> '%s' (fallback)", cat or "(empty)", CATEGORY_FALLBACK)
+    return CATEGORY_FALLBACK
+
 # Safety limit to avoid runaway loops (sum of max_per_run = 91, well within this)
 MAX_ARTICLES_PER_RUN = 120
 # Pause between API calls (seconds) to stay within rate limits
@@ -261,10 +326,21 @@ def supabase_get(table: str, params: dict[str, str] | None = None) -> list[dict[
 
 
 def supabase_post(table: str, data: dict[str, Any]) -> dict[str, Any]:
-    """POST (insert) a row into a Supabase table."""
+    """POST (insert) a row into a Supabase table.
+
+    On failure, surface the PostgREST response body in the raised exception.
+    The default requests `raise_for_status()` only reports the status code and
+    URL — which is why every insert failure historically logged the same opaque
+    "400 Client Error ... for url" with no clue. PostgREST puts the real reason
+    (constraint name, offending column) in the body; we must not lose it.
+    """
     url = f"{SUPABASE_URL}/rest/v1/{table}"
     resp = requests.post(url, headers=supabase_headers(), json=data, timeout=30)
-    resp.raise_for_status()
+    if not resp.ok:
+        detail = resp.text[:500] if resp.text else "(empty body)"
+        raise requests.HTTPError(
+            f"{resp.status_code} on {table}: {detail}", response=resp
+        )
     # For empty 201 responses return an empty dict
     if not resp.text:
         return {}
@@ -1078,14 +1154,17 @@ def run() -> None:
 
             # ---- STAGE 7: Insert into Supabase ----
             summary = result.get("summary", "")
-            body = result.get("body", summary)
+            body = result.get("body", summary) or summary or story_title
             actual_reading_time = max(1, round(len(body.split()) / 200))
+            # summary is NOT NULL in the DB — never insert an empty/None summary.
+            safe_summary = summary or (body[:200] if body else story_title)
             story_record: dict[str, Any] = {
                 "title": story_title,
                 "subtitle": result.get("subtitle", ""),
                 "body_markdown": body,
-                "summary": summary,
-                "category": result.get("category", "gemeinschaft"),
+                "summary": safe_summary,
+                # normalize_category guarantees a value the CHECK constraint accepts
+                "category": normalize_category(result.get("category")),
                 "region": result.get("region", ""),
                 "region_code": result.get("region_code", ""),
                 "lat": result.get("lat"),

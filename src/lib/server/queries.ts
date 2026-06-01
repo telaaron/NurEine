@@ -4,6 +4,8 @@ import { PUBLIC_BASE_URL } from '$env/static/public';
 
 // ---- Types ----
 
+export type OgImageSrcset = Record<string, string | null>;
+
 export type SupabaseStory = {
   id: string;
   title: string;
@@ -25,6 +27,7 @@ export type SupabaseStory = {
   emoji: string | null;
   image_url: string | null;
   og_image_url: string | null;
+  og_image_srcset: OgImageSrcset | null;
   is_hero: boolean;
   published_at: string;
   created_at: string;
@@ -55,6 +58,7 @@ export type StoryResult = {
   imageUrl: string | null;
   image_url: string | null;
   ogImageUrl: string | null;
+  ogImageSrcset: OgImageSrcset | null;
   pinned: number;
   local: number;
   featuredDate: string | null;
@@ -111,6 +115,7 @@ function mapStory(row: SupabaseStory): StoryResult {
     imageUrl: row.image_url,
     image_url: row.image_url,
     ogImageUrl: row.og_image_url || null,
+    ogImageSrcset: row.og_image_srcset || null,
     pinned: 0,
     local: 0,
     featuredDate: row.is_hero ? row.published_at : null,

@@ -35,9 +35,11 @@
                 'Wir filtern tausende Quellen mit KI auf das Wesentliche. Eine gute Nachricht am Tag gegen die Reizüberflutung. Exklusiv, neutral und kuratiert.'
         );
 
+        // PNG for og:image — universal compatibility with iMessage, WhatsApp, Facebook, Twitter
+        // (none of these platforms reliably support WebP in link previews)
         const seoImage = $derived(
-                isStory 
-                        ? (page.data.story.ogImageUrl || `https://nureine.de/api/og/${page.data.story.slug}`) 
+                isStory
+                        ? (page.data.story.ogImageUrl || `https://nureine.de/api/og/${page.data.story.slug}`)
                         : 'https://nureine.de/og-default.png'
         );
 
@@ -52,8 +54,10 @@
         <meta property="og:description" content={seoDesc} />
         <meta property="og:type" content={seoType} />
         <meta property="og:image" content={seoImage} />
+        <meta property="og:image:type" content="image/png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content={seoTitle} />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:site_name" content="NurEine" />
         <meta property="og:locale" content="de_DE" />
@@ -62,6 +66,7 @@
         <meta name="twitter:title" content={seoTitle} />
         <meta name="twitter:description" content={seoDesc} />
         <meta name="twitter:image" content={seoImage} />
+        <meta name="twitter:image:alt" content={seoTitle} />
 
         <link rel="canonical" href={canonicalUrl} />
 

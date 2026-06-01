@@ -6,7 +6,16 @@ Composition: Left-aligned editorial typography over a warm beige background,
 accented by an abstract rising sun (a single glowing amber orb) on the right
 to symbolize "Lichtblick" and the single daily good news.
 
-Output: static/og-default.png (1200x630)
+Output:
+  static/og-default.png      — 1200x630 (1x, PNG, universal OG fallback)
+  static/og-default-2x.png   — 2400x1260 (2x, PNG, retina displays)
+  static/og-default.webp     — 1200x630 (1x, WebP, website srcset)
+
+OG meta tag notes:
+  - og:image uses PNG because iMessage, WhatsApp, Facebook, and Twitter
+    DO NOT reliably support WebP in link previews.
+  - WebP variants are for website <img> tags via srcset (performance).
+  - The 2x PNG targets high-DPI screens (retina).
 """
 from __future__ import annotations
 
@@ -99,9 +108,29 @@ except Exception:
 draw.text((left_margin, H - left_margin), "nureine.de", fill=SOFT, font=dom_font)
 
 # ------------------------------------------------------------------
-# Save
+# Save — all formats
 # ------------------------------------------------------------------
-out = os.path.join(_sd, "..", "static", "og-default.png")
-os.makedirs(os.path.dirname(out), exist_ok=True)
-img.save(out, format="PNG", optimize=True)
-print(f"Default OG saved: {out}")
+static_dir = os.path.join(_sd, "..", "static")
+os.makedirs(static_dir, exist_ok=True)
+
+# Normalize to exact 1200x630
+if img.size == (1201, 631):
+    img = img.crop((1, 1, 1201, 631))
+elif img.size != (1200, 630):
+    img = img.resize((1200, 630), Image.Resampling.LANCZOS)
+
+# 1x PNG — universal OG compatibility (iMessage, WhatsApp, FB, Twitter)
+out_png = os.path.join(static_dir, "og-default.png")
+img.save(out_png, format="PNG", optimize=True, compress_level=9)
+print(f"Default OG (1x PNG):  {out_png}")
+
+# 2x PNG — retina / high-DPI displays
+img_2x = img.resize((W * 2, H * 2), Image.Resampling.LANCZOS)
+out_png_2x = os.path.join(static_dir, "og-default-2x.png")
+img_2x.save(out_png_2x, format="PNG", optimize=True, compress_level=9)
+print(f"Default OG (2x PNG):  {out_png_2x}")
+
+# 1x WebP — website <img> srcset (modern browsers, ~60% smaller)
+out_webp = os.path.join(static_dir, "og-default.webp")
+img.save(out_webp, format="WEBP", quality=85, method=6)
+print(f"Default OG (1x WebP): {out_webp}")

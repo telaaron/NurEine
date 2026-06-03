@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { supabaseAdmin } from '$lib/server/supabase/client';
-import { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME } from '$env/static/private';
+import { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME, BREVO_REPLY_TO_EMAIL } from '$env/static/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 
 const BASE_URL = PUBLIC_BASE_URL || 'https://nureine.de';
@@ -141,6 +141,7 @@ async function sendWelcomeEmail(recipientEmail: string, name: string | null): Pr
 		body: JSON.stringify({
 			sender: { name: BREVO_FROM_NAME || 'NurEine', email: BREVO_FROM_EMAIL },
 			to: [{ email: recipientEmail }],
+			replyTo: { email: BREVO_REPLY_TO_EMAIL || BREVO_FROM_EMAIL, name: BREVO_FROM_NAME || 'NurEine' },
 			subject: 'Willkommen bei NurEine! Deine Anmeldung ist bestätigt.',
 			htmlContent: html
 		})

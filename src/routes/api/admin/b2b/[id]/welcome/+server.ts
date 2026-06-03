@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import { getB2BClientById } from '$lib/server/queries';
-import { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME } from '$env/static/private';
+import { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME, BREVO_REPLY_TO_EMAIL } from '$env/static/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 import type { RequestHandler } from './$types';
 
@@ -224,6 +224,7 @@ export const POST: RequestHandler = async ({ params, cookies, url }) => {
       body: JSON.stringify({
         sender: { name: BREVO_FROM_NAME || 'NurEine', email: BREVO_FROM_EMAIL },
         to: recipients.map((email: string) => ({ email })),
+        replyTo: { email: BREVO_REPLY_TO_EMAIL || BREVO_FROM_EMAIL, name: BREVO_FROM_NAME || 'NurEine' },
         subject,
         htmlContent: finalHtml
       })

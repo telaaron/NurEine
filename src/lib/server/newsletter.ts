@@ -15,7 +15,7 @@
  */
 
 import { supabaseAdmin } from './supabase/client';
-import { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME } from '$env/static/private';
+import { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME, BREVO_REPLY_TO_EMAIL } from '$env/static/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 
 // ---------------------------------------------------------------------------
@@ -442,6 +442,7 @@ async function sendBrevoEmail(toEmail: string, subject: string, html: string): P
     body: JSON.stringify({
       sender: { name: BREVO_FROM_NAME || 'NurEine', email: BREVO_FROM_EMAIL },
       to: [{ email: toEmail }],
+      replyTo: { email: BREVO_REPLY_TO_EMAIL || BREVO_FROM_EMAIL, name: BREVO_FROM_NAME || 'NurEine' },
       subject,
       htmlContent: html
     })

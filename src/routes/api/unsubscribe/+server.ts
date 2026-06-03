@@ -1,9 +1,10 @@
 import { supabaseAdmin } from '$lib/server/supabase/client';
 
 // GET /api/unsubscribe?token=xxx&email=yyy
-// 1. Look up subscriber by email (and optionally verify token)
-// 2. Delete the subscriber or set confirmed=false
-// 3. Return a simple HTML page saying "Du wurdest erfolgreich abgemeldet."
+// 1. Look up subscriber by email and verify token
+// 2. Soft-unsubscribe: set confirmed=false, clear confirmation_token
+//    (cannot hard-delete — FK constraint from nureine_newsletter_sends)
+// 3. Return a simple HTML page
 
 export async function GET({ url }) {
 	const email = url.searchParams.get('email');
@@ -147,14 +148,18 @@ export async function GET({ url }) {
 		);
 	}
 
-	// 3. Delete the subscriber
-	const { error: deleteError } = await supabaseAdmin
+	// 3. Soft-unsubscribe: set confirmed=false, clear token.
+	//    Hard-delete is blocked by FK constraint from nureine_newsletter_sends.
+	const { error: updateError } = await supabaseAdmin
 		.from('nureine_subscribers')
-		.delete()
+		.update({
+			confirmed: false,
+			confirmation_token: null
+		})
 		.eq('id', subscriber.id);
 
-	if (deleteError) {
-		console.error('Supabase delete error:', deleteError);
+	if (updateError) {
+		console.error('Supabase update error:', updateError);
 		return htmlResponse(
 			'Fehler',
 			'Es ist ein technischer Fehler aufgetreten. Bitte versuche es sp\u00e4ter erneut.',

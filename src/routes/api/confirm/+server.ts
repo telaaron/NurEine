@@ -187,12 +187,13 @@ export async function GET({ url }) {
 		throw redirect(303, '/newsletter?confirmed=true');
 	}
 
-	// 2. Set confirmed=true, clear confirmation_token
+	// 2. Set confirmed=true. Keep confirmation_token — it doubles as the
+	//    unsubscribe authorization token. Clearing it would break the
+	//    Abmeldelink in every subsequent newsletter.
 	const { error: updateError } = await supabaseAdmin
 		.from('nureine_subscribers')
 		.update({
-			confirmed: true,
-			confirmation_token: null
+			confirmed: true
 		})
 		.eq('id', subscriber.id);
 

@@ -158,6 +158,32 @@ CATEGORY_ALIASES: dict[str, str] = {
 CATEGORY_FALLBACK = "gemeinschaft"
 
 
+def _safe_int(value: Any, *, lo: int | None = None, hi: int | None = None) -> int | None:
+    """Coerce a value to int, optionally clamped to [lo, hi].
+
+    DeepSeek occasionally returns numbers that overflow Postgres column types —
+    e.g. impact_reach='2200000000' (2.2 B) exceeds int4 (2147483647) and 400'd
+    the whole insert. We coerce defensively (impact_reach is now BIGINT, but a
+    stray 1e18 would still break it; impact_durability/evidence stay 0..100).
+    Returns None if the value is missing or unparseable.
+    """
+    if value is None:
+        return None
+    try:
+        n = int(float(value))  # tolerate "85", 85.0, "1.2e9"
+    except (ValueError, TypeError):
+        return None
+    if lo is not None:
+        n = max(lo, n)
+    if hi is not None:
+        n = min(hi, n)
+    return n
+
+
+# Postgres bigint max — hard ceiling for impact_reach regardless of model output.
+_BIGINT_MAX = 9_223_372_036_854_775_807
+
+
 def normalize_category(raw: Any) -> str:
     """Coerce any DeepSeek category into an allowed DB value.
 
@@ -1179,9 +1205,11 @@ def run() -> None:
                 "image_url": image_url,
                 "source_url": source_url,
                 "source_name": source_name,
-                "impact_reach": result.get("impact_reach"),
-                "impact_durability": result.get("impact_durability"),
-                "impact_evidence": result.get("impact_evidence"),
+                # impact_reach is BIGINT; clamp to its ceiling so no model
+                # estimate can ever overflow it again. durability/evidence are 0..100.
+                "impact_reach": _safe_int(result.get("impact_reach"), lo=0, hi=_BIGINT_MAX),
+                "impact_durability": _safe_int(result.get("impact_durability"), lo=0, hi=100),
+                "impact_evidence": _safe_int(result.get("impact_evidence"), lo=0, hi=100),
                 "impact_score": _compute_impact_score(
                     result.get("impact_score"),
                     result.get("impact_reach"),

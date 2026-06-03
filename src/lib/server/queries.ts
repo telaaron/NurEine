@@ -176,69 +176,48 @@ export async function getStoryById(id: string): Promise<StoryResult | undefined>
 }
 
 /**
- * The website front story.
+ * The website front story ("Geschichte des Tages").
  *
- * Decoupled from the newsletter: the homepage always shows the freshest
- * high-impact story so the site feels alive and is never empty — independent
- * of whether/what the newsletter sent. Previously this required is_hero=true,
- * which a separate 02:00 cron set; when that cron failed the homepage fell back
- * to the all-time top story (could be weeks old) or went blank.
+ * Coupled to the newsletter: the homepage shows the story that most recently
+ * went out as the daily newsletter (highest newsletter_sent_at). This keeps the
+ * header in lockstep with what readers receive in their inbox, and because the
+ * newsletter picks a fresh, never-before-sent story every day (see
+ * selectNewsletterStory in newsletter.ts), the header automatically rotates
+ * daily, never repeats, and never shows a stale story.
  *
- * Selection: among the 30 most recently created stories, pick the one with the
- * highest recency-weighted impact score. A decay curve prevents stories older
- * than a few days from dominating the homepage (e.g. a 3-day-old 100-impact
- * story would lose to a fresh 85-impact story).
- *
- * Decay curve by age:
- *   0–6 h   → 1.00   (full weight)
- *   6–12 h  → 0.95
- *   12–24 h → 0.85
- *   24–36 h → 0.70
- *   36–48 h → 0.55
- *   48–72 h → 0.40
- *   >72 h   → 0.25
+ * Fallbacks (so the homepage is NEVER empty — e.g. before the first send):
+ *   1. most recently sent story (newsletter_sent_at desc)
+ *   2. freshest story by created_at (until the first newsletter has gone out)
+ *   3. highest-impact story overall
  *
  * Uses created_at (true insert time), not published_at (RSS date, lags 24h+).
  */
 export async function getLatestFeatured(): Promise<StoryResult | undefined> {
-  const hour = 1000 * 60 * 60;
-  const decayForAge = (ageHours: number): number => {
-    if (ageHours < 6) return 1.0;
-    if (ageHours < 12) return 0.95;
-    if (ageHours < 24) return 0.85;
-    if (ageHours < 36) return 0.70;
-    if (ageHours < 48) return 0.55;
-    if (ageHours < 72) return 0.40;
-    return 0.25;
-  };
+  // 1. The story last sent as the daily newsletter — the "story of the day".
+  const { data: sent } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('*')
+    .not('newsletter_sent_at', 'is', null)
+    .order('newsletter_sent_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  // Fetch the 30 most recently created stories with scores.
-  const { data, error } = await supabaseAdmin
+  if (sent) return mapStory(sent as SupabaseStory);
+
+  // 2. No newsletter sent yet — show the freshest scored story so the page lives.
+  const { data: fresh } = await supabaseAdmin
     .from('nureine_stories')
     .select('*')
     .not('impact_score', 'is', null)
     .order('created_at', { ascending: false })
-    .limit(30);
+    .limit(1)
+    .maybeSingle();
 
-  if (error || !data || data.length === 0) {
-    // Last-resort fallback: highest-impact story overall.
-    const all = await getAllStories();
-    return all[0];
-  }
+  if (fresh) return mapStory(fresh as SupabaseStory);
 
-  const now = Date.now();
-  const rows = data as SupabaseStory[];
-
-  // Pick the story with the highest recency-weighted impact score.
-  const best = rows.reduce((top, s) => {
-    const topAge = (now - new Date(top.created_at).getTime()) / hour;
-    const sAge = (now - new Date(s.created_at).getTime()) / hour;
-    const topScore = (top.impact_score ?? 0) * decayForAge(topAge);
-    const sScore = (s.impact_score ?? 0) * decayForAge(sAge);
-    return sScore > topScore ? s : top;
-  }, rows[0]);
-
-  return mapStory(best);
+  // 3. Last-resort: highest-impact story overall.
+  const all = await getAllStories();
+  return all[0];
 }
 
 export async function getLocalStories(): Promise<StoryResult[]> {

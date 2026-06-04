@@ -960,3 +960,132 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
     durationMs
   };
 }
+
+// ---------------------------------------------------------------------------
+// Monthly "Stand der Welt" newsletter — free for all confirmed subscribers.
+// ---------------------------------------------------------------------------
+
+interface WorldMetricRow {
+  metric_key: string;
+  label: string;
+  unit: string | null;
+  latest_value: number;
+  latest_year: number;
+  baseline_value: number;
+  baseline_year: number;
+  direction: 'up' | 'down';
+  blurb: string | null;
+}
+
+function metricImprovementPct(m: WorldMetricRow): number {
+  if (!m.baseline_value) return 0;
+  const change = ((m.latest_value - m.baseline_value) / m.baseline_value) * 100;
+  const better = m.direction === 'up' ? change > 0 : change < 0;
+  return better ? Math.abs(change) : 0;
+}
+
+function fmtMetric(v: number, unit: string | null): string {
+  const s = Number.isInteger(v) ? String(v) : v.toFixed(1).replace('.', ',');
+  if (unit === '%') return `${s} %`;
+  if (unit === 'Jahre') return `${s} Jahre`;
+  return s;
+}
+
+function buildWorldMetricsHtml(m: WorldMetricRow, email: string, token: string): string {
+  const dashUrl = `${BASE_URL}/stand-der-welt`;
+  const unsubscribeUrl = `${BASE_URL}/api/unsubscribe?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+  const settingsUrl = `${BASE_URL}/einstellungen?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+  const pct = Math.round(metricImprovementPct(m));
+  return `<!DOCTYPE html>
+<html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/></head>
+<body style="margin:0;padding:0;background:#f5f1ea url('${PNG_CANVAS}');">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background:#f5f1ea url('${PNG_CANVAS}');">
+<tr><td align="center" style="padding:40px 16px 32px;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
+<tr><td style="font-family:Georgia,serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
+<tr><td style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;text-transform:uppercase;letter-spacing:0.14em;">Der Stand der Welt</td></tr>
+</table>
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#faf6ee url('${PNG_CARD}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);">
+<tr><td style="padding:36px 40px 8px;">
+<p style="margin:0 0 6px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:#bd6a35;">Diesen Monat bewegt</p>
+<h2 style="margin:0 0 14px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1815;line-height:1.2;">${escapeForHtml(m.label)}</h2>
+<p style="margin:0 0 18px;font-family:Georgia,serif;font-size:19px;line-height:1.5;color:#3a342c;">
+<span style="color:#bd6a35;">${fmtMetric(m.baseline_value, m.unit)}</span> (${m.baseline_year})
+&rarr; <span style="color:#bd6a35;">${fmtMetric(m.latest_value, m.unit)}</span> (${m.latest_year})${pct ? ` — <strong>${pct}% besser</strong>` : ''}.
+</p>
+${m.blurb ? `<p style="margin:0 0 24px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a342c;">${escapeForHtml(m.blurb)}</p>` : ''}
+<p style="margin:0 0 28px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;line-height:1.7;color:#3a342c;">
+Dieselbe Welt. Eine andere Geschichte. Auf den Metriken, die wirklich z&auml;hlen, bewegt sich die Welt in die richtige Richtung.
+</p>
+</td></tr>
+<tr><td style="padding:0 40px 36px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="background:#1a1815 url('${PNG_INK}');border-radius:9999px;text-align:center;">
+<a href="${dashUrl}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Alle Metriken ansehen &rarr;</a>
+</td></tr></table>
+</td></tr>
+<tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;"/></td></tr>
+<tr><td style="padding:22px 40px 30px;">
+<p style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">Einmal im Monat: der Stand der Welt. Quellen: World Bank u.a.</p>
+<p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
+<a href="${settingsUrl}" target="_blank" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">Themen anpassen</a>&nbsp;&middot;&nbsp;
+<a href="${unsubscribeUrl}" target="_blank" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">Abmelden</a>
+</p>
+</td></tr>
+</table>
+<p style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.</p>
+</td></tr></table></body></html>`;
+}
+
+/** Render-only preview of the monthly world newsletter (admin). No send. */
+export async function renderWorldMetricsHtml(toEmail = 'preview@nureine.de'): Promise<string | null> {
+  const { data: rows } = await supabaseAdmin
+    .from('nureine_world_metrics')
+    .select('metric_key,label,unit,latest_value,latest_year,baseline_value,baseline_year,direction,blurb');
+  const metrics = (rows as WorldMetricRow[]) ?? [];
+  if (!metrics.length) return null;
+  const featured = [...metrics].sort((a, b) => metricImprovementPct(b) - metricImprovementPct(a))[0];
+  const { data: sub } = await supabaseAdmin
+    .from('nureine_subscribers')
+    .select('confirmation_token')
+    .eq('email', toEmail.toLowerCase().trim())
+    .maybeSingle();
+  return buildWorldMetricsHtml(featured, toEmail, (sub?.confirmation_token as string) || 'test-token');
+}
+
+export async function sendWorldMetricsNewsletter(): Promise<NewsletterRunResult> {
+  const startedAt = Date.now();
+  if (!BREVO_API_KEY || !BREVO_FROM_EMAIL) {
+    throw new Error('BREVO_API_KEY / BREVO_FROM_EMAIL not configured');
+  }
+
+  const { data: rows } = await supabaseAdmin
+    .from('nureine_world_metrics')
+    .select('metric_key,label,unit,latest_value,latest_year,baseline_value,baseline_year,direction,blurb');
+  const metrics = (rows as WorldMetricRow[]) ?? [];
+  if (!metrics.length) {
+    console.warn('[world-newsletter] no metrics, nothing to send');
+    return { story: null, b2c: { total: 0, sent: 0, failed: 0 }, b2b: { total: 0, sent: 0, failed: 0 }, durationMs: Date.now() - startedAt };
+  }
+
+  // Pick the most-improved metric this run.
+  const featured = [...metrics].sort((a, b) => metricImprovementPct(b) - metricImprovementPct(a))[0];
+  console.info('[world-newsletter] featured:', featured.metric_key);
+
+  const subscribers = await fetchConfirmedFreeSubscribers();
+  const subject = `Der Stand der Welt — ${featured.label} verbessert sich`;
+  let sent = 0, failed = 0;
+  for (const sub of subscribers) {
+    if (!sub.email || !sub.id) { failed += 1; continue; }
+    try {
+      const html = buildWorldMetricsHtml(featured, sub.email, sub.confirmation_token || '');
+      await sendBrevoEmail(sub.email, subject, html);
+      sent += 1;
+    } catch (err) {
+      console.error('[world-newsletter] send failed', sub.email, err);
+      failed += 1;
+    }
+  }
+  await logCronRun('world_metrics', subscribers.length, sent, failed);
+  return { story: null, b2c: { total: subscribers.length, sent, failed }, b2b: { total: 0, sent: 0, failed: 0 }, durationMs: Date.now() - startedAt };
+}

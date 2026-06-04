@@ -29,6 +29,8 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	// Keep only valid, unique category slugs.
 	const categories = [...new Set(rawCats.filter((c): c is string => typeof c === 'string' && CATEGORY_SLUGS.includes(c)))];
+	// has_kids: true | false | null (only set if explicitly provided)
+	const hasKids = typeof body.has_kids === 'boolean' ? body.has_kids : undefined;
 
 	const { data: sub, error: lookupErr } = await supabaseAdmin
 		.from('nureine_subscribers')
@@ -44,7 +46,11 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const { error: updErr } = await supabaseAdmin
 		.from('nureine_subscribers')
-		.update({ categories, preferences_updated_at: new Date().toISOString() })
+		.update({
+			categories,
+			preferences_updated_at: new Date().toISOString(),
+			...(hasKids !== undefined ? { has_kids: hasKids } : {})
+		})
 		.eq('id', sub.id);
 
 	if (updErr) return json({ error: 'Speichern fehlgeschlagen.' }, { status: 500 });

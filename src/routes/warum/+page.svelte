@@ -73,7 +73,7 @@
 	<title>Warum NurEine — Schluss mit Doomscrolling</title>
 	<meta
 		name="description"
-		content="Die Nachrichtenlage ist nicht die Welt. NurEine filtert tausende Quellen und liefert dir täglich eine belegte gute Nachricht — werbefrei, ohne Algorithmus."
+		content="Wir berichten nicht, dass die Welt gut ist — wir zeigen, wo sie besser wird. Täglich eine belegte Geschichte über echten Fortschritt, in zwei Minuten. Kein Feed, kein Algorithmus."
 	/>
 </svelte:head>
 
@@ -98,9 +98,9 @@
 			class="mx-auto mt-6 sm:mt-8 text-lg sm:text-xl lg:text-2xl leading-[1.5] max-w-[52ch] rise rise-d2"
 			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 		>
-			Die Nachrichtenlage ist nicht die Welt — sie ist eine Auswahl. Wir treffen eine andere:
-			täglich <span style="color: var(--color-amber);">eine</span> belegte gute Nachricht. Werbefrei,
-			ohne Algorithmus, ohne Sog.
+			Wir behaupten nicht, die Welt sei gut. Wir zeigen, <span style="color: var(--color-amber);">wo
+			sie besser wird</span> — täglich eine belegte Geschichte, in zwei Minuten. Kein Feed, kein
+			Algorithmus, kein Sog.
 		</p>
 		<div class="mt-9 sm:mt-11 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 rise rise-d3">
 			<a

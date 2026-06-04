@@ -169,10 +169,10 @@
 				werden — gewichtet nach Belegbarkeit, Reichweite und Dauerhaftigkeit. Methodik:
 				<a
 					class="underline"
-					href={base + '/manifest#methodik'}
+					href={base + '/methodik'}
 					style="color: var(--color-ink-soft);"
 				>
-					Manifest §3
+					Methodik
 				</a>.
 			</p>
 		</aside>

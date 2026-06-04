@@ -410,7 +410,7 @@ export async function renderTestNewsletterHtml(
 ): Promise<{ html: string; title: string } | null> {
   const { data: storyData } = await supabaseAdmin
     .from('nureine_stories')
-    .select('id,title,subtitle,summary,category,image_url,impact_score,reading_time_min,published_at')
+    .select('id,title,subtitle,summary,category,image_url,impact_score,reading_time_min,published_at,kid_min_age,kid_explainer,conversation_starter')
     .eq('is_hero', true)
     .order('published_at', { ascending: false })
     .limit(1)
@@ -421,7 +421,7 @@ export async function renderTestNewsletterHtml(
   if (!row) {
     const { data: fresh } = await supabaseAdmin
       .from('nureine_stories')
-      .select('id,title,subtitle,summary,category,image_url,impact_score,reading_time_min,published_at')
+      .select('id,title,subtitle,summary,category,image_url,impact_score,reading_time_min,published_at,kid_min_age,kid_explainer,conversation_starter')
       .not('impact_score', 'is', null)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -440,19 +440,22 @@ export async function renderTestNewsletterHtml(
     category: (row.category as string) || null,
     image_url: (row.image_url as string) || null,
     impact_score: (row.impact_score as number) ?? null,
-    reading_time_min: (row.reading_time_min as number) ?? null
+    reading_time_min: (row.reading_time_min as number) ?? null,
+    kid_min_age: (row.kid_min_age as number) ?? null,
+    kid_explainer: (row.kid_explainer as string) ?? null,
+    conversation_starter: (row.conversation_starter as string) ?? null
   };
 
   // Use the recipient's real confirmation_token if they are a subscriber, so the
   // "Themen anpassen" + unsubscribe links in the test are live too.
   const { data: subRow } = await supabaseAdmin
     .from('nureine_subscribers')
-    .select('confirmation_token')
+    .select('confirmation_token, has_kids')
     .eq('email', toEmail.toLowerCase().trim())
     .maybeSingle();
   const token = (subRow?.confirmation_token as string) || 'test-token';
 
-  return { html: buildB2CHtml(heroStory, toEmail, token), title };
+  return { html: buildB2CHtml(heroStory, toEmail, token, subRow?.has_kids === true), title };
 }
 
 export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSendResult> {

@@ -5,6 +5,7 @@
 	let { data } = $props();
 
 	let selected = $state<Set<string>>(new Set(data.ok ? data.categories : []));
+	let hasKids = $state<boolean | null>(data.ok ? (data.hasKids ?? null) : null);
 	let saving = $state(false);
 	let savedMsg = $state('');
 	let errorMsg = $state('');
@@ -37,7 +38,7 @@
 			const res = await fetch(`${base}/api/preferences`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ email: data.email, token: data.token, categories: [...selected] })
+				body: JSON.stringify({ email: data.email, token: data.token, categories: [...selected], ...(hasKids !== null ? { has_kids: hasKids } : {}) })
 			});
 			const result = await res.json();
 			if (res.ok) {
@@ -105,6 +106,24 @@
 					</span>
 				</button>
 			{/each}
+		</div>
+
+		<!-- Family: one optional question -->
+		<div class="mt-10 pt-8" style="border-top: 1px solid var(--color-rule);">
+			<p class="text-base font-medium" style="color: var(--color-ink);">Hast du Kinder im Haushalt?</p>
+			<p class="mt-1 text-sm leading-relaxed max-w-[42ch]" style="color: var(--color-muted); font-family: var(--font-serif);">
+				Wenn ja, ergänzen wir passende Geschichten um eine kindgerechte Erklärung und einen Gesprächsstarter — für das Gespräch beim Abendessen.
+			</p>
+			<div class="mt-3 flex gap-2">
+				{#each [{ v: true, l: 'Ja' }, { v: false, l: 'Nein' }] as opt}
+					{@const on = hasKids === opt.v}
+					<button type="button" onclick={() => (hasKids = on ? null : opt.v)}
+						class="px-5 py-2.5 rounded-full text-sm font-medium transition-all active:scale-[0.97]"
+						style="border: 1px solid {on ? 'var(--color-amber)' : 'var(--color-rule)'}; background: {on ? 'var(--color-amber-tint)' : 'var(--color-paper)'}; color: var(--color-ink);">
+						{opt.l}
+					</button>
+				{/each}
+			</div>
 		</div>
 
 		<div class="mt-8 flex items-center gap-4 flex-wrap">

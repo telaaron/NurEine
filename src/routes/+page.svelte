@@ -91,7 +91,7 @@
 						aria-hidden="true"
 					></span>
 					<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">
-						Eine gute Nachricht heute
+						Ehrlicher Fortschritt · heute
 					</span>
 				</div>
 
@@ -233,10 +233,9 @@
 		</div>
 		<div class="lg:col-span-8">
 			<p class="serif text-xl sm:text-2xl lg:text-[1.85rem] leading-snug" style="color: var(--color-ink);">
-				Die Nachrichtenlage ist nicht die Welt. Sie ist eine Auswahl. Wir filtern dieselben
-				tausenden Quellen — aber suchen das, was zeigt, dass Menschen
-				<span style="color: var(--color-amber);">vorankommen</span>: bauen, heilen, einigen,
-				erfinden, schützen.
+				Wir behaupten nicht, die Welt sei gut. Wir zeigen, <span style="color: var(--color-amber);">wo
+				sie besser wird</span> — belegt, in zwei Minuten. Kein Feed, kein Algorithmus, kein Sog.
+				Eine Geschichte. Für das Gespräch heute.
 			</p>
 			<a
 				href={base + '/manifest'}

@@ -1,0 +1,25 @@
+name: Fetch World Metrics (Stand der Welt)
+
+on:
+  schedule:
+    - cron: '0 5 1 * *'  # 05:00 UTC am 1. jedes Monats — Daten ändern sich jährlich
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install requests python-dotenv
+
+      - name: Fetch world metrics (World Bank)
+        run: python scripts/fetch_world_metrics.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

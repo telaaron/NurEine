@@ -160,3 +160,56 @@ Technik steht. Jetzt = Setup-Reste + Distribution starten:
 - B2B-Verkauf (braucht Proof-Zahlen).
 - Native Apps (PWA reicht lange).
 - Weitere Sprachen (DACH-Fokus erst dominieren).
+
+---
+
+## 7 · Brainstorm eingeordnet (Differenzierung & Moat)
+
+Bewertet nach Hebel ÷ Aufwand. Reihenfolge bewusst.
+
+### 7.1 Positionierung „ehrlicher Fortschritt" (P0 · Stunden) — IN ARBEIT
+Weg von „gute Nachrichten" → **„Wir berichten nicht, dass die Welt gut ist. Wir
+zeigen, wo sie besser wird — täglich, belegt, in zwei Minuten."** Anti-Feed als
+härteste Differenzierung überall (Hero, /warum, Manifest, Meta, OG). Zweites
+Dream-Outcome: **„Eine Geschichte. Für das Gespräch heute."** (sozialer Katalysator).
+Reiner Copy-/Messaging-Change, höchster Hebel pro Aufwand.
+
+### 7.2 Wirkungsindex-Transparenzseite (P1 · niedrig) — für Skeptiker (ZG 3)
+`/methodik` (oder /manifest#methodik ausbauen): Quellen, Gewichtungen (0,4/0,35/0,25),
+**Limitierungen**, „Keine Blackbox" — alles öffentlich + prüfbar. Skeptiker liest
+das; existiert es nicht → weg, existiert es transparent → gewonnen. Billig, hoher
+Vertrauens-Hebel.
+
+### 7.3 Familien-Feature „ein Gespräch mehr" (P1 · mittel)
+Onboarding +1 Frage „Hast du Kinder?" (Spalte `has_kids`). Eltern-Segment bekommt
+**dieselbe** Story + 3 Zusätze WENN tauglich: Alters-Badge („ab 8 erklärbar"),
+Erklärlinie (1 Satz kindgerecht), Gesprächsstarter (offene Frage). Braucht
+per-Story-Felder (`kid_age`, `explainer`, `conversation_starter`) → KI-Tagging in
+`scripts/fetch_stories.py`. Reuse: Segment-Versand existiert. Kein Konkurrent
+positioniert sich als Familien-Ritual → Retention + Eltern-Viral-Kanal.
+
+### 7.4 „Stand der Welt"-Dashboard (P1 · hoch) — der echte Moat ✅ LIVE
+**Gebaut:** `/stand-der-welt`, Tabelle `nureine_world_metrics`, Python-Cron
+`scripts/fetch_world_metrics.py` (World Bank API, 6 Metriken) + monatlicher
+GitHub-Action. Trendlinien (SVG, „besser"-Richtung flippt), Ehrlichkeits-Layer,
+OWID-Verweis. Erweitern: mehr Metriken (WHO/OWID-CSV), Detail-Vollbild-Chart pro
+Karte, Monats-Newsletter „Der Stand der Welt".
+<!-- Ursprüngliche Notiz: -->
+
+`/stand-der-welt`: ~5–8 (später 15) kuratierte Langzeit-Metriken, **Trendlinie 20–50J
+schlägt Momentaufnahme** (z.B. extreme Armut 1990 36% → 2024 8,5% = „75% eliminiert").
+Quellen: World Bank REST API (trivial), Our World in Data CSV (GitHub). Python-Cron
+**monatlich** (Daten ändern sich nicht über Nacht — Fake-Aktualität wäre unehrlich)
+→ Supabase-Tabelle `nureine_world_metrics`. **Ehrlichkeits-Layer** „Was wir NICHT
+zeigen" (CO₂, Artenvielfalt, Ungleichheit → Verweis Our World in Data) = Integrität +
+immunisiert gegen Kritik. Moat = Zeit, nicht Geld. PR-Aufhänger (t3n/Gründerszene),
+Lehrer-Multiplikator, Skeptiker-Bindung. Monats-Newsletter: „Der Stand der Welt".
+NICHT: Echtzeit-Feed, Propaganda-Board, Datenwüste, Fake-Tagesaktualität.
+
+### 7.5 Tagesklima / Mood (P3 · später) — erst bei Audience
+Nach Story dezente Frage „Wie startest du in den Tag?" (5 Punkte, optional, 3 Sek).
+Über Zeit: persönliche Kurve. Kontrollgröße: freitags „Wie war die Woche?" (Morgen-
+Score vs. Wochen-Score = ehrlicher persönlicher Beweis ohne externe Daten). Teilen =
+minimalistisches Kurven-Bild, opt-in. KEIN Streak-Counter (Dark Pattern), kein
+Nutzer-Vergleich, keine Push, kein Pflichtfeld. **Sinnlos bei <100 aktiven Lesern →
+nach Wachstum.**

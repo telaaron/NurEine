@@ -35,15 +35,19 @@ export const POST: RequestHandler = async ({ request, url }) => {
 	const ev = String(body.event || '');
 	const email = typeof body.email === 'string' ? body.email : null;
 
-	let name: 'email_open' | 'email_click' | null = null;
-	if (ev === 'opened' || ev === 'unique_opened') name = 'email_open';
+	// Map to a named funnel event for the two we chart (open/click); log every
+	// other Brevo event under the generic `email_event` (real type in props.event)
+	// so we keep full deliverability data without a CHECK migration per type.
+	let name: 'email_open' | 'email_click' | 'email_event';
+	if (ev === 'opened' || ev === 'unique_opened' || ev === 'proxy_open') name = 'email_open';
 	else if (ev === 'click') name = 'email_click';
+	else name = 'email_event';
 
-	if (name) {
+	if (ev) {
 		try {
 			await supabaseAdmin.from('nureine_events').insert({
 				name,
-				props: { provider: 'brevo', event: ev, hasEmail: !!email },
+				props: { provider: 'brevo', event: ev, hasEmail: !!email, tag: body.tag ?? null },
 				referrer: typeof body.link === 'string' ? body.link.slice(0, 512) : null
 			});
 		} catch {

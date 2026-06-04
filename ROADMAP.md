@@ -54,21 +54,29 @@ A: Erst bei Engagement-Beweis. Schwelle grob: **>1.000 Abonnenten, >35% Open-Rat
 
 Priorität: **P0 = blockiert Launch/Wachstum, P1 = bald, P2 = später.**
 
+### ✅ Erledigt (live auf main)
+Redesign (Schrift/Tiefe/Hero/Feature-Card), OG-Bilder (dynamisch, Satori),
+Landing /warum, Live-Ticker, eigene Analytics (`nureine_events`) + Vercel,
+Admin-Cockpit + Funnel-Modul (inkl. Deliverability + Top-Werber), HMAC-Admin-Auth
+(alle Endpoints), personalisierter Newsletter (explizit + gelernt), **Story-Einreichen
+`/einreichen` + Admin-Moderation**, **Referral-Mechanik** (Code/Capture/Credit/Share-UI),
+**Open-Rate-Tracking** (Brevo-Webhook, alle Events), **Double-Opt-in** (confirmed_at + IP),
+SEO (JSON-LD, sitemap, robots), Mobil-Feinschliff. Live: Supabase, Brevo, ADMIN_SESSION_SECRET.
+
+### Noch offen
 | P | Lücke | Warum |
 |---|---|---|
-| **P0** | **Echte API-Keys + Supabase live + Domain live** (CLAUDE.md offen) | Ohne Live = kein Traffic. Vercel-Env: `ADMIN_SESSION_SECRET` NEU nötig (sonst Admin-Login fail-closed). |
-| **P0** | **Brevo echter Versand testen** (DNS: SPF/DKIM/DMARC) | Newsletter-Zustellbarkeit = Kern. Sonst Spam-Ordner. |
-| **P1** | **Story-Einreichen-Route** (`/einreichen`) — UGC, Community | Hormozi Free-Tier-Hebel + Engagement + SEO. Existiert nicht. |
-| **P1** | **Referral-Mechanik** (geteilter Link → Tracking → Belohnung) | Viraler Koeffizient. `nureine_events` kann's tracken. |
-| **P1** | **Open-Rate-Tracking** (Brevo-Webhook → `category_scores`) | Auto-Personalisierung lernt aktuell nur aus Klicks, nicht Opens. |
-| **P1** | **Double-Opt-in DSGVO sauber** (Confirm-Flow existiert — Logs/Nachweis prüfen) | Rechtlich Pflicht DE. |
-| **P2** | **PWA / „Zum Homescreen"** | Daily-Habit, Retention. Meta-Tags da, Manifest fehlt. |
-| **P2** | **Volltext-Suche / Kategorie-Filter im Archiv** | Aktuell nur Datum/Wirkung-Sort. |
-| **P2** | **Slug als echte DB-Spalte** (statt slugify+id-prefix in-memory) | `getStoryBySlug` lädt ALLE Stories + filtert in JS — skaliert nicht über ~paar Tausend. |
-| **P2** | **OG cold-render 36-45s** → pre-generieren (Python-Cron existiert, stillgelegt) ODER Edge-Cache-Warm | Erster Viewer wartet; danach CDN. Bei viraler Story = viele „erste". |
-| **P2** | **`category_scores` decay** (alte Klicks verfallen) | Sonst „eingefrorene" Personalisierung. |
-| **P3** | **Soft-Paywall / Optimist-Tier (Stripe)** | NUR nach Wachstums-Beweis (§1). Infra bereit (Stripe-MCP). |
-| **P3** | **B2B-Pipeline aktiv verkaufen** | Braucht die Proof-Zahlen aus `nureine_events`. |
+| **P0** | **Brevo-Webhook registrieren** (URL `?secret=`, Auth „Keine", Transactional, alle Events) | Sonst keine Open/Click-Daten. Code steht. NEU: `BREVO_WEBHOOK_SECRET` in Vercel. |
+| **P0** | **Brevo DNS prüfen** (SPF/DKIM/DMARC) | Zustellbarkeit. Läuft schon an ~5+7 → vermutlich ok, verifizieren. |
+| **P1** | **Auto-Social-Cards** (9:16 aus OG für IG/TikTok, Cron) | Der eine Wachstumskanal (§4). Assets existieren. |
+| **P1** | **Referral-Belohnung** (Schwelle → Badge/Unlock) | Aktuell nur Zählung; Anreiz fehlt noch. |
+| **P2** | **Streak / „X Tage Lichtblick"** | Habit-Loop, Retention. |
+| **P2** | **Slug als echte DB-Spalte** | `getStoryBySlug` lädt ALLE Stories + filtert in JS — skaliert nicht über ~paar Tausend. |
+| **P2** | **OG cold-render 36-45s** → pre-generieren / Edge-Cache-Warm | Bei viraler Story = viele „erste" Viewer warten. |
+| **P2** | **`category_scores` decay** + Opens→Scores | Personalisierung lernt nur aus Klicks; Decay fehlt. |
+| **P2** | **PWA-Manifest / Volltext-Suche Archiv** | Nice-to-have. |
+| **P3** | **Soft-Paywall / Optimist-Tier (Stripe)** | NUR nach Wachstums-Beweis (§1). Infra bereit. |
+| **P3** | **B2B aktiv verkaufen** | Proof-Zahlen aus `nureine_events` jetzt vorhanden → bald möglich. |
 
 **Sicherheits-Notiz:** Admin-Auth jetzt HMAC-Session (gefixt). `ADMIN_SESSION_SECRET`
 MUSS in Vercel gesetzt werden. Zwei `00016_*` Migrationen kollidieren (Altlast) —
@@ -138,13 +146,12 @@ Die besten Wachstumshebel sind **eingebaute Produkt-Loops**, nicht Marketing-Spe
 
 ## 5 · Sofort-Nächste-Schritte (konkret, diese Woche)
 
-1. **Live gehen:** Supabase prod, echte API-Keys, Domain, `ADMIN_SESSION_SECRET`
-   in Vercel, Brevo DNS (SPF/DKIM/DMARC). → ohne das kein Wachstum.
-2. **Brevo-Echt-Versand testen** an 2-3 echte Adressen, Spam-Check.
-3. **Social-Account-Setup** (IG + TikTok) + erste 7 Story-Reels aus bestehenden
-   OG-Bildern.
-4. **Story-Einreichen-Route** bauen (UGC + Engagement-Loop).
-5. **Referral-Token** in Share-Links + `nureine_events`-Tracking.
+Technik steht. Jetzt = Setup-Reste + Distribution starten:
+1. **Brevo-Webhook registrieren** — URL `https://nureine.de/api/webhooks/brevo?secret=<BREVO_WEBHOOK_SECRET>`, Auth **„Keine"**, Kategorie **Transactional email**, alle Events. + `BREVO_WEBHOOK_SECRET` in Vercel.
+2. **Echt-Versand-Check** — Test-Newsletter an dich, öffnen+klicken, im Admin-Funnel prüfen ob Öffnung/Klick zählt.
+3. **Social-Accounts** (IG + TikTok) + erste 7 Story-Reels aus OG-Bildern (§4 Phase 1).
+4. **Referral teilen** — deine 7 Member haben Codes (`/einstellungen` zeigt Link). Anstoßen.
+5. **Reddit/Foren + Newsletter-Swaps** starten (§4).
 
 ---
 

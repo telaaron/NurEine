@@ -807,9 +807,17 @@ export interface FunnelStats {
   ctaClicks7d: number;
   emailOpens7d: number;
   emailClicks7d: number;
+  emailsDelivered7d: number;
+  bounces7d: number;
+  unsubs7d: number;
+  openRate7d: number; // opens / delivered, %
   referralSignups7d: number;
   signupRate7d: number; // signups / pageviews, %
+  pendingSubmissions: number;
+  totalSubscribers: number;
+  confirmedSubscribers: number;
   topStories: { slug: string; reads: number }[];
+  referralLeaders: { code: string; count: number }[];
   byDay: { day: string; pageviews: number; signups: number }[];
 }
 
@@ -834,7 +842,10 @@ export async function getFunnelStats(): Promise<FunnelStats> {
     cta = 0,
     opens = 0,
     clicks = 0,
-    referrals = 0;
+    referrals = 0,
+    delivered = 0,
+    bounces = 0,
+    unsubs = 0;
   const storyReads: Record<string, number> = {};
   const dayMap: Record<string, { pageviews: number; signups: number }> = {};
 
@@ -872,6 +883,13 @@ export async function getFunnelStats(): Promise<FunnelStats> {
       case 'referral_signup':
         referrals++;
         break;
+      case 'email_event': {
+        const e = r.props?.event;
+        if (e === 'delivered') delivered++;
+        else if (e === 'hard_bounce' || e === 'soft_bounce' || e === 'blocked') bounces++;
+        else if (e === 'unsubscribed') unsubs++;
+        break;
+      }
     }
   }
 
@@ -885,6 +903,20 @@ export async function getFunnelStats(): Promise<FunnelStats> {
     return { day: d, pageviews: dayMap[d]?.pageviews ?? 0, signups: dayMap[d]?.signups ?? 0 };
   });
 
+  // Subscriber + submission + referral aggregates (cheap, parallel).
+  const [{ count: totalSubs }, { count: confirmedSubs }, { count: pendingSubs }, { data: leaders }] =
+    await Promise.all([
+      supabaseAdmin.from('nureine_subscribers').select('*', { count: 'exact', head: true }),
+      supabaseAdmin.from('nureine_subscribers').select('*', { count: 'exact', head: true }).eq('confirmed', true),
+      supabaseAdmin.from('nureine_story_submissions').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabaseAdmin
+        .from('nureine_subscribers')
+        .select('referral_code, referral_count')
+        .gt('referral_count', 0)
+        .order('referral_count', { ascending: false })
+        .limit(5)
+    ]);
+
   return {
     pageviews7d: pageviews,
     signups7d: signups,
@@ -894,9 +926,20 @@ export async function getFunnelStats(): Promise<FunnelStats> {
     ctaClicks7d: cta,
     emailOpens7d: opens,
     emailClicks7d: clicks,
+    emailsDelivered7d: delivered,
+    bounces7d: bounces,
+    unsubs7d: unsubs,
+    openRate7d: delivered ? Math.round((opens / delivered) * 1000) / 10 : 0,
     referralSignups7d: referrals,
     signupRate7d: pageviews ? Math.round((signups / pageviews) * 1000) / 10 : 0,
+    pendingSubmissions: pendingSubs ?? 0,
+    totalSubscribers: totalSubs ?? 0,
+    confirmedSubscribers: confirmedSubs ?? 0,
     topStories,
+    referralLeaders: (leaders ?? []).map((l: { referral_code: string; referral_count: number }) => ({
+      code: l.referral_code,
+      count: l.referral_count
+    })),
     byDay
   };
 }

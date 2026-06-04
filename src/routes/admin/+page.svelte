@@ -120,19 +120,37 @@
 			{/each}
 		</div>
 
-		<!-- Email + referral KPIs -->
-		<div class="grid grid-cols-3" style="gap: 1px; background: var(--color-rule); border-top: 1px solid var(--color-rule);">
+		<!-- Email deliverability + referral KPIs -->
+		<div class="grid grid-cols-3 md:grid-cols-5" style="gap: 1px; background: var(--color-rule); border-top: 1px solid var(--color-rule);">
 			{#each [
-				{ l: 'E-Mail Öffnungen', v: funnel.emailOpens7d.toLocaleString('de-DE'), c: 'var(--color-sky)' },
+				{ l: 'Öffnungsrate', v: funnel.openRate7d + '%', sub: `${funnel.emailOpens7d} / ${funnel.emailsDelivered7d}`, c: 'var(--color-sky)' },
 				{ l: 'E-Mail Klicks', v: funnel.emailClicks7d.toLocaleString('de-DE'), c: 'var(--color-amber)' },
+				{ l: 'Bounces', v: String(funnel.bounces7d), c: 'var(--color-rose)' },
+				{ l: 'Abmeldungen', v: String(funnel.unsubs7d), c: 'var(--color-muted)' },
 				{ l: 'Empfehlungen', v: String(funnel.referralSignups7d), c: 'var(--color-sage)' }
 			] as kpi}
 				<div class="p-4 sm:p-5" style="background: var(--color-paper);">
 					<p class="uppercase" style="font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.14em; color: {kpi.c};">{kpi.l}</p>
 					<p class="display tnum text-2xl sm:text-3xl mt-1.5" style="color: var(--color-ink); font-weight: 600;">{kpi.v}</p>
+					{#if kpi.sub}<p class="text-xs mt-0.5 tnum" style="color: var(--color-muted);">{kpi.sub}</p>{/if}
 				</div>
 			{/each}
 		</div>
+
+		{#if funnel.referralLeaders.length}
+			<div class="p-5 sm:p-6" style="background: var(--color-paper); border-top: 1px solid var(--color-rule);">
+				<p class="uppercase mb-3" style="font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.14em; color: var(--color-faint);">Top-Werber</p>
+				<div class="flex flex-wrap gap-x-6 gap-y-2">
+					{#each funnel.referralLeaders as l, i}
+						<span class="text-sm tnum" style="color: var(--color-ink-soft);">
+							<span style="color: var(--color-amber); font-family: var(--font-mono);">{i + 1}.</span>
+							<span style="font-family: var(--font-mono);">{l.code}</span>
+							<strong style="color: var(--color-ink);">· {l.count}</strong>
+						</span>
+					{/each}
+				</div>
+			</div>
+		{/if}
 
 		<!-- 7-day bars + top stories -->
 		<div class="grid lg:grid-cols-[1.4fr_1fr]" style="gap: 1px; background: var(--color-rule);">

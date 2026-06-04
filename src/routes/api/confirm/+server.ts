@@ -164,7 +164,7 @@ export async function GET({ url }) {
 	// 1. Look up subscriber by confirmation_token
 	const { data: subscriber, error: lookupError } = await supabaseAdmin
 		.from('nureine_subscribers')
-		.select('id, email, name, confirmed')
+		.select('id, email, name, confirmed, referred_by')
 		.eq('confirmation_token', token)
 		.maybeSingle();
 
@@ -193,13 +193,38 @@ export async function GET({ url }) {
 	const { error: updateError } = await supabaseAdmin
 		.from('nureine_subscribers')
 		.update({
-			confirmed: true
+			confirmed: true,
+			confirmed_at: new Date().toISOString() // DSGVO: Double-Opt-in-Nachweis
 		})
 		.eq('id', subscriber.id);
 
 	if (updateError) {
 		console.error('Supabase update error:', updateError);
 		throw redirect(303, '/newsletter?error=server_error');
+	}
+
+	// 2b. Referral credit — only on confirm (real subscriber). Increment the
+	//     referrer's count + log an event. Best-effort, never blocks confirm.
+	if (subscriber.referred_by) {
+		try {
+			const { data: referrer } = await supabaseAdmin
+				.from('nureine_subscribers')
+				.select('id, referral_count')
+				.eq('referral_code', subscriber.referred_by)
+				.maybeSingle();
+			if (referrer && referrer.id !== subscriber.id) {
+				await supabaseAdmin
+					.from('nureine_subscribers')
+					.update({ referral_count: (referrer.referral_count ?? 0) + 1 })
+					.eq('id', referrer.id);
+				await supabaseAdmin.from('nureine_events').insert({
+					name: 'referral_signup',
+					props: { referrer_code: subscriber.referred_by }
+				});
+			}
+		} catch (e) {
+			console.error('Referral credit failed:', e);
+		}
 	}
 
 	// 3. Send welcome email (fire-and-forget, don't block the redirect)

@@ -3,6 +3,7 @@
 	import { formatDate, toneStyles } from '$lib/utils';
 	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import { track } from '$lib/track';
+	import { getRef } from '$lib/referral';
 	import StoryCard from '$lib/components/StoryCard.svelte';
 	import ShareBar from '$lib/components/ShareBar.svelte';
 
@@ -53,7 +54,7 @@
 			const res = await fetch(`${base}/api/subscribe`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ email: newsletterEmail.trim(), tier: 'free' })
+				body: JSON.stringify({ email: newsletterEmail.trim(), tier: 'free', ref: getRef() })
 			});
 			const result = await res.json();
 			if (res.ok) {

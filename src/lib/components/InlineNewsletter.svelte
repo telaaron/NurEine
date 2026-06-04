@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { track } from '$lib/track';
+	import { getRef } from '$lib/referral';
 
 	let { source = 'inline', compact = false }: { source?: string; compact?: boolean } = $props();
 
@@ -19,7 +20,7 @@
 			const res = await fetch(`${base}/api/subscribe`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ email: email.trim(), tier: 'free', source })
+				body: JSON.stringify({ email: email.trim(), tier: 'free', source, ref: getRef() })
 			});
 			const result = await res.json();
 			if (res.ok) {

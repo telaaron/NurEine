@@ -3,6 +3,7 @@
 	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import { toneStyles } from '$lib/utils';
 	import { track } from '$lib/track';
+	import { getRef } from '$lib/referral';
 
 	let { data } = $props();
 	const featured = $derived(data.featured);
@@ -31,7 +32,7 @@
 			const res = await fetch(`${base}/api/subscribe`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ email: email.trim(), tier: 'free', source: 'landing' })
+				body: JSON.stringify({ email: email.trim(), tier: 'free', source: 'landing', ref: getRef() })
 			});
 			const result = await res.json();
 			if (res.ok) {

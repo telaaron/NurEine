@@ -37,7 +37,7 @@
 					Mitmachen
 				</h3>
 				<ul class="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 text-sm">
-					<li><a class="hover:opacity-70" href={base + '/bei-dir'}>Story einreichen</a></li>
+					<li><a class="hover:opacity-70" href={base + '/einreichen'}>Story einreichen</a></li>
 					<li><a class="hover:opacity-70" href={base + '/newsletter'}>Newsletter</a></li>
 					<li><a class="hover:opacity-70" href={base + '/manifest'}>Manifest</a></li>
 				</ul>

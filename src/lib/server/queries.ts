@@ -805,6 +805,9 @@ export interface FunnelStats {
   storyReads7d: number;
   shares7d: number;
   ctaClicks7d: number;
+  emailOpens7d: number;
+  emailClicks7d: number;
+  referralSignups7d: number;
   signupRate7d: number; // signups / pageviews, %
   topStories: { slug: string; reads: number }[];
   byDay: { day: string; pageviews: number; signups: number }[];
@@ -828,7 +831,10 @@ export async function getFunnelStats(): Promise<FunnelStats> {
     signupsToday = 0,
     reads = 0,
     shares = 0,
-    cta = 0;
+    cta = 0,
+    opens = 0,
+    clicks = 0,
+    referrals = 0;
   const storyReads: Record<string, number> = {};
   const dayMap: Record<string, { pageviews: number; signups: number }> = {};
 
@@ -857,6 +863,15 @@ export async function getFunnelStats(): Promise<FunnelStats> {
       case 'cta_click':
         cta++;
         break;
+      case 'email_open':
+        opens++;
+        break;
+      case 'email_click':
+        clicks++;
+        break;
+      case 'referral_signup':
+        referrals++;
+        break;
     }
   }
 
@@ -877,6 +892,9 @@ export async function getFunnelStats(): Promise<FunnelStats> {
     storyReads7d: reads,
     shares7d: shares,
     ctaClicks7d: cta,
+    emailOpens7d: opens,
+    emailClicks7d: clicks,
+    referralSignups7d: referrals,
     signupRate7d: pageviews ? Math.round((signups / pageviews) * 1000) / 10 : 0,
     topStories,
     byDay

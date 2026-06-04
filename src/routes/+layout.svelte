@@ -9,14 +9,15 @@
         import { injectAnalytics } from '@vercel/analytics/sveltekit';
         import { afterNavigate } from '$app/navigation';
         import { track } from '$lib/track';
+        import { captureRef } from '$lib/referral';
 
         let { children, data } = $props();
 
         // Vercel Web Analytics (cookieless pageviews)
         injectAnalytics({ mode: dev ? 'development' : 'production' });
 
-        // First-party pageview events (owned funnel data)
-        afterNavigate(() => track('pageview'));
+        // First-party pageview events (owned funnel data) + referral capture
+        afterNavigate(() => { track('pageview'); captureRef(); });
 
         const pagePath = $derived(page.url.pathname.replace(base, '') || '/');
         const canonicalUrl = $derived(

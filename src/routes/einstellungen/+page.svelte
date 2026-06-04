@@ -9,6 +9,18 @@
 	let savedMsg = $state('');
 	let errorMsg = $state('');
 
+	const refLink = $derived(
+		data.ok && data.referralCode ? `https://nureine.de/?ref=${data.referralCode}` : ''
+	);
+	let refCopied = $state(false);
+	function copyRef() {
+		if (!refLink) return;
+		navigator.clipboard?.writeText(refLink).then(() => {
+			refCopied = true;
+			setTimeout(() => (refCopied = false), 1800);
+		}).catch(() => {});
+	}
+
 	function toggle(slug: string) {
 		const next = new Set(selected);
 		if (next.has(slug)) next.delete(slug);
@@ -111,6 +123,35 @@
 				<span class="text-sm" style="color: var(--color-rose); font-family: var(--font-serif);">{errorMsg}</span>
 			{/if}
 		</div>
+
+		{#if data.ok && data.referralCode}
+			<div class="mt-12 pt-8" style="border-top: 1px solid var(--color-rule);">
+				<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">Weitersagen</span>
+				<h2 class="display mt-3 text-xl sm:text-2xl" style="color: var(--color-ink); font-weight: 600;">
+					Schenk jemandem den täglichen Lichtblick.
+				</h2>
+				<p class="mt-2 text-sm leading-relaxed max-w-[46ch]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
+					Teile deinen Link. {#if data.referralCount > 0}Schon <strong>{data.referralCount}</strong> {data.referralCount === 1 ? 'Person hat' : 'Menschen haben'} durch dich angefangen. Danke.{:else}Jede:r, der über dich startet, zählt.{/if}
+				</p>
+				<div class="mt-4 flex flex-col sm:flex-row gap-3 max-w-[460px]">
+					<input
+						type="text"
+						readonly
+						value={refLink}
+						class="flex-1 px-4 py-3 rounded-full text-sm"
+						style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink-soft);"
+					/>
+					<button
+						type="button"
+						onclick={copyRef}
+						class="px-6 py-3 rounded-full text-sm font-medium transition-all active:scale-[0.97] whitespace-nowrap"
+						style="background: var(--color-amber); color: var(--color-paper);"
+					>
+						{refCopied ? 'Kopiert ✓' : 'Link kopieren'}
+					</button>
+				</div>
+			</div>
+		{/if}
 
 		<p class="mt-10 text-xs" style="color: var(--color-faint); font-family: var(--font-mono); letter-spacing: 0.03em;">
 			Angemeldet als {data.email}

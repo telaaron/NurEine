@@ -24,6 +24,14 @@ function isValidEmail(email: string): boolean {
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+// Short, URL-safe, human-shareable referral code (8 chars, no ambiguous chars).
+function genReferralCode(): string {
+	const alphabet = 'abcdefghjkmnpqrstuvwxyz23456789';
+	let s = '';
+	for (let i = 0; i < 8; i++) s += alphabet[Math.floor(Math.random() * alphabet.length)];
+	return s;
+}
+
 function buildConfirmationEmailHtml(token: string): string {
 	const confirmUrl = `${BASE_URL}/api/confirm?token=${token}`;
 
@@ -146,9 +154,15 @@ async function sendConfirmationEmail(email: string, token: string): Promise<void
 	}
 }
 
-export async function POST({ request }) {
+export async function POST({ request, getClientAddress }) {
 	try {
-		const { email, name, tier, lat, lng, region, region_code, categories } = await request.json();
+		const { email, name, tier, lat, lng, region, region_code, categories, ref } = await request.json();
+
+		// DSGVO: record signup IP for double-opt-in proof.
+		let signupIp: string | null = null;
+		try { signupIp = getClientAddress(); } catch { signupIp = null; }
+		// Referral code of the person who referred this signup (if any).
+		const referredBy = typeof ref === 'string' && /^[A-Za-z0-9]{4,16}$/.test(ref) ? ref : null;
 
 		// 1. Validate email format
 		if (!email || typeof email !== 'string') {
@@ -237,6 +251,9 @@ export async function POST({ request }) {
 				region: region ?? null,
 				region_code: region_code ?? null,
 				categories: cleanCategories,
+				referral_code: genReferralCode(),
+				referred_by: referredBy,
+				signup_ip: signupIp,
 				created_at: now
 			});
 

@@ -120,6 +120,20 @@
 			{/each}
 		</div>
 
+		<!-- Email + referral KPIs -->
+		<div class="grid grid-cols-3" style="gap: 1px; background: var(--color-rule); border-top: 1px solid var(--color-rule);">
+			{#each [
+				{ l: 'E-Mail Öffnungen', v: funnel.emailOpens7d.toLocaleString('de-DE'), c: 'var(--color-sky)' },
+				{ l: 'E-Mail Klicks', v: funnel.emailClicks7d.toLocaleString('de-DE'), c: 'var(--color-amber)' },
+				{ l: 'Empfehlungen', v: String(funnel.referralSignups7d), c: 'var(--color-sage)' }
+			] as kpi}
+				<div class="p-4 sm:p-5" style="background: var(--color-paper);">
+					<p class="uppercase" style="font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.14em; color: {kpi.c};">{kpi.l}</p>
+					<p class="display tnum text-2xl sm:text-3xl mt-1.5" style="color: var(--color-ink); font-weight: 600;">{kpi.v}</p>
+				</div>
+			{/each}
+		</div>
+
 		<!-- 7-day bars + top stories -->
 		<div class="grid lg:grid-cols-[1.4fr_1fr]" style="gap: 1px; background: var(--color-rule);">
 			<!-- bars -->

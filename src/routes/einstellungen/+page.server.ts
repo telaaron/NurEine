@@ -12,7 +12,7 @@ export async function load({ url }) {
 
 	const { data: sub, error } = await supabaseAdmin
 		.from('nureine_subscribers')
-		.select('confirmation_token, categories, confirmed')
+		.select('confirmation_token, categories, confirmed, referral_code, referral_count')
 		.eq('email', email)
 		.maybeSingle();
 
@@ -27,6 +27,8 @@ export async function load({ url }) {
 		ok: true as const,
 		email,
 		token,
-		categories: (sub.categories as string[]) ?? []
+		categories: (sub.categories as string[]) ?? [],
+		referralCode: (sub.referral_code as string) ?? null,
+		referralCount: (sub.referral_count as number) ?? 0
 	};
 }

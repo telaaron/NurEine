@@ -35,6 +35,7 @@
                 '/preise': 'Preise',
                 '/manifest': 'Manifest',
                 '/methodik': 'Methodik',
+                '/stand-der-welt': 'Der Stand der Welt',
                 '/warum': 'Warum NurEine',
                 '/einreichen': 'Geschichte einreichen',
                 '/karte': 'Karte',

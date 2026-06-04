@@ -188,7 +188,14 @@ per-Story-Felder (`kid_age`, `explainer`, `conversation_starter`) → KI-Tagging
 `scripts/fetch_stories.py`. Reuse: Segment-Versand existiert. Kein Konkurrent
 positioniert sich als Familien-Ritual → Retention + Eltern-Viral-Kanal.
 
-### 7.4 „Stand der Welt"-Dashboard (P1 · hoch) — der echte Moat
+### 7.4 „Stand der Welt"-Dashboard (P1 · hoch) — der echte Moat ✅ LIVE
+**Gebaut:** `/stand-der-welt`, Tabelle `nureine_world_metrics`, Python-Cron
+`scripts/fetch_world_metrics.py` (World Bank API, 6 Metriken) + monatlicher
+GitHub-Action. Trendlinien (SVG, „besser"-Richtung flippt), Ehrlichkeits-Layer,
+OWID-Verweis. Erweitern: mehr Metriken (WHO/OWID-CSV), Detail-Vollbild-Chart pro
+Karte, Monats-Newsletter „Der Stand der Welt".
+<!-- Ursprüngliche Notiz: -->
+
 `/stand-der-welt`: ~5–8 (später 15) kuratierte Langzeit-Metriken, **Trendlinie 20–50J
 schlägt Momentaufnahme** (z.B. extreme Armut 1990 36% → 2024 8,5% = „75% eliminiert").
 Quellen: World Bank REST API (trivial), Our World in Data CSV (GitHub). Python-Cron

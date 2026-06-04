@@ -40,6 +40,7 @@
 					<li><a class="hover:opacity-70" href={base + '/einreichen'}>Story einreichen</a></li>
 					<li><a class="hover:opacity-70" href={base + '/newsletter'}>Newsletter</a></li>
 					<li><a class="hover:opacity-70" href={base + '/manifest'}>Manifest</a></li>
+					<li><a class="hover:opacity-70" href={base + '/methodik'}>Methodik</a></li>
 				</ul>
 			</div>
 		</div>

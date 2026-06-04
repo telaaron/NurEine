@@ -32,6 +32,9 @@ export interface HeroStory {
   image_url: string | null;
   impact_score: number | null;
   reading_time_min: number | null;
+  kid_min_age?: number | null;
+  kid_explainer?: string | null;
+  conversation_starter?: string | null;
 }
 
 export interface Subscriber {
@@ -41,6 +44,7 @@ export interface Subscriber {
   tier: string;
   categories: string[];
   category_scores: Record<string, number>;
+  has_kids?: boolean | null;
 }
 
 export type B2BBranding = {
@@ -171,6 +175,14 @@ function formatBodyHtml(bodyMarkdown: string | null): string {
   return parts.join('\n');
 }
 
+function escapeForHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 // ---------------------------------------------------------------------------
 // B2C HTML Template
 // ---------------------------------------------------------------------------
@@ -178,10 +190,24 @@ function formatBodyHtml(bodyMarkdown: string | null): string {
 export function buildB2CHtml(
   story: HeroStory,
   subscriberEmail: string,
-  confirmationToken: string
+  confirmationToken: string,
+  forParent = false
 ): string {
   // Tracked link → learns the reader's category taste from clicks.
   const url = trackedStoryUrl(story, subscriberEmail, confirmationToken);
+
+  // Family block — only for the parent segment AND only when the story is tagged
+  // family-suitable. "Ein Gespräch mehr."
+  const familyBlock =
+    forParent && story.kid_min_age
+      ? `<tr><td style="padding:0 40px 24px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f0e9dc;border-radius:10px;"><tr><td style="padding:18px 20px;">
+    <p style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#bd6a35;">★ Für die Familie · ab ${story.kid_min_age} Jahren erklärbar</p>
+    ${story.kid_explainer ? `<p style="margin:0 0 10px;font-family:Georgia,serif;font-size:15px;line-height:1.6;color:#3a342c;">${escapeForHtml(story.kid_explainer)}</p>` : ''}
+    ${story.conversation_starter ? `<p style="margin:0;font-family:Georgia,serif;font-style:italic;font-size:15px;line-height:1.55;color:#9c5527;">Frage für heute Abend: ${escapeForHtml(story.conversation_starter)}</p>` : ''}
+  </td></tr></table>
+</td></tr>`
+      : '';
   const unsubscribeUrl = `${BASE_URL}/api/unsubscribe?token=${encodeURIComponent(
     confirmationToken
   )}&email=${encodeURIComponent(subscriberEmail)}`;
@@ -268,6 +294,8 @@ export function buildB2CHtml(
             <td><span class="nur-eine-text-muted" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;"><strong style="font-weight:600;color:#1a1815;">Lesezeit</strong> ${minutes} Min.</span></td>
           </tr></table>
         </td></tr>
+
+        ${familyBlock}
 
         <tr><td style="padding:0 40px 32px;">
           <table role="presentation" cellpadding="0" cellspacing="0"><tr>
@@ -506,7 +534,7 @@ async function sendBrevoEmail(toEmail: string, subject: string, html: string): P
  */
 async function selectNewsletterStory(): Promise<HeroStory | null> {
   const BASE_SELECT =
-    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min';
+    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter';
   const now = new Date();
 
   // ── Tier 1: last 24 h ──────────────────────────────────────────────
@@ -587,7 +615,7 @@ async function markStorySent(storyId: string): Promise<void> {
  */
 async function selectRankedStories(limit = 12): Promise<HeroStory[]> {
   const BASE_SELECT =
-    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min';
+    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter';
   const now = Date.now();
 
   async function tier(sinceMs: number | null): Promise<HeroStory[]> {
@@ -673,7 +701,7 @@ function pickForSubscriber(
 async function fetchConfirmedFreeSubscribers(): Promise<Subscriber[]> {
   const { data, error } = await supabaseAdmin
     .from('nureine_subscribers')
-    .select('id,email,confirmation_token,tier,categories,category_scores')
+    .select('id,email,confirmation_token,tier,categories,category_scores,has_kids')
     .eq('confirmed', true)
     .eq('tier', 'free');
 
@@ -811,7 +839,7 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
       continue;
     }
     try {
-      const html = buildB2CHtml(pick, sub.email, sub.confirmation_token || '');
+      const html = buildB2CHtml(pick, sub.email, sub.confirmation_token || '', sub.has_kids === true);
       await sendBrevoEmail(sub.email, SUBJECT_DAILY, html);
       await logSend(sub.id, pick.id);
       sentStoryIds.add(pick.id);

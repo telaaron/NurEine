@@ -34,6 +34,9 @@
                 '/archiv': 'Archiv',
                 '/preise': 'Preise',
                 '/manifest': 'Manifest',
+                '/methodik': 'Methodik',
+                '/warum': 'Warum NurEine',
+                '/einreichen': 'Geschichte einreichen',
                 '/karte': 'Karte',
                 '/newsletter': 'Newsletter',
                 '/bei-dir': 'Bei dir'
@@ -41,12 +44,12 @@
 
         const seoTitle = $derived(
                 isStory ? `${page.data.story.title} — NurEine` : 
-                (pathTitles[pagePath] ? `${pathTitles[pagePath]} — NurEine` : 'NurEine — Dein täglicher Lichtblick')
+                (pathTitles[pagePath] ? `${pathTitles[pagePath]} — NurEine` : 'NurEine — Ehrlicher Fortschritt, täglich')
         );
 
         const seoDesc = $derived(
                 isStory ? page.data.story.dek : 
-                'Wir filtern tausende Quellen mit KI auf das Wesentliche. Eine gute Nachricht am Tag gegen die Reizüberflutung. Exklusiv, neutral und kuratiert.'
+                'Wir berichten nicht, dass die Welt gut ist — wir zeigen, wo sie besser wird. Täglich eine belegte Geschichte über echten Fortschritt, in zwei Minuten. Kein Feed, kein Algorithmus.'
         );
 
         // JPEG for og:image — universally supported by WhatsApp, iMessage, Facebook, Twitter

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NurEine — Mockup v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@300..800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-serif: 'Fraunces', Georgia, serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    /* Warm canvas */
+    --canvas: #f4efe6;
+    --canvas-soft: #ece4d7;
+    --paper: #fbf8f1;
+    --elevated: #ffffff;
+
+    /* Ink */
+    --ink: #16140f;
+    --ink-soft: #38322a;
+    --muted: #6b6359;
+    --faint: #9a9087;
+
+    /* Rules */
+    --rule: rgba(22, 20, 15, 0.10);
+    --rule-strong: rgba(22, 20, 15, 0.20);
+
+    /* Brand */
+    --amber: #bd6a35;
+    --amber-deep: #9c5527;
+    --amber-soft: #e9b58e;
+    --amber-tint: rgba(189, 106, 53, 0.10);
+    --sage: #56764e;
+    --sky: #5d7e9c;
+    --rose: #b06f6f;
+
+    /* Two-part shadows (RefactoringUI) — warm-tinted, never pure black */
+    --shadow-sm: 0 1px 2px rgba(60, 40, 20, 0.04), 0 2px 6px rgba(60, 40, 20, 0.06);
+    --shadow-md: 0 2px 4px rgba(60, 40, 20, 0.05), 0 8px 20px rgba(60, 40, 20, 0.09);
+    --shadow-lg: 0 4px 8px rgba(60, 40, 20, 0.06), 0 18px 44px rgba(60, 40, 20, 0.13);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--amber); color: var(--paper); }
+  a { color: inherit; text-decoration: none; }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 clamp(20px, 5vw, 56px); }
+  .serif { font-family: var(--font-serif); }
+  .mono { font-family: var(--font-mono); }
+
+  /* Eyebrow — telegraph ticker */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    font-weight: 500;
+    color: var(--amber);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7em;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 28px; height: 1.5px;
+    background: var(--amber);
+    display: inline-block;
+  }
+
+  /* ─── Header ─── */
+  header {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(244, 239, 230, 0.82);
+    backdrop-filter: blur(14px) saturate(1.2);
+    border-bottom: 1px solid var(--rule);
+  }
+  .hbar { display: flex; align-items: center; justify-content: space-between; height: 68px; }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand-mark {
+    width: 30px; height: 36px;
+    background: linear-gradient(160deg, var(--amber) 0%, var(--amber-deep) 100%);
+    clip-path: polygon(50% 0%, 100% 78%, 50% 100%, 0% 78%);
+    box-shadow: var(--shadow-sm);
+  }
+  .brand-name { font-family: var(--font-serif); font-size: 1.45rem; font-weight: 600; letter-spacing: -0.01em; }
+  nav.main { display: flex; gap: 34px; }
+  nav.main a {
+    font-size: 0.9rem; color: var(--muted);
+    position: relative; padding: 4px 0;
+    transition: color .2s;
+  }
+  nav.main a:hover { color: var(--ink); }
+  nav.main a.active { color: var(--ink); }
+  nav.main a.active::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -2px;
+    height: 2px; background: var(--amber); border-radius: 2px;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 20px; border-radius: 100px;
+    font-size: 0.875rem; font-weight: 500;
+    background: var(--ink); color: var(--paper);
+    box-shadow: var(--shadow-sm);
+    transition: transform .18s cubic-bezier(.2,.7,.2,1), box-shadow .18s;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .btn .arr { transition: transform .2s; }
+  .btn:hover .arr { transform: translateX(3px); }
+  .btn-amber { background: var(--amber); }
+
+  /* ─── HERO ─── */
+  .hero { position: relative; overflow: hidden; }
+  .hero-glow {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse 80% 60% at 70% 8%, rgba(189,106,53,.16) 0%, rgba(189,106,53,.04) 38%, transparent 64%);
+  }
+  /* Asymmetric editorial grid: big headline left-ish, meta rail right */
+  .hero-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: clamp(24px, 5vw, 72px);
+    padding-top: clamp(48px, 8vh, 104px);
+    padding-bottom: clamp(40px, 6vh, 80px);
+    align-items: start;
+  }
+  .kicker-date {
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: var(--muted);
+    font-size: 1.05rem;
+    margin-top: 14px;
+  }
+  .hero h1 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: clamp(2.7rem, 7vw, 6rem);
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    margin-top: 22px;
+    max-width: 16ch;
+    color: var(--ink);
+  }
+  /* optical: tighten the headline's "voranbringen" — amber word */
+  .hero h1 em { font-style: normal; color: var(--amber); }
+  .hero .dek {
+    font-family: var(--font-serif);
+    font-size: clamp(1.15rem, 1.7vw, 1.55rem);
+    line-height: 1.45;
+    color: var(--ink-soft);
+    margin-top: clamp(20px, 3vw, 34px);
+    max-width: 46ch;
+  }
+  .hero-cta { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; margin-top: 36px; }
+  .meta-inline {
+    display: flex; align-items: center; gap: 10px;
+    font-family: var(--font-mono); font-size: 0.78rem;
+    color: var(--muted); letter-spacing: 0.02em;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); }
+
+  /* Hero right rail — story image card, overlapping/floating */
+  .hero-rail { position: relative; }
+  .hero-art {
+    aspect-ratio: 3/4;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--rule);
+    background: linear-gradient(150deg, #f0c9a0, #d98b52 55%, #b5673a);
+    position: relative;
+  }
+  .hero-art .na {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-serif); font-weight: 700;
+    font-size: 5rem; color: rgba(255,255,255,.92);
+    text-shadow: 0 2px 20px rgba(120,60,20,.3);
+  }
+  .hero-art .tag {
+    position: absolute; top: 14px; left: 14px;
+    font-family: var(--font-mono); font-size: 0.62rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    background: rgba(251,248,241,.9); color: var(--amber-deep);
+    padding: 5px 11px; border-radius: 100px;
+    backdrop-filter: blur(6px);
+  }
+  .impact-chip {
+    position: absolute; bottom: -16px; right: -10px;
+    background: var(--paper); border: 1px solid var(--rule);
+    border-radius: 12px; padding: 12px 16px;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+  }
+  .impact-chip .n { font-family: var(--font-serif); font-size: 1.7rem; font-weight: 600; line-height: 1; color: var(--ink); }
+  .impact-chip .l { font-family: var(--font-mono); font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.16em; color: var(--faint); margin-top: 5px; }
+
+  /* ─── Compass strip — stats ─── */
+  .compass {
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    background: linear-gradient(var(--canvas-soft), var(--canvas-soft));
+  }
+  .compass-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px; background: var(--rule);
+  }
+  .stat { background: var(--canvas-soft); padding: 24px clamp(16px,2vw,28px); }
+  .stat .l { font-family: var(--font-mono); font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.16em; color: var(--faint); }
+  .stat .n { font-family: var(--font-serif); font-size: clamp(1.6rem, 2.4vw, 2.3rem); font-weight: 500; margin-top: 8px; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  .stat .n small { font-size: 0.9rem; color: var(--faint); font-family: var(--font-sans); }
+
+  /* ─── Manifesto ─── */
+  .manifesto { padding: clamp(64px, 10vh, 130px) 0; }
+  .manifesto-grid { display: grid; grid-template-columns: 220px minmax(0,1fr); gap: clamp(24px,5vw,64px); align-items: start; }
+  .manifesto p.big {
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 2.8vw, 2.3rem);
+    line-height: 1.32;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+    max-width: 24ch;
+  }
+  .manifesto p.big em { font-style: normal; color: var(--amber); }
+  .link-underline {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 28px; font-size: 0.9rem; color: var(--ink-soft);
+    border-bottom: 1.5px solid var(--rule-strong);
+    padding-bottom: 3px; transition: border-color .2s, gap .2s;
+  }
+  .link-underline:hover { border-color: var(--amber); gap: 12px; }
+
+  /* ─── Story section ─── */
+  .stories { padding-bottom: clamp(64px, 10vh, 120px); }
+  .sec-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: clamp(32px,5vw,52px); }
+  .sec-head h2 { font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.9rem, 3.5vw, 3rem); letter-spacing: -0.02em; margin-top: 12px; }
+
+  /* Asymmetric: 1 feature (spans 2) + smaller ones */
+  .story-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(20px, 2.5vw, 34px);
+  }
+  .card {
+    display: flex; flex-direction: column;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    transition: transform .4s cubic-bezier(.2,.7,.2,1), box-shadow .4s, border-color .4s;
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--rule-strong); }
+  .card-img { aspect-ratio: 4/3; overflow: hidden; position: relative; }
+  .card-img > div.ph { position: absolute; inset: 0; transition: transform .9s cubic-bezier(.2,.7,.2,1); }
+  .card:hover .card-img > div.ph { transform: scale(1.05); }
+  .card-img .tag {
+    position: absolute; top: 13px; left: 13px; z-index: 2;
+    font-family: var(--font-mono); font-size: 0.6rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    background: rgba(251,248,241,.88); padding: 5px 11px; border-radius: 100px;
+    backdrop-filter: blur(6px);
+  }
+  .card-body { padding: clamp(18px,2vw,26px); display: flex; flex-direction: column; flex: 1; }
+  .card-meta { font-family: var(--font-mono); font-size: 0.68rem; color: var(--faint); letter-spacing: 0.03em; display: flex; gap: 8px; }
+  .card h3 { font-family: var(--font-serif); font-weight: 500; line-height: 1.16; letter-spacing: -0.01em; margin-top: 12px; color: var(--ink); }
+  .card p { font-family: var(--font-serif); color: var(--ink-soft); margin-top: 11px; line-height: 1.55; }
+  .card-foot {
+    margin-top: auto; padding-top: 16px; border-top: 1px solid var(--rule);
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 0.68rem; color: var(--muted);
+  }
+  .card-foot .impact { display: flex; align-items: center; gap: 7px; }
+
+  /* feature card: spans 2 cols, horizontal on wide */
+  .card.feature { grid-column: span 2; grid-row: span 2; }
+  .card.feature .card-img { aspect-ratio: 16/10; }
+  .card.feature h3 { font-size: clamp(1.6rem, 2.6vw, 2.3rem); }
+  .card.feature p { font-size: 1.08rem; max-width: 52ch; }
+  .card.feature .card-body { padding: clamp(24px,3vw,38px); }
+
+  .card:not(.feature) h3 { font-size: 1.3rem; }
+  .card:not(.feature) p { font-size: 0.92rem; }
+
+  /* tone tints on feature placeholder */
+  .ph-sage { background: linear-gradient(150deg,#cdd9c4,#7d9b71 60%,#56764e); }
+  .ph-sky  { background: linear-gradient(150deg,#c6d4e0,#7c9bb6 60%,#5d7e9c); }
+  .ph-rose { background: linear-gradient(150deg,#e2c6c6,#c08e8e 60%,#b06f6f); }
+  .ph-amber{ background: linear-gradient(150deg,#f0c9a0,#d98b52 60%,#b5673a); }
+  .ph-ico { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size: 3.2rem; opacity:.92; }
+
+  /* ─── Newsletter ─── */
+  .news { padding-bottom: clamp(56px, 8vh, 100px); }
+  .news-card {
+    position: relative; overflow: hidden;
+    background: var(--ink); color: var(--paper);
+    border-radius: 20px;
+    padding: clamp(32px, 5vw, 64px);
+    display: grid; grid-template-columns: minmax(0,1fr) minmax(0, 420px);
+    gap: clamp(28px, 4vw, 56px); align-items: center;
+    box-shadow: var(--shadow-lg);
+  }
+  .news-card::before {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse 60% 80% at 92% 50%, rgba(189,106,53,.4), transparent 60%);
+  }
+  .news-card .eyebrow { color: var(--amber-soft); position: relative; }
+  .news-card .eyebrow::before { background: var(--amber-soft); }
+  .news-card h2 { position: relative; font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.7rem, 3vw, 2.6rem); line-height: 1.1; letter-spacing: -0.02em; margin-top: 18px; }
+  .news-card .sub { position: relative; font-family: var(--font-serif); color: rgba(251,248,241,.72); margin-top: 16px; line-height: 1.55; max-width: 48ch; }
+  .news-form { position: relative; display: flex; flex-direction: column; gap: 12px; }
+  .news-form .row { display: flex; gap: 12px; }
+  .news-form input {
+    flex: 1; padding: 14px 18px; border-radius: 100px;
+    background: rgba(251,248,241,.06); border: 1px solid rgba(251,248,241,.22);
+    color: var(--paper); font-size: 0.92rem; font-family: var(--font-sans);
+    transition: border-color .2s, background .2s;
+  }
+  .news-form input::placeholder { color: rgba(251,248,241,.5); }
+  .news-form input:focus { outline: none; border-color: var(--amber-soft); background: rgba(251,248,241,.1); }
+  .news-form .note { font-family: var(--font-mono); font-size: 0.66rem; color: rgba(251,248,241,.45); letter-spacing: 0.04em; }
+
+  /* ─── Footer mini ─── */
+  footer { border-top: 1px solid var(--rule); padding: 48px 0; }
+  .foot-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+  .foot-row .copy { font-family: var(--font-mono); font-size: 0.7rem; color: var(--faint); letter-spacing: 0.04em; }
+  .foot-links { display: flex; gap: 24px; font-size: 0.85rem; color: var(--muted); }
+
+  .rise { opacity: 0; transform: translateY(16px); animation: rise .8s cubic-bezier(.2,.7,.2,1) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  .d1{animation-delay:.06s}.d2{animation-delay:.14s}.d3{animation-delay:.24s}.d4{animation-delay:.36s}.d5{animation-delay:.48s}
+
+  /* annotation banner */
+  .annot { background: var(--amber); color: var(--paper); text-align: center; font-family: var(--font-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; padding: 8px; }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 960px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .hero-rail { max-width: 340px; margin-top: 12px; }
+    .manifesto-grid { grid-template-columns: 1fr; gap: 16px; }
+    .story-grid { grid-template-columns: repeat(2, 1fr); }
+    .card.feature { grid-column: span 2; grid-row: auto; }
+    .news-card { grid-template-columns: 1fr; }
+    nav.main { display: none; }
+  }
+  @media (max-width: 600px) {
+    .compass-grid { grid-template-columns: repeat(2, 1fr); }
+    .story-grid { grid-template-columns: 1fr; }
+    .card.feature { grid-column: auto; }
+    .news-form .row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="annot">▼ Mockup v2 — leveled-up Homepage · warm editorial, mehr Tiefe + Hierarchie + Wei&szlig;raum</div>
+
+<!-- HEADER -->
+<header>
+  <div class="wrap hbar">
+    <a class="brand" href="#">
+      <span class="brand-mark"></span>
+      <span class="brand-name">NurEine</span>
+    </a>
+    <nav class="main">
+      <a href="#" class="active">Heute</a>
+      <a href="#">Archiv</a>
+      <a href="#">Karte der Hoffnung</a>
+      <a href="#">Bei dir</a>
+      <a href="#">Manifest</a>
+    </nav>
+    <a class="btn" href="#">Newsletter <span class="arr">&rarr;</span></a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="wrap hero-grid">
+    <div class="hero-main">
+      <span class="eyebrow rise">Eine gute Nachricht heute</span>
+      <p class="kicker-date rise d1">Sonntag, 31. Mai 2026</p>
+      <h1 class="rise d2">Natrium-Batterie wird g&uuml;nstige <em>Alternative</em> zu Lithium</h1>
+      <p class="dek rise d3">Studie belegt: Natrium-Ionen-Akku erreicht fast Tesla-Niveau &mdash; senkt Kosten und Risiken zugleich.</p>
+      <div class="hero-cta rise d4">
+        <a class="btn" href="#">Geschichte lesen <span class="arr">&rarr;</span></a>
+        <span class="meta-inline"><span class="dot"></span> 2 Min &middot; Wirkung 82 &middot; Deutschland</span>
+      </div>
+    </div>
+    <div class="hero-rail rise d3">
+      <div class="hero-art">
+        <span class="tag">Innovation</span>
+        <span class="na">Na</span>
+        <div class="impact-chip">
+          <div class="n">82</div>
+          <div class="l">Wirkung</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPASS -->
+  <div class="compass">
+    <div class="wrap">
+      <div class="compass-grid">
+        <div class="stat"><div class="l">Heute kuratiert</div><div class="n">114</div></div>
+        <div class="stat"><div class="l">Quellen gepr&uuml;ft</div><div class="n">2.847</div></div>
+        <div class="stat"><div class="l">&Oslash; Wirkungsindex</div><div class="n">78<small>/100</small></div></div>
+        <div class="stat"><div class="l">&Oslash; Lesezeit</div><div class="n">3,3<small> min</small></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MANIFESTO -->
+<section class="manifesto">
+  <div class="wrap manifesto-grid">
+    <span class="eyebrow">Warum es uns gibt</span>
+    <div>
+      <p class="big">Die Nachrichtenlage ist nicht die Welt. Sie ist eine Auswahl. Wir filtern dieselben tausenden Quellen &mdash; und suchen das, was zeigt, dass Menschen <em>vorankommen</em>: bauen, heilen, einigen, erfinden, sch&uuml;tzen.</p>
+      <a class="link-underline" href="#">Vollst&auml;ndiges Manifest lesen <span>&rarr;</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- STORIES -->
+<section class="stories">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="eyebrow">Diese Woche</span>
+        <h2>Geschichten, die weitertragen</h2>
+      </div>
+      <a class="link-underline" href="#">Ganzes Archiv <span>&rarr;</span></a>
+    </div>
+
+    <div class="story-grid">
+      <!-- FEATURE -->
+      <a class="card feature" href="#">
+        <div class="card-img"><div class="ph ph-sky"><span class="ph-ico">🌊</span></div><span class="tag">Wissenschaft</span></div>
+        <div class="card-body">
+          <div class="card-meta"><span>Deutschland</span><span>&middot;</span><span>29. Mai</span><span>&middot;</span><span>4 Min</span></div>
+          <h3>Forscher filtern Mikroplastik mit einem Material aus Pflanzenresten</h3>
+          <p>Ein Team aus Kiel hat einen biologisch abbaubaren Schwamm entwickelt, der 99&nbsp;% der Partikel aus Wasser bindet &mdash; g&uuml;nstig und skalierbar.</p>
+          <div class="card-foot"><span class="impact"><span class="dot"></span> Wirkung 91/100</span><span>Hoffnungsvoll</span></div>
+        </div>
+      </a>
+      <!-- small cards -->
+      <a class="card" href="#">
+        <div class="card-img"><div class="ph ph-sage"><span class="ph-ico">🌳</span></div><span class="tag">Klima</span></div>
+        <div class="card-body">
+          <div class="card-meta"><span>Kenia</span><span>&middot;</span><span>3 Min</span></div>
+          <h3>Wiederaufforstung bringt Fl&uuml;sse zur&uuml;ck</h3>
+          <p>Zehn Jahre Arbeit zahlen sich aus.</p>
+          <div class="card-foot"><span class="impact"><span class="dot"></span> 84/100</span><span>Umwelt</span></div>
+        </div>
+      </a>
+      <a class="card" href="#">
+        <div class="card-img"><div class="ph ph-rose"><span class="ph-ico">🕊️</span></div><span class="tag">Tiere</span></div>
+        <div class="card-body">
+          <div class="card-meta"><span>Spanien</span><span>&middot;</span><span>2 Min</span></div>
+          <h3>Seltener Greifvogel kehrt zur&uuml;ck</h3>
+          <p>Bestand verdreifacht seit 2020.</p>
+          <div class="card-foot"><span class="impact"><span class="dot"></span> 76/100</span><span>Menschlich</span></div>
+        </div>
+      </a>
+      <a class="card" href="#">
+        <div class="card-img"><div class="ph ph-amber"><span class="ph-ico">💡</span></div><span class="tag">Innovation</span></div>
+        <div class="card-body">
+          <div class="card-meta"><span>Indien</span><span>&middot;</span><span>5 Min</span></div>
+          <h3>Solar-Mini-Netze versorgen 40 D&ouml;rfer</h3>
+          <p>Strom f&uuml;r erstmals 12.000 Menschen.</p>
+          <div class="card-foot"><span class="impact"><span class="dot"></span> 88/100</span><span>Wirkung &uarr;</span></div>
+        </div>
+      </a>
+      <a class="card" href="#">
+        <div class="card-img"><div class="ph ph-sky"><span class="ph-ico">🔬</span></div><span class="tag">Gesundheit</span></div>
+        <div class="card-body">
+          <div class="card-meta"><span>Tunesien</span><span>&middot;</span><span>4 Min</span></div>
+          <h3>WHO erkl&auml;rt Trachom f&uuml;r besiegt</h3>
+          <p>Jahrzehnte-Kampagne erfolgreich.</p>
+          <div class="card-foot"><span class="impact"><span class="dot"></span> 96/100</span><span>Gesundheit</span></div>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="news">
+  <div class="wrap">
+    <div class="news-card">
+      <div>
+        <span class="eyebrow">Der t&auml;gliche Lichtblick</span>
+        <h2>Eine gute Nachricht. Jeden Morgen. Werbefrei.</h2>
+        <p class="sub">Kein Doomscrolling, kein Algorithmus. Eine kuratierte Geschichte pro Tag &mdash; mit Hintergrund, Quellen und Wirkungsindex.</p>
+      </div>
+      <form class="news-form" onsubmit="return false">
+        <div class="row">
+          <input type="email" placeholder="Deine beste E-Mail" />
+          <button class="btn btn-amber" type="submit">Abonnieren</button>
+        </div>
+        <span class="note">Jederzeit abbestellbar &middot; Kein Spam</span>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap foot-row">
+    <div class="copy">© 2026 NurEine &middot; Teltow, Brandenburg</div>
+    <div class="foot-links">
+      <a href="#">Manifest</a><a href="#">Impressum</a><a href="#">Datenschutz</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

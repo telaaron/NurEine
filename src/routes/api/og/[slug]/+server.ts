@@ -1,6 +1,10 @@
 import { getStoryBySlug } from '$lib/server/queries';
 import type { RequestHandler } from './$types';
-import { loadFonts } from '$lib/server/og/fonts';
+
+// OG render (Satori + resvg) can take a few seconds cold; give Vercel headroom.
+// Result is CDN-cached 24h so only the first request per story pays this.
+export const config = { maxDuration: 30 };
+import { loadFonts, loadLogoDataUri } from '$lib/server/og/fonts';
 import { buildOgTemplate } from '$lib/server/og/template';
 
 /**
@@ -47,15 +51,18 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
 		imageBase64 = await imageToBase64DataUri(imageUrl);
 	}
 
-	// --- 3) Load fonts for Satori ---
-	const fonts = await loadFonts();
+	// --- 3) Load fonts + logo for Satori ---
+	const [fonts, logoDataUri] = await Promise.all([loadFonts(), loadLogoDataUri()]);
 
 	// --- 4) Build the HTML template ---
 	const html = buildOgTemplate({
 		title: story.title || '',
 		dek: story.dek || '',
 		category: story.category || 'gemeinschaft',
-		imageBase64
+		country: story.country || '',
+		code: story.region || '',
+		imageBase64,
+		logoDataUri
 	});
 
 	// --- 5) Render HTML → SVG via Satori ---

@@ -884,3 +884,90 @@ export async function getDeliveryLog(limit = 50): Promise<DeliveryLogEntry[]> {
     story_title: entry.nureine_stories?.title || null
   }));
 }
+
+// ---- Funnel / Analytics (nureine_events) ----
+
+export interface FunnelStats {
+  pageviews7d: number;
+  signups7d: number;
+  signupsToday: number;
+  storyReads7d: number;
+  shares7d: number;
+  ctaClicks7d: number;
+  signupRate7d: number; // signups / pageviews, %
+  topStories: { slug: string; reads: number }[];
+  byDay: { day: string; pageviews: number; signups: number }[];
+}
+
+export async function getFunnelStats(): Promise<FunnelStats> {
+  const since = new Date(Date.now() - 7 * 864e5).toISOString();
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabaseAdmin
+    .from('nureine_events')
+    .select('name, props, created_at')
+    .gte('created_at', since)
+    .limit(50000);
+
+  const rows = error || !data ? [] : data;
+
+  let pageviews = 0,
+    signups = 0,
+    signupsToday = 0,
+    reads = 0,
+    shares = 0,
+    cta = 0;
+  const storyReads: Record<string, number> = {};
+  const dayMap: Record<string, { pageviews: number; signups: number }> = {};
+
+  for (const r of rows as { name: string; props: any; created_at: string }[]) {
+    const day = r.created_at.slice(0, 10);
+    dayMap[day] ??= { pageviews: 0, signups: 0 };
+    switch (r.name) {
+      case 'pageview':
+        pageviews++;
+        dayMap[day].pageviews++;
+        break;
+      case 'newsletter_signup':
+        signups++;
+        dayMap[day].signups++;
+        if (r.created_at >= todayStart.toISOString()) signupsToday++;
+        break;
+      case 'story_read': {
+        reads++;
+        const slug = r.props?.slug;
+        if (typeof slug === 'string') storyReads[slug] = (storyReads[slug] || 0) + 1;
+        break;
+      }
+      case 'share':
+        shares++;
+        break;
+      case 'cta_click':
+        cta++;
+        break;
+    }
+  }
+
+  const topStories = Object.entries(storyReads)
+    .map(([slug, reads]) => ({ slug, reads }))
+    .sort((a, b) => b.reads - a.reads)
+    .slice(0, 5);
+
+  const byDay = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(Date.now() - (6 - i) * 864e5).toISOString().slice(0, 10);
+    return { day: d, pageviews: dayMap[d]?.pageviews ?? 0, signups: dayMap[d]?.signups ?? 0 };
+  });
+
+  return {
+    pageviews7d: pageviews,
+    signups7d: signups,
+    signupsToday,
+    storyReads7d: reads,
+    shares7d: shares,
+    ctaClicks7d: cta,
+    signupRate7d: pageviews ? Math.round((signups / pageviews) * 1000) / 10 : 0,
+    topStories,
+    byDay
+  };
+}

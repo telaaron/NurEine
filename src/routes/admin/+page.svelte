@@ -3,7 +3,7 @@
 	import { formatDate, relTime } from '$lib/utils';
 
 	let { data } = $props();
-	const { totalStories, categories, subscribers, heroStory, b2bStats, deliveryLog } = $derived(data);
+	const { totalStories, categories, subscribers, heroStory, b2bStats, deliveryLog, funnel } = $derived(data);
 
 	let testEmail = $state('');
 	let testStatus = $state('');
@@ -49,7 +49,7 @@
 </script>
 
 <!-- ===== MODUL 1: HUD (Heads Up Display) ===== -->
-<h1 class="serif text-2xl" style="color: var(--color-ink);">Command Center</h1>
+<h1 class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">Command Center</h1>
 <p class="mt-1 text-sm" style="color: var(--color-muted);">Der Puls deines Business auf einen Blick.</p>
 
 <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
@@ -93,6 +93,68 @@
 		</p>
 	</div>
 </div>
+
+<!-- ===== MODUL: Funnel / Wachstum (nureine_events) ===== -->
+{#if funnel}
+	{@const maxPv = Math.max(1, ...funnel.byDay.map((d) => d.pageviews))}
+	<div class="mt-10 paper rounded-[10px] overflow-hidden" style="border: 1px solid var(--color-rule); box-shadow: var(--shadow-sm);">
+		<div class="flex items-center justify-between px-5 sm:px-6 py-4 border-b" style="border-color: var(--color-rule);">
+			<h2 class="display text-lg" style="color: var(--color-ink); font-weight: 600;">Wachstum &amp; Funnel</h2>
+			<span class="uppercase" style="font-family: var(--font-mono); font-size: 0.6rem; letter-spacing: 0.14em; color: var(--color-faint);">Letzte 7 Tage</span>
+		</div>
+
+		<!-- KPI row -->
+		<div class="grid grid-cols-2 md:grid-cols-5" style="gap: 1px; background: var(--color-rule);">
+			{#each [
+				{ l: 'Seitenaufrufe', v: funnel.pageviews7d.toLocaleString('de-DE'), c: 'var(--color-sky)' },
+				{ l: 'Anmeldungen', v: String(funnel.signups7d), sub: `${funnel.signupsToday} heute`, c: 'var(--color-sage)' },
+				{ l: 'Conversion', v: funnel.signupRate7d + '%', c: 'var(--color-amber)' },
+				{ l: 'Story-Reads', v: funnel.storyReads7d.toLocaleString('de-DE'), c: 'var(--color-ink-soft)' },
+				{ l: 'Shares', v: String(funnel.shares7d), c: 'var(--color-rose)' }
+			] as kpi}
+				<div class="p-4 sm:p-5" style="background: var(--color-paper);">
+					<p class="uppercase" style="font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.14em; color: {kpi.c};">{kpi.l}</p>
+					<p class="display tnum text-2xl sm:text-3xl mt-1.5" style="color: var(--color-ink); font-weight: 600;">{kpi.v}</p>
+					{#if kpi.sub}<p class="text-xs mt-0.5" style="color: var(--color-muted);">{kpi.sub}</p>{/if}
+				</div>
+			{/each}
+		</div>
+
+		<!-- 7-day bars + top stories -->
+		<div class="grid lg:grid-cols-[1.4fr_1fr]" style="gap: 1px; background: var(--color-rule);">
+			<!-- bars -->
+			<div class="p-5 sm:p-6" style="background: var(--color-paper);">
+				<p class="uppercase mb-4" style="font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.14em; color: var(--color-faint);">Seitenaufrufe / Tag</p>
+				<div class="flex items-end gap-2 sm:gap-3" style="height: 120px;">
+					{#each funnel.byDay as d}
+						<div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end">
+							<span class="tnum" style="font-family: var(--font-mono); font-size: 0.6rem; color: var(--color-muted);">{d.pageviews}</span>
+							<div class="w-full rounded-t" style="background: var(--color-amber); opacity: 0.85; height: {Math.max(2, (d.pageviews / maxPv) * 92)}px;" title="{d.day}: {d.pageviews} Aufrufe, {d.signups} Anmeldungen"></div>
+							<span class="uppercase" style="font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.1em; color: var(--color-faint);">{d.day.slice(8)}.{d.day.slice(5,7)}</span>
+						</div>
+					{/each}
+				</div>
+			</div>
+			<!-- top stories -->
+			<div class="p-5 sm:p-6" style="background: var(--color-paper);">
+				<p class="uppercase mb-4" style="font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.14em; color: var(--color-faint);">Meistgelesen (7T)</p>
+				{#if funnel.topStories.length}
+					<ol class="space-y-2.5">
+						{#each funnel.topStories as s, i}
+							<li class="flex items-center gap-3 text-sm">
+								<span class="tnum shrink-0" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-amber);">{i + 1}</span>
+								<a href={base + '/geschichte/' + s.slug} target="_blank" class="flex-1 min-w-0 truncate hover:opacity-70" style="color: var(--color-ink-soft);">{s.slug}</a>
+								<span class="tnum shrink-0" style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--color-ink);">{s.reads}</span>
+							</li>
+						{/each}
+					</ol>
+				{:else}
+					<p class="text-sm" style="color: var(--color-faint); font-family: var(--font-serif);">Noch keine Lesedaten.</p>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/if}
 
 <!-- ===== Nächste Hero-Story Preview ===== -->
 <div class="mt-10">

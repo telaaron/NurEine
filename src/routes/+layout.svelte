@@ -2,10 +2,21 @@
         import '../app.css';
         import Header from '$lib/components/Header.svelte';
         import Footer from '$lib/components/Footer.svelte';
+        import Ticker from '$lib/components/Ticker.svelte';
+        import { dev } from '$app/environment';
         import { base } from '$app/paths';
         import { page } from '$app/state';
+        import { injectAnalytics } from '@vercel/analytics/sveltekit';
+        import { afterNavigate } from '$app/navigation';
+        import { track } from '$lib/track';
 
-        let { children } = $props();
+        let { children, data } = $props();
+
+        // Vercel Web Analytics (cookieless pageviews)
+        injectAnalytics({ mode: dev ? 'development' : 'production' });
+
+        // First-party pageview events (owned funnel data)
+        afterNavigate(() => track('pageview'));
 
         const pagePath = $derived(page.url.pathname.replace(base, '') || '/');
         const canonicalUrl = $derived(
@@ -14,6 +25,8 @@
 
         const isStory = $derived(!!page?.data?.story);
         const isIndex = $derived(pagePath === '/');
+        // Admin has its own chrome — skip the public Header/Ticker/Footer there.
+        const isAdmin = $derived(pagePath.startsWith('/admin'));
 
         const pathTitles: Record<string, string> = {
                 '/lokal': 'Lokal',
@@ -76,8 +89,22 @@
         <meta name="theme-color" content="#f5f1ea" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+
+        {@html `<script type="application/ld+json">${JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'Organization',
+                name: 'NurEine',
+                url: 'https://nureine.de',
+                logo: 'https://nureine.de/NurEine.svg',
+                description: 'Eine kuratierte gute Nachricht pro Tag — werbefrei, ohne Algorithmus.'
+        })}</scr` + `ipt>`}
 </svelte:head>
 
-<Header />
-<main>{@render children?.()}</main>
-<Footer />
+{#if isAdmin}
+        {@render children?.()}
+{:else}
+        <Ticker story={data?.ticker ?? null} />
+        <Header />
+        <main>{@render children?.()}</main>
+        <Footer />
+{/if}

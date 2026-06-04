@@ -56,8 +56,8 @@
 			Manifest
 		</p>
 		<h1
-			class="serif mt-4 leading-[1.05] tracking-tight text-[1.9rem] sm:text-[2.6rem] lg:text-[5rem] rise rise-d1"
-			style="color: var(--color-ink); font-weight: 500;"
+			class="display mt-4 leading-[1.0] text-[1.9rem] sm:text-[2.6rem] lg:text-[4.4rem] rise rise-d1"
+			style="color: var(--color-ink); font-weight: 600;"
 		>
 			Sechs Sätze, an denen wir uns messen lassen.
 		</h1>
@@ -85,8 +85,8 @@
 				</div>
 				<div class="col-span-9 sm:col-span-10">
 					<h2
-						class="serif leading-tight tracking-tight text-xl sm:text-2xl lg:text-[2rem]"
-						style="color: var(--color-ink); font-weight: 500;"
+						class="display leading-tight text-xl sm:text-2xl lg:text-[2rem]"
+						style="color: var(--color-ink); font-weight: 600;"
 					>
 						{p.title}
 					</h2>
@@ -120,7 +120,7 @@
 		<p class="eyebrow" style="color: var(--color-amber);">
 			Methodik
 		</p>
-		<h2 class="serif text-2xl sm:text-3xl lg:text-4xl mt-3" style="color: var(--color-ink); font-weight: 500;">
+		<h2 class="display text-2xl sm:text-3xl lg:text-4xl mt-3" style="color: var(--color-ink); font-weight: 600;">
 			Wie der Wirkungsindex berechnet wird
 		</h2>
 		<p

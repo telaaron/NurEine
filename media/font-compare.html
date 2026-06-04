@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NurEine — Font-Vergleich</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..600&family=Newsreader:opsz,wght@6..72,300..600&family=Instrument+Serif&family=Spectral:wght@300;400;500&family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet"/>
+<style>
+:root{--amber:#bd6a35;--ink:#16140f;--muted:#6b6359;--canvas:#f4efe6;--paper:#fbf8f1;--rule:rgba(22,20,15,.1)}
+*{margin:0;box-sizing:border-box}
+body{background:var(--canvas);color:var(--ink);font-family:'Inter',sans-serif;padding:48px clamp(20px,5vw,72px);line-height:1.4}
+h1.page{font-family:'Inter';font-size:.8rem;text-transform:uppercase;letter-spacing:.2em;color:var(--amber);margin-bottom:8px;font-weight:600}
+.lead{font-size:1rem;color:var(--muted);margin-bottom:40px;max-width:60ch}
+.sample{border-top:1px solid var(--rule);padding:38px 0}
+.label{font-family:'JetBrains Mono',monospace;font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--amber);margin-bottom:4px}
+.note{font-family:'Inter';font-size:.8rem;color:var(--muted);margin-bottom:20px}
+.hl{font-weight:500;line-height:.98;letter-spacing:-.025em;font-size:clamp(2.4rem,6vw,4.6rem);max-width:16ch}
+.hl em{font-style:normal;color:var(--amber)}
+.dek{font-size:clamp(1.05rem,1.6vw,1.4rem);line-height:1.45;color:#38322a;margin-top:16px;max-width:42ch}
+/* current site = Fraunces serif */
+.f-fraunces .hl,.f-fraunces .dek{font-family:'Fraunces',serif}
+.f-newsreader .hl,.f-newsreader .dek{font-family:'Newsreader',serif}
+.f-spectral .hl,.f-spectral .dek{font-family:'Spectral',serif}
+.f-instrument .hl{font-family:'Instrument Serif',serif;font-weight:400;letter-spacing:-.01em}
+.f-instrument .dek{font-family:'Newsreader',serif}
+/* modern sans displays */
+.f-jakarta .hl{font-family:'Plus Jakarta Sans',sans-serif;font-weight:800;letter-spacing:-.035em}
+.f-jakarta .dek{font-family:'Plus Jakarta Sans',sans-serif;font-weight:400}
+.f-space .hl{font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-.03em}
+.f-space .dek{font-family:'Space Grotesk',sans-serif;font-weight:400}
+.f-bricolage .hl{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;letter-spacing:-.025em}
+.f-bricolage .dek{font-family:'Inter',sans-serif;font-weight:400}
+/* hybrid: modern sans head + serif dek (Wired move) */
+.f-hybrid .hl{font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:-.03em}
+.f-hybrid .dek{font-family:'Newsreader',serif;font-weight:400}
+.tag{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.6rem;background:rgba(189,106,53,.12);color:var(--amber);padding:3px 9px;border-radius:100px;margin-left:10px;vertical-align:middle;letter-spacing:.08em;text-transform:uppercase}
+</style></head><body>
+<h1 class="page">NurEine — Schrift-Kandidaten</h1>
+<p class="lead">Gleiche Headline + Dek in 8 Varianten. Problem v2: Fraunces in Riesen-Größe wirkt antik (Didone-Flair). Welche fühlt sich „hochmodern" an?</p>
+
+<div class="sample f-fraunces"><div class="label">1 · Fraunces <span class="tag">aktuell / v2</span></div><div class="note">Was du jetzt hast. Klassisch-elegant, aber groß = „Mittelalter".</div>
+<div class="hl">Natrium-Batterie wird günstige <em>Alternative</em> zu Lithium</div><div class="dek">Studie belegt: Natrium-Ionen-Akku erreicht fast Tesla-Niveau.</div></div>
+
+<div class="sample f-newsreader"><div class="label">2 · Newsreader</div><div class="note">Moderner Editorial-Serif (Google). Zeitung-modern, weniger Flair, sehr lesbar.</div>
+<div class="hl">Natrium-Batterie wird günstige <em>Alternative</em> zu Lithium</div><div class="dek">Studie belegt: Natrium-Ionen-Akku erreicht fast Tesla-Niveau.</div></div>
+
+<div class="sample f-spectral"><div class="label">3 · Spectral</div><div class="note">Ruhiger, warmer Serif. Buchhaft, seriös, weniger Kontrast als Fraunces.</div>
+<div class="hl">Natrium-Batterie wird günstige <em>Alternative</em> zu Lithium</div><div class="dek">Studie belegt: Natrium-Ionen-Akku erreicht fast Tesla-Niveau.</div></div>
+
+<div class="sample f-instrument"><div class="label">4 · Instrument Serif</div><div class="note">Schlank, elegant, „NYT-Magazine"-Vibe. Modern editorial, kein Mittelalter.</div>
+<div class="hl">Natrium-Batterie wird günstige <em>Alternative</em> zu Lithium</div><div class="dek">Studie belegt: Natrium-Ionen-Akku erreicht fast Tesla-Niveau.</div></div>
+
+<div class="sample f-jakarta"><div class="label">5 · Plus Jakarta Sans <span class="tag">sans</span></div><div class="note">Reiner moderner Sans. Tech-startup, klar, „2026". Kein Serif-Flair.</div>
+<div class="hl">Natrium-Batterie wird günstige <em>Alternative</em> zu Lithium</div><div class="dek">Studie belegt: Natrium-Ionen-Akku erreicht fast Tesla-Niveau.</div></div>
+
+<div class="sample f-space"><div class="label">6 · Space Grotesk <span class="tag">sans</span></div><div class="note">Geometrischer Sans mit Charakter. Modern, etwas eigenwillig, tech-editorial.</div>
+<div class="hl">Natrium-Batterie wird günstige <em>Alternative</em> zu Lithium</div><div class="dek">Studie belegt: Natrium-Ionen-Akku erreicht fast Tesla-Niveau.</div></div>
+
+<div class="sample f-bricolage"><div class="label">7 · Bricolage Grotesque <span class="tag">sans</span></div><div class="note">Moderner Display-Sans mit Wärme (2023er Trend-Face). Editorial + zeitgemäß.</div>
+<div class="hl">Natrium-Batterie wird günstige <em>Alternative</em> zu Lithium</div><div class="dek">Studie belegt: Natrium-Ionen-Akku erreicht fast Tesla-Niveau.</div></div>
+
+<div class="sample f-hybrid"><div class="label">8 · Hybrid: Space Grotesk + Newsreader <span class="tag">empfehlung</span></div><div class="note">Moderner Sans-Headline + Serif-Dek (Wired-Prinzip). Modern UND editorial-warm.</div>
+<div class="hl">Natrium-Batterie wird günstige <em>Alternative</em> zu Lithium</div><div class="dek">Studie belegt: Natrium-Ionen-Akku erreicht fast Tesla-Niveau.</div></div>
+
+</body></html>

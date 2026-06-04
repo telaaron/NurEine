@@ -39,6 +39,8 @@ export interface Subscriber {
   email: string;
   confirmation_token: string | null;
   tier: string;
+  categories: string[];
+  category_scores: Record<string, number>;
 }
 
 export type B2BBranding = {
@@ -122,6 +124,24 @@ function storyUrl(story: HeroStory): string {
   return `${BASE_URL}/geschichte/${slug}`;
 }
 
+/**
+ * Story link routed through the tracked redirect /r so we learn the reader's
+ * category taste (auto-personalization) from real clicks. Falls back to a plain
+ * link if we lack the subscriber token.
+ */
+function trackedStoryUrl(story: HeroStory, email: string, token: string): string {
+  const slug = `${slugify(story.title)}-${story.id.slice(0, 8)}`;
+  const to = `/geschichte/${slug}`;
+  if (!token) return `${BASE_URL}${to}`;
+  const q = new URLSearchParams({
+    e: email,
+    t: token,
+    c: story.category || '',
+    to
+  });
+  return `${BASE_URL}/r?${q.toString()}`;
+}
+
 function categoryColor(category: string | null): string {
   const tone = TONE_MAP[(category || '').toLowerCase()] || 'amber';
   return CATEGORY_COLOR[tone] || '#c87340';
@@ -160,8 +180,12 @@ export function buildB2CHtml(
   subscriberEmail: string,
   confirmationToken: string
 ): string {
-  const url = storyUrl(story);
+  // Tracked link → learns the reader's category taste from clicks.
+  const url = trackedStoryUrl(story, subscriberEmail, confirmationToken);
   const unsubscribeUrl = `${BASE_URL}/api/unsubscribe?token=${encodeURIComponent(
+    confirmationToken
+  )}&email=${encodeURIComponent(subscriberEmail)}`;
+  const settingsUrl = `${BASE_URL}/einstellungen?token=${encodeURIComponent(
     confirmationToken
   )}&email=${encodeURIComponent(subscriberEmail)}`;
 
@@ -258,6 +282,8 @@ export function buildB2CHtml(
         <tr><td style="padding:22px 40px 30px;">
           <p class="nur-eine-text-faint" style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">Du erh&auml;ltst diese E-Mail, weil du den NurEine-Newsletter abonniert hast.</p>
           <p class="nur-eine-text-faint" style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
+            <a href="${settingsUrl}" target="_blank" class="nur-eine-link" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">Themen anpassen</a>
+            &nbsp;&middot;&nbsp;
             <a href="${unsubscribeUrl}" target="_blank" class="nur-eine-link" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">Abmelden</a>
           </p>
         </td></tr>
@@ -551,10 +577,103 @@ async function markStorySent(storyId: string): Promise<void> {
   if (error) console.error('[newsletter] markStorySent error:', error);
 }
 
+/**
+ * Ranked candidate stories for the personalized send.
+ *
+ * Like selectNewsletterStory but returns the top-N unsent stories (impact desc),
+ * tiered by freshness, so each subscriber can be matched to the best story in
+ * THEIR categories. One query, in-memory matching afterwards — O(stories+users),
+ * no per-user DB round-trips (cost- and exponential-safe).
+ */
+async function selectRankedStories(limit = 12): Promise<HeroStory[]> {
+  const BASE_SELECT =
+    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min';
+  const now = Date.now();
+
+  async function tier(sinceMs: number | null): Promise<HeroStory[]> {
+    let q = supabaseAdmin
+      .from('nureine_stories')
+      .select(BASE_SELECT)
+      .is('newsletter_sent_at', null)
+      .not('impact_score', 'is', null);
+    if (sinceMs !== null) q = q.gte('created_at', new Date(now - sinceMs).toISOString());
+    const { data } = await q
+      .order('impact_score', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    return (data as HeroStory[]) ?? [];
+  }
+
+  // Prefer fresh; fall back to wider windows only if nothing fresh exists.
+  let ranked = await tier(24 * 3600e3);
+  if (ranked.length === 0) ranked = await tier(48 * 3600e3);
+  if (ranked.length === 0) ranked = await tier(null);
+  return ranked;
+}
+
+/**
+ * For a set of candidate story ids, return which story ids each subscriber has
+ * already been sent (so we never resend the same story to the same person).
+ * One query for the whole audience.
+ */
+async function fetchRecentSendsByStory(storyIds: string[]): Promise<Map<string, Set<string>>> {
+  const map = new Map<string, Set<string>>();
+  if (storyIds.length === 0) return map;
+  const { data, error } = await supabaseAdmin
+    .from('nureine_newsletter_sends')
+    .select('subscriber_id, story_id')
+    .in('story_id', storyIds);
+  if (error || !data) return map;
+  for (const row of data as { subscriber_id: string; story_id: string }[]) {
+    if (!map.has(row.subscriber_id)) map.set(row.subscriber_id, new Set());
+    map.get(row.subscriber_id)!.add(row.story_id);
+  }
+  return map;
+}
+
+/**
+ * Pick the best story for one subscriber:
+ *   1. If they have category prefs, prefer the highest-impact ranked story in
+ *      one of those categories that they haven't been sent yet.
+ *   2. Else (no prefs OR no match left), the highest-impact ranked story they
+ *      haven't been sent yet.
+ *   3. Else null (everything already sent to them — rare; skip).
+ */
+function pickForSubscriber(
+  ranked: HeroStory[],
+  categories: string[],
+  scores: Record<string, number>,
+  alreadySent: Set<string>
+): HeroStory | null {
+  const unseen = ranked.filter((s) => !alreadySent.has(s.id));
+  if (unseen.length === 0) return null;
+
+  // 1) Explicit prefs win — the reader told us directly.
+  if (categories.length > 0) {
+    const match = unseen.find((s) => s.category && categories.includes(s.category));
+    if (match) return match;
+    return unseen[0];
+  }
+
+  // 2) No explicit prefs → fall back to LEARNED taste (from click signals).
+  //    Prefer categories with a meaningful score; among those, highest impact.
+  const learned = Object.entries(scores)
+    .filter(([, v]) => v >= 2) // ignore one-off clicks; need a small signal
+    .sort((a, b) => b[1] - a[1])
+    .map(([k]) => k);
+  if (learned.length > 0) {
+    const match = unseen.find((s) => s.category && learned.includes(s.category));
+    if (match) return match;
+  }
+
+  // 3) Otherwise the globally strongest unseen story.
+  return unseen[0];
+}
+
 async function fetchConfirmedFreeSubscribers(): Promise<Subscriber[]> {
   const { data, error } = await supabaseAdmin
     .from('nureine_subscribers')
-    .select('id,email,confirmation_token,tier')
+    .select('id,email,confirmation_token,tier,categories,category_scores')
     .eq('confirmed', true)
     .eq('tier', 'free');
 
@@ -562,7 +681,11 @@ async function fetchConfirmedFreeSubscribers(): Promise<Subscriber[]> {
     console.error('[newsletter] fetchConfirmedFreeSubscribers error:', error);
     return [];
   }
-  return data as Subscriber[];
+  return (data as Subscriber[]).map((s) => ({
+    ...s,
+    categories: s.categories ?? [],
+    category_scores: s.category_scores ?? {}
+  }));
 }
 
 async function fetchActiveB2BClients(): Promise<B2BClient[]> {
@@ -645,10 +768,13 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
     throw new Error('BREVO_API_KEY / BREVO_FROM_EMAIL not configured');
   }
 
-  const story = await selectNewsletterStory();
+  // Rank today's unsent candidates once. The #1 is the global hero (used for
+  // B2B + the return value); each B2C subscriber gets the best story in THEIR
+  // categories, matched in-memory (cost-/exponential-safe).
+  const ranked = await selectRankedStories(12);
+  const story = ranked[0] ?? null;
   if (!story) {
-    // No unsent story left. This is the only legitimate "send nothing" case and
-    // it means the fetch pipeline has produced nothing new — surface it loudly.
+    // No unsent story left — the only legitimate "send nothing" case.
     console.warn('[newsletter] no unsent story available, nothing to send');
     await logCronRun('daily', 0, 0, 0);
     return {
@@ -658,34 +784,49 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
       durationMs: Date.now() - startedAt
     };
   }
+  console.info(
+    '[newsletter] ranked candidates:',
+    ranked.map((s) => `${s.category}:${s.impact_score}`).join(', ')
+  );
 
-  // Claim the story BEFORE sending: set newsletter_sent_at now so it can never
-  // be picked again — even if this run crashes mid-send. Atomic-by-construction
-  // dedup; replaces the old cross-platform 02:00-hero race + wasSentRecently net.
-  await markStorySent(story.id);
-  console.info('[newsletter] selected story:', story.id, story.title, `(impact ${story.impact_score})`);
-
-  // ---- B2C ----
+  // ---- B2C (personalized) ----
   const subscribers = await fetchConfirmedFreeSubscribers();
   console.info('[newsletter] B2C subscribers:', subscribers.length);
+
+  // Per-subscriber dedup: which candidate stories has each already received?
+  const sentByStory = await fetchRecentSendsByStory(ranked.map((s) => s.id));
+
   let b2cSent = 0;
   let b2cFailed = 0;
+  const sentStoryIds = new Set<string>(); // stories actually sent today → mark once
 
   for (const sub of subscribers) {
     if (!sub.email || !sub.id) {
       b2cFailed += 1;
       continue;
     }
+    const pick = pickForSubscriber(ranked, sub.categories, sub.category_scores, sentByStory.get(sub.id) ?? new Set());
+    if (!pick) {
+      // Everything in the candidate set already sent to this subscriber — skip.
+      continue;
+    }
     try {
-      const html = buildB2CHtml(story, sub.email, sub.confirmation_token || '');
+      const html = buildB2CHtml(pick, sub.email, sub.confirmation_token || '');
       await sendBrevoEmail(sub.email, SUBJECT_DAILY, html);
-      await logSend(sub.id, story.id);
+      await logSend(sub.id, pick.id);
+      sentStoryIds.add(pick.id);
       b2cSent += 1;
     } catch (err) {
       console.error('[newsletter] B2C send failed', sub.email, err);
       b2cFailed += 1;
     }
   }
+
+  // Mark every story that actually went out today so it won't be re-picked
+  // globally tomorrow. (The hero #1 always gets marked even if B2C is empty,
+  // because B2B uses it below.)
+  sentStoryIds.add(story.id);
+  for (const id of sentStoryIds) await markStorySent(id);
 
   await logCronRun('daily', subscribers.length, b2cSent, b2cFailed);
 

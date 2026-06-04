@@ -1,25 +1,25 @@
 /**
  * OG Image HTML template for Satori rendering.
  *
- * Design matches the base template (static/og-slug-base.jpg):
- *   - Background: light blue-gray #DFE9F0
- *   - Blue elliptical orb on the right side (brand panel)
- *   - Story image framed on the left
- *   - Headline + category below the image
- *   - Brand bar at the bottom
+ * Design — matches static/og-slug-base.jpg + the site's new look:
+ *   - Warm cream canvas (#f4efe6)
+ *   - Amber brand circle, top-right
+ *   - Story illustration in a rounded, framed card overlapping the circle (right)
+ *   - Left column: logo mark → Space Grotesk headline → Newsreader-italic dek
+ *     (amber) → short amber rule → category pill + location meta
+ *   - "nureine.de" faint, bottom-right
  *
- * Dimensions: 1200×630 (1.91:1) — scaled from 1424×748 base.
+ * Dimensions: 1200×630 (1.91:1) — optimal for WhatsApp, iMessage, X, FB, LinkedIn.
  */
 
-// Category → accent color
 const CATEGORY_ACCENT: Record<string, string> = {
-	klima: '#5a7a52',
-	gesundheit: '#b87a7a',
-	wissenschaft: '#6c8aa8',
-	gemeinschaft: '#c87340',
-	tiere: '#5a7a52',
-	kultur: '#c87340',
-	innovation: '#6c8aa8'
+	klima: '#56764e',
+	gesundheit: '#b06f6f',
+	wissenschaft: '#5d7e9c',
+	gemeinschaft: '#bd6a35',
+	tiere: '#56764e',
+	kultur: '#bd6a35',
+	innovation: '#5d7e9c'
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -36,96 +36,30 @@ export interface OgTemplateInput {
 	title: string;
 	dek: string;
 	category: string;
+	country?: string;
+	code?: string; // 2-letter region code, e.g. "LA"
 	imageBase64: string | null;
+	logoDataUri?: string | null;
 }
 
-// Layout constants (scaled from 1424×748 base to 1200×630)
+// ── Palette (matches src/app.css) ──
 const CANVAS_W = 1200;
 const CANVAS_H = 630;
-const BG = '#DFE9F0';          // light blue-gray background
-const INK = '#1A1815';          // dark text color
-const MUTED = '#5B6B7A';        // muted text for category
-const FAINT = '#8A9AAA';        // faint text for dek / brand
+const CANVAS = '#f4efe6';
+const PAPER = '#fbf8f1';
+const INK = '#16140f';
+const MUTED = '#6b6359';
+const FAINT = '#9a9087';
+const AMBER = '#bd6a35';
+const AMBER_DEEP = '#9c5527';
+const RULE = 'rgba(22,20,15,0.12)';
 
-const PAD = 48;
-const IMG_W = 560;
-const IMG_H = 400;
-const IMG_X = PAD;
-const IMG_Y = 54;
-const IMG_RADIUS = 6;
-
-// Blue orb (scaled: 380×377px at 1424 → 320×318px at 1200)
-const ORB_W = 320;
-const ORB_H = 318;
-const ORB_RIGHT = 48;
-const ORB_TOP = 83;
-const ORB_COLOR = '#4A76BD';
-
-// Brand text on orb
-const BRAND_SIZE = 24;
-
-// Text area below the image
-const TEXT_Y = IMG_Y + IMG_H + 36;
-const TEXT_MAX_W = CANVAS_W - PAD * 2;
-
-export function buildOgTemplate(input: OgTemplateInput): string {
-	const { title, dek, category, imageBase64 } = input;
-	const accent = CATEGORY_ACCENT[category] || '#c87340';
-	const categoryLabel = CATEGORY_LABELS[category] || category;
-
-	// Story image HTML
-	const imageHtml = imageBase64
-		? `<img src="${imageBase64}" width="${IMG_W}" height="${IMG_H}" style="object-fit:cover;border-radius:${IMG_RADIUS}px;" />`
-		: `<div style="width:${IMG_W}px;height:${IMG_H}px;background:rgba(200,115,64,0.06);border-radius:${IMG_RADIUS}px;display:flex;align-items:center;justify-content:center;"><div style="color:rgba(200,115,64,0.15);font-size:72px;font-weight:700;">NurEine</div></div>`;
-
-	// Truncate dek to fit
-	const maxDekChars = 120;
-	const displayDek = dek && dek.length > 0
-		? (dek.length > maxDekChars ? dek.slice(0, maxDekChars - 3) + '...' : dek)
-		: null;
-
-	return `<!DOCTYPE html>
-<html>
-<body style="margin:0;padding:0;width:${CANVAS_W}px;height:${CANVAS_H}px;background:${BG};font-family:Inter,sans-serif;display:flex;position:relative;overflow:hidden;">
-
-<!-- Blue orb — elliptical brand panel on the right -->
-<div style="position:absolute;right:${ORB_RIGHT}px;top:${ORB_TOP}px;width:${ORB_W}px;height:${ORB_H}px;background:${ORB_COLOR};border-radius:50%;"></div>
-
-<!-- Brand name on the orb -->
-<div style="position:absolute;right:${ORB_RIGHT}px;top:${ORB_TOP}px;width:${ORB_W}px;height:${ORB_H}px;display:flex;align-items:center;justify-content:center;">
-  <div style="font-size:${BRAND_SIZE}px;font-weight:600;color:#FFFFFF;letter-spacing:0.08em;">NurEine</div>
-</div>
-
-<!-- Story image — left side -->
-<div style="position:absolute;left:${IMG_X}px;top:${IMG_Y}px;width:${IMG_W}px;height:${IMG_H}px;border-radius:${IMG_RADIUS}px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
-  ${imageHtml}
-</div>
-
-<!-- Text area — below the image -->
-<div style="position:absolute;left:${PAD}px;top:${TEXT_Y}px;width:${TEXT_MAX_W}px;display:flex;flex-direction:column;">
-
-  <!-- Headline -->
-  <div style="font-size:40px;font-weight:700;color:${INK};line-height:1.2;letter-spacing:-0.02em;margin-bottom:16px;max-width:720px;">
-    ${escapeHtml(title)}
-  </div>
-
-  ${displayDek ? `
-  <!-- Subtitle -->
-  <div style="font-size:18px;font-weight:400;color:${FAINT};line-height:1.45;max-width:620px;margin-bottom:20px;">
-    ${escapeHtml(displayDek)}
-  </div>` : ''}
-
-  <!-- Category badge -->
-  <div style="display:flex;align-items:center;">
-    <div style="width:8px;height:8px;border-radius:50%;background:${accent};flex-shrink:0;"></div>
-    <div style="font-size:18px;font-weight:600;color:${MUTED};margin-left:10px;letter-spacing:0.02em;">${categoryLabel}</div>
-  </div>
-
-</div>
-
-</body>
-</html>`;
-}
+// ── Layout ──
+const PAD = 64;
+const COL_W = 600; // left text column width
+const CIRCLE = 360; // amber brand circle diameter
+const CARD_W = 470;
+const CARD_H = 470;
 
 function escapeHtml(text: string): string {
 	return text
@@ -134,4 +68,98 @@ function escapeHtml(text: string): string {
 		.replace(/>/g, '&gt;')
 		.replace(/"/g, '&quot;')
 		.replace(/'/g, '&#039;');
+}
+
+/** Pick a headline font-size that keeps long titles inside the column. */
+function headlineSize(title: string): number {
+	const len = title.length;
+	if (len <= 32) return 60;
+	if (len <= 50) return 52;
+	if (len <= 72) return 44;
+	return 38;
+}
+
+export function buildOgTemplate(input: OgTemplateInput): string {
+	const { title, dek, category, country, code, imageBase64, logoDataUri } = input;
+	const accent = CATEGORY_ACCENT[category] || AMBER;
+	const categoryLabel = (CATEGORY_LABELS[category] || category).toUpperCase();
+	const hSize = headlineSize(title);
+
+	const maxDek = 92;
+	const displayDek =
+		dek && dek.length > 0 ? (dek.length > maxDek ? dek.slice(0, maxDek - 1) + '…' : dek) : '';
+
+	const locationText = [country, code ? code.toUpperCase() : ''].filter(Boolean).join(' · ');
+
+	// Story illustration card (right). Falls back to an amber-tinted panel.
+	const cardInner = imageBase64
+		? `<img src="${imageBase64}" width="${CARD_W}" height="${CARD_H}" style="object-fit:cover;width:${CARD_W}px;height:${CARD_H}px;" />`
+		: `<div style="display:flex;width:${CARD_W}px;height:${CARD_H}px;align-items:center;justify-content:center;background:linear-gradient(150deg,#f0c9a0,#d98b52 60%,#b5673a);">
+			 <div style="font-family:'Space Grotesk';font-size:96px;font-weight:700;color:rgba(255,255,255,0.92);">N</div>
+		   </div>`;
+
+	return `<!DOCTYPE html>
+<html>
+<body style="margin:0;width:${CANVAS_W}px;height:${CANVAS_H}px;background:${CANVAS};font-family:'Inter';display:flex;position:relative;overflow:hidden;">
+
+  <!-- Amber brand circle, top-right -->
+  <div style="position:absolute;display:flex;top:-40px;right:96px;width:${CIRCLE}px;height:${CIRCLE}px;border-radius:${CIRCLE}px;background:linear-gradient(160deg,${AMBER} 0%,${AMBER_DEEP} 100%);"></div>
+
+  <!-- Story illustration card, overlapping the circle (right) -->
+  <div style="position:absolute;display:flex;top:80px;right:64px;width:${CARD_W}px;height:${CARD_H}px;border-radius:20px;overflow:hidden;background:${PAPER};box-shadow:0 18px 50px rgba(60,40,20,0.22);border:6px solid ${PAPER};">
+    ${cardInner}
+  </div>
+
+  <!-- Left column -->
+  <div style="position:absolute;display:flex;flex-direction:column;left:${PAD}px;top:${PAD}px;width:${COL_W}px;height:${CANVAS_H - PAD * 2}px;">
+
+    <!-- Logo mark (water-drop) + wordmark -->
+    <div style="display:flex;align-items:center;">
+      ${
+		logoDataUri
+			? `<img src="${logoDataUri}" width="38" height="38" style="width:38px;height:38px;" />`
+			: `<div style="display:flex;width:30px;height:36px;background:${INK};border-radius:4px 4px 16px 16px;"></div>`
+	}
+      <div style="font-family:'Space Grotesk';font-size:27px;font-weight:700;color:${INK};margin-left:12px;letter-spacing:-0.02em;">NurEine</div>
+    </div>
+
+    <!-- Headline -->
+    <div style="display:flex;font-family:'Space Grotesk';font-size:${hSize}px;font-weight:700;color:${INK};line-height:1.04;letter-spacing:-0.03em;margin-top:44px;max-width:${COL_W}px;">
+      ${escapeHtml(title)}
+    </div>
+
+    ${
+		displayDek
+			? `<!-- Dek (serif italic, amber) -->
+    <div style="display:flex;font-family:'Newsreader';font-style:italic;font-size:25px;font-weight:400;color:${AMBER_DEEP};line-height:1.32;margin-top:24px;max-width:540px;">
+      ${escapeHtml(displayDek)}
+    </div>`
+			: ''
+	}
+
+    <!-- Spacer pushes meta to the bottom -->
+    <div style="display:flex;flex:1;"></div>
+
+    <!-- Short amber rule -->
+    <div style="display:flex;width:64px;height:3px;background:${AMBER};margin-bottom:24px;"></div>
+
+    <!-- Category pill + location -->
+    <div style="display:flex;align-items:center;">
+      <div style="display:flex;align-items:center;border:1px solid ${RULE};border-radius:100px;padding:8px 16px;">
+        <div style="display:flex;width:8px;height:8px;border-radius:8px;background:${accent};margin-right:9px;"></div>
+        <div style="font-family:'Inter';font-size:15px;font-weight:600;color:${MUTED};letter-spacing:0.1em;">${categoryLabel}</div>
+      </div>
+      ${
+		locationText
+			? `<div style="font-family:'Inter';font-size:18px;font-weight:400;color:${MUTED};margin-left:18px;">${escapeHtml(locationText)}</div>`
+			: ''
+	}
+    </div>
+  </div>
+
+  <!-- nureine.de, bottom-right -->
+  <div style="position:absolute;display:flex;right:${PAD}px;bottom:${PAD - 16}px;font-family:'Inter';font-size:20px;font-weight:400;color:${FAINT};">nureine.de</div>
+
+</body>
+</html>`;
 }

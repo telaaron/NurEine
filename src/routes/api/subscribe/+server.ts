@@ -148,7 +148,7 @@ async function sendConfirmationEmail(email: string, token: string): Promise<void
 
 export async function POST({ request }) {
 	try {
-		const { email, name, tier, lat, lng, region, region_code } = await request.json();
+		const { email, name, tier, lat, lng, region, region_code, categories } = await request.json();
 
 		// 1. Validate email format
 		if (!email || typeof email !== 'string') {
@@ -158,6 +158,12 @@ export async function POST({ request }) {
 		if (!isValidEmail(email)) {
 			return json({ error: 'Bitte gib eine gültige E-Mail-Adresse ein.' }, { status: 400 });
 		}
+
+		// Optional category preferences (kept frictionless: defaults to none = all).
+		const VALID_CATS = ['klima', 'gesundheit', 'wissenschaft', 'gemeinschaft', 'tiere', 'kultur', 'innovation'];
+		const cleanCategories = Array.isArray(categories)
+			? [...new Set(categories.filter((c: unknown): c is string => typeof c === 'string' && VALID_CATS.includes(c)))]
+			: [];
 
 		// Validate tier if provided — B2C is always free
 		const validTiers = ['free', 'b2b'];
@@ -196,7 +202,9 @@ export async function POST({ request }) {
 					lat: lat ?? null,
 					lng: lng ?? null,
 					region: region ?? null,
-					region_code: region_code ?? null
+					region_code: region_code ?? null,
+					// Only overwrite prefs if the caller sent some — never wipe existing.
+					...(cleanCategories.length > 0 ? { categories: cleanCategories } : {})
 				})
 				.eq('id', existing.id);
 
@@ -228,6 +236,7 @@ export async function POST({ request }) {
 				lng: lng ?? null,
 				region: region ?? null,
 				region_code: region_code ?? null,
+				categories: cleanCategories,
 				created_at: now
 			});
 

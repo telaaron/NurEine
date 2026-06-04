@@ -130,8 +130,8 @@
 <section class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-14 pb-4 sm:pb-6 lg:pb-8">
 	<p class="eyebrow" style="color: var(--color-amber);">Karte der Hoffnung</p>
 	<h1
-		class="serif mt-3 leading-tight tracking-tight text-[1.7rem] sm:text-[2.2rem] lg:text-[3.2rem]"
-		style="color: var(--color-ink); font-weight: 500; max-width: 14ch;"
+		class="display mt-3 leading-tight text-[1.7rem] sm:text-[2.2rem] lg:text-[3.2rem]"
+		style="color: var(--color-ink); font-weight: 600; max-width: 14ch;"
 	>
 		Wo auf der Welt Gutes passiert.
 	</h1>
@@ -206,8 +206,8 @@
 								<span class="text-2xl flex-shrink-0 mt-0.5">{activeStory.hero || '&#x1F4F0;'}</span>
 							{/if}
 							<h2
-								class="serif leading-snug text-[1.2rem] sm:text-[1.35rem] lg:text-[1.5rem]"
-								style="color: var(--color-ink); font-weight: 500;"
+								class="display leading-snug text-[1.2rem] sm:text-[1.35rem] lg:text-[1.5rem]"
+								style="color: var(--color-ink); font-weight: 600;"
 							>
 								{activeStory.title}
 							</h2>

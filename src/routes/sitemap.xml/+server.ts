@@ -19,6 +19,7 @@ export async function GET() {
 
 	const staticPages = [
 		{ loc: `${BASE_URL}/`, priority: '1.0', changefreq: 'daily' },
+		{ loc: `${BASE_URL}/warum`, priority: '0.9', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/archiv`, priority: '0.8', changefreq: 'daily' },
 		{ loc: `${BASE_URL}/karte`, priority: '0.7', changefreq: 'daily' },
 		{ loc: `${BASE_URL}/bei-dir`, priority: '0.6', changefreq: 'daily' },

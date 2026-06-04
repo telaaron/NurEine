@@ -51,8 +51,8 @@
 					Story einreichen
 				</p>
 				<h2
-					class="serif text-2xl sm:text-3xl lg:text-4xl mt-3 leading-tight"
-					style="color: var(--color-ink); font-weight: 500;"
+					class="display text-2xl sm:text-3xl lg:text-4xl mt-3 leading-tight"
+					style="color: var(--color-ink); font-weight: 600;"
 				>
 					Du kennst eine Geschichte, die wir kennen sollten?
 				</h2>

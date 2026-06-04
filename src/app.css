@@ -1,10 +1,13 @@
 @import 'tailwindcss';
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+/* Fonts loaded via <link> in app.html (Space Grotesk · Newsreader · Inter · JetBrains Mono) */
 
 @theme {
 	--font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-	--font-serif: 'Fraunces', 'Cambria', Georgia, serif;
+	/* Display — modern geometric sans for headlines (kills the antique Didone flair) */
+	--font-display: 'Space Grotesk', 'Inter', ui-sans-serif, system-ui, sans-serif;
+	/* Serif — modern editorial serif for deks, prose, body (warm, readable, not medieval) */
+	--font-serif: 'Newsreader', 'Cambria', Georgia, serif;
 	--font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
 	/* Warm canvas — anti-doomscroll, paper-like */
@@ -34,6 +37,12 @@
 	--color-rose-tint: rgba(184, 122, 122, 0.1);
 	--color-sky: #6c8aa8;
 	--color-sky-tint: rgba(108, 138, 168, 0.1);
+	--color-amber-deep: #9c5527;
+
+	/* Two-part warm shadows (RefactoringUI) — never pure black, tinted with brand warmth */
+	--shadow-sm: 0 1px 2px rgba(60, 40, 20, 0.04), 0 2px 6px rgba(60, 40, 20, 0.06);
+	--shadow-md: 0 2px 4px rgba(60, 40, 20, 0.05), 0 8px 20px rgba(60, 40, 20, 0.09);
+	--shadow-lg: 0 4px 8px rgba(60, 40, 20, 0.06), 0 18px 44px rgba(60, 40, 20, 0.13);
 }
 
 /* ── Base ──────────────────────────────────────────── */
@@ -62,7 +71,14 @@ body {
 /* ── Typography utilities ─────────────────────────── */
 .serif {
 	font-family: var(--font-serif);
-	font-feature-settings: 'ss01', 'ss02', 'liga';
+	font-feature-settings: 'ss01', 'liga';
+}
+
+/* Display — Space Grotesk for headlines. Tight tracking, modern stance. */
+.display {
+	font-family: var(--font-display);
+	letter-spacing: -0.025em;
+	font-feature-settings: 'ss01', 'ss03';
 }
 
 .tnum {
@@ -102,9 +118,10 @@ body {
 
 /* Card heading (medium) — story card titles */
 .card-heading {
+	font-family: var(--font-display);
 	font-size: 1.2rem;     /* 18px @ 15px */
-	line-height: 1.18;
-	letter-spacing: -0.01em;
+	line-height: 1.2;
+	letter-spacing: -0.02em;
 }
 @media (min-width: 640px) {
 	.card-heading { font-size: 1.28rem; }
@@ -125,11 +142,12 @@ body {
 	.card-dek { font-size: 0.938rem; }   /* 15px @ 16px */
 }
 
-/* Page heading — serif h1 on sub-pages */
+/* Page heading — display h1 on sub-pages */
 .page-h1 {
+	font-family: var(--font-display);
 	font-size: 1.8rem;
-	line-height: 1.05;
-	letter-spacing: -0.01em;
+	line-height: 1.02;
+	letter-spacing: -0.03em;
 }
 @media (min-width: 640px) {
 	.page-h1 { font-size: 2.4rem; }

@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { formatDate, inline, sections, toneStyles } from '$lib/utils';
+	import { track } from '$lib/track';
 	import StoryCard from '$lib/components/StoryCard.svelte';
 	import ShareBar from '$lib/components/ShareBar.svelte';
+	import InlineNewsletter from '$lib/components/InlineNewsletter.svelte';
 
 	let { data } = $props();
 	const story = $derived(data.story);
@@ -11,7 +13,38 @@
 
 	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
 	const storyUrl = $derived(`${baseUrl}/geschichte/${story.slug}`);
+
+	// Article structured data for Google rich results.
+	const jsonLd = $derived(
+		JSON.stringify({
+			'@context': 'https://schema.org',
+			'@type': 'NewsArticle',
+			headline: story.title,
+			description: story.dek,
+			image: story.imageUrl ? [story.imageUrl] : undefined,
+			datePublished: story.publishedAt,
+			dateModified: story.publishedAt,
+			author: { '@type': 'Organization', name: 'NurEine', url: baseUrl },
+			publisher: {
+				'@type': 'Organization',
+				name: 'NurEine',
+				logo: { '@type': 'ImageObject', url: `${baseUrl}/NurEine.svg` }
+			},
+			mainEntityOfPage: { '@type': 'WebPage', '@id': storyUrl },
+			articleSection: story.category,
+			isAccessibleForFree: true
+		})
+	);
+
+	// Fire one story_read per slug view
+	$effect(() => {
+		if (story?.slug) track('story_read', { slug: story.slug, category: story.category });
+	});
 	</script>
+
+<svelte:head>
+	{@html `<script type="application/ld+json">${jsonLd}</scr` + `ipt>`}
+</svelte:head>
 
 <!-- Hero -->
 <article>
@@ -47,8 +80,8 @@
 			</div>
 
 			<h1
-				class="serif mt-6 leading-[1.05] tracking-tight text-[1.8rem] sm:text-[2.4rem] lg:text-[4.2rem] rise rise-d2"
-				style="color: var(--color-ink); font-weight: 500;"
+				class="display mt-6 leading-[1.02] text-[1.8rem] sm:text-[2.4rem] lg:text-[4rem] rise rise-d2"
+				style="color: var(--color-ink); font-weight: 600;"
 			>
 				{story.title}
 			</h1>
@@ -155,6 +188,11 @@
 		</div>
 	</div>
 
+	<!-- Inline newsletter capture at peak intent (just finished reading) -->
+	<div class="relative mx-auto max-w-[680px] px-4 sm:px-6 lg:px-0 mt-12 sm:mt-16">
+		<InlineNewsletter source="story_end" />
+	</div>
+
 	<!-- Nav prev/next -->
 	<nav
 		class="mx-auto max-w-[860px] px-4 sm:px-6 lg:px-10 mt-14 sm:mt-20 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"
@@ -194,8 +232,8 @@
 	{#if data.related.length}
 		<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 mt-14 sm:mt-24">
 			<h2
-				class="serif text-xl sm:text-2xl mb-6 sm:mb-8"
-				style="color: var(--color-ink); font-weight: 500;"
+				class="display text-xl sm:text-2xl mb-6 sm:mb-8"
+				style="color: var(--color-ink); font-weight: 600;"
 			>
 				Weiteres aus {story.category}
 			</h2>

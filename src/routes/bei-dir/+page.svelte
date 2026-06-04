@@ -322,7 +322,7 @@
 	{#if geo.status === 'loading'}
 		<div class="flex flex-col gap-3 rise">
 			<p class="eyebrow" style="color: var(--color-amber);">Standort wird ermittelt</p>
-			<h1 class="serif leading-tight tracking-tight text-[1.6rem] sm:text-[2rem] lg:text-[3rem]" style="color: var(--color-ink); font-weight: 500;">
+			<h1 class="display leading-tight text-[1.6rem] sm:text-[2rem] lg:text-[3rem]" style="color: var(--color-ink); font-weight: 600;">
 				Gute Nachrichten aus deiner Region.
 			</h1>
 			<div class="mt-2 flex items-center gap-3">
@@ -332,7 +332,7 @@
 		</div>
 	{:else if geo.status === 'error'}
 		<p class="eyebrow rise" style="color: var(--color-amber);">Bei dir</p>
-		<h1 class="serif mt-3 leading-tight tracking-tight text-[1.6rem] sm:text-[2rem] lg:text-[3rem] rise rise-d1" style="color: var(--color-ink); font-weight: 500;">
+		<h1 class="display mt-3 leading-tight text-[1.6rem] sm:text-[2rem] lg:text-[3rem] rise rise-d1" style="color: var(--color-ink); font-weight: 600;">
 			Ort konnte nicht ermittelt werden.
 		</h1>
 		<div class="mt-5 max-w-[55ch] text-base leading-relaxed rise rise-d2" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
@@ -352,7 +352,7 @@
 		</div>
 	{:else}
 		<p class="eyebrow rise" style="color: var(--color-amber);">Bei dir</p>
-		<h1 class="serif mt-3 leading-tight tracking-tight text-[1.6rem] sm:text-[2rem] lg:text-[3rem] rise rise-d1" style="color: var(--color-ink); font-weight: 500;">
+		<h1 class="display mt-3 leading-tight text-[1.6rem] sm:text-[2rem] lg:text-[3rem] rise rise-d1" style="color: var(--color-ink); font-weight: 600;">
 			Gute Nachrichten
 			{#if geo.city || geo.region}
 				aus <span style="color: var(--color-amber);">{locationLabel}</span>

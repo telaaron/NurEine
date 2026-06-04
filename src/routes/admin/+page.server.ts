@@ -1,12 +1,13 @@
-import { getAllStories, getSubscriberStats, getLatestFeatured, getB2BDashboardStats, getDeliveryLog } from '$lib/server/queries';
+import { getAllStories, getSubscriberStats, getLatestFeatured, getB2BDashboardStats, getDeliveryLog, getFunnelStats } from '$lib/server/queries';
 
 export async function load() {
-  const [stories, subscribers, heroStory, b2bStats, deliveryLog] = await Promise.all([
+  const [stories, subscribers, heroStory, b2bStats, deliveryLog, funnel] = await Promise.all([
     getAllStories(),
     getSubscriberStats(),
     getLatestFeatured(),
     getB2BDashboardStats(),
-    getDeliveryLog(5) // last 5 entries for HUD preview
+    getDeliveryLog(5), // last 5 entries for HUD preview
+    getFunnelStats()
   ]);
 
   const categoryCount: Record<string, number> = {};
@@ -20,6 +21,7 @@ export async function load() {
     subscribers,
     b2bStats,
     deliveryLog,
+    funnel,
     heroStory: heroStory ? {
       id: heroStory.id,
       title: heroStory.title,

@@ -194,8 +194,8 @@
 <!-- Comparison table -->
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20">
 	<h2
-		class="serif text-xl sm:text-2xl text-center mb-10"
-		style="color: var(--color-ink); font-weight: 500;"
+		class="display text-xl sm:text-2xl text-center mb-10"
+		style="color: var(--color-ink); font-weight: 600;"
 	>
 		Was ist in welchem Plan enthalten?
 	</h2>
@@ -262,8 +262,8 @@
 			F&uuml;r Teams &amp; Einrichtungen
 		</p>
 		<h2
-			class="serif text-2xl sm:text-3xl lg:text-4xl mt-3 leading-tight"
-			style="color: var(--color-ink); font-weight: 500;"
+			class="display text-2xl sm:text-3xl lg:text-4xl mt-3 leading-tight"
+			style="color: var(--color-ink); font-weight: 600;"
 		>
 			Gute Nachrichten als Arbeitsumfeld
 		</h2>
@@ -349,8 +349,8 @@
 <!-- FAQ -->
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20">
 	<h2
-		class="serif text-xl sm:text-2xl text-center mb-10"
-		style="color: var(--color-ink); font-weight: 500;"
+		class="display text-xl sm:text-2xl text-center mb-10"
+		style="color: var(--color-ink); font-weight: 600;"
 	>
 		Häufige Fragen
 	</h2>

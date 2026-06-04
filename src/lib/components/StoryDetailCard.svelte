@@ -83,7 +83,7 @@
 		{/if}
 
 		<h3
-			class="serif font-medium leading-tight mb-2"
+			class="display font-semibold leading-tight mb-2"
 			style="color: var(--color-ink);"
 		>
 			{story.title}

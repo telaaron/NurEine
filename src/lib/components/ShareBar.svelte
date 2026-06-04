@@ -20,6 +20,8 @@
 		size?: number;
 	};
 
+	import { track } from '$lib/track';
+
 	let { url, title, text = '', showLabel = false, size = 18 }: Props = $props();
 
 	let copied = $state(false);
@@ -35,6 +37,7 @@
 	const xUrl = $derived(`https://x.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`);
 
 	async function share() {
+		track('share', { method: 'native', url: shareUrl });
 		if (typeof navigator !== 'undefined' && navigator.share) {
 			try {
 				await navigator.share({ title, text, url: shareUrl });
@@ -47,6 +50,7 @@
 	}
 
 	async function copyLink() {
+		track('share', { method: 'copy', url: shareUrl });
 		try {
 			await navigator.clipboard.writeText(shareUrl);
 			copied = true;
@@ -86,13 +90,13 @@
 		{/if}
 	</button>
 
-	<a href={whatsappUrl} target="_blank" rel="noopener noreferrer" class="share-btn" aria-label="Auf WhatsApp teilen" title="WhatsApp">
+	<a href={whatsappUrl} target="_blank" rel="noopener noreferrer" onclick={() => track('share', { method: 'whatsapp', url: shareUrl })} class="share-btn" aria-label="Auf WhatsApp teilen" title="WhatsApp">
 		<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 			<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
 		</svg>
 	</a>
 
-	<a href={xUrl} target="_blank" rel="noopener noreferrer" class="share-btn" aria-label="Auf X teilen" title="X">
+	<a href={xUrl} target="_blank" rel="noopener noreferrer" onclick={() => track('share', { method: 'x', url: shareUrl })} class="share-btn" aria-label="Auf X teilen" title="X">
 		<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 			<path d="M4 4l11.733 16h4.267l-11.733 -16z" />
 			<path d="M4 20l6.768 -6.768" />
@@ -100,7 +104,7 @@
 		</svg>
 	</a>
 
-	<a href={emailUrl} class="share-btn" aria-label="Per E-Mail teilen" title="E-Mail">
+	<a href={emailUrl} onclick={() => track('share', { method: 'email', url: shareUrl })} class="share-btn" aria-label="Per E-Mail teilen" title="E-Mail">
 		<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 			<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
 			<polyline points="22,6 12,13 2,6" />

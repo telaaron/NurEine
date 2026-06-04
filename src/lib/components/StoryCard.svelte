@@ -116,10 +116,10 @@
 			<span>{story.readingMinutes} Min. Lesezeit</span>
 		</div>
 		<h3
-			class="serif mt-2 sm:mt-3 leading-[1.18] tracking-tight line-clamp-2 {size === 'lg'
+			class="display mt-2 sm:mt-3 leading-[1.2] line-clamp-2 {size === 'lg'
 				? 'text-xl sm:text-2xl lg:text-3xl'
 				: 'card-heading'}"
-			style="color: var(--color-ink); font-weight: 500;"
+			style="color: var(--color-ink); font-weight: 600;"
 		>
 			{story.title}
 		</h3>

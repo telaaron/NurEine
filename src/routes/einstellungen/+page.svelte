@@ -1,0 +1,119 @@
+<script lang="ts">
+	import { base } from '$app/paths';
+	import { CATEGORIES } from '$lib/categories';
+
+	let { data } = $props();
+
+	let selected = $state<Set<string>>(new Set(data.ok ? data.categories : []));
+	let saving = $state(false);
+	let savedMsg = $state('');
+	let errorMsg = $state('');
+
+	function toggle(slug: string) {
+		const next = new Set(selected);
+		if (next.has(slug)) next.delete(slug);
+		else next.add(slug);
+		selected = next;
+	}
+
+	async function save() {
+		if (!data.ok || saving) return;
+		saving = true;
+		savedMsg = '';
+		errorMsg = '';
+		try {
+			const res = await fetch(`${base}/api/preferences`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email: data.email, token: data.token, categories: [...selected] })
+			});
+			const result = await res.json();
+			if (res.ok) {
+				savedMsg = selected.size === 0
+					? 'Gespeichert — du erhältst Geschichten aus allen Themen.'
+					: 'Gespeichert. Dein täglicher Lichtblick ist jetzt auf dich zugeschnitten.';
+			} else {
+				errorMsg = result.error || 'Speichern fehlgeschlagen.';
+			}
+		} catch {
+			errorMsg = 'Ein Fehler ist aufgetreten.';
+		} finally {
+			saving = false;
+		}
+	}
+</script>
+
+<svelte:head>
+	<title>Deine Einstellungen — NurEine</title>
+	<meta name="robots" content="noindex" />
+</svelte:head>
+
+<section class="mx-auto max-w-[680px] px-4 sm:px-6 lg:px-10 py-12 sm:py-20">
+	{#if !data.ok}
+		<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">Einstellungen</span>
+		<h1 class="display mt-4 text-3xl sm:text-4xl" style="color: var(--color-ink); font-weight: 600;">Link ungültig</h1>
+		<p class="mt-4 text-base leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
+			Dieser Einstellungs-Link ist ungültig oder abgelaufen. Bitte nutze den Link aus deiner
+			aktuellsten NurEine-E-Mail.
+		</p>
+		<a href={base + '/'} class="mt-6 inline-flex items-center gap-2 text-sm" style="color: var(--color-ink-soft); border-bottom: 1.5px solid var(--color-rule-strong); padding-bottom: 3px;">
+			Zur Startseite <span aria-hidden="true">→</span>
+		</a>
+	{:else}
+		<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">Deine Einstellungen</span>
+		<h1 class="display mt-4 text-3xl sm:text-4xl leading-[1.05]" style="color: var(--color-ink); font-weight: 600;">
+			Welche guten Nachrichten willst du?
+		</h1>
+		<p class="mt-4 text-base sm:text-lg leading-[1.5] max-w-[46ch]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
+			Wähle deine Themen. Wir senden dir täglich die stärkste Geschichte daraus. Keine Auswahl =
+			alle Themen.
+		</p>
+
+		<div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+			{#each CATEGORIES as cat}
+				{@const on = selected.has(cat.slug)}
+				<button
+					type="button"
+					onclick={() => toggle(cat.slug)}
+					class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all active:scale-[0.99]"
+					style="border: 1px solid {on ? 'var(--color-amber)' : 'var(--color-rule)'};
+						background: {on ? 'var(--color-amber-tint)' : 'var(--color-paper)'};
+						box-shadow: {on ? 'var(--shadow-sm)' : 'none'};"
+					aria-pressed={on}
+				>
+					<span class="text-xl" aria-hidden="true">{cat.emoji}</span>
+					<span class="flex-1 text-base" style="color: var(--color-ink); font-weight: {on ? 600 : 400};">{cat.label}</span>
+					<span
+						class="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+						style="border: 1.5px solid {on ? 'var(--color-amber)' : 'var(--color-rule-strong)'}; background: {on ? 'var(--color-amber)' : 'transparent'};"
+					>
+						{#if on}
+							<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-paper)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+						{/if}
+					</span>
+				</button>
+			{/each}
+		</div>
+
+		<div class="mt-8 flex items-center gap-4 flex-wrap">
+			<button
+				type="button"
+				onclick={save}
+				disabled={saving}
+				class="px-6 py-3 rounded-full text-sm font-medium transition-all active:scale-[0.97] disabled:opacity-60"
+				style="background: var(--color-ink); color: var(--color-paper); box-shadow: var(--shadow-sm);"
+			>
+				{saving ? 'Speichern…' : 'Einstellungen speichern'}
+			</button>
+			{#if savedMsg}
+				<span class="text-sm" style="color: var(--color-sage); font-family: var(--font-serif);">{savedMsg}</span>
+			{:else if errorMsg}
+				<span class="text-sm" style="color: var(--color-rose); font-family: var(--font-serif);">{errorMsg}</span>
+			{/if}
+		</div>
+
+		<p class="mt-10 text-xs" style="color: var(--color-faint); font-family: var(--font-mono); letter-spacing: 0.03em;">
+			Angemeldet als {data.email}
+		</p>
+	{/if}
+</section>

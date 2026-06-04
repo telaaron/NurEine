@@ -1,0 +1,19 @@
+name: Monthly World Newsletter (Stand der Welt)
+
+on:
+  schedule:
+    - cron: '20 6 1 * *'  # 06:20 UTC am 1. jedes Monats — nach dem Metrik-Fetch (05:00)
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger monthly world newsletter
+        run: |
+          curl -fsS -X POST "${BASE_URL}/api/cron/world-newsletter" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -w "\nHTTP %{http_code}\n"
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

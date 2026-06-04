@@ -57,6 +57,28 @@
 	}
 
 	const headline = $derived(metrics.find((m) => m.metric_key === 'extreme_poverty'));
+
+	const catOrder = ['ueberleben', 'planet', 'wissen', 'frieden'];
+	const grouped = $derived(
+		catOrder
+			.map((c) => ({ cat: c, items: metrics.filter((m) => m.category === c) }))
+			.filter((g) => g.items.length)
+	);
+
+	// Detail modal
+	let active = $state<Metric | null>(null);
+
+	// Larger detail chart: real value axis (not flipped), gridlines, year labels.
+	function detailPath(m: Metric, w: number, h: number, pad = 4): string {
+		const s = m.series;
+		if (s.length < 2) return '';
+		const xs = s.map((p) => p.year), ys = s.map((p) => p.value);
+		const minX = Math.min(...xs), maxX = Math.max(...xs);
+		const minY = Math.min(...ys), maxY = Math.max(...ys);
+		const sx = (x: number) => pad + ((x - minX) / (maxX - minX || 1)) * (w - 2 * pad);
+		const sy = (y: number) => h - pad - ((y - minY) / (maxY - minY || 1)) * (h - 2 * pad);
+		return s.map((p, i) => `${i ? 'L' : 'M'}${sx(p.year).toFixed(1)},${sy(p.value).toFixed(1)}`).join(' ');
+	}
 </script>
 
 <svelte:head>
@@ -81,35 +103,79 @@
 		</p>
 	{/if}
 
-	<!-- Metric cards -->
-	<div class="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-		{#each metrics as m (m.metric_key)}
-			<div class="paper rounded-2xl p-6 flex flex-col" style="border: 1px solid var(--color-rule); box-shadow: var(--shadow-sm);">
-				<div class="flex items-center justify-between">
-					<span class="uppercase" style="font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.14em; color: var(--color-faint);">{catLabels[m.category] ?? m.category}</span>
-					{#if improvement(m)}
-						<span class="uppercase" style="font-family: var(--font-mono); font-size: 0.58rem; letter-spacing: 0.08em; color: var(--color-sage);">↑ {improvement(m)}</span>
-					{/if}
+	<!-- Metric cards, grouped by category -->
+	{#each grouped as group (group.cat)}
+		<div class="mt-12">
+			<h2 class="eyebrow mb-5" style="color: var(--color-amber); font-family: var(--font-mono);">{catLabels[group.cat] ?? group.cat}</h2>
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+				{#each group.items as m (m.metric_key)}
+					<button type="button" onclick={() => (active = m)}
+						class="paper rounded-2xl p-6 flex flex-col text-left transition-all hover:-translate-y-0.5"
+						style="border: 1px solid var(--color-rule); box-shadow: var(--shadow-sm); cursor: pointer;">
+						<div class="flex items-center justify-between gap-2">
+							<h3 class="display text-lg" style="color: var(--color-ink); font-weight: 600;">{m.label}</h3>
+							{#if improvement(m)}
+								<span class="uppercase shrink-0" style="font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.06em; color: var(--color-sage);">↑ {improvement(m)}</span>
+							{/if}
+						</div>
+						<div class="mt-2 flex items-baseline gap-2">
+							<span class="display tnum text-3xl" style="color: var(--color-ink); font-weight: 600;">{fmt(m.latest_value, m.unit)}</span>
+							<span class="tnum" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-faint);">{m.latest_year}</span>
+						</div>
+						<svg viewBox="0 0 260 64" class="mt-4 w-full" style="height: 56px;" preserveAspectRatio="none" aria-hidden="true">
+							<path d={sparkline(m)} fill="none" stroke="var(--color-amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+						</svg>
+						<span class="mt-3 text-xs" style="font-family: var(--font-mono); color: var(--color-faint);">Details ansehen →</span>
+					</button>
+				{/each}
+			</div>
+		</div>
+	{:else}
+		<p class="mt-12 text-sm" style="color: var(--color-faint); font-family: var(--font-serif);">Daten werden geladen.</p>
+	{/each}
+
+	<!-- Detail modal -->
+	{#if active}
+		{@const m = active}
+		<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+		<div class="fixed inset-0 z-50 flex items-center justify-center p-4" style="background: rgba(22,20,15,0.55); backdrop-filter: blur(3px);" onclick={() => (active = null)}>
+			<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
+			<div class="paper rounded-2xl w-full max-w-[640px] p-6 sm:p-8" style="box-shadow: var(--shadow-lg);" onclick={(e) => e.stopPropagation()}>
+				<div class="flex items-start justify-between gap-4">
+					<div>
+						<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">{catLabels[m.category] ?? m.category}</span>
+						<h3 class="display text-2xl mt-2" style="color: var(--color-ink); font-weight: 600;">{m.label}</h3>
+					</div>
+					<button type="button" onclick={() => (active = null)} aria-label="Schließen" class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style="border: 1px solid var(--color-rule);">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-ink)" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+					</button>
 				</div>
-				<h2 class="display text-lg mt-3" style="color: var(--color-ink); font-weight: 600;">{m.label}</h2>
-				<div class="mt-2 flex items-baseline gap-2">
-					<span class="display tnum text-3xl" style="color: var(--color-ink); font-weight: 600;">{fmt(m.latest_value, m.unit)}</span>
-					<span class="tnum" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-faint);">{m.latest_year}</span>
+
+				<div class="mt-4 flex items-baseline gap-3">
+					<span class="display tnum text-4xl" style="color: var(--color-ink); font-weight: 600;">{fmt(m.latest_value, m.unit)}</span>
+					<span class="tnum" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-faint);">{m.latest_year}</span>
+					{#if improvement(m)}<span class="ml-auto uppercase" style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--color-sage);">↑ {improvement(m)}</span>{/if}
 				</div>
-				<!-- sparkline -->
-				<svg viewBox="0 0 260 64" class="mt-4 w-full" style="height: 56px;" preserveAspectRatio="none" aria-hidden="true">
-					<path d={sparkline(m)} fill="none" stroke="var(--color-amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
-				</svg>
-				{#if m.blurb}<p class="mt-3 text-sm leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">{m.blurb}</p>{/if}
-				<div class="mt-auto pt-3 flex items-center justify-between" style="border-top: 1px solid var(--color-rule);">
-					<span style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--color-faint);">{m.source}</span>
-					{#if m.source_url}<a href={m.source_url} target="_blank" rel="noreferrer" style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--color-amber);">Quelle ↗</a>{/if}
+
+				<!-- full detail chart -->
+				<div class="mt-5 rounded-xl p-4" style="background: var(--color-canvas-soft);">
+					<svg viewBox="0 0 600 220" class="w-full" style="height: 200px;" preserveAspectRatio="none">
+						<path d={detailPath(m, 600, 220)} fill="none" stroke="var(--color-amber)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
+					</svg>
+					<div class="flex justify-between mt-2 tnum" style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--color-faint);">
+						<span>{m.series[0]?.year}: {fmt(m.series[0]?.value, m.unit)}</span>
+						<span>{m.series[m.series.length - 1]?.year}: {fmt(m.series[m.series.length - 1]?.value, m.unit)}</span>
+					</div>
+				</div>
+
+				{#if m.blurb}<p class="mt-5 text-base leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">{m.blurb}</p>{/if}
+				<div class="mt-5 pt-4 flex items-center justify-between" style="border-top: 1px solid var(--color-rule);">
+					<span style="font-family: var(--font-mono); font-size: 0.66rem; color: var(--color-faint);">Quelle: {m.source}</span>
+					{#if m.source_url}<a href={m.source_url} target="_blank" rel="noreferrer" style="font-family: var(--font-mono); font-size: 0.66rem; color: var(--color-amber);">Methodik ↗</a>{/if}
 				</div>
 			</div>
-		{:else}
-			<p class="text-sm" style="color: var(--color-faint); font-family: var(--font-serif);">Daten werden geladen.</p>
-		{/each}
-	</div>
+		</div>
+	{/if}
 
 	<!-- Honesty layer -->
 	<div class="mt-12 p-6 sm:p-8 rounded-2xl" style="background: var(--color-canvas-soft); border-left: 3px solid var(--color-amber);">

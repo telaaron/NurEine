@@ -61,15 +61,21 @@ Admin-Cockpit + Funnel-Modul (inkl. Deliverability + Top-Werber), HMAC-Admin-Aut
 (alle Endpoints), personalisierter Newsletter (explizit + gelernt), **Story-Einreichen
 `/einreichen` + Admin-Moderation**, **Referral-Mechanik** (Code/Capture/Credit/Share-UI),
 **Open-Rate-Tracking** (Brevo-Webhook, alle Events), **Double-Opt-in** (confirmed_at + IP),
-SEO (JSON-LD, sitemap, robots), Mobil-Feinschliff. Live: Supabase, Brevo, ADMIN_SESSION_SECRET.
+SEO (JSON-LD, sitemap, robots), Mobil-Feinschliff. **Positionierung „ehrlicher
+Fortschritt"**, **/methodik** (Transparenz), **Familien-Feature** (has_kids +
+auto-KI-Tagging der Story-Felder), **/stand-der-welt** Dashboard (12 Metriken,
+4 Kategorien, Detail-Modal, World-Bank-Cron), **Monats-Newsletter „Stand der
+Welt"**, **Einsendung→echte Story**. Brevo-Webhook live (alle Events). Live:
+Supabase, Brevo, ADMIN_SESSION_SECRET, BREVO_WEBHOOK_SECRET.
 
 ### Noch offen
 | P | Lücke | Warum |
 |---|---|---|
-| **P0** | **Brevo-Webhook registrieren** (URL `?secret=`, Auth „Keine", Transactional, alle Events) | Sonst keine Open/Click-Daten. Code steht. NEU: `BREVO_WEBHOOK_SECRET` in Vercel. |
 | **P0** | **Brevo DNS prüfen** (SPF/DKIM/DMARC) | Zustellbarkeit. Läuft schon an ~5+7 → vermutlich ok, verifizieren. |
+| **P0** | **GitHub-Secret `PUBLIC_BASE_URL`** für world-newsletter.yml | Sonst feuert der Monats-Cron ins Leere. |
 | **P1** | **Auto-Social-Cards** (9:16 aus OG für IG/TikTok, Cron) | Der eine Wachstumskanal (§4). Assets existieren. |
 | **P1** | **Referral-Belohnung** (Schwelle → Badge/Unlock) | Aktuell nur Zählung; Anreiz fehlt noch. |
+| **P1** | **Bestehende Stories familien-taggen** (einmaliger DeepSeek-Lauf) | Neue Stories werden auto-getaggt; alte haben noch keine Kid-Felder. |
 | **P2** | **Streak / „X Tage Lichtblick"** | Habit-Loop, Retention. |
 | **P2** | **Slug als echte DB-Spalte** | `getStoryBySlug` lädt ALLE Stories + filtert in JS — skaliert nicht über ~paar Tausend. |
 | **P2** | **OG cold-render 36-45s** → pre-generieren / Edge-Cache-Warm | Bei viraler Story = viele „erste" Viewer warten. |
@@ -213,3 +219,36 @@ Score vs. Wochen-Score = ehrlicher persönlicher Beweis ohne externe Daten). Tei
 minimalistisches Kurven-Bild, opt-in. KEIN Streak-Counter (Dark Pattern), kein
 Nutzer-Vergleich, keine Push, kein Pflichtfeld. **Sinnlos bei <100 aktiven Lesern →
 nach Wachstum.**
+
+---
+
+## 8 · Monetarisierung — Paywall-Strategie (Hormozi-Prinzip)
+
+**Kernsatz:** Niemand zahlt für Features. Man zahlt für den Moment *„Das will
+ich nicht verlieren."* → **Free gibt den Geschmack. Paid gibt den Besitz.**
+
+### Free (Akquisition — bleibt gratis)
+Tägliche Geschichte · täglicher Newsletter · Archiv letzte 7 Tage · Karte der
+Hoffnung · „Bei dir" (lokal) · Familien-Badge + Gesprächsstarter · Story
+einreichen · **Stand-der-Welt Dashboard (Basis)** · Tagesklima-Eingabe.
+→ Das ist der Akquisitionskanal, nicht das Produkt. Ohne Liebe zum Free kein Paid.
+
+### Paid — „NurEine Plus" (~3,99 €/Mo · 35 €/Jahr, ein einziges Abo)
+- **Vollständiges Archiv** (alle Stories seit Tag 1) — Sammler/Recherche, natürliche Segmentierung (7-Tage-Wall).
+- **Dein persönliches Tagesklima** (Kurve, 30+-Tage-Verlauf, Teilen) — *der* „nicht-verlieren"-Moment. Lock-in ohne Dark Pattern: die Kurve gehört dir.
+- **Sonntags-Tiefenanalyse** (1 Story, 800 W, Quellenpaket) — einziger Nur-dort-Content.
+- *(offen, ob Dashboard-Tiefe Paid wird — Basis bleibt Free als PR/SEO-Asset; ggf. Detail-Tiefe/Historie Paid für Skeptiker ZG 3.)*
+
+### Wann launchen — NICHT jetzt
+Erst wenn: (1) Tagesklima-Daten existieren (Nutzer ≥30 Tage Eingabe), (2)
+Dashboard steht ✓, (3) **>500 aktive Abonnenten**. Dann ist der Pitch keine
+Feature-Liste, sondern eine Erinnerung: *„Du nutzt das seit 30 Tagen. Deine
+Kurve gehört dir. Willst du sie behalten?"*
+
+### Reihenfolge dahin
+1. Wachstum (§4) → 500+ aktive Abonnenten.
+2. Tagesklima bauen (§7.5) + 30 Tage Daten sammeln lassen.
+3. Stripe-Integration (Infra via MCP bereit) + Member-Gate (braucht erstmals echtes Login-System für B2C — aktuell nur Token-Magic-Links).
+4. „Plus" launchen als Erinnerung, nicht als Sales-Pitch.
+
+**Familien-Extras bleiben Free** — Akquisition, kein Revenue-Hebel.

@@ -1,13 +1,25 @@
 import { json } from '@sveltejs/kit';
-import { sendTestNewsletter } from '$lib/server/queries';
+import { sendTestNewsletter, renderTestNewsletterHtml } from '$lib/server/queries';
+import { verifyAdminRequest } from '$lib/server/auth';
+
+// GET /api/newsletter/test?email=...  → renders the email HTML (no send).
+// Admin-only preview so you can eyeball the real template before sending.
+export async function GET({ url, cookies }) {
+  if (!verifyAdminRequest(cookies)) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+  const email = (url.searchParams.get('email') || 'preview@nureine.de').trim();
+  const rendered = await renderTestNewsletterHtml(email);
+  if (!rendered) return new Response('No story to render', { status: 404 });
+  return new Response(rendered.html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+}
 
 // POST /api/newsletter/test
 // Admin-only: sends a test newsletter to a specified email address.
-// Requires admin_token cookie.
+// Requires a valid admin session cookie.
 
 export async function POST({ request, cookies }) {
-  const token = cookies.get('admin_token');
-  if (token !== 'admin-authenticated') {
+  if (!verifyAdminRequest(cookies)) {
     return json({ error: 'Unauthorized' }, { status: 401 });
   }
 

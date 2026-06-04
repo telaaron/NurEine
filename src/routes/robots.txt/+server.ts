@@ -13,6 +13,10 @@ Sitemap: ${BASE_URL}/sitemap.xml
 Disallow: /admin/
 Disallow: /api/
 
+# Token-based personal pages — never index
+Disallow: /einstellungen
+Disallow: /r
+
 # Crawl-delay (optional — polites zum Server)
 Crawl-delay: 2
 `;

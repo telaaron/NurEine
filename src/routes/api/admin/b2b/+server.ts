@@ -1,10 +1,10 @@
 import { json } from '@sveltejs/kit';
+import { verifyAdminRequest } from '$lib/server/auth';
 import { createB2BClient } from '$lib/server/queries';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
-  const token = cookies.get('admin_token');
-  if (token !== 'admin-authenticated') {
+  if (!verifyAdminRequest(cookies)) {
     return json({ error: 'Nicht autorisiert' }, { status: 401 });
   }
 

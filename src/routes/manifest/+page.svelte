@@ -44,34 +44,35 @@
 		{ role: 'Sprache', n: 'DE' }
 	];
 </script>
-
-<section class="relative">
+<div class="relative isolate">
 	<div
-		class="absolute inset-0 sun-glow pointer-events-none"
+		class="absolute pointer-events-none -z-10"
 		aria-hidden="true"
-		style="opacity: 0.5;"
+		style="left: 50%; top: 11rem; width: 10rem; height: 10rem; opacity: 0.22; transform: translate(-50%, -50%); border-radius: 9999px; background: radial-gradient(circle, rgba(200, 115, 64, 0.42) 0%, rgba(200, 115, 64, 0.14) 30%, transparent 68%); filter: blur(8px);"
 	></div>
-	<div class="relative mx-auto max-w-[860px] px-4 sm:px-6 lg:px-10 pt-12 sm:pt-16 lg:pt-24 pb-12">
-		<p class="eyebrow rise" style="color: var(--color-amber);">
-			Manifest
-		</p>
-		<h1
-			class="display mt-4 leading-[1.0] text-[1.9rem] sm:text-[2.6rem] lg:text-[4.4rem] rise rise-d1"
-			style="color: var(--color-ink); font-weight: 600;"
-		>
-			Sechs Sätze, an denen wir uns messen lassen.
-		</h1>
-		<p
-			class="mt-7 text-base sm:text-xl lg:text-2xl leading-snug max-w-[55ch] rise rise-d2"
-			style="color: var(--color-ink-soft); font-family: var(--font-serif); font-style: italic;"
-		>
-			Nachrichten formen, wie wir die Welt sehen. Wenn ein Großteil der Berichterstattung Schmerz
-			zeigt, denken wir, die Welt sei nur Schmerz. Sie ist es nicht.
-		</p>
-	</div>
-</section>
 
-<section class="mx-auto max-w-[860px] px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20">
+	<section class="relative z-10">
+		<div class="relative mx-auto max-w-215 px-4 sm:px-6 lg:px-10 pt-12 sm:pt-16 lg:pt-24 pb-12">
+			<p class="eyebrow rise" style="color: var(--color-amber);">
+				Manifest
+			</p>
+			<h1
+				class="display mt-4 leading-none text-[1.9rem] sm:text-[2.6rem] lg:text-[4.4rem] rise rise-d1"
+				style="color: var(--color-ink); font-weight: 600;"
+			>
+				Sechs Sätze, an denen wir uns messen lassen.
+			</h1>
+			<p
+				class="mt-7 text-base sm:text-xl lg:text-2xl leading-snug max-w-[55ch] rise rise-d2"
+				style="color: var(--color-ink-soft); font-family: var(--font-serif); font-style: italic;"
+			>
+				Nachrichten formen, wie wir die Welt sehen. Wenn ein Großteil der Berichterstattung Schmerz
+				zeigt, denken wir, die Welt sei nur Schmerz. Sie ist es nicht.
+			</p>
+		</div>
+	</section>
+
+	<section class="relative z-10 mx-auto max-w-215 px-4 sm:px-6 lg:px-10 pb-14 sm:pb-20">
 	<ol class="space-y-10 sm:space-y-14">
 		{#each principles as p, i (p.n)}
 			<li class="grid grid-cols-12 gap-6 rise" style="animation-delay: {0.1 + i * 0.06}s;">
@@ -114,7 +115,7 @@
 	<!-- Methodik anchor -->
 	<div
 		id="methodik"
-		class="mt-14 sm:mt-20 paper rounded-[8px] p-6 sm:p-10 lg:p-14"
+		class="mt-14 sm:mt-20 paper rounded-lg p-6 sm:p-10 lg:p-14"
 		style="border: 1px solid var(--color-rule);"
 	>
 		<p class="eyebrow" style="color: var(--color-amber);">
@@ -174,7 +175,7 @@
 	<div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
 		{#each team as t}
 			<div
-				class="p-5 rounded-[6px]"
+				class="p-5 rounded-md"
 				style="border: 1px solid var(--color-rule); background: var(--color-canvas-soft);"
 			>
 			<p class="footer-heading" style="color: var(--color-faint);">
@@ -187,11 +188,21 @@
 		{/each}
 	</div>
 
-	<a
-		href={base + '/'}
-		class="mt-10 sm:mt-14 inline-flex items-center gap-2 text-sm hover:opacity-70"
-		style="color: var(--color-ink-soft); border-bottom: 1px solid var(--color-rule-strong);"
-	>
-		<span aria-hidden="true">←</span> Zurück zur heutigen Geschichte
-	</a>
+	<div class="mt-12 sm:mt-16 flex flex-wrap items-center gap-x-8 gap-y-4">
+		<a
+			href={base + '/warum'}
+			class="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium transition-all active:scale-[0.97]"
+			style="background: var(--color-ink); color: var(--color-paper); box-shadow: var(--shadow-sm);"
+		>
+			Täglich eine gute Nachricht <span aria-hidden="true">→</span>
+		</a>
+		<a
+			href={base + '/'}
+			class="inline-flex items-center gap-2 text-sm hover:opacity-70"
+			style="color: var(--color-ink-soft); border-bottom: 1px solid var(--color-rule-strong);"
+		>
+			<span aria-hidden="true">←</span> Zurück zur heutigen Geschichte
+		</a>
+	</div>
 </section>
+</div>

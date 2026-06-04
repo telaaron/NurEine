@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { verifyAdminRequest } from '$lib/server/auth';
 import { getStoryById, updateStory, deleteStory } from '$lib/server/queries';
 
 export async function GET({ params }) {
@@ -10,8 +11,7 @@ export async function GET({ params }) {
 }
 
 export async function PUT({ request, params, cookies }) {
-  const token = cookies.get('admin_token');
-  if (token !== 'admin-authenticated') {
+  if (!verifyAdminRequest(cookies)) {
     return json({ error: 'Nicht autorisiert' }, { status: 401 });
   }
 
@@ -45,8 +45,7 @@ export async function PUT({ request, params, cookies }) {
 }
 
 export async function DELETE({ params, cookies }) {
-  const token = cookies.get('admin_token');
-  if (token !== 'admin-authenticated') {
+  if (!verifyAdminRequest(cookies)) {
     return json({ error: 'Nicht autorisiert' }, { status: 401 });
   }
 

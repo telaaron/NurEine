@@ -17,9 +17,10 @@
 		hero: string;
 	};
 
-	type Props = { story: StoryCardData; size?: 'sm' | 'md' | 'lg'; baseUrl?: string };
+	type Props = { story: StoryCardData; size?: 'sm' | 'md' | 'lg' | 'feature'; baseUrl?: string };
 	let { story, size = 'md', baseUrl = 'https://nureine.de' }: Props = $props();
 
+	const isFeature = $derived(size === 'feature');
 	const t = $derived(toneStyles[story.tone]);
 	const staticImageSrc = $derived(getStoryHeroImageSrc(story.category, base));
 	const heroImageSrc = $derived(
@@ -54,12 +55,12 @@
 
 <a
 	href={base + '/geschichte/' + story.slug}
-		class="group block h-full paper rounded-md overflow-hidden transition-all duration-500 active:scale-[0.985]"
-	style="border: 1px solid var(--color-rule); will-change: transform; display: flex; flex-direction: column;"
+	class="group h-full paper rounded-md overflow-hidden transition-all duration-500 active:scale-[0.985] flex flex-col {isFeature ? 'lg:flex-row' : ''}"
+	style="border: 1px solid var(--color-rule); will-change: transform;"
 	onmouseenter={(e) => (e.currentTarget.style.borderColor = t.ring)}
 	onmouseleave={(e) => (e.currentTarget.style.borderColor = 'var(--color-rule)')}
 >
-	<div class="relative aspect-[4/3] overflow-hidden"
+	<div class="relative overflow-hidden {isFeature ? 'aspect-[4/3] lg:aspect-auto lg:w-1/2 lg:min-h-[420px]' : 'aspect-[4/3]'}"
 		style="background: var(--color-paper);"
 	>
 		{#if heroImageSrc}
@@ -107,7 +108,7 @@
 			{/if}
 		</button>
 	</div>
-	<div class="p-4 sm:p-5 lg:p-6 flex flex-col flex-1">
+	<div class="p-4 sm:p-5 lg:p-6 flex flex-col flex-1 {isFeature ? 'lg:w-1/2 lg:justify-center lg:p-8 xl:p-10' : ''}">
 		<div class="flex items-center gap-2 meta" style="color: var(--color-faint);">
 			<span>{story.country}</span>
 			<span>·</span>
@@ -116,15 +117,17 @@
 			<span>{story.readingMinutes} Min. Lesezeit</span>
 		</div>
 		<h3
-			class="display mt-2 sm:mt-3 leading-[1.2] line-clamp-2 {size === 'lg'
-				? 'text-xl sm:text-2xl lg:text-3xl'
-				: 'card-heading'}"
+			class="display mt-2 sm:mt-3 leading-[1.15] {isFeature
+				? 'text-2xl sm:text-3xl lg:text-[2.4rem] line-clamp-3'
+				: size === 'lg'
+					? 'text-xl sm:text-2xl lg:text-3xl line-clamp-2'
+					: 'card-heading line-clamp-2'}"
 			style="color: var(--color-ink); font-weight: 600;"
 		>
 			{story.title}
 		</h3>
 		<p
-			class="card-dek mt-2 sm:mt-3 leading-relaxed line-clamp-3"
+			class="card-dek mt-2 sm:mt-3 leading-relaxed {isFeature ? 'line-clamp-4 lg:text-base' : 'line-clamp-3'}"
 			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 		>
 			{story.dek}

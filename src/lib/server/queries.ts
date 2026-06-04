@@ -1,6 +1,7 @@
 import { supabaseAdmin } from './supabase/client';
 import { ADMIN_USERNAME, ADMIN_PASSWORD, BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME, BREVO_REPLY_TO_EMAIL } from '$env/static/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
+import { buildB2CHtml, type HeroStory } from './newsletter';
 
 // ---- Types ----
 
@@ -399,13 +400,15 @@ export interface NewsletterSendResult {
   messageId?: string;
 }
 
-export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSendResult> {
-  if (!BREVO_API_KEY || !BREVO_FROM_EMAIL) {
-    return { success: false, total: 1, sent: 0, errors: [{ email: toEmail, error: 'Brevo env vars not configured' }] };
-  }
-
-  // Get the hero story
-  const { data: storyData, error: storyError } = await supabaseAdmin
+/**
+ * Render the test newsletter HTML for a recipient using the SAME template real
+ * subscribers receive (buildB2CHtml) — keeps test == production, one template.
+ * Returns null if no hero story exists. Used by both the send and the preview.
+ */
+export async function renderTestNewsletterHtml(
+  toEmail: string
+): Promise<{ html: string; title: string } | null> {
+  const { data: storyData } = await supabaseAdmin
     .from('nureine_stories')
     .select('id,title,subtitle,summary,category,image_url,impact_score,reading_time_min,published_at')
     .eq('is_hero', true)
@@ -413,147 +416,55 @@ export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSen
     .limit(1)
     .maybeSingle();
 
-  if (storyError || !storyData) {
-    return { success: false, total: 1, sent: 0, errors: [{ email: toEmail, error: 'No hero story found' }] };
+  // Fallback: if no story is flagged is_hero, use the freshest high-impact one.
+  let row = storyData as Record<string, unknown> | null;
+  if (!row) {
+    const { data: fresh } = await supabaseAdmin
+      .from('nureine_stories')
+      .select('id,title,subtitle,summary,category,image_url,impact_score,reading_time_min,published_at')
+      .not('impact_score', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    row = fresh as Record<string, unknown> | null;
+  }
+  if (!row) return null;
+
+  const title = (row.title as string) || 'Kein Titel';
+  const heroStory: HeroStory = {
+    id: row.id as string,
+    title,
+    subtitle: (row.subtitle as string) || null,
+    body_markdown: null,
+    summary: (row.summary as string) || null,
+    category: (row.category as string) || null,
+    image_url: (row.image_url as string) || null,
+    impact_score: (row.impact_score as number) ?? null,
+    reading_time_min: (row.reading_time_min as number) ?? null
+  };
+
+  // Use the recipient's real confirmation_token if they are a subscriber, so the
+  // "Themen anpassen" + unsubscribe links in the test are live too.
+  const { data: subRow } = await supabaseAdmin
+    .from('nureine_subscribers')
+    .select('confirmation_token')
+    .eq('email', toEmail.toLowerCase().trim())
+    .maybeSingle();
+  const token = (subRow?.confirmation_token as string) || 'test-token';
+
+  return { html: buildB2CHtml(heroStory, toEmail, token), title };
+}
+
+export async function sendTestNewsletter(toEmail: string): Promise<NewsletterSendResult> {
+  if (!BREVO_API_KEY || !BREVO_FROM_EMAIL) {
+    return { success: false, total: 1, sent: 0, errors: [{ email: toEmail, error: 'Brevo env vars not configured' }] };
   }
 
-  const story = storyData as Record<string, unknown>;
-  const title = (story.title as string) || 'Kein Titel';
-  const dek = (story.subtitle as string) || '';
-  const summary = (story.summary as string) || '';
-  const imageUrl = (story.image_url as string) || '';
-  const impactScore = story.impact_score || '?';
-  const readingMinutes = story.reading_time_min || '?';
-  const category = (story.category as string) || 'Allgemein';
-  const storyId = story.id as string;
-  const slug = slugify(title) + '-' + storyId.slice(0, 8);
-  const storyUrl = `${PUBLIC_BASE_URL || 'https://nureine.de'}/geschichte/${slug}`;
-
-  // Category -> Tone mapping (matches website toneStyles)
-  const toneMap: Record<string, string> = {
-    klima: 'sage', gesundheit: 'rose', wissenschaft: 'sky',
-    gemeinschaft: 'amber', tiere: 'sage', kultur: 'amber', innovation: 'sky'
-  };
-  const tone = toneMap[category] || 'amber';
-  const categoryColor: Record<string, string> = {
-    amber: '#c87340', sage: '#5a7a52', rose: '#b87a7a', sky: '#6c8aa8'
-  };
-  const color = categoryColor[tone] || '#c87340';
-
-  // Build header: hero image if available, otherwise emoji fallback
-  const headerHtml = imageUrl
-    ? `<tr><td style="padding:0;"><img src="${imageUrl}" alt="" width="600" height="450" style="display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:10px 10px 0 0;" /></td></tr>`
-    : `<tr><td style="padding:32px 40px 0;"><div style="font-size:64px;line-height:1;text-align:center;">\u2728</div></td></tr>`;
-
-  // 1x1 pixel PNG data URIs – Gmail never inverts actual images
-  const PNG_CANVAS = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4+vEVAAWvAtF1qGwPAAAAAElFTkSuQmCC";
-  const PNG_CARD   = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP49e0dAAXMAt9NjFIKAAAAAElFTkSuQmCC";
-  const PNG_INK    = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGOQkhAFAACXAEiRX1b9AAAAAElFTkSuQmCC";
-
-  const html = `<!DOCTYPE html>
-<html lang="de">
-<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/><meta name="supported-color-schemes" content="light"/><!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting"/><!--<![endif]--></head>
-<body style="margin:0;padding:0;background:#f5f1ea url('${PNG_CANVAS}');-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-<style type="text/css">:root{color-scheme:light;supported-color-schemes:light;}
-[data-ogsc] .nur-eine-bg{background:#f5f1ea url('${PNG_CANVAS}')!important;}
-[data-ogsc] .nur-eine-card{background:#faf6ee url('${PNG_CARD}')!important;}
-[data-ogsc] .nur-eine-cta{background:#1a1815 url('${PNG_INK}')!important;}
-[data-ogsc] .nur-eine-text-primary{color:#1a1815!important;}
-[data-ogsc] .nur-eine-text-dek{color:#4a3f35!important;}
-[data-ogsc] .nur-eine-text-body{color:#3a342c!important;}
-[data-ogsc] .nur-eine-text-muted{color:#6b6359!important;}
-[data-ogsc] .nur-eine-text-faint{color:#9a9087!important;}
-[data-ogsb] .nur-eine-bg{background:#f5f1ea url('${PNG_CANVAS}')!important;}
-[data-ogsb] .nur-eine-card{background:#faf6ee url('${PNG_CARD}')!important;}
-[data-ogsb] .nur-eine-cta{background:#1a1815 url('${PNG_INK}')!important;}
-[data-ogsb] .nur-eine-text-primary{color:#1a1815!important;}
-[data-ogsb] .nur-eine-text-dek{color:#4a3f35!important;}
-[data-ogsb] .nur-eine-text-body{color:#3a342c!important;}
-[data-ogsb] .nur-eine-text-muted{color:#6b6359!important;}
-[data-ogsb] .nur-eine-text-faint{color:#9a9087!important;}
-@media (prefers-color-scheme:dark){.nur-eine-bg{background:#f5f1ea url('${PNG_CANVAS}')!important;}.nur-eine-card{background:#faf6ee url('${PNG_CARD}')!important;}.nur-eine-cta{background:#1a1815 url('${PNG_INK}')!important;}.nur-eine-text-primary{color:#1a1815!important;}.nur-eine-text-dek{color:#4a3f35!important;}.nur-eine-text-body{color:#3a342c!important;}.nur-eine-text-muted{color:#6b6359!important;}.nur-eine-text-faint{color:#9a9087!important;}}
-</style>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background:#f5f1ea url('${PNG_CANVAS}');" class="nur-eine-bg">
-<tr><td align="center" style="padding:40px 16px 32px;">
-
-<!-- Brand header -->
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
-<tr><td class="nur-eine-text-primary" style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
-<tr><td class="nur-eine-text-faint" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td></tr>
-</table>
-
-<!-- Main card -->
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#faf6ee url('${PNG_CARD}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
-
-<!-- Hero -->
-${headerHtml}
-
-<!-- Body -->
-<tr><td style="padding:28px 40px 24px;">
-
-<!-- Test badge -->
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:14px;"><tr><td>
-<span style="display:inline-block;background-color:#c87340;color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;padding:4px 10px;border-radius:4px;">TEST</span>
-</td></tr></table>
-
-<!-- Category pill -->
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>
-<span style="display:inline-block;background-color:${color};color:#ffffff;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;padding:3px 12px;border-radius:9999px;">${category}</span>
-</td></tr></table>
-
-<!-- Title -->
-<h2 class="nur-eine-text-primary" style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">${title}</h2>
-
-<!-- Dek -->
-${dek ? `<p class="nur-eine-text-dek" style="margin:0 0 22px;font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#4a3f35;line-height:1.5;letter-spacing:-0.005em;">${dek}</p>` : ''}
-
-<!-- Summary -->
-<p class="nur-eine-text-body" style="margin:0 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">${summary || '<em>Keine Zusammenfassung vorhanden.</em>'}</p>
-
-</td></tr>
-
-<!-- Meta strip -->
-<tr><td style="padding:0 40px;">
-<hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;"/>
-</td></tr>
-<tr><td style="padding:18px 40px 0;">
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;">
-<tr>
-<td style="padding-right:28px;"><span class="nur-eine-text-muted" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;"><strong style="font-weight:600;color:#1a1815;">Wirkung</strong> ${impactScore}/100</span></td>
-<td><span class="nur-eine-text-muted" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;"><strong style="font-weight:600;color:#1a1815;">Lesezeit</strong> ${readingMinutes} Min.</span></td>
-</tr>
-</table>
-</td></tr>
-
-<!-- CTA -->
-<tr><td style="padding:0 40px 32px;">
-<table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td class="nur-eine-cta" style="background:#1a1815 url('${PNG_INK}');border-radius:9999px;text-align:center;">
-<a href="${storyUrl}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen &rarr;</a>
-</td>
-</tr></table>
-</td></tr>
-
-<!-- Divider -->
-<tr><td style="padding:0 40px;">
-<hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;"/>
-</td></tr>
-
-<!-- Footer -->
-<tr><td style="padding:22px 40px 30px;">
-<p class="nur-eine-text-faint" style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
-Dies ist ein Test-Newsletter aus dem Admin-Dashboard.<br/>Kein automatischer Versand.
-</p>
-</td></tr>
-
-</table>
-
-<!-- Site footer -->
-<p class="nur-eine-text-faint" style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#b0a79e;">
-NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.
-</p>
-
-</td></tr></table></body></html>`;
+  const rendered = await renderTestNewsletterHtml(toEmail);
+  if (!rendered) {
+    return { success: false, total: 1, sent: 0, errors: [{ email: toEmail, error: 'No hero story found' }] };
+  }
+  const { html, title } = rendered;
 
   try {
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {

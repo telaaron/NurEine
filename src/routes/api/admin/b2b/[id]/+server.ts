@@ -1,10 +1,10 @@
 import { json } from '@sveltejs/kit';
+import { verifyAdminRequest } from '$lib/server/auth';
 import { updateB2BClient, deleteB2BClient, getB2BClientById } from '$lib/server/queries';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ params, cookies }) => {
-  const token = cookies.get('admin_token');
-  if (token !== 'admin-authenticated') {
+  if (!verifyAdminRequest(cookies)) {
     return json({ error: 'Nicht autorisiert' }, { status: 401 });
   }
 
@@ -16,8 +16,7 @@ export const GET: RequestHandler = async ({ params, cookies }) => {
 };
 
 export const PUT: RequestHandler = async ({ params, request, cookies }) => {
-  const token = cookies.get('admin_token');
-  if (token !== 'admin-authenticated') {
+  if (!verifyAdminRequest(cookies)) {
     return json({ error: 'Nicht autorisiert' }, { status: 401 });
   }
 
@@ -31,8 +30,7 @@ export const PUT: RequestHandler = async ({ params, request, cookies }) => {
 };
 
 export const DELETE: RequestHandler = async ({ params, cookies }) => {
-  const token = cookies.get('admin_token');
-  if (token !== 'admin-authenticated') {
+  if (!verifyAdminRequest(cookies)) {
     return json({ error: 'Nicht autorisiert' }, { status: 401 });
   }
 

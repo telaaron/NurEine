@@ -70,3 +70,11 @@ export function verifySessionToken(token: string | undefined | null): boolean {
 
 export const SESSION_COOKIE = COOKIE_NAME;
 export const SESSION_TTL_MS = DEFAULT_TTL_MS;
+
+/**
+ * Guard for admin API endpoints. Returns true if the request carries a valid
+ * signed admin session cookie. Use at the top of every admin-only handler.
+ */
+export function verifyAdminRequest(cookies: { get(name: string): string | undefined }): boolean {
+	return verifySessionToken(cookies.get(COOKIE_NAME));
+}

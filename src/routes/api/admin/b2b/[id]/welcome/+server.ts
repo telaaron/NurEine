@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { verifyAdminRequest } from '$lib/server/auth';
 import { getB2BClientById } from '$lib/server/queries';
 import { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME, BREVO_REPLY_TO_EMAIL } from '$env/static/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
@@ -156,8 +157,7 @@ NurEine &mdash; Teltow, Brandenburg. Gegr&uuml;ndet 2026.
 }
 
 export const POST: RequestHandler = async ({ params, cookies, url }) => {
-  const token = cookies.get('admin_token');
-  if (token !== 'admin-authenticated') {
+  if (!verifyAdminRequest(cookies)) {
     return json({ error: 'Nicht autorisiert' }, { status: 401 });
   }
 

@@ -104,13 +104,26 @@
 				{#if featured}
 					<a href={base + '/geschichte/' + featured.slug} class="block mt-4 sm:mt-5 group rise rise-d2">
 						<h1
-							class="display leading-[0.98] text-[2.6rem] sm:text-[3rem] md:text-[3.8rem] lg:text-[4.4rem] xl:text-[5rem] max-w-[16ch]"
+							class="display leading-[1.0] sm:leading-[0.98] text-[2rem] sm:text-[2.8rem] md:text-[3.6rem] lg:text-[4.4rem] xl:text-[5rem] max-w-[16ch]"
 							style="color: var(--color-ink); font-weight: 600;"
 						>
 							{featured.title}
 						</h1>
+
+						<!-- Mobile-only hero image (desktop uses the floating side card) -->
+						{#if featuredImg}
+							<div class="lg:hidden relative mt-5 aspect-[16/10] rounded-2xl overflow-hidden" style="border: 1px solid var(--color-rule); box-shadow: var(--shadow-md);">
+								<img src={featuredImg} alt="" class="absolute inset-0 h-full w-full object-cover" loading="eager" />
+								<span class="absolute top-3 left-3 badge px-2.5 py-1 rounded-full backdrop-blur-sm" style="background: rgba(251,248,241,0.85); color: {tone.fg}; border: 1px solid {tone.ring}; font-family: var(--font-mono);">{featured.category}</span>
+								<div class="absolute bottom-3 right-3 text-center rounded-lg px-3 py-1.5" style="background: var(--color-paper); border: 1px solid var(--color-rule); box-shadow: var(--shadow-sm);">
+									<span class="display tnum text-base" style="color: var(--color-ink); font-weight: 600;">{featured.impactScore}</span>
+									<span class="uppercase ml-1" style="font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.12em; color: var(--color-faint);">Wirkung</span>
+								</div>
+							</div>
+						{/if}
+
 						<p
-							class="mt-5 sm:mt-6 text-lg sm:text-xl lg:text-2xl leading-[1.45] max-w-[46ch]"
+							class="mt-5 sm:mt-6 text-base sm:text-xl lg:text-2xl leading-[1.5] sm:leading-[1.45] max-w-[46ch]"
 							style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 						>
 							{featured.dek}
@@ -255,12 +268,12 @@
 		</a>
 	</div>
 
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8 auto-rows-auto">
-		{#if feature}
-			<div class="rise md:col-span-2 md:row-span-2" style="animation-delay: 0.1s;">
-				<StoryCard story={feature} size="lg" />
-			</div>
-		{/if}
+	{#if feature}
+		<div class="rise mb-5 sm:mb-6 lg:mb-8" style="animation-delay: 0.1s;">
+			<StoryCard story={feature} size="feature" />
+		</div>
+	{/if}
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
 		{#each restTail as story, i (story.slug)}
 			<div class="rise" style="animation-delay: {0.16 + i * 0.06}s;">
 				<StoryCard {story} />

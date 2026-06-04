@@ -168,6 +168,16 @@
 			</div>
 		{/each}
 	</div>
+
+	<div class="mt-8 text-center">
+		<a
+			href={base + '/manifest'}
+			class="inline-flex items-center gap-2 text-sm hover:opacity-70"
+			style="color: var(--color-ink-soft); border-bottom: 1px solid var(--color-rule-strong); padding-bottom: 3px;"
+		>
+			Unsere sechs Prinzipien im Manifest <span aria-hidden="true">→</span>
+		</a>
+	</div>
 </section>
 
 <!-- ─── VALUE EQUATION / PROOF ─── -->

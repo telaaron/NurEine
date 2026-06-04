@@ -1,4 +1,5 @@
 import { json } from '@sveltejs/kit';
+import { verifyAdminRequest } from '$lib/server/auth';
 import { getAllStories, getStats, insertStory } from '$lib/server/queries';
 
 export async function GET({ url }) {
@@ -24,8 +25,7 @@ export async function GET({ url }) {
 }
 
 export async function POST({ request, cookies }) {
-  const token = cookies.get('admin_token');
-  if (token !== 'admin-authenticated') {
+  if (!verifyAdminRequest(cookies)) {
     return json({ error: 'Nicht autorisiert' }, { status: 401 });
   }
 

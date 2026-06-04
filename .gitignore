@@ -28,3 +28,7 @@ vite.config.ts.timestamp-*
 # Python
 __pycache__/
 *.pyc
+
+# local dev tooling + scratch
+.claude/launch.json
+media/*.png

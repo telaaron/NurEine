@@ -49,12 +49,12 @@
                 'Wir filtern tausende Quellen mit KI auf das Wesentliche. Eine gute Nachricht am Tag gegen die Reizüberflutung. Exklusiv, neutral und kuratiert.'
         );
 
-        // PNG for og:image — universal compatibility with iMessage, WhatsApp, Facebook, Twitter
-        // (none of these platforms reliably support WebP in link previews)
+        // JPEG for og:image — universally supported by WhatsApp, iMessage, Facebook, Twitter
+        // (JPEG stays well under WhatsApp's 600 KB limit; PNG also available via srcset)
         const seoImage = $derived(
                 isStory
                         ? (page.data.story.ogImageUrl || `https://nureine.de/api/og/${page.data.story.slug}`)
-                        : 'https://nureine.de/og-default.png'
+                        : 'https://nureine.de/og-default.jpeg'
         );
 
         const seoType = $derived(isStory ? 'article' : 'website');
@@ -68,7 +68,7 @@
         <meta property="og:description" content={seoDesc} />
         <meta property="og:type" content={seoType} />
         <meta property="og:image" content={seoImage} />
-        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:type" content="image/jpeg" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content={seoTitle} />

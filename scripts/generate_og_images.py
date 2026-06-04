@@ -2,7 +2,7 @@
 """
 NurEine — OG Image Generator
 
-Generates editorial Open Graph images (1200x630 PNG, 1.91:1) for stories.
+Generates editorial Open Graph images (1200x630 JPEG, 1.91:1) for stories.
 Perfect for WhatsApp, iMessage, Twitter, Facebook, LinkedIn link previews.
 
 Layout: Full-bleed story illustration with a gradient overlay carrying the
@@ -62,6 +62,10 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 STORAGE_BUCKET = "og_images"
 OG_WIDTH = 1200
 OG_HEIGHT = 630  # 1.91:1 — optimal for WhatsApp, Twitter, Facebook, LinkedIn
+
+# WhatsApp enforces a strict 600 KB limit on OG images.
+# Larger images are silently ignored (no preview on link shares).
+MAX_OG_SIZE_BYTES = 600 * 1024  # 600 KB
 
 MISSING: list[str] = []
 if not SUPABASE_URL:
@@ -415,43 +419,67 @@ def compose_og_image(
         if alpha_line > 0:
             draw.point((x, BAR_Y), fill=accent + (alpha_line,))
 
-    # Output — optimized PNG for cross-platform OG compatibility
+    # Output — JPEG at quality 85 for WhatsApp/OG compatibility.
+    # JPEG yields ~150-250 KB for a 1200x630 photo composite, well below
+    # WhatsApp's 600 KB limit. Universally supported by all OG platforms.
+    # PNG is also generated as a secondary format in generate_image_variants().
     buf = io.BytesIO()
-    img.save(buf, format="PNG", optimize=True, compress_level=9)
-    return buf.getvalue()
+    img.save(buf, format="JPEG", quality=85, optimize=True)
+    result = buf.getvalue()
+
+    # Safety check — if JPEG somehow still exceeds WhatsApp limit, warn
+    if len(result) > MAX_OG_SIZE_BYTES:
+        log.warning(
+            "  JPEG still %.1f KB > %.0f KB (WhatsApp limit) — consider lowering quality",
+            len(result) / 1024,
+            MAX_OG_SIZE_BYTES / 1024,
+        )
+
+    return result
 
 
 # ---------------------------------------------------------------------------
 # Image format generation — PNG, WebP, AVIF + 2x variants
 # ---------------------------------------------------------------------------
-def generate_image_variants(og_bytes: bytes) -> dict[str, dict[str, bytes]]:
+def generate_image_variants(og_bytes: bytes) -> dict[str, dict[str, bytes | None]]:
     """
-    Generate multiple image formats and sizes from a base OG image.
-    
+    Generate multiple image formats and sizes from a base OG image (JPEG).
+
     Returns dict with structure:
     {
-        "1x": {"png": bytes, "webp": bytes, "avif": bytes},
-        "2x": {"png": bytes, "webp": bytes, "avif": bytes}
+        "1x": {"jpg": bytes, "png": bytes, "webp": bytes, "avif": bytes},
+        "2x": {"jpg": bytes, "png": bytes, "webp": bytes, "avif": bytes}
     }
     """
     from PIL import Image  # noqa: PLC0415
-    
-    variants = {}
-    
-    # Base image (1x)
+
+    variants: dict[str, dict[str, bytes | None]] = {}
+
+    # Re-open base image from JPEG bytes — gives a clean RGB object for re-encoding
     base_img = Image.open(io.BytesIO(og_bytes))
-    
+
     # 1x formats (1200x630)
     variants["1x"] = {}
-    
-    # PNG (original, already optimized)
-    variants["1x"]["png"] = og_bytes
-    
+
+    # JPEG (primary — WhatsApp/FB/Twitter compatible, already quality 85)
+    variants["1x"]["jpg"] = og_bytes
+
+    # PNG (lossless backup — generate from JPEG source + quantize to keep small)
+    png_buf = io.BytesIO()
+    base_img.save(png_buf, format="PNG", optimize=True, compress_level=9)
+    png_result = png_buf.getvalue()
+    if len(png_result) > 600 * 1024:
+        log.info("  1x PNG %.0f KB — quantizing to 256-color palette", len(png_result) / 1024)
+        q = base_img.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
+        q.save(png_buf := io.BytesIO(), format="PNG", optimize=True, compress_level=9)
+        png_result = png_buf.getvalue()
+    variants["1x"]["png"] = png_result
+
     # WebP (modern format, ~60% smaller than PNG)
     webp_buf = io.BytesIO()
     base_img.save(webp_buf, format="WEBP", quality=80, method=6)
     variants["1x"]["webp"] = webp_buf.getvalue()
-    
+
     # AVIF (best compression, ~30% smaller than WebP, requires pillow-avif plugin)
     try:
         avif_buf = io.BytesIO()
@@ -460,25 +488,41 @@ def generate_image_variants(og_bytes: bytes) -> dict[str, dict[str, bytes]]:
     except Exception as exc:
         log.warning("  Could not generate AVIF (pillow-avif not installed?): %s", exc)
         variants["1x"]["avif"] = None
-    
+
     # 2x formats (2400x1260)
     variants["2x"] = {}
-    
+
     img_2x = base_img.resize(
         (OG_WIDTH * 2, OG_HEIGHT * 2),
-        Image.Resampling.LANCZOS
+        Image.Resampling.LANCZOS,
     )
-    
-    # PNG 2x
+
+    # JPEG 2x
+    jpg_2x_buf = io.BytesIO()
+    img_2x.save(jpg_2x_buf, format="JPEG", quality=85, optimize=True)
+    variants["2x"]["jpg"] = jpg_2x_buf.getvalue()
+
+    # PNG 2x — quantize if oversized (2x is for retina web, not WhatsApp)
     png_2x_buf = io.BytesIO()
     img_2x.save(png_2x_buf, format="PNG", optimize=True, compress_level=9)
-    variants["2x"]["png"] = png_2x_buf.getvalue()
-    
+    png_2x_result = png_2x_buf.getvalue()
+    MAX_2X_SIZE = 2 * 1024 * 1024  # 2 MB
+    if len(png_2x_result) > MAX_2X_SIZE:
+        log.info(
+            "  2x PNG size %.0f KB > 2 MB — quantizing to 256-color palette",
+            len(png_2x_result) / 1024,
+        )
+        q2 = img_2x.quantize(colors=256, method=Image.Quantize.MEDIANCUT)
+        q2.save(png_2x_buf := io.BytesIO(), format="PNG", optimize=True, compress_level=9)
+        png_2x_result = png_2x_buf.getvalue()
+        log.info("  Quantized 2x PNG: %.0f KB", len(png_2x_result) / 1024)
+    variants["2x"]["png"] = png_2x_result
+
     # WebP 2x
     webp_2x_buf = io.BytesIO()
     img_2x.save(webp_2x_buf, format="WEBP", quality=80, method=6)
     variants["2x"]["webp"] = webp_2x_buf.getvalue()
-    
+
     # AVIF 2x
     try:
         avif_2x_buf = io.BytesIO()
@@ -486,7 +530,7 @@ def generate_image_variants(og_bytes: bytes) -> dict[str, dict[str, bytes]]:
         variants["2x"]["avif"] = avif_2x_buf.getvalue()
     except Exception:
         variants["2x"]["avif"] = None
-    
+
     return variants
 
 
@@ -555,9 +599,10 @@ def supabase_upload_image_variants(
     """
     urls = {"1x": {}, "2x": {}}
     content_types = {
+        "jpg": "image/jpeg",
         "png": "image/png",
         "webp": "image/webp",
-        "avif": "image/avif"
+        "avif": "image/avif",
     }
     
     for size_key in ["1x", "2x"]:
@@ -683,15 +728,17 @@ def run(slugs: list[str] | None = None, all_stories: bool = False) -> None:
             failed += 1
             continue
 
-        # Store the primary (1x PNG) URL in the database for backward compatibility
-        # The 2x/WebP/AVIF URLs can be used by the frontend via srcset
-        primary_url = urls["1x"]["png"]
-        
+        # Store the primary (1x JPEG) URL — JPEG is WhatsApp/FB/Twitter compatible
+        # PNG/WebP/AVIF variants are available for website srcset
+        primary_url = urls["1x"]["jpg"]
+
         try:
             # Update with primary URL + metadata about available variants
             update_data = {
                 "og_image_url": primary_url,
                 "og_image_srcset": {
+                    "jpg_1x": urls["1x"]["jpg"],
+                    "jpg_2x": urls["2x"]["jpg"],
                     "png_1x": urls["1x"]["png"],
                     "png_2x": urls["2x"]["png"],
                     "webp_1x": urls["1x"]["webp"],

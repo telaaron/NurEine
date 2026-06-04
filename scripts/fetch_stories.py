@@ -184,6 +184,24 @@ def _safe_int(value: Any, *, lo: int | None = None, hi: int | None = None) -> in
 _BIGINT_MAX = 9_223_372_036_854_775_807
 
 
+def _safe_kid_age(value: Any) -> int | None:
+    """Family feature: accept a plausible min-age (4..18) or None. Anything else → None."""
+    n = _safe_int(value)
+    if n is None or n < 4 or n > 18:
+        return None
+    return n
+
+
+def _safe_text(value: Any, max_len: int) -> str | None:
+    """Trimmed string up to max_len, or None for empty/non-string/'null'."""
+    if not isinstance(value, str):
+        return None
+    s = value.strip()
+    if not s or s.lower() == "null":
+        return None
+    return s[:max_len]
+
+
 def normalize_category(raw: Any) -> str:
     """Coerce any DeepSeek category into an allowed DB value.
 
@@ -545,6 +563,10 @@ impact_durability: 0-100 (Wie lange hält der Effekt an? Strukturveränderung=10
 impact_evidence: 0-100 (Peer-reviewed=100, etablierte Redaktion=75, lokal=50)
 
 impact_score: Integer 0-100. Formel: round(impact_reach_normalized * 0.4 + impact_durability * 0.35 + impact_evidence * 0.25) wobei impact_reach_normalized = min(100, log10(impact_reach + 1) * 20)
+
+kid_min_age: Wenn die Geschichte sich gut mit Kindern besprechen lässt: Mindestalter zum Erklären (integer, z.B. 6, 8, 10, 12). Wenn ungeeignet für Kinder (zu abstrakt, zu düster, kein kindgerechter Aufhänger): null.
+kid_explainer: Nur wenn kid_min_age gesetzt: EIN kurzer, kindgerechter Satz, der den schwierigsten Begriff der Geschichte erklärt (kein Belehrungston). Sonst null. Beispiel: "Extreme Armut bedeutet: von weniger als 2 Euro pro Tag leben müssen."
+conversation_starter: Nur wenn kid_min_age gesetzt: EINE offene Frage fürs Familiengespräch (keine richtige Antwort, kein Lehrton). Sonst null. Beispiel: "Was würdest du tun, wenn du das Problem lösen müsstest?"
 
 Antworte ausschließlich mit validem JSON. Kein Text davor oder danach."""
 
@@ -1218,6 +1240,10 @@ def run() -> None:
                 ),
                 "reading_time_min": actual_reading_time,
                 "published_at": entry.get("published", entry.get("updated", datetime.now(timezone.utc).isoformat())),
+                # Family feature: only set when DeepSeek judged the story kid-suitable.
+                "kid_min_age": _safe_kid_age(result.get("kid_min_age")),
+                "kid_explainer": _safe_text(result.get("kid_explainer"), 300),
+                "conversation_starter": _safe_text(result.get("conversation_starter"), 300),
             }
 
             # Parse published date

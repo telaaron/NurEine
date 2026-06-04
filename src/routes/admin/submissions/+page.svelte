@@ -9,7 +9,8 @@
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ id, status })
 		});
-		if (res.ok) items = items.map((s) => (s.id === id ? { ...s, status } : s));
+		const r = await res.json().catch(() => ({}));
+		if (res.ok) items = items.map((s) => (s.id === id ? { ...s, status, storyId: r.storyId ?? null } : s));
 	}
 
 	function badgeColor(s: string) {
@@ -43,6 +44,8 @@
 						<button type="button" onclick={() => moderate(s.id, 'approved')} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-sage); color: var(--color-paper);">Genehmigen</button>
 						<button type="button" onclick={() => moderate(s.id, 'rejected')} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: transparent; color: var(--color-rose); border: 1px solid var(--color-rose);">Ablehnen</button>
 					</div>
+				{:else if s.status === 'approved' && s.storyId}
+					<a href={base + '/admin/stories/' + s.storyId + '/edit'} class="px-3 py-1.5 rounded-full text-xs font-medium shrink-0" style="background: var(--color-ink); color: var(--color-paper);">Story bearbeiten →</a>
 				{/if}
 			</div>
 		</div>

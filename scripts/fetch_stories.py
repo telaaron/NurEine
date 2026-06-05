@@ -627,15 +627,24 @@ wa_ok: true/false — Würde man das einer Freundin schicken? NUR true wenn ALLE
   (3) Emotional sofort zugänglich.
 
 ig_hook: Nur wenn ig_ok=true. Der INSTAGRAM-HOOK — die ersten 1,5 Zeilen, BEVOR Instagram "… mehr" abschneidet.
-  NICHT der Titel. Die EMOTION. Max 90 Zeichen. Muss zum Weiterlesen zwingen, ohne Clickbait.
+  NICHT der Titel. Die EMOTION oder der überraschende Fakt. Max 90 Zeichen. Zwingt zum Weiterlesen, ohne Clickbait.
+  Stil: konkret, staunend, manchmal mit leiser System-Kritik ("warum hört man das nie?"). Nüchtern, nicht reißerisch.
   Beispiel (Wildbrücke): "Drei Hirsche. Ein erster Tag. Eine neue Brücke."
-  Beispiel (Modellrechnung): "99% der Menschen könnten 2100 besser leben. Das ist keine Utopie — eine Rechnung."
+  Beispiel (Modellrechnung): "99% der Menschen könnten 2100 besser leben. Keine Utopie — eine Rechnung."
+  Beispiel (Kontrast): "China hat eine Autobahn gestoppt. Für Vögel. Echt jetzt."
   Sonst null.
 
 wa_opener: Nur wenn wa_ok=true. Ein PERSÖNLICHER WhatsApp-Einstieg in DEINER Stimme — wie ein Mensch,
   den etwas berührt hat, NICHT wie eine Institution. Max 80 Zeichen. Soll zur Emotion passen.
+  So klingt die echte Stimme (Aarons Ton — locker, ehrlich, manchmal trocken):
+    - "krass, warum bekommt man das sonst nirgends mit:"
+    - "yeah. Fortschritt."
+    - "les go –"
+    - "kurz innegehalten, als ich das las:"
+    - "bin ich der Einzige, den sowas mehr packt als die üblichen News?"
+  KEIN Marketing-Ton, KEINE Ausrufezeichen-Ketten, kein "Schau dir das an!". Lieber knapp + echt.
   Beispiel (relief): "Das hat mich heute ruhiger gemacht:"
-  Beispiel (wonder): "Kurz innegehalten, als ich das las:"
+  Beispiel (wonder): "krass, warum hört man das sonst nirgends:"
   Beispiel (pride): "Manchmal lösen Menschen Probleme einfach. Leise."
   Sonst null.
 

@@ -1,0 +1,21 @@
+name: Social — Publish Due Posts
+
+# Postet fällige freigegebene Instagram-Posts via Graph API (07:30 CEST).
+# No-op ohne IG-Token (Trockenlauf bleibt sicher).
+on:
+  schedule:
+    - cron: '30 5 * * *'  # 05:30 UTC (07:30 CEST)
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger publish
+        run: |
+          curl -fsS -X POST "${BASE_URL}/api/cron/social-publish" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -w "\nHTTP %{http_code}\n"
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

@@ -10,6 +10,7 @@
 		{ href: '/admin/b2b', label: 'B2B Pipeline' },
 		{ href: '/admin/stories', label: 'Stories' },
 		{ href: '/admin/submissions', label: 'Einsendungen' },
+		{ href: '/admin/social', label: 'Social' },
 		{ href: '/admin/delivery', label: 'Delivery' },
 	];
 

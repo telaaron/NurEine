@@ -1,0 +1,79 @@
+<script lang="ts">
+	import { base } from '$app/paths';
+	let { data } = $props();
+
+	const cardUrl = $derived(`${base}/api/share-card/${data.slug}`);
+	const ogUrl = $derived(`${base}/api/og/${data.slug}`);
+
+	let copied = $state('');
+	function copy(text: string, key: string) {
+		navigator.clipboard?.writeText(text).then(() => {
+			copied = key;
+			setTimeout(() => (copied = ''), 1800);
+		}).catch(() => {});
+	}
+	const hashtagStr = $derived(data.hashtags.join(' '));
+</script>
+
+<svelte:head>
+	<title>Heute teilen — NurEine</title>
+	<meta name="description" content="Die Geschichte des Tages — fertige Karten und Texte zum Teilen." />
+</svelte:head>
+
+<section class="mx-auto max-w-[680px] px-4 sm:px-6 py-10 sm:py-14">
+	<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">Heute teilen</span>
+	<h1 class="display mt-3 text-2xl sm:text-3xl leading-tight" style="color: var(--color-ink); font-weight: 600;">
+		Die Geschichte des Tages — bereit zum Teilen.
+	</h1>
+	<p class="mt-3 text-base leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
+		Fertige Karten und Texte. Lade dir herunter, was du brauchst — für WhatsApp, Instagram oder einfach zum Weiterschicken.
+		Teile nur, wenn dich die Geschichte selbst bewegt.
+	</p>
+
+	<!-- Story -->
+	<div class="mt-8 paper rounded-xl p-5" style="border:1px solid var(--color-rule); box-shadow: var(--shadow-sm);">
+		<div class="text-xs uppercase tracking-wider mb-1.5" style="color: var(--color-amber); font-family: var(--font-mono);">
+			{data.category} · Wirkung {data.impactScore}/100
+		</div>
+		<h2 class="display text-xl leading-tight" style="color: var(--color-ink); font-weight:600;">{data.title}</h2>
+		<p class="mt-2 text-base leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">{data.dek}</p>
+		<a href={base + '/geschichte/' + data.slug} class="mt-3 inline-flex items-center gap-1.5 text-sm" style="color: var(--color-amber);">Ganze Geschichte lesen →</a>
+	</div>
+
+	<!-- Karten -->
+	<div class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-5">
+		<div>
+			<p class="text-xs uppercase tracking-wider mb-2" style="color: var(--color-muted); font-family: var(--font-mono);">WhatsApp / Story (9:16)</p>
+			<div class="rounded-xl overflow-hidden" style="box-shadow: var(--shadow-md); border:1px solid var(--color-rule);">
+				<img src={cardUrl} alt="Hochformat-Karte" width="100%" loading="eager" style="display:block;width:100%;aspect-ratio:9/16;object-fit:cover;" />
+			</div>
+			<a href={cardUrl} download={`nureine-${data.slug}-story.png`} class="mt-2 block text-center px-4 py-2.5 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Herunterladen ↓</a>
+		</div>
+		<div>
+			<p class="text-xs uppercase tracking-wider mb-2" style="color: var(--color-muted); font-family: var(--font-mono);">Feed / Link (1.91:1)</p>
+			<div class="rounded-xl overflow-hidden" style="box-shadow: var(--shadow-md); border:1px solid var(--color-rule);">
+				<img src={ogUrl} alt="Querformat-Karte" width="100%" loading="lazy" style="display:block;width:100%;aspect-ratio:1200/630;object-fit:cover;" />
+			</div>
+			<a href={ogUrl} download={`nureine-${data.slug}-feed.png`} class="mt-2 block text-center px-4 py-2.5 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Herunterladen ↓</a>
+		</div>
+	</div>
+
+	<!-- Texte -->
+	{#each [
+		{ key: 'wa', label: 'WhatsApp-Text', text: data.whatsappCaption },
+		{ key: 'ig', label: 'Instagram-Caption', text: data.igCaption },
+		{ key: 'tags', label: 'Hashtags', text: hashtagStr }
+	] as block}
+		<div class="mt-8">
+			<div class="flex items-center justify-between mb-2">
+				<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">{block.label}</span>
+				<button type="button" onclick={() => copy(block.text, block.key)} class="text-xs font-medium px-3 py-1.5 rounded-full" style="background: var(--color-amber); color: var(--color-paper);">
+					{copied === block.key ? 'Kopiert ✓' : 'Kopieren'}
+				</button>
+			</div>
+			<div class="p-4 rounded-xl whitespace-pre-line text-sm leading-relaxed" style="background: var(--color-paper); border:1px solid var(--color-rule); color: var(--color-ink-soft); font-family: {block.key === 'tags' ? 'var(--font-mono)' : 'var(--font-serif)'};">{block.text}</div>
+		</div>
+	{/each}
+
+	<p class="mt-10 text-xs" style="color: var(--color-faint); font-family: var(--font-mono);">Mach die Texte zu deinen. Authentisch schlägt perfekt.</p>
+</section>

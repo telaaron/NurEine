@@ -1,0 +1,21 @@
+name: Social — Generate Daily Draft
+
+# Erzeugt täglich den Instagram-Post-Entwurf der Tagesstory (status 'draft').
+# Postet nichts. Läuft nach dem 06:00-Story-Fetch.
+on:
+  schedule:
+    - cron: '15 6 * * *'  # 06:15 UTC (08:15 CEST)
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger draft generation
+        run: |
+          curl -fsS -X POST "${BASE_URL}/api/cron/social-generate" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -w "\nHTTP %{http_code}\n"
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

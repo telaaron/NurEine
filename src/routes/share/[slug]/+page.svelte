@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { track } from '$lib/track';
 
 	let { data } = $props();
 	const cardUrl = $derived(`${base}/api/share-card/${data.slug}`);
@@ -8,6 +9,7 @@
 	function copyCaption() {
 		navigator.clipboard?.writeText(data.caption).then(() => {
 			copied = true;
+			track('story_shared', { slug: data.slug, format: 'whatsapp', via: 'copy' });
 			setTimeout(() => (copied = false), 1800);
 		}).catch(() => {});
 	}
@@ -37,6 +39,7 @@
 
 	<div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
 		<a href={cardUrl} download={`nureine-${data.slug}.png`}
+			onclick={() => track('story_shared', { slug: data.slug, format: 'whatsapp', via: 'download' })}
 			class="px-6 py-3.5 rounded-full text-sm font-medium text-center transition-all active:scale-[0.97]"
 			style="background: var(--color-ink); color: var(--color-paper); box-shadow: var(--shadow-sm);">
 			Karte herunterladen ↓

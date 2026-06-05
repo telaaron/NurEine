@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS nureine_social_posts (
   posted_at    TIMESTAMPTZ,
   ig_media_id  TEXT,                                 -- Graph-API Media-ID nach Post
   error        TEXT,                                 -- letzte Fehlermeldung bei status=failed
+  is_carousel  BOOLEAN NOT NULL DEFAULT false,       -- 3-Folien-Carousel statt Einzelbild
   -- Performance (A/B-Auswertung)
   saves        INTEGER,                              -- manuell/Insights gepflegt
   reach        INTEGER,

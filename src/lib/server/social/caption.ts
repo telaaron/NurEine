@@ -92,6 +92,29 @@ export function buildCaption(
 	return lines.join('\n').trim();
 }
 
+/**
+ * Instagram-Caption, die auf dem Bild/Hook AUFBAUT statt zu wiederholen.
+ * Annahme: das Bild (Karte/Carousel) trägt bereits den Hook. Die Caption liefert
+ * also NICHT denselben Text nochmal, sondern Kontext → Quelle → Link.
+ * Erste 1,5 Zeilen = der Hook (überlebt vor dem "… mehr"), dann Substanz.
+ */
+export function buildCaptionFromHook(story: {
+	igHook?: string | null;
+	dek: string;
+	source?: string;
+	slides?: { aufloesung?: string } | null;
+}): string {
+	const hook = (story.igHook || '').trim();
+	// Kontext = Carousel-Auflösung falls vorhanden, sonst der Dek (nicht der Hook!).
+	const context = (story.slides?.aufloesung || story.dek || '').trim();
+	const lines: string[] = [];
+	if (hook) lines.push(hook, '');
+	if (context && context !== hook) lines.push(context);
+	if (story.source) lines.push('', `Quelle: ${story.source}`);
+	lines.push('', 'Täglich eine belegte gute Nachricht → nureine.de');
+	return lines.join('\n').trim();
+}
+
 /** Folie-1-Hook-Text für die Karte (kurz, ein Gedanke). */
 export function slide1Hook(story: CaptionStoryInput, hookType?: HookType): string {
 	const hook = hookType ?? pickHookType(story);

@@ -17,7 +17,8 @@ type EventName =
 	| 'share'
 	| 'ticker_click'
 	| 'archive_filter'
-	| 'story_submitted';
+	| 'story_submitted'
+	| 'story_shared';
 
 function sessionId(): string {
 	try {

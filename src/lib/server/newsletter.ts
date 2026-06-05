@@ -1121,50 +1121,70 @@ export async function sendHighlightEmailIfWorthy(): Promise<{
   const recipient = env.HIGHLIGHT_EMAIL || BREVO_REPLY_TO_EMAIL || BREVO_FROM_EMAIL;
   if (!recipient) return { sent: false, reason: 'no recipient configured' };
 
-  // Today's top story by impact (created in the last 24 h).
-  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data: row, error } = await supabaseAdmin
+  // Pipeline-Auswahl (inline, um Zirkular-Import mit queries.ts zu vermeiden):
+  // bevorzugt eine wa_ok-Story der letzten 36 h; Fallback = höchste Wirkung ≥85.
+  // "Lieber leer als falsch" — keine würdige Story heute → keine Mail.
+  const since36h = new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString();
+  const COLS = 'id,title,subtitle,category,image_url,impact_score,wa_opener,wa_ok';
+
+  type PickedStory = {
+    id: string; title: string; subtitle: string | null; category: string | null;
+    image_url: string | null; impact_score: number; wa_opener: string | null; wa_ok: boolean | null;
+  };
+  let picked: PickedStory | null = null;
+
+  const { data: waRow } = await supabaseAdmin
     .from('nureine_stories')
-    .select('id,title,subtitle,category,image_url,impact_score,region')
-    .not('impact_score', 'is', null)
-    .gte('created_at', since24h)
+    .select(COLS)
+    .eq('wa_ok', true)
+    .gte('created_at', since36h)
     .order('impact_score', { ascending: false })
-    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
+  picked = (waRow as PickedStory | null) ?? null;
 
-  if (error) {
-    console.error('[highlight] query error:', error);
-    return { sent: false, reason: `query error: ${error.message}` };
+  if (!picked) {
+    // Fallback: höchste Wirkung der letzten 36 h, muss ≥ Schwelle sein.
+    const { data: fbRow } = await supabaseAdmin
+      .from('nureine_stories')
+      .select(COLS)
+      .not('impact_score', 'is', null)
+      .gte('created_at', since36h)
+      .order('impact_score', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const fb = (fbRow as PickedStory | null) ?? null;
+    if (!fb) return { sent: false, reason: 'no story in last 36 h' };
+    if ((fb.impact_score ?? 0) < HIGHLIGHT_THRESHOLD) {
+      return {
+        sent: false,
+        reason: `top story impact ${fb.impact_score} < ${HIGHLIGHT_THRESHOLD} and none wa_ok — no highlight`,
+        impactScore: fb.impact_score
+      };
+    }
+    picked = fb;
   }
-  if (!row) return { sent: false, reason: 'no story in last 24 h' };
 
-  const story = row as {
-    id: string;
-    title: string;
-    subtitle: string | null;
-    category: string | null;
-    image_url: string | null;
-    impact_score: number;
+  const story = {
+    title: picked.title,
+    subtitle: picked.subtitle,
+    category: picked.category,
+    image_url: picked.image_url,
+    impact_score: picked.impact_score
   };
 
-  if (story.impact_score < HIGHLIGHT_THRESHOLD) {
-    return {
-      sent: false,
-      reason: `top story impact ${story.impact_score} < ${HIGHLIGHT_THRESHOLD} — no highlight today`,
-      impactScore: story.impact_score
-    };
-  }
-
-  const slug = `${slugify(story.title)}-${story.id.slice(0, 8)}`;
+  const slug = `${slugify(picked.title)}-${picked.id.slice(0, 8)}`;
   const shareUrl = `${BASE_URL}/share/${slug}`;
-  const dek = story.subtitle || '';
+  const dek = picked.subtitle || '';
+  // Persönlicher, aufbauender Begleittext: KI-Opener (wa_opener) führt, dann Story,
+  // dann ein ruhiger Schluss — KEINE Wiederholung des Titels als Floskel.
+  const opener = picked.wa_opener || 'Das hat mich heute bewegt:';
   const caption =
-    `Das hat mich heute bewegt:\n\n${story.title}\n\n` +
+    `${opener}\n\n${picked.title}\n\n` +
     (dek ? `${dek}\n\n` : '') +
-    `Eine gute Nachricht am Tag — ehrlicher Fortschritt, belegt. 👉 nureine.de`;
+    `Manchmal tut so eine Nachricht einfach gut. 👉 nureine.de`;
 
-  const subject = `🔥 Heute postenswert — ${story.title}`;
+  const subject = `🔥 Heute postenswert — ${picked.title}`;
   const html = renderHighlightHtml(story, shareUrl, caption);
 
   try {

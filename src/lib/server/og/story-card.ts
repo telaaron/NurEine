@@ -39,9 +39,20 @@ export interface StoryCardInput {
 	category: string;
 	country?: string;
 	impactScore?: number | null;
+	emotion?: string | null;
 	imageBase64: string | null;
 	logoDataUri?: string | null;
 }
+
+// Warmer, menschlicher Aufmacher statt institutionellem "Ehrlicher Fortschritt".
+// Passt zur Emotion — die Karte soll wirken wie "hey, das hat mich bewegt".
+const EMOTION_TAG: Record<string, string> = {
+	relief: 'durchatmen',
+	wonder: 'kurz gestaunt',
+	hope: 'da bewegt sich was',
+	pride: 'Menschen, die anpacken',
+	warmth: 'das wärmt'
+};
 
 function esc(s: string): string {
 	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -56,11 +67,12 @@ function headlineSize(title: string): number {
 }
 
 export function buildStoryCard(input: StoryCardInput): string {
-	const { title, dek, category, country, impactScore, imageBase64, logoDataUri } = input;
+	const { title, dek, category, country, impactScore, emotion, imageBase64, logoDataUri } = input;
 	const accent = CATEGORY_ACCENT[category] || AMBER;
 	const catLabel = (CATEGORY_LABELS[category] || category).toUpperCase();
 	const hSize = headlineSize(title);
 	const dekShort = dek && dek.length > 120 ? dek.slice(0, 119) + '…' : dek;
+	const emotionTag = (emotion && EMOTION_TAG[emotion]) || 'gefunden · geteilt';
 
 	const imageBlock = imageBase64
 		? `<img src="${imageBase64}" width="${W}" height="980" style="width:${W}px;height:980px;object-fit:cover;" />`
@@ -77,13 +89,17 @@ export function buildStoryCard(input: StoryCardInput): string {
 	}
     <div style="font-family:'Space Grotesk';font-size:40px;font-weight:700;color:${INK};margin-left:16px;letter-spacing:-0.02em;">NurEine</div>
     <div style="display:flex;flex:1;"></div>
-    <div style="font-family:'Inter';font-size:24px;font-weight:500;color:${MUTED};letter-spacing:0.06em;">Ehrlicher Fortschritt</div>
+    <!-- Emotion-Tag (handschriftlich-warm), statt institutionellem Label -->
+    <div style="font-family:'Newsreader';font-style:italic;font-size:30px;font-weight:400;color:${AMBER_DEEP};">— ${esc(emotionTag)}</div>
   </div>
 
-  <!-- Story image -->
-  <div style="display:flex;position:relative;width:${W}px;height:980px;">
-    ${imageBlock}
-    <div style="position:absolute;display:flex;top:32px;left:64px;background:rgba(251,248,241,0.9);border-radius:100px;padding:12px 26px;">
+  <!-- Story image (gerundet, freigestellt → wirkt wie eingeklebt, nicht wie Header) -->
+  <div style="display:flex;position:relative;width:${W}px;height:980px;padding:0 40px;">
+    <div style="display:flex;width:1000px;height:960px;border-radius:36px;overflow:hidden;box-shadow:0 22px 60px rgba(60,40,20,0.18);">
+      ${imageBlock.replace(`width:${W}px;height:980px`, 'width:1000px;height:960px')}
+    </div>
+    <div style="position:absolute;display:flex;top:32px;left:80px;background:rgba(251,248,241,0.92);border-radius:100px;padding:12px 26px;">
+      <div style="display:flex;width:12px;height:12px;border-radius:12px;background:${accent};margin-right:12px;margin-top:7px;"></div>
       <div style="font-family:'Inter';font-size:24px;font-weight:600;letter-spacing:0.12em;color:${accent};">${catLabel}</div>
     </div>
   </div>
@@ -106,7 +122,7 @@ export function buildStoryCard(input: StoryCardInput): string {
 		impactScore
 			? `<div style="display:flex;align-items:center;">
         <div style="display:flex;width:14px;height:14px;border-radius:14px;background:${accent};margin-right:14px;"></div>
-        <div style="font-family:'Inter';font-size:30px;font-weight:600;color:${INK};">Wirkung ${impactScore}/100</div>
+        <div style="font-family:'Inter';font-size:30px;font-weight:600;color:${INK};">belegt · Wirkung ${impactScore}</div>
       </div>`
 			: ''
 	}

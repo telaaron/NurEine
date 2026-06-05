@@ -70,13 +70,15 @@ function escapeHtml(text: string): string {
 		.replace(/'/g, '&#039;');
 }
 
-/** Pick a headline font-size that keeps long titles inside the column. */
+/** Pick a headline font-size that keeps long titles inside the column.
+ *  Größer als zuvor (Story-Headline soll dominieren, nicht zurückhaltend wirken). */
 function headlineSize(title: string): number {
 	const len = title.length;
-	if (len <= 32) return 60;
-	if (len <= 50) return 52;
-	if (len <= 72) return 44;
-	return 38;
+	if (len <= 32) return 74;
+	if (len <= 50) return 64;
+	if (len <= 72) return 54;
+	if (len <= 95) return 46;
+	return 42;
 }
 
 export function buildOgTemplate(input: OgTemplateInput): string {
@@ -85,7 +87,7 @@ export function buildOgTemplate(input: OgTemplateInput): string {
 	const categoryLabel = (CATEGORY_LABELS[category] || category).toUpperCase();
 	const hSize = headlineSize(title);
 
-	const maxDek = 92;
+	const maxDek = 110;
 	const displayDek =
 		dek && dek.length > 0 ? (dek.length > maxDek ? dek.slice(0, maxDek - 1) + '…' : dek) : '';
 
@@ -124,14 +126,14 @@ export function buildOgTemplate(input: OgTemplateInput): string {
     </div>
 
     <!-- Headline -->
-    <div style="display:flex;font-family:'Space Grotesk';font-size:${hSize}px;font-weight:700;color:${INK};line-height:1.04;letter-spacing:-0.03em;margin-top:44px;max-width:${COL_W}px;">
+    <div style="display:flex;font-family:'Space Grotesk';font-size:${hSize}px;font-weight:700;color:${INK};line-height:1.03;letter-spacing:-0.03em;margin-top:34px;max-width:${COL_W}px;">
       ${escapeHtml(title)}
     </div>
 
     ${
 		displayDek
 			? `<!-- Dek (serif italic, amber) -->
-    <div style="display:flex;font-family:'Newsreader';font-style:italic;font-size:25px;font-weight:400;color:${AMBER_DEEP};line-height:1.32;margin-top:24px;max-width:540px;">
+    <div style="display:flex;font-family:'Newsreader';font-style:italic;font-size:29px;font-weight:400;color:${AMBER_DEEP};line-height:1.3;margin-top:24px;max-width:560px;">
       ${escapeHtml(displayDek)}
     </div>`
 			: ''

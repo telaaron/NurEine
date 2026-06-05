@@ -12,8 +12,8 @@
 import { supabaseAdmin } from '$lib/server/supabase/client';
 import { env } from '$env/dynamic/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
-import { getLatestFeatured } from '$lib/server/queries';
-import { buildCaption, hashtagsFor, pickHookType } from './caption';
+import { selectInstagramStory } from '$lib/server/queries';
+import { buildCaption, buildCaptionFromHook, hashtagsFor, pickHookType } from './caption';
 
 const BASE_URL = PUBLIC_BASE_URL || 'https://nureine.de';
 
@@ -27,6 +27,7 @@ export interface SocialPostRow {
 	og_url: string | null;
 	hook_type: string;
 	category: string | null;
+	is_carousel: boolean;
 	status: 'draft' | 'approved' | 'posted' | 'skipped' | 'failed';
 	scheduled_for: string | null;
 	posted_at: string | null;
@@ -56,12 +57,17 @@ export async function generateTodayDraft(): Promise<{
 	reason: string;
 	storyId?: string;
 }> {
-	const story = await getLatestFeatured();
-	if (!story) return { created: false, reason: 'no featured story' };
+	// "Lieber leer als falsch": nur eine Instagram-taugliche Story wird zum Draft.
+	// Hat heute keine Story ig_ok → kein Post. Qualität vor Rhythmus.
+	const story = await selectInstagramStory();
+	if (!story) return { created: false, reason: 'no instagram-worthy story today (kein Post)' };
 
 	const hookType = pickHookType(story);
-	// Woche-4-CTA-Logik bewusst aus: Entwurf neutral, du entscheidest pro Post.
-	const caption = buildCaption(story, { hookType, withCta: false });
+	// Caption baut auf dem Bild auf statt es zu wiederholen: KI-Hook (igHook) führt,
+	// dann erst Titel + Quelle. Fallback auf regelbasierte Caption ohne KI-Hook.
+	const caption = story.igHook
+		? buildCaptionFromHook(story)
+		: buildCaption(story, { hookType, withCta: false });
 	const hashtags = hashtagsFor(story.category);
 
 	const { error } = await supabaseAdmin.from('nureine_social_posts').insert({
@@ -73,6 +79,8 @@ export async function generateTodayDraft(): Promise<{
 		og_url: `${BASE_URL}/api/og/${story.slug}`,
 		hook_type: hookType,
 		category: story.category,
+		// Carousel nur wenn die Pipeline 3 Folien geliefert hat, sonst Einzelbild.
+		is_carousel: !!story.slides,
 		status: 'draft',
 		scheduled_for: nextPostSlot()
 	});
@@ -161,29 +169,62 @@ function igConfigured(): boolean {
 	return !!(env.IG_USER_ID && env.IG_ACCESS_TOKEN);
 }
 
-async function igPost(imageUrl: string, caption: string): Promise<string> {
+const IG_V = 'v21.0';
+
+async function igCreateContainer(body: Record<string, unknown>): Promise<string> {
 	const userId = env.IG_USER_ID!;
 	const token = env.IG_ACCESS_TOKEN!;
-	const v = 'v21.0';
-
-	// 1) Container
-	const createResp = await fetch(`https://graph.facebook.com/${v}/${userId}/media`, {
+	const resp = await fetch(`https://graph.facebook.com/${IG_V}/${userId}/media`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ image_url: imageUrl, caption, access_token: token })
+		body: JSON.stringify({ ...body, access_token: token })
 	});
-	if (!createResp.ok) throw new Error(`IG container ${createResp.status}: ${(await createResp.text()).slice(0, 300)}`);
-	const { id: creationId } = (await createResp.json()) as { id: string };
+	if (!resp.ok) throw new Error(`IG container ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
+	return ((await resp.json()) as { id: string }).id;
+}
 
-	// 2) Publish
-	const pubResp = await fetch(`https://graph.facebook.com/${v}/${userId}/media_publish`, {
+async function igPublish(creationId: string): Promise<string> {
+	const userId = env.IG_USER_ID!;
+	const token = env.IG_ACCESS_TOKEN!;
+	const resp = await fetch(`https://graph.facebook.com/${IG_V}/${userId}/media_publish`, {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ creation_id: creationId, access_token: token })
 	});
-	if (!pubResp.ok) throw new Error(`IG publish ${pubResp.status}: ${(await pubResp.text()).slice(0, 300)}`);
-	const { id: mediaId } = (await pubResp.json()) as { id: string };
-	return mediaId;
+	if (!resp.ok) throw new Error(`IG publish ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
+	return ((await resp.json()) as { id: string }).id;
+}
+
+/** Single-image feed post. */
+async function igPost(imageUrl: string, caption: string): Promise<string> {
+	const creationId = await igCreateContainer({ image_url: imageUrl, caption });
+	return igPublish(creationId);
+}
+
+/**
+ * Carousel feed post: one child container per image (is_carousel_item), then a
+ * parent carousel container with the children, then publish the parent.
+ */
+async function igPostCarousel(imageUrls: string[], caption: string): Promise<string> {
+	const children: string[] = [];
+	for (const url of imageUrls) {
+		children.push(await igCreateContainer({ image_url: url, is_carousel_item: true }));
+	}
+	const parent = await igCreateContainer({
+		media_type: 'CAROUSEL',
+		children: children.join(','),
+		caption
+	});
+	return igPublish(parent);
+}
+
+/** Build the 3 carousel slide URLs from a post's og_url (same slug + base). */
+function carouselUrlsFor(p: SocialPostRow): string[] | null {
+	// og_url looks like {BASE}/api/og/{slug}; derive {BASE}/api/carousel/{slug}/{1..3}.
+	const m = p.og_url?.match(/^(.*)\/api\/og\/(.+)$/);
+	if (!m) return null;
+	const [, base, slug] = m;
+	return [1, 2, 3].map((n) => `${base}/api/carousel/${slug}/${n}`);
 }
 
 /**
@@ -213,16 +254,20 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 	let failed = 0;
 
 	for (const p of due) {
-		// IG Feed-Post braucht eine 1:1/4:5/1.91:1-Bild-URL → wir nutzen die OG-Karte (1.91:1).
-		const imageUrl = p.og_url || p.card_url;
-		if (!imageUrl) {
-			await updateSocialPost(p.id, { status: 'failed' });
-			failed += 1;
-			continue;
-		}
 		const fullCaption = [p.caption, '', p.hashtags.join(' ')].join('\n').trim();
 		try {
-			const mediaId = await igPost(imageUrl, fullCaption);
+			let mediaId: string;
+			if (p.is_carousel) {
+				// 3-Folien-Carousel (4:5). URLs aus og_url-Slug abgeleitet.
+				const urls = carouselUrlsFor(p);
+				if (!urls) throw new Error('cannot derive carousel urls from og_url');
+				mediaId = await igPostCarousel(urls, fullCaption);
+			} else {
+				// Einzelbild — OG-Karte (1.91:1).
+				const imageUrl = p.og_url || p.card_url;
+				if (!imageUrl) throw new Error('no image url');
+				mediaId = await igPost(imageUrl, fullCaption);
+			}
 			await supabaseAdmin
 				.from('nureine_social_posts')
 				.update({ status: 'posted', posted_at: new Date().toISOString(), ig_media_id: mediaId, error: null, updated_at: new Date().toISOString() })

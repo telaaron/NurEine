@@ -33,6 +33,13 @@ export type SupabaseStory = {
   published_at: string;
   created_at: string;
   gut_filter_reason: string | null;
+  // Editorial pipeline (migration 00023)
+  emotion: string | null;
+  ig_ok: boolean | null;
+  wa_ok: boolean | null;
+  ig_hook: string | null;
+  wa_opener: string | null;
+  slides: { hook: string; aufloesung: string; stille: string } | null;
 };
 
 export type StoryResult = {
@@ -65,6 +72,13 @@ export type StoryResult = {
   featuredDate: string | null;
   createdAt: string;
   updatedAt: string;
+  // Editorial pipeline
+  emotion: string | null;
+  igOk: boolean;
+  waOk: boolean;
+  igHook: string | null;
+  waOpener: string | null;
+  slides: { hook: string; aufloesung: string; stille: string } | null;
 };
 
 // ---- Helpers ----
@@ -121,7 +135,13 @@ function mapStory(row: SupabaseStory): StoryResult {
     local: 0,
     featuredDate: row.is_hero ? row.published_at : null,
     createdAt: row.created_at,
-    updatedAt: row.published_at
+    updatedAt: row.published_at,
+    emotion: row.emotion ?? null,
+    igOk: row.ig_ok ?? false,
+    waOk: row.wa_ok ?? false,
+    igHook: row.ig_hook ?? null,
+    waOpener: row.wa_opener ?? null,
+    slides: row.slides ?? null
   };
 }
 
@@ -219,6 +239,91 @@ export async function getLatestFeatured(): Promise<StoryResult | undefined> {
   // 3. Last-resort: highest-impact story overall.
   const all = await getAllStories();
   return all[0];
+}
+
+// ---------------------------------------------------------------------------
+// Editorial pipeline — channel selection (GROWTH.md §Tages-Auswahl)
+//
+// "Lieber leer als falsch." Each channel has its own bar. If no story clears
+// a channel's bar today, that channel gets NOTHING — quality over rhythm.
+// Stories from before migration 00023 have ig_ok/wa_ok=false (default), so a
+// heuristic fallback keeps the channels alive until the pipeline has run a bit.
+// ---------------------------------------------------------------------------
+
+const FRESH_WINDOW_H = 36; // a story counts as "today's" within this window
+
+function sinceFresh(): string {
+  return new Date(Date.now() - FRESH_WINDOW_H * 60 * 60 * 1000).toISOString();
+}
+
+/**
+ * Today's Instagram pick: a fresh, ig_ok story with the strongest visual moment
+ * (proxied by impact_score). Returns undefined if none qualifies → no post today.
+ * Fallback (no ig_ok stories scored yet): fresh story with impact ≥ 75.
+ */
+export async function selectInstagramStory(): Promise<StoryResult | undefined> {
+  const since = sinceFresh();
+  const { data } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('*')
+    .eq('ig_ok', true)
+    .gte('created_at', since)
+    .order('impact_score', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (data) return mapStory(data as SupabaseStory);
+
+  // Fallback only while no ig_ok-tagged stories exist at all (pre-pipeline).
+  const { count } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('*', { count: 'exact', head: true })
+    .eq('ig_ok', true);
+  if ((count ?? 0) > 0) return undefined; // pipeline active but nothing today → no post
+
+  const { data: fb } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('*')
+    .gte('created_at', since)
+    .gte('impact_score', 75)
+    .order('impact_score', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return fb ? mapStory(fb as SupabaseStory) : undefined;
+}
+
+/**
+ * Today's WhatsApp pick: a fresh, wa_ok story. Returns undefined if none.
+ * Fallback (pre-pipeline): fresh story with impact ≥ 85 (the old highlight bar).
+ */
+export async function selectWhatsappStory(): Promise<StoryResult | undefined> {
+  const since = sinceFresh();
+  const { data } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('*')
+    .eq('wa_ok', true)
+    .gte('created_at', since)
+    .order('impact_score', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (data) return mapStory(data as SupabaseStory);
+
+  const { count } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('*', { count: 'exact', head: true })
+    .eq('wa_ok', true);
+  if ((count ?? 0) > 0) return undefined;
+
+  const { data: fb } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('*')
+    .gte('created_at', since)
+    .gte('impact_score', 85)
+    .order('impact_score', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return fb ? mapStory(fb as SupabaseStory) : undefined;
 }
 
 export async function getLocalStories(): Promise<StoryResult[]> {

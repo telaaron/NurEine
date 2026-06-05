@@ -18,7 +18,9 @@ const ALLOWED = new Set([
 	'cta_click',
 	'share',
 	'ticker_click',
-	'archive_filter'
+	'archive_filter',
+	'story_submitted',
+	'story_shared'
 ]);
 
 export const POST: RequestHandler = async ({ request }) => {

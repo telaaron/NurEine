@@ -202,6 +202,38 @@ def _safe_text(value: Any, max_len: int) -> str | None:
     return s[:max_len]
 
 
+_ALLOWED_EMOTIONS = {"relief", "wonder", "hope", "pride", "warmth"}
+
+
+def _safe_emotion(value: Any) -> str | None:
+    """Editorial pipeline: accept one of the five resonance emotions, else None."""
+    if not isinstance(value, str):
+        return None
+    e = value.strip().lower()
+    return e if e in _ALLOWED_EMOTIONS else None
+
+
+def _safe_bool(value: Any) -> bool:
+    """Coerce a model truthy into a strict bool (DB columns are NOT NULL DEFAULT false)."""
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "1", "yes", "ja"}
+    return bool(value)
+
+
+def _safe_slides(value: Any) -> dict[str, str] | None:
+    """Carousel texts {hook, aufloesung, stille} — only if all three present + non-empty."""
+    if not isinstance(value, dict):
+        return None
+    hook = _safe_text(value.get("hook"), 90)
+    aufloesung = _safe_text(value.get("aufloesung"), 320)
+    stille = _safe_text(value.get("stille"), 120)
+    if not (hook and aufloesung and stille):
+        return None
+    return {"hook": hook, "aufloesung": aufloesung, "stille": stille}
+
+
 def normalize_category(raw: Any) -> str:
     """Coerce any DeepSeek category into an allowed DB value.
 
@@ -567,6 +599,54 @@ impact_score: Integer 0-100. Formel: round(impact_reach_normalized * 0.4 + impac
 kid_min_age: Wenn die Geschichte sich gut mit Kindern besprechen lässt: Mindestalter zum Erklären (integer, z.B. 6, 8, 10, 12). Wenn ungeeignet für Kinder (zu abstrakt, zu düster, kein kindgerechter Aufhänger): null.
 kid_explainer: Nur wenn kid_min_age gesetzt: EIN kurzer, kindgerechter Satz, der den schwierigsten Begriff der Geschichte erklärt (kein Belehrungston). Sonst null. Beispiel: "Extreme Armut bedeutet: von weniger als 2 Euro pro Tag leben müssen."
 conversation_starter: Nur wenn kid_min_age gesetzt: EINE offene Frage fürs Familiengespräch (keine richtige Antwort, kein Lehrton). Sonst null. Beispiel: "Was würdest du tun, wenn du das Problem lösen müsstest?"
+
+=== REDAKTIONS-PIPELINE: Emotion + Kanal-Eignung + Social-Texte ===
+
+Wir posten nicht jede Story auf Social Media. Nur was wirklich bewegt. Lieber leer als falsch.
+Stell dir bei jeder Story die ehrliche Frage: "Würde ich das meiner besten Freundin per WhatsApp
+schicken — nicht als Link, sondern weil ICH selbst erstaunt/berührt bin?"
+
+emotion: Die EINE primäre Emotion, die die Story auslöst. Genau einer von:
+  - "relief"  — Erleichterung: die Welt ist nicht so kaputt wie befürchtet (Armut sinkt, Flüsse werden frei)
+  - "wonder"  — Staunen: das ist unglaublich, ein Bild das man sich vorstellen kann (Hirsche queren neue Wildbrücke am 1. Tag)
+  - "hope"    — Hoffnung: etwas bewegt sich, ein erster Schritt (neues Gesetz schützt erstmals X)
+  - "pride"   — Stolz: Menschen lösen ihr Problem selbst (Gemeinde baut eigene Schule)
+  - "warmth"  — Wärme: menschliche Verbindung, Solidarität im großen Maßstab
+  Wähle die DOMINANTE Emotion, nicht mehrere. Im Zweifel die, die ein Mensch beim Lesen ZUERST spürt.
+
+ig_ok: true/false — Taugt die Story für Instagram? NUR true wenn ALLE vier zutreffen:
+  (1) Es gibt ein visuelles Moment (ein konkretes Bild, das man sich vorstellen kann).
+  (2) Der Kern ist in EINEM Satz erklärbar.
+  (3) Die Emotion ist "relief", "wonder" oder "pride" (nicht "hope"/"warmth" allein).
+  (4) impact_score >= 70.
+  Policy-Themen, abstrakte Statistiken, "zu weit weg"-Themen → ig_ok=false. Sei streng.
+
+wa_ok: true/false — Würde man das einer Freundin schicken? NUR true wenn ALLE drei zutreffen:
+  (1) Fühlt sich an wie etwas, das man spontan teilt.
+  (2) Keine Erklärung nötig, um es zu verstehen.
+  (3) Emotional sofort zugänglich.
+
+ig_hook: Nur wenn ig_ok=true. Der INSTAGRAM-HOOK — die ersten 1,5 Zeilen, BEVOR Instagram "… mehr" abschneidet.
+  NICHT der Titel. Die EMOTION. Max 90 Zeichen. Muss zum Weiterlesen zwingen, ohne Clickbait.
+  Beispiel (Wildbrücke): "Drei Hirsche. Ein erster Tag. Eine neue Brücke."
+  Beispiel (Modellrechnung): "99% der Menschen könnten 2100 besser leben. Das ist keine Utopie — eine Rechnung."
+  Sonst null.
+
+wa_opener: Nur wenn wa_ok=true. Ein PERSÖNLICHER WhatsApp-Einstieg in DEINER Stimme — wie ein Mensch,
+  den etwas berührt hat, NICHT wie eine Institution. Max 80 Zeichen. Soll zur Emotion passen.
+  Beispiel (relief): "Das hat mich heute ruhiger gemacht:"
+  Beispiel (wonder): "Kurz innegehalten, als ich das las:"
+  Beispiel (pride): "Manchmal lösen Menschen Probleme einfach. Leise."
+  Sonst null.
+
+slides: Nur wenn ig_ok=true. Ein Objekt mit DREI kurzen Carousel-Texten, die AUFEINANDER AUFBAUEN
+  (nicht wiederholen):
+  {
+    "hook": "Folie 1 — der Hook (= ig_hook oder enger Variant). Ein Gedanke, max 70 Zeichen.",
+    "aufloesung": "Folie 2 — die Auflösung. Was ist passiert + warum es zählt. 2-3 kurze Sätze, max 280 Zeichen. Erklär einfach, aber verkauf niemanden für dumm.",
+    "stille": "Folie 3 — ein letzter, ruhiger Satz zum Nachhall. Max 90 Zeichen. Kein CTA."
+  }
+  Sonst null.
 
 Antworte ausschließlich mit validem JSON. Kein Text davor oder danach."""
 
@@ -1245,6 +1325,20 @@ def run() -> None:
                 "kid_explainer": _safe_text(result.get("kid_explainer"), 300),
                 "conversation_starter": _safe_text(result.get("conversation_starter"), 300),
             }
+
+            # ---- Editorial pipeline: emotion + channel fit + social texts ----
+            # ig_ok requires impact_score >= 70 — enforce server-side too, so a
+            # generous model can't push a weak story onto Instagram.
+            _impact = story_record.get("impact_score") or 0
+            _ig_ok = _safe_bool(result.get("ig_ok")) and _impact >= 70
+            story_record["emotion"] = _safe_emotion(result.get("emotion"))
+            story_record["ig_ok"] = _ig_ok
+            story_record["wa_ok"] = _safe_bool(result.get("wa_ok"))
+            story_record["ig_hook"] = _safe_text(result.get("ig_hook"), 120) if _ig_ok else None
+            story_record["wa_opener"] = (
+                _safe_text(result.get("wa_opener"), 120) if story_record["wa_ok"] else None
+            )
+            story_record["slides"] = _safe_slides(result.get("slides")) if _ig_ok else None
 
             # Parse published date
             raw_published = story_record["published_at"]

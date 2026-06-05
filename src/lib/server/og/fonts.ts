@@ -1,9 +1,21 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { read } from '$app/server';
+import SpaceGroteskMedium from '$lib/server/fonts/SpaceGrotesk-Medium.ttf?url';
+import SpaceGroteskBold from '$lib/server/fonts/SpaceGrotesk-Bold.ttf?url';
+import NewsreaderItalic from '$lib/server/fonts/Newsreader-Italic.ttf?url';
+import NewsreaderMedium from '$lib/server/fonts/Newsreader-Medium.ttf?url';
+import InterRegular from '$lib/server/fonts/Inter-Regular.ttf?url';
+import InterSemiBold from '$lib/server/fonts/Inter-SemiBold.ttf?url';
+import InterBold from '$lib/server/fonts/Inter-Bold.ttf?url';
+import LogoSvg from '$lib/server/og/NurEine.svg?url';
 
 /**
  * Load TTF fonts for Satori OG image rendering.
- * Fonts are bundled in src/lib/server/fonts/ and included in the deployment.
+ *
+ * Assets are imported via Vite `?url` and read with SvelteKit's `read()` so
+ * they are bundled into the serverless function. `readFile(process.cwd()/src/...)`
+ * does NOT work on Vercel — `src/` is not in the deployed function bundle, so it
+ * threw ENOENT (500) in production while working in dev. `read()` is the
+ * canonical, adapter-agnostic way to access bundled assets at runtime.
  *
  * Families:
  *   - Space Grotesk  → OG headline (matches site display font)
@@ -20,14 +32,10 @@ export interface SatoriFont {
 let _fonts: SatoriFont[] | null = null;
 let _logo: string | null = null;
 
-function toArrayBuffer(buf: Buffer): ArrayBuffer {
-	return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
-}
-
 /** NurEine water-drop logo as a base64 SVG data-URI (cached). */
 export async function loadLogoDataUri(): Promise<string> {
 	if (_logo) return _logo;
-	const svg = await readFile(join(process.cwd(), 'static/NurEine.svg'), 'utf-8');
+	const svg = await read(LogoSvg).text();
 	_logo = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
 	return _logo;
 }
@@ -35,26 +43,21 @@ export async function loadLogoDataUri(): Promise<string> {
 export async function loadFonts(): Promise<SatoriFont[]> {
 	if (_fonts) return _fonts;
 
-	const fontDir = join(process.cwd(), 'src/lib/server/fonts');
-
 	// NOTE: Satori's opentype parser cannot read variable fonts — use static instances only.
-	const spec: { file: string; name: string; weight: SatoriFont['weight']; style: SatoriFont['style'] }[] = [
-		// Display — Space Grotesk (static)
-		{ file: 'SpaceGrotesk-Medium.ttf', name: 'Space Grotesk', weight: 500, style: 'normal' },
-		{ file: 'SpaceGrotesk-Bold.ttf', name: 'Space Grotesk', weight: 700, style: 'normal' },
-		// Serif dek — Newsreader (static)
-		{ file: 'Newsreader-Italic.ttf', name: 'Newsreader', weight: 400, style: 'italic' },
-		{ file: 'Newsreader-Medium.ttf', name: 'Newsreader', weight: 500, style: 'normal' },
-		// UI / meta — Inter
-		{ file: 'Inter-Regular.ttf', name: 'Inter', weight: 400, style: 'normal' },
-		{ file: 'Inter-SemiBold.ttf', name: 'Inter', weight: 600, style: 'normal' },
-		{ file: 'Inter-Bold.ttf', name: 'Inter', weight: 700, style: 'normal' }
+	const spec: { url: string; name: string; weight: SatoriFont['weight']; style: SatoriFont['style'] }[] = [
+		{ url: SpaceGroteskMedium, name: 'Space Grotesk', weight: 500, style: 'normal' },
+		{ url: SpaceGroteskBold, name: 'Space Grotesk', weight: 700, style: 'normal' },
+		{ url: NewsreaderItalic, name: 'Newsreader', weight: 400, style: 'italic' },
+		{ url: NewsreaderMedium, name: 'Newsreader', weight: 500, style: 'normal' },
+		{ url: InterRegular, name: 'Inter', weight: 400, style: 'normal' },
+		{ url: InterSemiBold, name: 'Inter', weight: 600, style: 'normal' },
+		{ url: InterBold, name: 'Inter', weight: 700, style: 'normal' }
 	];
 
 	const fonts: SatoriFont[] = [];
-	for (const { file, name, weight, style } of spec) {
-		const data = await readFile(join(fontDir, file));
-		fonts.push({ name, data: toArrayBuffer(data), weight, style });
+	for (const { url, name, weight, style } of spec) {
+		const data = await read(url).arrayBuffer();
+		fonts.push({ name, data, weight, style });
 	}
 
 	_fonts = fonts;

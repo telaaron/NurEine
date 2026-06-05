@@ -1125,7 +1125,7 @@ export async function sendHighlightEmailIfWorthy(): Promise<{
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { data: row, error } = await supabaseAdmin
     .from('nureine_stories')
-    .select('id,title,subtitle,category,image_url,impact_score,country')
+    .select('id,title,subtitle,category,image_url,impact_score,region')
     .not('impact_score', 'is', null)
     .gte('created_at', since24h)
     .order('impact_score', { ascending: false })
@@ -1146,7 +1146,6 @@ export async function sendHighlightEmailIfWorthy(): Promise<{
     category: string | null;
     image_url: string | null;
     impact_score: number;
-    country: string | null;
   };
 
   if (story.impact_score < HIGHLIGHT_THRESHOLD) {
@@ -1179,7 +1178,7 @@ export async function sendHighlightEmailIfWorthy(): Promise<{
 }
 
 function renderHighlightHtml(
-  story: { title: string; subtitle: string | null; impact_score: number; image_url: string | null; country: string | null },
+  story: { title: string; subtitle: string | null; impact_score: number; image_url: string | null },
   shareUrl: string,
   caption: string
 ): string {

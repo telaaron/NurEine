@@ -145,6 +145,29 @@ Wer auf den Status antwortet → bekommt den Newsletter-Link persönlich (1:1, h
 - [ ] Outreach-Backlog im Admin (Reddit-Subs, Newsletter-Swap-Ziele)
 
 ### Offene To-Dos für Aaron
-1. GitHub Secret `PUBLIC_BASE_URL=https://nureine.de` setzen (Crons brauchen's).
+1. ✅ GitHub Secret `PUBLIC_BASE_URL` gesetzt.
 2. Eine Woche `/admin/social` prüfen — Entwürfe ansehen, Captions/Format abnicken.
 3. Danach Meta-Setup → Instagram scharfschalten.
+
+## 9. Redaktions-Pipeline (Schicht 2-5) — gebaut 2026-06-05
+
+DeepSeek scort jede Story zusätzlich (fetch_stories.py):
+- **emotion**: relief|wonder|hope|pride|warmth (relief/wonder→IG, hope/warmth→Newsletter, pride→beide)
+- **ig_ok / wa_ok**: Kanal-Eignung (ig_ok erzwingt server-seitig impact≥70)
+- **ig_hook**: erste 1,5 Zeilen (Emotion, nicht Titel) — überlebt vor "… mehr"
+- **wa_opener**: persönlicher WhatsApp-Einstieg ("Das hat mich ruhiger gemacht")
+- **slides**: {hook, aufloesung, stille} für Carousel
+- **discard**: is_nureine=false → wird gar nicht inserted (Qualitätsschwellen Schicht 4)
+
+Tages-Auswahl (queries.ts): selectInstagramStory / selectWhatsappStory.
+**Lieber leer als falsch** — keine ig_ok/wa_ok Story heute → kein Post.
+Fallback-Heuristik (impact≥75 / ≥85) für Stories vor der Pipeline.
+
+Ausgabe:
+- Carousel /api/carousel/[slug]/[1-3] (3 Folien 4:5) → IG-Carousel-Publish
+- Caption baut auf Hook auf statt zu wiederholen (buildCaptionFromHook)
+- share-card verspielter (Emotion-Tag, gerundetes Bild), OG-Headline größer
+- Highlight-Mail + /heute nutzen wa_opener (persönlich, aufbauend)
+
+Share-Tracking: story_shared {format: whatsapp|instagram|og, via: copy|download}
+auf /heute + /share. In 30 Tagen: welcher Kanal konvertiert wirklich.

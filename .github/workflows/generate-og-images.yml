@@ -1,9 +1,12 @@
-name: Generate OG Images
+name: Generate OG Images (DEPRECATED)
+
+# DEPRECATED 2026-06: OG images are now rendered on-demand via the Satori
+# endpoint /api/og/[slug] (cream + amber, branded). This Python generator wrote
+# og_image_url into the DB, which then overrode the new endpoint. Schedule
+# disabled so it can't repopulate og_image_url. Kept as manual dispatch only,
+# for the rare case of pre-warming/pre-generating. Do NOT re-enable the cron.
 
 on:
-  schedule:
-    # Runs 5 minutes after each fetch-stories cron (06/10/14/18 UTC)
-    - cron: '5 6,10,14,18 * * *'
   workflow_dispatch:
     inputs:
       all:

@@ -49,8 +49,9 @@
         );
 
         const seoDesc = $derived(
-                isStory ? page.data.story.dek : 
-                'Wir berichten nicht, dass die Welt gut ist — wir zeigen, wo sie besser wird. Täglich eine belegte Geschichte über echten Fortschritt, in zwei Minuten. Kein Feed, kein Algorithmus.'
+                isStory
+                        ? `${page.data.story.dek} · Eine gute Nachricht am Tag — ehrlicher Fortschritt, belegt. Kostenlos auf nureine.de`
+                        : 'Wir berichten nicht, dass die Welt gut ist — wir zeigen, wo sie besser wird. Täglich eine belegte Geschichte über echten Fortschritt, in zwei Minuten. Kein Feed, kein Algorithmus.'
         );
 
         // JPEG for og:image — universally supported by WhatsApp, iMessage, Facebook, Twitter

@@ -16,6 +16,7 @@
 
 import { supabaseAdmin } from './supabase/client';
 import { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME, BREVO_REPLY_TO_EMAIL } from '$env/static/private';
+import { env } from '$env/dynamic/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 
 // ---------------------------------------------------------------------------
@@ -1088,4 +1089,129 @@ export async function sendWorldMetricsNewsletter(): Promise<NewsletterRunResult>
   }
   await logCronRun('world_metrics', subscribers.length, sent, failed);
   return { story: null, b2c: { total: subscribers.length, sent, failed }, b2b: { total: 0, sent: 0, failed: 0 }, durationMs: Date.now() - startedAt };
+}
+
+// ---------------------------------------------------------------------------
+// Highlight morning email — "Be the customer, not the seller"
+//
+// Each morning we look at today's stories. If one genuinely stands out
+// (impact_score >= HIGHLIGHT_THRESHOLD), we email *Aaron* — not subscribers —
+// a link to its /share page, where he finds a ready-made 9:16 card + caption
+// to post on his WhatsApp status. The rule: only post when the story moves you.
+// So this mail fires ONLY for true highlights, not daily out of duty.
+// ---------------------------------------------------------------------------
+
+const HIGHLIGHT_THRESHOLD = 85;
+
+/**
+ * Find today's highest-impact story and, if it clears the highlight bar,
+ * email Aaron a /share link. Returns a small status object for the endpoint.
+ */
+export async function sendHighlightEmailIfWorthy(): Promise<{
+  sent: boolean;
+  reason: string;
+  slug?: string;
+  impactScore?: number;
+}> {
+  if (!BREVO_API_KEY || !BREVO_FROM_EMAIL) {
+    throw new Error('BREVO_API_KEY / BREVO_FROM_EMAIL not configured');
+  }
+
+  // Recipient: HIGHLIGHT_EMAIL override → reply-to → from. Always Aaron, never subscribers.
+  const recipient = env.HIGHLIGHT_EMAIL || BREVO_REPLY_TO_EMAIL || BREVO_FROM_EMAIL;
+  if (!recipient) return { sent: false, reason: 'no recipient configured' };
+
+  // Today's top story by impact (created in the last 24 h).
+  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: row, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('id,title,subtitle,category,image_url,impact_score,country')
+    .not('impact_score', 'is', null)
+    .gte('created_at', since24h)
+    .order('impact_score', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('[highlight] query error:', error);
+    return { sent: false, reason: `query error: ${error.message}` };
+  }
+  if (!row) return { sent: false, reason: 'no story in last 24 h' };
+
+  const story = row as {
+    id: string;
+    title: string;
+    subtitle: string | null;
+    category: string | null;
+    image_url: string | null;
+    impact_score: number;
+    country: string | null;
+  };
+
+  if (story.impact_score < HIGHLIGHT_THRESHOLD) {
+    return {
+      sent: false,
+      reason: `top story impact ${story.impact_score} < ${HIGHLIGHT_THRESHOLD} — no highlight today`,
+      impactScore: story.impact_score
+    };
+  }
+
+  const slug = `${slugify(story.title)}-${story.id.slice(0, 8)}`;
+  const shareUrl = `${BASE_URL}/share/${slug}`;
+  const dek = story.subtitle || '';
+  const caption =
+    `Das hat mich heute bewegt:\n\n${story.title}\n\n` +
+    (dek ? `${dek}\n\n` : '') +
+    `Eine gute Nachricht am Tag — ehrlicher Fortschritt, belegt. 👉 nureine.de`;
+
+  const subject = `🔥 Heute postenswert — ${story.title}`;
+  const html = renderHighlightHtml(story, shareUrl, caption);
+
+  try {
+    await sendBrevoEmail(recipient, subject, html);
+    console.info('[highlight] sent', slug, 'impact', story.impact_score, '→', recipient);
+    return { sent: true, reason: 'highlight sent', slug, impactScore: story.impact_score };
+  } catch (err) {
+    console.error('[highlight] send failed', err);
+    return { sent: false, reason: `send failed: ${(err as Error).message}`, slug, impactScore: story.impact_score };
+  }
+}
+
+function renderHighlightHtml(
+  story: { title: string; subtitle: string | null; impact_score: number; image_url: string | null; country: string | null },
+  shareUrl: string,
+  caption: string
+): string {
+  const dek = story.subtitle || '';
+  const cap = escapeForHtml(caption).replace(/\n/g, '<br>');
+  return `<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;background:#f4efe6;font-family:'Helvetica Neue',Arial,sans-serif;color:#16140f;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4efe6;padding:32px 0;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fbf8f1;border-radius:18px;overflow:hidden;border:1px solid #e8ddc9;">
+        <tr><td style="padding:28px 36px 8px;">
+          <p style="margin:0;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#c87340;font-weight:600;">Highlight des Tages · Wirkung ${story.impact_score}/100</p>
+        </td></tr>
+        ${story.image_url ? `<tr><td style="padding:14px 36px 0;"><img src="${story.image_url}" alt="" width="448" style="width:100%;border-radius:12px;display:block;"></td></tr>` : ''}
+        <tr><td style="padding:18px 36px 0;">
+          <h1 style="margin:0;font-family:Georgia,serif;font-size:23px;line-height:1.25;color:#16140f;">${escapeForHtml(story.title)}</h1>
+          ${dek ? `<p style="margin:12px 0 0;font-family:Georgia,serif;font-style:italic;font-size:16px;color:#4a3f35;line-height:1.5;">${escapeForHtml(dek)}</p>` : ''}
+        </td></tr>
+        <tr><td style="padding:24px 36px 6px;">
+          <a href="${shareUrl}" style="display:block;background:#16140f;color:#fbf8f1;text-decoration:none;text-align:center;padding:15px 24px;border-radius:999px;font-size:15px;font-weight:600;">Karte + Text holen → posten</a>
+        </td></tr>
+        <tr><td style="padding:10px 36px 4px;">
+          <p style="margin:0;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:#c87340;font-weight:600;">Begleittext (zum Kopieren)</p>
+        </td></tr>
+        <tr><td style="padding:6px 36px 0;">
+          <div style="background:#f4efe6;border:1px solid #e8ddc9;border-radius:10px;padding:16px;font-family:Georgia,serif;font-size:15px;color:#4a3f35;line-height:1.55;">${cap}</div>
+        </td></tr>
+        <tr><td style="padding:18px 36px 30px;">
+          <p style="margin:0;font-size:13px;color:#8a7d6a;line-height:1.5;">Nur posten, wenn dich die Geschichte selbst bewegt. Nicht aus Pflicht. Du postest nicht als Gründer — als Mensch, den etwas bewegt hat.</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
 }

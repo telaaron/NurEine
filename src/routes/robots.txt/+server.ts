@@ -16,6 +16,7 @@ Disallow: /api/
 # Token-based personal pages — never index
 Disallow: /einstellungen
 Disallow: /r
+Disallow: /share
 
 # Crawl-delay (optional — polites zum Server)
 Crawl-delay: 2

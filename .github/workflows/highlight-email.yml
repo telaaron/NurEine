@@ -1,0 +1,22 @@
+name: Daily Highlight Email (post-worthy story → Aaron)
+
+# Fires every morning AFTER the 06:00 UTC story fetch+score has run.
+# Only sends if today's top story clears impact >= 85 (the "post-worthy" bar).
+# Recipient is Aaron (HIGHLIGHT_EMAIL / reply-to), never subscribers.
+on:
+  schedule:
+    - cron: '30 6 * * *'  # 06:30 UTC (08:30 CEST) — after 06:00 fetch + 06:05 OG
+  workflow_dispatch:
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger highlight email
+        run: |
+          curl -fsS -X POST "${BASE_URL}/api/cron/highlight" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -w "\nHTTP %{http_code}\n"
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

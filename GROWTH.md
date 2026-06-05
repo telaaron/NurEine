@@ -136,10 +136,15 @@ Wer auf den Status antwortet → bekommt den Newsletter-Link persönlich (1:1, h
 
 - [x] WhatsApp-Highlight-Mail (≥85) + /share-Seite + 9:16-Karte
 - [x] OG/Card Performance-Fix (sharp downscale)
-- [ ] `/heute` öffentliche Asset-Seite (teilbar)
-- [ ] DB: `nureine_social_posts` (Queue)
-- [ ] Generator-Cron (täglich Entwurf, Trockenlauf-Modus)
-- [ ] Admin `/admin/social` (Queue, Vorschau, Freigabe, Save-Tracking, A/B-Auswertung)
-- [ ] IG-Post-Cron (Graph API) — hinter Approval-Gate, Schalter auf Voll-Auto
-- [ ] Meta Graph API Setup (Business-Account, FB-Seite, App, Token)
+- [x] `/heute` öffentliche Asset-Seite (teilbar) — live
+- [x] DB: `nureine_social_posts` (Queue) — migration 00022
+- [x] Generator-Cron (täglich 06:15 UTC, Trockenlauf-Modus) — live
+- [x] Admin `/admin/social` (Queue, Vorschau, Freigabe, Save-Tracking, A/B-Auswertung) — live
+- [x] IG-Post-Cron (Graph API) — gebaut, hinter Approval-Gate, no-op ohne Token
+- [ ] **Meta Graph API Setup** (Business-Account, FB-Seite, App, Token) → IG_USER_ID + IG_ACCESS_TOKEN in Vercel. ERST nach Trockenlauf-Woche.
 - [ ] Outreach-Backlog im Admin (Reddit-Subs, Newsletter-Swap-Ziele)
+
+### Offene To-Dos für Aaron
+1. GitHub Secret `PUBLIC_BASE_URL=https://nureine.de` setzen (Crons brauchen's).
+2. Eine Woche `/admin/social` prüfen — Entwürfe ansehen, Captions/Format abnicken.
+3. Danach Meta-Setup → Instagram scharfschalten.

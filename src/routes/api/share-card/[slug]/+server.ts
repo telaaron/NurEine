@@ -7,13 +7,20 @@ import { buildStoryCard } from '$lib/server/og/story-card';
 // Bigger canvas than OG → give resvg/image-fetch more headroom on Vercel.
 export const config = { maxDuration: 60 };
 
+// Downscale + recompress before embedding — Satori rasterizes the embedded
+// image on every render; a full-size PNG makes that take ~70 s. A 1080 px JPEG
+// keeps the whole card render at a few seconds. (See /api/og for the same fix.)
 async function imageToBase64(url: string): Promise<string | null> {
 	try {
-		const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+		const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
 		if (!resp.ok) return null;
-		const buf = await resp.arrayBuffer();
-		const ct = resp.headers.get('content-type') || 'image/png';
-		return `data:${ct};base64,${Buffer.from(buf).toString('base64')}`;
+		const input = Buffer.from(await resp.arrayBuffer());
+		const sharp = (await import('sharp')).default;
+		const out = await sharp(input)
+			.resize({ width: 1080, height: 1080, fit: 'inside', withoutEnlargement: true })
+			.jpeg({ quality: 80 })
+			.toBuffer();
+		return `data:image/jpeg;base64,${out.toString('base64')}`;
 	} catch {
 		return null;
 	}

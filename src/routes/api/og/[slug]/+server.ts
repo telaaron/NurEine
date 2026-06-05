@@ -21,21 +21,31 @@ import { buildOgTemplate } from '$lib/server/og/template';
  * Caching: 24h CDN cache. Vercel edge cache handles repeat requests.
  */
 
-/** Download and convert a remote image to base64 data URI */
+/**
+ * Download a remote image, downscale + recompress, return base64 data URI.
+ *
+ * CRITICAL for perf: Satori decodes/rasterizes the embedded image on every
+ * render. A full-size 860 KB PNG made Satori take ~70 s (→ Vercel 504). A
+ * downscaled ~700 px JPEG brings the whole render to ~1.5 s. The OG image slot
+ * is only ~500 px wide, so 700 px is plenty sharp.
+ */
 async function imageToBase64DataUri(url: string): Promise<string | null> {
 	try {
-		const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+		const resp = await fetch(url, { signal: AbortSignal.timeout(8000) });
 		if (!resp.ok) return null;
-		const buf = await resp.arrayBuffer();
-		const b64 = Buffer.from(buf).toString('base64');
-		const contentType = resp.headers.get('content-type') || 'image/png';
-		return `data:${contentType};base64,${b64}`;
+		const input = Buffer.from(await resp.arrayBuffer());
+		const sharp = (await import('sharp')).default;
+		const out = await sharp(input)
+			.resize({ width: 700, height: 700, fit: 'inside', withoutEnlargement: true })
+			.jpeg({ quality: 78 })
+			.toBuffer();
+		return `data:image/jpeg;base64,${out.toString('base64')}`;
 	} catch {
 		return null;
 	}
 }
 
-export const GET: RequestHandler = async ({ params, setHeaders }) => {
+export const GET: RequestHandler = async ({ params, setHeaders, url }) => {
 	const slug = params.slug;
 
 	// --- 1) Look up the story ---
@@ -47,7 +57,7 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
 	// --- 2) Download story image, convert to base64 ---
 	const imageUrl = story.image_url || story.imageUrl || '';
 	let imageBase64: string | null = null;
-	if (imageUrl) {
+	if (imageUrl && url.searchParams.get('noimg') !== '1') {
 		imageBase64 = await imageToBase64DataUri(imageUrl);
 	}
 

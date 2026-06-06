@@ -263,8 +263,10 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 				if (!urls) throw new Error('cannot derive carousel urls from og_url');
 				mediaId = await igPostCarousel(urls, fullCaption);
 			} else {
-				// Einzelbild — OG-Karte (1.91:1).
-				const imageUrl = p.og_url || p.card_url;
+				// Einzelbild — 4:5 Hook-Folie (NICHT das quere 1.91:1-OG, das sieht
+				// im IG-Feed klein/falsch aus). Wir nutzen Carousel-Folie 1 (1080×1350).
+				const urls = carouselUrlsFor(p);
+				const imageUrl = urls?.[0] || p.card_url || p.og_url;
 				if (!imageUrl) throw new Error('no image url');
 				mediaId = await igPost(imageUrl, fullCaption);
 			}

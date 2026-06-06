@@ -1,5 +1,15 @@
 # META_SETUP.md — Instagram-Auto-Posting scharfschalten
 
+## ✅ ERLEDIGT 2026-06-07 — LIVE
+- App-ID: `1956896111625575` · IG_USER_ID: `17841427734990268` · FB-Seite NurEine: `1148485798353511`
+- IG_ACCESS_TOKEN = Page-Token (läuft NIE ab, `expires_at=0`) → in Vercel gesetzt
+- Erster Post live (media_id 18076363085668152). Approval-Gate aktiv.
+- **Token neu holen (falls mal nötig):** OAuth-URL OHNE `extras`/Wizard im NORMALEN Browser
+  (MCP-Tab bricht ab). Details unten + im Memory `nureine-social-growth-2026-06.md`.
+
+---
+
+
 Ziel: NurEine postet täglich automatisch auf Instagram (hinter Approval-Gate).
 Dafür braucht der Code zwei Werte: `IG_USER_ID` + `IG_ACCESS_TOKEN`.
 Die holen wir am Ende. Davor müssen Accounts stehen.

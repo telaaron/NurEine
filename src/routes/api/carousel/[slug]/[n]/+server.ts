@@ -22,7 +22,22 @@ async function imageToBase64(url: string): Promise<string | null> {
 	}
 }
 
-export const GET: RequestHandler = async ({ params, setHeaders }) => {
+/**
+ * Held-Zahl aus Text ziehen (für die Riesen-Zahl-Variante).
+ * Bevorzugt Prozent/Mio/Mrd, sonst die erste markante Zahl. Null wenn keine.
+ */
+function extractHeroNumber(text: string): string | null {
+	// −60%, 60 %, 11 Mio, 3,7 Mrd, 603, 1.800
+	const pct = text.match(/[−-]?\d[\d.,]*\s?%/);
+	if (pct) return pct[0].replace(/\s/g, '');
+	const big = text.match(/\d[\d.,]*\s?(Mrd|Mio|Millionen|Milliarden|Tsd)\b/i);
+	if (big) return big[0];
+	const num = text.match(/\d[\d.,]{2,}/); // mind. 3 Stellen (vermeidet Jahre? nein, ok)
+	if (num) return num[0];
+	return null;
+}
+
+export const GET: RequestHandler = async ({ params, setHeaders, url }) => {
 	const story = await getStoryBySlug(params.slug);
 	if (!story) return new Response('Story not found', { status: 404 });
 
@@ -34,9 +49,15 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
 	const aufloesung = slides?.aufloesung || story.dek || story.title;
 	const stille = slides?.stille || 'Manchmal tut so eine Nachricht einfach gut.';
 
-	// Slide 3 needs the image; slides 1+2 don't → skip the fetch for speed.
+	// Folie-1-Stopper-Stil: ?style=image|number|minimal (Default image, A/B-testbar).
+	const hookStyle = (url.searchParams.get('style') as 'image' | 'number' | 'minimal' | null) || undefined;
+	// Held-Zahl für number-Variante: ?n= überschreibt, sonst aus Titel/dek extrahiert.
+	const heroNumber = url.searchParams.get('hero') || extractHeroNumber(`${hook} ${story.dek}`);
+
+	// Folie 1 (image-Stil) + Folie 3 brauchen das Bild. Folie 2 nicht.
 	const imageUrl = story.image_url || story.imageUrl || '';
-	const imageBase64 = n === 3 && imageUrl ? await imageToBase64(imageUrl) : null;
+	const needsImage = n === 3 || (n === 1 && hookStyle !== 'number' && hookStyle !== 'minimal');
+	const imageBase64 = needsImage && imageUrl ? await imageToBase64(imageUrl) : null;
 
 	const [fonts, logoDataUri] = await Promise.all([loadFonts(), loadLogoDataUri()]);
 
@@ -47,7 +68,9 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
 		category: story.category || 'gemeinschaft',
 		impactScore: story.impactScore ?? null,
 		imageBase64,
-		logoDataUri
+		logoDataUri,
+		heroNumber,
+		hookStyle
 	};
 
 	const satori = (await import('satori')).default;

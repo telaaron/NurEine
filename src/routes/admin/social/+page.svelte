@@ -8,6 +8,14 @@
 	let busy = $state<number | null>(null);
 	let genMsg = $state('');
 
+	// IG-Feed-Vorschau = Carousel-Folie 1 (4:5), mit A/B-Stil. Aus og_url abgeleitet.
+	function slideUrl(p: any, n: number): string {
+		const m = (p.og_url || '').match(/^(.*)\/api\/og\/(.+)$/);
+		if (!m) return p.card_url || '';
+		const style = p.hook_style === 'number' ? 'number' : 'image';
+		return n === 1 ? `${m[1]}/api/carousel/${m[2]}/1?style=${style}` : `${m[1]}/api/carousel/${m[2]}/${n}`;
+	}
+
 	async function api(body: Record<string, unknown>) {
 		const res = await fetch(`${base}/api/admin/social`, {
 			method: 'POST',
@@ -66,8 +74,16 @@
 </div>
 
 <!-- A/B-Auswertung -->
-{#if analytics.byHook.length || analytics.byCategory.length}
-	<div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+{#if analytics.byHook.length || analytics.byCategory.length || analytics.byStyle?.length}
+	<div class="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+		<div class="paper rounded-[10px] p-4" style="border: 1px solid var(--color-rule);">
+			<p class="text-xs uppercase tracking-wider mb-2" style="color: var(--color-amber); font-family: var(--font-mono);">Ø Saves nach Folie-1-Stil</p>
+			{#each analytics.byStyle ?? [] as s}
+				<div class="flex justify-between text-sm py-0.5"><span style="color: var(--color-ink-soft);">{s.hook_style} <span style="color: var(--color-faint);">({s.posts})</span></span><span style="font-weight:600;">{s.avgSaves}</span></div>
+			{:else}
+				<div class="text-sm" style="color: var(--color-faint);">noch keine Daten</div>
+			{/each}
+		</div>
 		<div class="paper rounded-[10px] p-4" style="border: 1px solid var(--color-rule);">
 			<p class="text-xs uppercase tracking-wider mb-2" style="color: var(--color-amber); font-family: var(--font-mono);">Ø Saves nach Hook</p>
 			{#each analytics.byHook as h}
@@ -87,11 +103,10 @@
 	{#each items as p (p.id)}
 		<div class="paper rounded-[10px] p-5" style="border: 1px solid var(--color-rule); box-shadow: var(--shadow-sm);">
 			<div class="flex gap-5 flex-col sm:flex-row">
-				<!-- Karten-Vorschau (9:16) -->
+				<!-- IG-Vorschau: Folie 1 (4:5, der Daumen-Stopper) -->
 				<div class="shrink-0">
-					{#if p.card_url}
-						<img src={p.card_url} alt="Karte" width="135" height="240" loading="lazy" style="width:135px;height:240px;object-fit:cover;border-radius:8px;border:1px solid var(--color-rule);" />
-					{/if}
+					<img src={slideUrl(p, 1)} alt="Folie 1" width="180" height="225" loading="lazy" style="width:180px;height:225px;object-fit:cover;border-radius:8px;border:1px solid var(--color-rule);" />
+					<div class="mt-1 text-center text-xs" style="color: var(--color-faint); font-family: var(--font-mono);">4:5 · {p.hook_style}</div>
 				</div>
 
 				<div class="min-w-0 flex-1">
@@ -122,8 +137,10 @@
 						{#if p.status === 'approved'}
 							<button type="button" disabled={busy === p.id} onclick={() => setStatus(p.id, 'draft')} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: transparent; color: var(--color-muted); border: 1px solid var(--color-rule-strong);">Zurück zu Entwurf</button>
 						{/if}
-						{#if p.card_url}<a href={p.card_url} target="_blank" rel="noreferrer" class="text-xs underline" style="color: var(--color-muted);">Karte ↗</a>{/if}
-						{#if p.og_url}<a href={p.og_url} target="_blank" rel="noreferrer" class="text-xs underline" style="color: var(--color-muted);">OG ↗</a>{/if}
+						<a href={slideUrl(p, 1)} target="_blank" rel="noreferrer" class="text-xs underline" style="color: var(--color-muted);">Folie 1 ↗</a>
+						<a href={slideUrl(p, 2)} target="_blank" rel="noreferrer" class="text-xs underline" style="color: var(--color-muted);">2 ↗</a>
+						<a href={slideUrl(p, 3)} target="_blank" rel="noreferrer" class="text-xs underline" style="color: var(--color-muted);">3 ↗</a>
+						{#if p.card_url}<a href={p.card_url} target="_blank" rel="noreferrer" class="text-xs underline" style="color: var(--color-faint);">WA-Karte ↗</a>{/if}
 					</div>
 
 					{#if p.status === 'posted'}

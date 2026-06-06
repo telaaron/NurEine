@@ -38,7 +38,13 @@ export interface CarouselInput {
 	impactScore?: number | null;
 	imageBase64: string | null;
 	logoDataUri?: string | null;
+	// Feed-Stopper-Optionen (Folie 1)
+	heroNumber?: string | null; // z.B. "−60%", "603", "11 Mio" — für number-Variante
+	hookStyle?: 'image' | 'number' | 'minimal'; // Default 'image' (vollflächiges Bild + Overlay)
 }
+
+// Dunkles Overlay für Bild-Hook (Text bleibt lesbar, Kontrast knallt im Feed).
+const INK_OVERLAY = 'rgba(18,16,11,0.55)';
 
 function esc(s: string): string {
 	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -52,10 +58,15 @@ function hookSize(text: string): number {
 	return 52;
 }
 
-function logoMark(logoDataUri?: string | null): string {
-	return logoDataUri
-		? `<img src="${logoDataUri}" width="44" height="44" style="width:44px;height:44px;" />`
-		: '';
+function logoMark(logoDataUri?: string | null, onDark = false): string {
+	if (!logoDataUri) return '';
+	// Auf dunklen/farbigen Folien: weißer Kreis hinter dem Logo → immer sichtbar.
+	if (onDark) {
+		return `<div style="display:flex;align-items:center;justify-content:center;width:60px;height:60px;border-radius:60px;background:#fff;">
+      <img src="${logoDataUri}" width="40" height="40" style="width:40px;height:40px;" />
+    </div>`;
+	}
+	return `<img src="${logoDataUri}" width="44" height="44" style="width:44px;height:44px;" />`;
 }
 
 function brandRow(logoDataUri?: string | null, right = 'Ehrlicher Fortschritt'): string {
@@ -103,14 +114,62 @@ export function buildCarouselSlide(input: CarouselInput, n: number): string {
     </div>
   </div>
   <div style="display:flex;align-items:center;padding:0 64px 56px;">
-    ${logoMark(input.logoDataUri)}
+    ${logoMark(input.logoDataUri, true)}
     <div style="font-family:'Inter';font-size:30px;font-weight:600;color:${AMBER};margin-left:12px;">nureine.de</div>
     <div style="display:flex;flex:1;"></div>
     <div style="font-family:'Inter';font-size:26px;font-weight:600;color:${FAINT};">3 / 3</div>
   </div>`;
 	} else {
-		// HOOK — große Emotion, warmer Grund, ein dezenter Akzentkreis. Minimal.
+		// ── FOLIE 1: der DAUMEN-STOPPER ──────────────────────────────────────
+		const style = input.hookStyle || (input.imageBase64 ? 'image' : 'number');
 		const hSize = hookSize(input.hook);
+
+		if (style === 'number' && input.heroNumber) {
+			// VARIANTE B — Riesen-Zahl-Held auf gesättigter Markenfarbe.
+			// Zahl stoppt + löst Staunen aus. Kontext klein drunter. Hoher Kontrast.
+			const num = esc(input.heroNumber);
+			const numSize = num.length <= 4 ? 360 : num.length <= 7 ? 260 : 190;
+			return `<!DOCTYPE html><html><body style="margin:0;width:${W}px;height:${H}px;display:flex;flex-direction:column;position:relative;overflow:hidden;background:linear-gradient(155deg,${accent} 0%,#16140f 230%);font-family:'Inter';">
+  <div style="display:flex;align-items:center;padding:48px 60px 0;">
+    ${logoMark(input.logoDataUri, true)}
+    <div style="font-family:'Space Grotesk';font-size:36px;font-weight:700;color:#fff;margin-left:14px;letter-spacing:-0.02em;">NurEine</div>
+  </div>
+  <div style="display:flex;flex-direction:column;flex:1;justify-content:center;padding:0 60px;">
+    <div style="display:flex;font-family:'Space Grotesk';font-size:${numSize}px;font-weight:700;color:#fff;line-height:0.9;letter-spacing:-0.04em;">${num}</div>
+    <div style="display:flex;font-family:'Newsreader';font-size:48px;font-weight:400;color:rgba(255,255,255,0.92);line-height:1.25;margin-top:36px;max-width:880px;">${esc(input.hook)}</div>
+  </div>
+  <div style="display:flex;align-items:center;padding:0 60px 56px;">
+    <div style="font-family:'Inter';font-size:26px;font-weight:600;color:rgba(255,255,255,0.85);">Wisch weiter →</div>
+    <div style="display:flex;flex:1;"></div>
+    <div style="font-family:'Inter';font-size:26px;font-weight:600;color:rgba(255,255,255,0.5);">1 / 3</div>
+  </div>
+</body></html>`;
+		}
+
+		if (style === 'image' && input.imageBase64) {
+			// VARIANTE A — vollflächiges Bild + dunkler Gradient + heller Hook drauf.
+			// Bild stoppt den Daumen, dunkles Overlay sichert Lesbarkeit, Amber-Akzent = Marke.
+			return `<!DOCTYPE html><html><body style="margin:0;width:${W}px;height:${H}px;display:flex;position:relative;overflow:hidden;font-family:'Inter';">
+  <img src="${input.imageBase64}" width="${W}" height="${H}" style="position:absolute;top:0;left:0;width:${W}px;height:${H}px;object-fit:cover;" />
+  <div style="position:absolute;top:0;left:0;display:flex;width:${W}px;height:${H}px;background:linear-gradient(180deg,rgba(18,16,11,0.45) 0%,rgba(18,16,11,0.0) 32%,rgba(18,16,11,0.35) 60%,${INK_OVERLAY} 100%);"></div>
+  <div style="position:absolute;top:0;left:0;display:flex;flex-direction:column;width:${W}px;height:${H}px;">
+    <div style="display:flex;align-items:center;padding:48px 60px 0;">
+      ${logoMark(input.logoDataUri, true)}
+      <div style="font-family:'Space Grotesk';font-size:36px;font-weight:700;color:#fff;margin-left:14px;letter-spacing:-0.02em;">NurEine</div>
+    </div>
+    <div style="display:flex;flex:1;"></div>
+    <div style="display:flex;width:84px;height:6px;background:${accent};margin:0 0 28px 60px;"></div>
+    <div style="display:flex;font-family:'Space Grotesk';font-size:${hSize}px;font-weight:700;color:#fff;line-height:1.05;letter-spacing:-0.03em;padding:0 60px;text-shadow:0 2px 24px rgba(0,0,0,0.4);">${esc(input.hook)}</div>
+    <div style="display:flex;align-items:center;padding:36px 60px 56px;">
+      <div style="font-family:'Inter';font-size:26px;font-weight:600;color:rgba(255,255,255,0.85);">Wisch weiter →</div>
+      <div style="display:flex;flex:1;"></div>
+      <div style="font-family:'Inter';font-size:26px;font-weight:600;color:rgba(255,255,255,0.6);">1 / 3</div>
+    </div>
+  </div>
+</body></html>`;
+		}
+
+		// FALLBACK — minimal (warm, kein Bild verfügbar).
 		inner = `<div style="position:absolute;display:flex;top:-120px;right:-120px;width:520px;height:520px;border-radius:520px;background:linear-gradient(160deg,${AMBER} 0%,${AMBER_DEEP} 100%);opacity:0.16;"></div>
   ${brandRow(input.logoDataUri)}
   <div style="display:flex;flex-direction:column;flex:1;justify-content:center;padding:0 64px;">

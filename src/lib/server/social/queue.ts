@@ -26,6 +26,7 @@ export interface SocialPostRow {
 	card_url: string | null;
 	og_url: string | null;
 	hook_type: string;
+	hook_style: string; // 'image' | 'number' — A/B-Folie-1-Stil
 	category: string | null;
 	is_carousel: boolean;
 	status: 'draft' | 'approved' | 'posted' | 'skipped' | 'failed';
@@ -62,6 +63,17 @@ export async function generateTodayDraft(): Promise<{
 	const story = await selectInstagramStory();
 	if (!story) return { created: false, reason: 'no instagram-worthy story today (kein Post)' };
 
+	// A/B-Folie-1-Stil alternierend (image/number) — Save-Tracking pro Stil.
+	// number nur wenn der Hook/Dek eine Held-Zahl hat, sonst immer image.
+	const { count: postCount } = await supabaseAdmin
+		.from('nureine_social_posts')
+		.select('*', { count: 'exact', head: true })
+		.eq('platform', 'instagram');
+	const hasNumber = /\d[\d.,]*\s?(%|Mio|Mrd|Millionen|Milliarden)|\d[\d.,]{2,}/.test(
+		`${story.igHook || ''} ${story.dek || ''}`
+	);
+	const hookStyle = hasNumber && (postCount ?? 0) % 2 === 1 ? 'number' : 'image';
+
 	const hookType = pickHookType(story);
 	// Caption baut auf dem Bild auf statt es zu wiederholen: KI-Hook (igHook) führt,
 	// dann erst Titel + Quelle. Fallback auf regelbasierte Caption ohne KI-Hook.
@@ -78,6 +90,7 @@ export async function generateTodayDraft(): Promise<{
 		card_url: `${BASE_URL}/api/share-card/${story.slug}`,
 		og_url: `${BASE_URL}/api/og/${story.slug}`,
 		hook_type: hookType,
+		hook_style: hookStyle,
 		category: story.category,
 		// Carousel nur wenn die Pipeline 3 Folien geliefert hat, sonst Einzelbild.
 		is_carousel: !!story.slides,
@@ -128,17 +141,19 @@ export async function updateSocialPost(
 export async function socialAnalytics(): Promise<{
 	byHook: { hook_type: string; posts: number; avgSaves: number }[];
 	byCategory: { category: string; posts: number; avgSaves: number }[];
+	byStyle: { hook_style: string; posts: number; avgSaves: number }[];
 }> {
 	const { data } = await supabaseAdmin
 		.from('nureine_social_posts')
-		.select('hook_type,category,saves')
+		.select('hook_type,hook_style,category,saves')
 		.eq('status', 'posted');
-	const rows = (data as { hook_type: string; category: string | null; saves: number | null }[]) ?? [];
+	const rows =
+		(data as { hook_type: string; hook_style: string; category: string | null; saves: number | null }[]) ?? [];
 
-	const agg = (key: 'hook_type' | 'category') => {
+	const agg = (key: 'hook_type' | 'category' | 'hook_style') => {
 		const m = new Map<string, { sum: number; n: number }>();
 		for (const r of rows) {
-			const k = (r[key] as string) || 'unbekannt';
+			const k = ((r as Record<string, unknown>)[key] as string) || 'unbekannt';
 			const cur = m.get(k) ?? { sum: 0, n: 0 };
 			cur.sum += r.saves ?? 0;
 			cur.n += 1;
@@ -153,7 +168,8 @@ export async function socialAnalytics(): Promise<{
 
 	return {
 		byHook: agg('hook_type') as { hook_type: string; posts: number; avgSaves: number }[],
-		byCategory: agg('category') as { category: string; posts: number; avgSaves: number }[]
+		byCategory: agg('category') as { category: string; posts: number; avgSaves: number }[],
+		byStyle: agg('hook_style') as { hook_style: string; posts: number; avgSaves: number }[]
 	};
 }
 
@@ -218,13 +234,17 @@ async function igPostCarousel(imageUrls: string[], caption: string): Promise<str
 	return igPublish(parent);
 }
 
-/** Build the 3 carousel slide URLs from a post's og_url (same slug + base). */
+/** Build the 3 carousel slide URLs from a post's og_url (same slug + base).
+ *  Folie 1 trägt den A/B-Stil (?style=image|number) für den Feed-Stopper. */
 function carouselUrlsFor(p: SocialPostRow): string[] | null {
 	// og_url looks like {BASE}/api/og/{slug}; derive {BASE}/api/carousel/{slug}/{1..3}.
 	const m = p.og_url?.match(/^(.*)\/api\/og\/(.+)$/);
 	if (!m) return null;
 	const [, base, slug] = m;
-	return [1, 2, 3].map((n) => `${base}/api/carousel/${slug}/${n}`);
+	const style = p.hook_style === 'number' ? 'number' : 'image';
+	return [1, 2, 3].map((n) =>
+		n === 1 ? `${base}/api/carousel/${slug}/1?style=${style}` : `${base}/api/carousel/${slug}/${n}`
+	);
 }
 
 /**

@@ -650,11 +650,11 @@ wa_opener: Nur wenn wa_ok=true. Ein PERSÖNLICHER WhatsApp-Einstieg in DEINER St
 
 slides: Nur wenn ig_ok=true. Ein Objekt mit DREI kurzen Carousel-Texten, die AUFEINANDER AUFBAUEN
   (nicht wiederholen):
-  {
+  {{
     "hook": "Folie 1 — der Hook (= ig_hook oder enger Variant). Ein Gedanke, max 70 Zeichen.",
     "aufloesung": "Folie 2 — die Auflösung. Was ist passiert + warum es zählt. 2-3 kurze Sätze, max 280 Zeichen. Erklär einfach, aber verkauf niemanden für dumm.",
     "stille": "Folie 3 — ein letzter, ruhiger Satz zum Nachhall. Max 90 Zeichen. Kein CTA."
-  }
+  }}
   Sonst null.
 
 Antworte ausschließlich mit validem JSON. Kein Text davor oder danach."""

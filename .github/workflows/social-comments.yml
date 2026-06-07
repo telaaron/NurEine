@@ -1,0 +1,24 @@
+name: Social — Reply to Comments (KI)
+
+# Beantwortet neue IG-Kommentare im NurEine-Ton. Tagsüber alle paar Stunden.
+# DeepSeek klassifiziert + guardet (nur positive/Fragen, kein Troll-Bait).
+on:
+  schedule:
+    - cron: '30 7 * * *'   # 09:30 CEST
+    - cron: '30 11 * * *'  # 13:30 CEST
+    - cron: '30 15 * * *'  # 17:30 CEST
+    - cron: '30 19 * * *'  # 21:30 CEST
+  workflow_dispatch:
+
+jobs:
+  comments:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger comment replies
+        run: |
+          curl -fsS -X POST "${BASE_URL}/api/cron/social-comments" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -w "\nHTTP %{http_code}\n"
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

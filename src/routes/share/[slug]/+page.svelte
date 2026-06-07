@@ -3,7 +3,7 @@
 	import { track } from '$lib/track';
 
 	let { data } = $props();
-	const cardUrl = $derived(`${base}/api/share-card/${data.slug}`);
+	const cardUrl = $derived(`${base}/api/wa-card/${data.slug}`);
 
 	let copied = $state(false);
 	function copyCaption() {

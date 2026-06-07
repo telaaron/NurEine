@@ -3,8 +3,10 @@
 	import { track } from '$lib/track';
 	let { data } = $props();
 
-	const cardUrl = $derived(`${base}/api/share-card/${data.slug}`);
+	const waUrl = $derived(`${base}/api/wa-card/${data.slug}`); // WhatsApp, unbranded 9:16
+	const storyUrl = $derived(`${base}/api/share-card/${data.slug}`); // IG-Story, branded 9:16
 	const ogUrl = $derived(`${base}/api/og/${data.slug}`);
+	const cardUrl = waUrl; // alias für bestehende Referenzen
 
 	// Share-Tracking: welcher Kanal/Format wird wirklich genutzt? Wertvollste Frühdaten.
 	function shared(format: 'whatsapp' | 'instagram' | 'og' | 'text', via: string) {

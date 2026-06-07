@@ -40,6 +40,7 @@ export type SupabaseStory = {
   ig_hook: string | null;
   wa_opener: string | null;
   slides: { hook: string; aufloesung: string; stille: string } | null;
+  ig_caption: string | null;
 };
 
 export type StoryResult = {
@@ -79,6 +80,7 @@ export type StoryResult = {
   igHook: string | null;
   waOpener: string | null;
   slides: { hook: string; aufloesung: string; stille: string } | null;
+  igCaption: string | null;
 };
 
 // ---- Helpers ----
@@ -141,7 +143,8 @@ function mapStory(row: SupabaseStory): StoryResult {
     waOk: row.wa_ok ?? false,
     igHook: row.ig_hook ?? null,
     waOpener: row.wa_opener ?? null,
-    slides: row.slides ?? null
+    slides: row.slides ?? null,
+    igCaption: row.ig_caption ?? null
   };
 }
 

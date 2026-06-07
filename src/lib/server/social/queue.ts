@@ -84,11 +84,13 @@ export async function generateTodayDraft(): Promise<{
 	const hookStyle = hasNumber && (postCount ?? 0) % 2 === 1 ? 'number' : 'image';
 
 	const hookType = pickHookType(story);
-	// Caption baut auf dem Bild auf statt es zu wiederholen: KI-Hook (igHook) führt,
-	// dann erst Titel + Quelle. Fallback auf regelbasierte Caption ohne KI-Hook.
-	const caption = story.igHook
-		? buildCaptionFromHook(story)
-		: buildCaption(story, { hookType, withCta: false });
+	// Caption-Priorität: (1) KI-igCaption (eigener Blickwinkel, wiederholt Folien NICHT),
+	// (2) buildCaptionFromHook (aus Substanz), (3) regelbasiert.
+	const caption = story.igCaption
+		? story.igCaption
+		: story.igHook
+			? buildCaptionFromHook(story)
+			: buildCaption(story, { hookType, withCta: false });
 	const hashtags = hashtagsFor(story.category, postCount ?? 0);
 
 	const { error } = await supabaseAdmin.from('nureine_social_posts').insert({

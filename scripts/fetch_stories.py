@@ -669,6 +669,16 @@ slides: Nur wenn ig_ok=true. Ein Objekt mit DREI kurzen Carousel-Texten, die AUF
   }}
   Sonst null.
 
+ig_caption: Nur wenn ig_ok=true. Der INSTAGRAM-CAPTION-TEXT unter dem Post. WICHTIG: dieser Text
+  darf NICHT den Hook oder die Folien-Texte (hook/aufloesung/stille) wiederholen — die sieht man
+  schon auf den Bildern. Die Caption liefert einen NEUEN Blickwinkel: eine zusätzliche Zahl, ein
+  überraschendes Detail, eine Einordnung oder einen Gedanken, der NEUGIER weckt oder die Geschichte
+  vertieft. 2-4 Sätze, warm + konkret, kein Marketing-Sprech, max ein dezenter "→ nureine.de" am Ende.
+  Beispiel (wenn das Bild "603 Dämme entfernt" zeigt): "Frei fließende Flüsse bringen Lachse zurück,
+  die seit Jahrzehnten verschwunden waren. Und das Beste: Viele Dämme wurden einfach abgerissen, weil
+  sie ohnehin niemand mehr brauchte. → nureine.de"
+  Sonst null.
+
 Antworte ausschließlich mit validem JSON. Kein Text davor oder danach."""
 
 
@@ -1360,6 +1370,7 @@ def run() -> None:
                 _safe_text(result.get("wa_opener"), 120) if story_record["wa_ok"] else None
             )
             story_record["slides"] = _safe_slides(result.get("slides")) if _ig_ok else None
+            story_record["ig_caption"] = _safe_text(result.get("ig_caption"), 600) if _ig_ok else None
 
             # Parse published date
             raw_published = story_record["published_at"]

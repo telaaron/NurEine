@@ -171,3 +171,61 @@ Ausgabe:
 
 Share-Tracking: story_shared {format: whatsapp|instagram|og, via: copy|download}
 auf /heute + /share. In 30 Tagen: welcher Kanal konvertiert wirklich.
+
+---
+
+## 10. Marketing-Autopilot (2026-06-07)
+
+Ziel: alles läuft selbst. Mensch greift nur bei Strategie ein.
+
+### Content-Strom (Ursache des Drought gefixt)
+- RSS-Quellen 8 → **21** (Spektrum, Perspective Daily, Tagesschau, Reasons to be
+  Cheerful, Optimist Daily, Yale E360, Grist, Anthropocene, MIT Tech, Phys.org,
+  ScienceDaily, Our World in Data, Futura).
+- Pre-Filter entschärft: nur krasse Negatives im TITEL, Rest → KI (vorher killte
+  `\bdies?\b` 56/Run, `tot\b` matchte "total", desc mitgeprüft).
+- **Großzügige Archiv-Aufnahme:** is_nureine = jede valide positive News (auch mittel).
+  Wirkungsindex sortiert später was gepostet/versendet wird.
+
+### Gestufte Schwellen
+| Kanal | Schwelle |
+|---|---|
+| Archiv | jede valide positive News (großzügig) |
+| Newsletter | Tier 1/2 (≤48h) sonst Tier-3 ≤7d + impact≥60 (kein verstaubter Newsletter mehr) |
+| IG-Feed-Post | ig_ok + impact≥70, max 1/Tag |
+| IG-Story | impact≥60, ≤36h, max 4/Tag verteilt |
+
+### Crons (alle GitHub Actions)
+| Cron | Zeit (UTC) | Was |
+|---|---|---|
+| fetch-stories | 06/10/14/18 | News holen + scoren (21 Quellen) |
+| social-generate | 06:15 | Feed-Post-Draft (nur ig_ok) |
+| social-publish | 05:30 | Feed-Post posten (Guard: 1/Tag) |
+| social-story | 06/10/14/17 | IG-Story posten (Guard: 4/Tag) |
+| social-comments | 07:30/11:30/15:30/19:30 | KI-Kommentar-Antworten |
+| social-insights | 22:00 | saves/reach automatisch ziehen |
+| highlight-email | 06:30 | WhatsApp-Highlight-Mail (≥85) |
+
+### Autopilot-Schalter
+`SOCIAL_AUTOPILOT=true` (Vercel) → publish postet draft+approved autonom (nur ig_ok,
+1/Tag-Guard). Default aus = Approval-Gate. **Noch nicht aktiviert** (erst Output prüfen).
+
+### A/B (nur tracken, du entscheidest)
+- Folie-1-Stil image vs. number (hook_style col) alternierend
+- IG-Insights-Cron zieht saves/reach automatisch → byStyle/byHook/byCategory im Admin
+- Hashtags: 8/Kategorie-Pool, rotierend ~10/Post (seed = Post-Zähler)
+
+### KI-Kommentar-Antworten
+DeepSeek klassifiziert: nur positive/Fragen → kurze menschliche Antwort. Troll/Spam/
+Politik → still skip. Dedup via nureine_social_replies, max 8/Run.
+**Braucht instagram_manage_comments-Scope** (Token hat ihn noch nicht — Code wartet).
+
+### Kategorien
+/archiv/[kategorie] SEO-Seiten (klima/gesundheit/…) + Footer + Sitemap.
+IG-Highlight-Cover pro Kategorie: manuell in IG-App (Cover-Bild generierbar).
+
+### Bonus-Ideen (Backlog, noch nicht gebaut)
+- **Best-time-to-post:** misst Reach-Peak, verschiebt Postzeit dahin
+- **Reel-Format:** Karten als 5-Sek-Slideshow-Reel (3× Reach vs. Feed)
+- **Wachstums-Dashboard:** Follower-Trend, Save-Rate, Top-Posts, A/B-Sieger im Admin
+- **Cross-Post:** IG-Feed + Story + (später) Threads/TikTok aus einem Generator

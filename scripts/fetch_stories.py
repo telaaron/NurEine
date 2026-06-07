@@ -110,8 +110,23 @@ SOURCE_CONFIG: dict[str, dict[str, int]] = {
     # Priority 4 — Broken or empty feeds, sampled rarely
     "Nature News":          {"max_per_run": 3,  "priority": 4},
     "WHO News":             {"max_per_run": 3,  "priority": 4},
+    # ── 2026-06-07: neue Quellen. Positive-News-Feeds höher, Science moderat.
+    # Limits bewusst eng, damit 21 Quellen zusammen nicht die Laufzeit sprengen.
+    "Reasons to be Cheerful": {"max_per_run": 10, "priority": 1},
+    "The Optimist Daily":     {"max_per_run": 8,  "priority": 1},
+    "Anthropocene Magazine":  {"max_per_run": 6,  "priority": 2},
+    "Yale Environment 360":   {"max_per_run": 6,  "priority": 2},
+    "Grist":                  {"max_per_run": 6,  "priority": 2},
+    "Spektrum Wissenschaft":  {"max_per_run": 6,  "priority": 2},
+    "Perspective Daily":      {"max_per_run": 5,  "priority": 2},
+    "Our World in Data":      {"max_per_run": 4,  "priority": 2},
+    "ScienceDaily":           {"max_per_run": 5,  "priority": 3},
+    "Phys.org":               {"max_per_run": 5,  "priority": 3},
+    "MIT Technology Review":  {"max_per_run": 5,  "priority": 3},
+    "Futura Sciences":        {"max_per_run": 5,  "priority": 3},
+    "Tagesschau Wissen":      {"max_per_run": 5,  "priority": 3},
 }
-DEFAULT_SOURCE_CONFIG = {"max_per_run": 10, "priority": 3}
+DEFAULT_SOURCE_CONFIG = {"max_per_run": 6, "priority": 3}
 
 # ---------------------------------------------------------------------------
 # Category safety — the DB CHECK constraint only permits these seven values.

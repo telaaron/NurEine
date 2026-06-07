@@ -8,6 +8,7 @@ on:
 jobs:
   fetch:
     runs-on: ubuntu-latest
+    timeout-minutes: 25  # Safety net: 21 Quellen × Bild-gen kann sonst entgleisen
     steps:
       - uses: actions/checkout@v4
 

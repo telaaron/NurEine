@@ -267,31 +267,34 @@ IMAGE_API_DELAY_SECONDS = 1.0
 # ---------------------------------------------------------------------------
 
 # German stop-words for low-signal headlines
+# ── Pre-Filter: NUR krasse, eindeutige Negatives. Bewusst schlank.
+# Frühere Version war zu aggressiv (tot\b matcht "total", \bdies?\b matcht "die",
+# desc wurde mitgeprüft) → 50+ legitime Stories pro Run starben vor der KI.
+# Jetzt: nur Wörter die FAST IMMER auf eine schlechte Nachricht zeigen, nur im
+# TITEL geprüft (nicht Description), saubere Wortgrenzen. Alles andere → DeepSeek
+# entscheidet (kostet ~0,001€/Call, aber wir wollen Content-Strom statt Hunger).
 _GERMAN_NEGATIVE_PATTERNS = [
-    r"tote?\b", r"tot\b", r"gestorben", r"tödlich", r"stirbt\b",
-    r"katastrophe", r"unglück", r"anschlag", r"attentat",
-    r"krieg", r"gefallen", r"opfer", r"tragödie", r"verletzt",
+    r"\bgetötet\b", r"\bgestorben\b", r"\btödlich(e[rn]?)?\b", r"\bermordet\b",
+    r"\bkatastrophe\b", r"\banschlag\b", r"\battentat\b", r"\bamoklauf\b",
+    r"\bmassaker\b", r"\bterror", r"\bgefallene[rn]?\b",
 ]
 
 # Headline patterns that indicate "local fluff" / sports / history
 _GERMAN_FLUFF_PATTERNS = [
-    r"vor \d+ jahren", r"jubiläum", r"jahrestag",
-    r"tor .+ sieg", r"\d+:\d+.*sieg", r"spieltag",
-    r"rettet .+welpen", r"rettet .+hund", r"rettet .+katze",
+    r"\bvor \d+ jahren\b", r"\bjahrestag\b",
+    r"\bspieltag\b", r"\bbundesliga\b",
 ]
 
-# English negative patterns for international sources
+# English negative patterns for international sources (TITLE only, strict).
 _ENGLISH_NEGATIVE_PATTERNS = [
-    r"\bkilled?\b", r"\bdead\b", r"\bdeath\b", r"\bdies?\b",
-    r"\battack\b", r"\bwar\b", r"\bbomb(ing)?\b", r"\bdisaster\b",
-    r"\btragedy\b", r"\bcasualt", r"\binjur", r"\bfatal",
+    r"\bkilled\b", r"\bmurder", r"\bmassacre\b", r"\bterror(ism|ist)?\b",
+    r"\bgenocide\b", r"\bbombing\b", r"\bshooting\b", r"\bfatalit",
 ]
 
 # English fluff/sports/history patterns
 _ENGLISH_FLUFF_PATTERNS = [
-    r"\byears? ago\b", r"\banniversary\b", r"\bretrospective\b",
-    r"\bwin(s)? .*\d+-\d+\b", r"\bgoal(s)? .*\b(match|game)\b",
-    r"\brescues? .*(dog|cat|puppy|kitten)\b",
+    r"\byears? ago\b", r"\banniversary\b",
+    r"\b(premier league|nfl|nba)\b",
 ]
 
 # Heuristic: titles that strongly suggest a Good News article
@@ -314,37 +317,23 @@ def _prefilter_entry(entry: feedparser.FeedParserDict, source_name: str) -> tupl
     STRONG negative signals. Everything borderline passes through to DeepSeek.
     """
     title = (entry.get("title", "") or "").lower()
-    desc = (entry.get("description", entry.get("summary", "")) or "").lower()
 
-    combined = f"{title} {desc[:500]}"
-
-    # 1. Check for strong positive signals first — these always pass
+    # NUR der Titel wird geprüft (Description triggerte zu viele false-positives).
+    # 1. Starke Positiv-Signale → immer durchlassen.
     for pattern in _STRONG_POSITIVE_SIGNALS:
-        if re.search(pattern, combined, re.IGNORECASE):
+        if re.search(pattern, title, re.IGNORECASE):
             return False, ""
 
-    # 2. Check for obviously broken feeds (Nature, WHO return malformed XML)
+    # 2. Kaputte Feed-Einträge (Nature/WHO liefern manchmal leere Titel).
     if not title or len(title) < 5:
         return True, "broken_entry"
 
-    # 3. German negative patterns
-    for pattern in _GERMAN_NEGATIVE_PATTERNS:
-        if re.search(pattern, combined, re.IGNORECASE):
+    # 3-6. Krasse Negatives/Fluff NUR im Titel. Alles Grenzwertige → DeepSeek.
+    for pattern in _GERMAN_NEGATIVE_PATTERNS + _ENGLISH_NEGATIVE_PATTERNS:
+        if re.search(pattern, title, re.IGNORECASE):
             return True, f"local_negative:{pattern}"
-
-    # 4. German fluff/history/sports patterns
-    for pattern in _GERMAN_FLUFF_PATTERNS:
-        if re.search(pattern, combined, re.IGNORECASE):
-            return True, f"local_fluff:{pattern}"
-
-    # 5. English negative patterns
-    for pattern in _ENGLISH_NEGATIVE_PATTERNS:
-        if re.search(pattern, combined, re.IGNORECASE):
-            return True, f"local_negative:{pattern}"
-
-    # 6. English fluff/history/sports patterns
-    for pattern in _ENGLISH_FLUFF_PATTERNS:
-        if re.search(pattern, combined, re.IGNORECASE):
+    for pattern in _GERMAN_FLUFF_PATTERNS + _ENGLISH_FLUFF_PATTERNS:
+        if re.search(pattern, title, re.IGNORECASE):
             return True, f"local_fluff:{pattern}"
 
     return False, ""
@@ -558,7 +547,15 @@ Quelle: {source}
 
 JSON-Felder:
 
-is_nureine: true/false — Erfüllt diese Story unsere Qualitätsstandards? Prüfe ALLE drei Todsünden + Gold-Standard-Kriterien.
+is_nureine: true/false — Kommt diese Story INS ARCHIV? Sei GROSSZÜGIG: true für JEDE
+glaubwürdige, belegte, GENUINELY POSITIVE Nachricht mit Substanz — auch wenn sie nur
+mittelgroß ist (regionaler Fortschritt, ein gelöstes Problem, eine gute Entwicklung).
+Der Wirkungsindex sortiert später, was aktiv gepostet/versendet wird — DU musst hier
+nur entscheiden, ob es überhaupt eine echte gute Nachricht ist.
+Lehne NUR ab (false), wenn EINE der drei Todsünden zutrifft (Historie/local-fluff/Sport)
+ODER die Nachricht nicht wirklich positiv ist (neutral, reine Ankündigung ohne Ergebnis,
+schlechte Nachricht, oder bloßes "Forscher untersuchen…" ohne konkreten Fortschritt).
+Im Zweifel: AUFNEHMEN. Lieber eine mittlere gute Nachricht im Archiv als ein leeres Archiv.
 
 gut_filter_reason: null (wenn is_nureine=true) ODER einer von ["history_trap", "local_fluff", "sports_niche"] (wenn is_nureine=false). Bei anderem Ablehnungsgrund (z.B. einfach keine positive Nachricht): "not_positive".
 

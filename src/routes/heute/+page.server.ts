@@ -14,12 +14,10 @@ export async function load() {
 		? buildCaptionFromHook(story)
 		: buildCaption(story, { hookType, withCta: true });
 
-	// WhatsApp: persönlich + aufbauend. Opener (KI-waOpener) → Story → ruhiger Schluss.
-	// Bewusst KEINE Wiederholung von Titel als Floskel. Friction-frei zum Kopieren.
-	const opener = story.waOpener || 'Das hat mich heute bewegt:';
-	const whatsappCaption =
-		`${opener}\n\n${story.title}\n\n${story.dek}\n\n` +
-		`Manchmal tut so eine Nachricht einfach gut. 👉 nureine.de`;
+	// WhatsApp-Status: KURZ. Niemand liest lange Texte im Status. Die Karte trägt
+	// die Story — der Begleittext ist nur ein persönlicher Funke + Link. Ein Satz.
+	const opener = story.waOpener || 'Das hat mich heute kurz innehalten lassen.';
+	const whatsappCaption = `${opener}\n👉 nureine.de`;
 
 	const hashtags = hashtagsFor(story.category, story.impactScore ?? 0);
 

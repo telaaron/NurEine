@@ -7,11 +7,9 @@ export async function load({ params }) {
 	const story = await getStoryBySlug(params.slug);
 	if (!story) throw error(404, 'Geschichte nicht gefunden');
 
-	// Human, "be the customer not the seller" caption — Aaron tweaks or ignores it.
-	const caption =
-		`Das hat mich heute bewegt:\n\n${story.title}\n\n` +
-		`${story.dek}\n\n` +
-		`Eine gute Nachricht am Tag — ehrlicher Fortschritt, belegt. 👉 nureine.de`;
+	// WhatsApp-Status: KURZ. Karte trägt die Story, Text ist nur ein Funke + Link.
+	const opener = story.waOpener || 'Das hat mich heute kurz innehalten lassen.';
+	const caption = `${opener}\n👉 nureine.de`;
 
 	return {
 		slug: params.slug,

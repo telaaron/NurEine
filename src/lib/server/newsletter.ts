@@ -1184,13 +1184,10 @@ export async function sendHighlightEmailIfWorthy(): Promise<{
   const slug = `${slugify(picked.title)}-${picked.id.slice(0, 8)}`;
   const shareUrl = `${BASE_URL}/share/${slug}`;
   const dek = picked.subtitle || '';
-  // Persönlicher, aufbauender Begleittext: KI-Opener (wa_opener) führt, dann Story,
-  // dann ein ruhiger Schluss — KEINE Wiederholung des Titels als Floskel.
-  const opener = picked.wa_opener || 'Das hat mich heute bewegt:';
-  const caption =
-    `${opener}\n\n${picked.title}\n\n` +
-    (dek ? `${dek}\n\n` : '') +
-    `Manchmal tut so eine Nachricht einfach gut. 👉 nureine.de`;
+  // WhatsApp-Status-Begleittext: KURZ. Karte trägt die Story, niemand liest lange
+  // Status-Texte. Ein persönlicher Funke + Link — mehr nicht.
+  const opener = picked.wa_opener || 'Das hat mich heute kurz innehalten lassen.';
+  const caption = `${opener}\n👉 nureine.de`;
 
   const subject = `🔥 Heute postenswert — ${picked.title}`;
   const html = renderHighlightHtml(story, shareUrl, caption);

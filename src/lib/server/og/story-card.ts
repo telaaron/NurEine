@@ -74,61 +74,46 @@ export function buildStoryCard(input: StoryCardInput): string {
 	const dekShort = dek && dek.length > 120 ? dek.slice(0, 119) + '…' : dek;
 	const emotionTag = (emotion && EMOTION_TAG[emotion]) || 'gefunden · geteilt';
 
+	// WhatsApp-Status verdeckt oben (~280px Header) + unten (~400px Caption/Buttons).
+	// Darum: ALLES Wichtige in die sichere Mitte (y≈300–1480). Oben/unten nur Farbe.
+	// Kein langer Text — im Status liest niemand. Bild + kurze Headline + ein Tag.
+	const IMG_H = 760;
 	const imageBlock = imageBase64
-		? `<img src="${imageBase64}" width="${W}" height="980" style="width:${W}px;height:980px;object-fit:cover;" />`
-		: `<div style="display:flex;width:${W}px;height:980px;align-items:center;justify-content:center;background:linear-gradient(150deg,#f0c9a0,#d98b52 60%,#b5673a);"><div style="font-family:'Space Grotesk';font-size:200px;font-weight:700;color:rgba(255,255,255,0.92);">N</div></div>`;
+		? `<img src="${imageBase64}" width="940" height="${IMG_H}" style="width:940px;height:${IMG_H}px;object-fit:cover;" />`
+		: `<div style="display:flex;width:940px;height:${IMG_H}px;align-items:center;justify-content:center;background:linear-gradient(150deg,#f0c9a0,#d98b52 60%,#b5673a);"><div style="font-family:'Space Grotesk';font-size:200px;font-weight:700;color:rgba(255,255,255,0.92);">N</div></div>`;
 
-	return `<!DOCTYPE html><html><body style="margin:0;width:${W}px;height:${H}px;background:${CANVAS};font-family:'Inter';display:flex;flex-direction:column;">
+	const waHSize = title.length <= 40 ? 64 : title.length <= 70 ? 54 : 46;
 
-  <!-- Brand header -->
-  <div style="display:flex;align-items:center;padding:54px 64px 30px;">
-    ${
-		logoDataUri
-			? `<img src="${logoDataUri}" width="48" height="48" style="width:48px;height:48px;" />`
-			: ''
-	}
-    <div style="font-family:'Space Grotesk';font-size:40px;font-weight:700;color:${INK};margin-left:16px;letter-spacing:-0.02em;">NurEine</div>
-    <div style="display:flex;flex:1;"></div>
-    <!-- Emotion-Tag (handschriftlich-warm), statt institutionellem Label -->
-    <div style="font-family:'Newsreader';font-style:italic;font-size:30px;font-weight:400;color:${AMBER_DEEP};">— ${esc(emotionTag)}</div>
-  </div>
+	return `<!DOCTYPE html><html><body style="margin:0;width:${W}px;height:${H}px;background:${CANVAS};font-family:'Inter';display:flex;flex-direction:column;align-items:center;justify-content:center;">
 
-  <!-- Story image (gerundet, freigestellt → wirkt wie eingeklebt, nicht wie Header) -->
-  <div style="display:flex;position:relative;width:${W}px;height:980px;padding:0 40px;">
-    <div style="display:flex;width:1000px;height:960px;border-radius:36px;overflow:hidden;box-shadow:0 22px 60px rgba(60,40,20,0.18);">
-      ${imageBlock.replace(`width:${W}px;height:980px`, 'width:1000px;height:960px')}
+  <!-- ALLES in der sicheren Mitte (WA-Header/Footer verdecken Rand) -->
+  <div style="display:flex;flex-direction:column;align-items:center;width:940px;">
+
+    <!-- Bild gerundet + Kategorie-Pill -->
+    <div style="display:flex;position:relative;width:940px;height:${IMG_H}px;">
+      <div style="display:flex;width:940px;height:${IMG_H}px;border-radius:36px;overflow:hidden;box-shadow:0 22px 60px rgba(60,40,20,0.18);">
+        ${imageBlock}
+      </div>
+      <div style="position:absolute;display:flex;top:28px;left:28px;background:rgba(251,248,241,0.94);border-radius:100px;padding:12px 26px;">
+        <div style="display:flex;width:12px;height:12px;border-radius:12px;background:${accent};margin-right:12px;margin-top:7px;"></div>
+        <div style="font-family:'Inter';font-size:24px;font-weight:600;letter-spacing:0.12em;color:${accent};">${catLabel}</div>
+      </div>
     </div>
-    <div style="position:absolute;display:flex;top:32px;left:80px;background:rgba(251,248,241,0.92);border-radius:100px;padding:12px 26px;">
-      <div style="display:flex;width:12px;height:12px;border-radius:12px;background:${accent};margin-right:12px;margin-top:7px;"></div>
-      <div style="font-family:'Inter';font-size:24px;font-weight:600;letter-spacing:0.12em;color:${accent};">${catLabel}</div>
-    </div>
-  </div>
 
-  <!-- Headline + meta -->
-  <div style="display:flex;flex-direction:column;flex:1;padding:48px 64px 0;">
-    <div style="display:flex;font-family:'Space Grotesk';font-size:${hSize}px;font-weight:700;color:${INK};line-height:1.04;letter-spacing:-0.03em;">
+    <!-- Headline (kurz, fett) -->
+    <div style="display:flex;font-family:'Space Grotesk';font-size:${waHSize}px;font-weight:700;color:${INK};line-height:1.05;letter-spacing:-0.03em;margin-top:44px;width:940px;">
       ${esc(title)}
     </div>
-    ${
-		dekShort
-			? `<div style="display:flex;font-family:'Newsreader';font-style:italic;font-size:34px;font-weight:400;color:${AMBER_DEEP};line-height:1.34;margin-top:28px;">${esc(dekShort)}</div>`
-			: ''
-	}
-  </div>
 
-  <!-- Footer bar -->
-  <div style="display:flex;align-items:center;padding:0 64px 64px;">
-    ${
-		impactScore
-			? `<div style="display:flex;align-items:center;">
-        <div style="display:flex;width:14px;height:14px;border-radius:14px;background:${accent};margin-right:14px;"></div>
-        <div style="font-family:'Inter';font-size:30px;font-weight:600;color:${INK};">belegt · Wirkung ${impactScore}</div>
-      </div>`
-			: ''
-	}
-    ${country ? `<div style="font-family:'Inter';font-size:30px;color:${MUTED};margin-left:24px;">· ${esc(country)}</div>` : ''}
-    <div style="display:flex;flex:1;"></div>
-    <div style="font-family:'Inter';font-size:30px;font-weight:600;color:${AMBER};">nureine.de</div>
+    <!-- Quelle/Logo-Zeile direkt unter Headline (kompakt, in der sicheren Zone) -->
+    <div style="display:flex;align-items:center;margin-top:36px;width:940px;">
+      ${logoDataUri ? `<img src="${logoDataUri}" width="42" height="42" style="width:42px;height:42px;" />` : ''}
+      <div style="font-family:'Space Grotesk';font-size:32px;font-weight:700;color:${INK};margin-left:14px;">NurEine</div>
+      ${impactScore ? `<div style="font-family:'Inter';font-size:28px;font-weight:600;color:${MUTED};margin-left:20px;">· belegt ${impactScore}/100</div>` : ''}
+      <div style="display:flex;flex:1;"></div>
+      <div style="font-family:'Inter';font-size:30px;font-weight:700;color:${AMBER};">nureine.de</div>
+    </div>
+
   </div>
 
 </body></html>`;

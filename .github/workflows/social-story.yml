@@ -1,0 +1,24 @@
+name: Social — IG Story (verteilt)
+
+# Postet IG-Stories über den Tag verteilt (max 4/Tag, Guard im Code).
+# Hält den Account aktiv ohne den kuratierten Feed zu fluten.
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 08:00 CEST
+    - cron: '0 10 * * *'  # 12:00 CEST
+    - cron: '0 14 * * *'  # 16:00 CEST
+    - cron: '0 17 * * *'  # 19:00 CEST
+  workflow_dispatch:
+
+jobs:
+  story:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger IG story
+        run: |
+          curl -fsS -X POST "${BASE_URL}/api/cron/social-story" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -w "\nHTTP %{http_code}\n"
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

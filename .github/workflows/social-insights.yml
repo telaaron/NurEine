@@ -1,0 +1,21 @@
+name: Social — Refresh Insights
+
+# Zieht täglich IG-Insights (saves/reach) für geposteten Content in die DB.
+# A/B-Auswertung ohne manuelles Eintragen.
+on:
+  schedule:
+    - cron: '0 22 * * *'  # 22:00 UTC (00:00 CEST) — nach dem Tagesgeschäft
+  workflow_dispatch:
+
+jobs:
+  insights:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger insights refresh
+        run: |
+          curl -fsS -X POST "${BASE_URL}/api/cron/social-insights" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -w "\nHTTP %{http_code}\n"
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

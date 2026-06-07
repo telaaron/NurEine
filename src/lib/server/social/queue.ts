@@ -41,6 +41,15 @@ export interface SocialPostRow {
 }
 
 /** Nächster 07:30 lokaler Zeit (Europe/Berlin ≈ UTC+2 im Sommer) als ISO. */
+function slugify(text: string): string {
+	return text
+		.toLowerCase()
+		.replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '')
+		.slice(0, 80);
+}
+
 function nextPostSlot(): string {
 	const now = new Date();
 	const slot = new Date(now);
@@ -260,6 +269,20 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 	const autopilot = env.SOCIAL_AUTOPILOT === 'true';
 	const statuses = autopilot ? ['approved', 'draft'] : ['approved'];
 
+	// GUARD: max 1 Feed-Post pro Tag (kein Spam, IG straft Bulk ab). Schon heute
+	// gepostet → Schluss. Schützt besonders im Autopilot-Modus.
+	const todayStart = new Date();
+	todayStart.setUTCHours(0, 0, 0, 0);
+	const { count: postedToday } = await supabaseAdmin
+		.from('nureine_social_posts')
+		.select('*', { count: 'exact', head: true })
+		.eq('platform', 'instagram')
+		.eq('status', 'posted')
+		.gte('posted_at', todayStart.toISOString());
+	if ((postedToday ?? 0) >= 1) {
+		return { posted: 0, failed: 0, skipped: 'daily feed-post limit reached (1/day)' };
+	}
+
 	const { data } = await supabaseAdmin
 		.from('nureine_social_posts')
 		.select('*')
@@ -267,7 +290,7 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 		.lte('scheduled_for', new Date().toISOString())
 		.eq('platform', 'instagram')
 		.order('scheduled_for', { ascending: true })
-		.limit(5);
+		.limit(1); // nur 1/Tag
 
 	const due = (data as SocialPostRow[]) ?? [];
 	let posted = 0;
@@ -306,4 +329,136 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 	}
 
 	return { posted, failed, skipped: '' };
+}
+
+// ---------------------------------------------------------------------------
+// Insights — saves / reach / likes / shares automatisch ziehen (kein manuelles
+// Eintragen mehr). Läuft täglich für geposteten Content der letzten 30 Tage.
+// ---------------------------------------------------------------------------
+
+/**
+ * Holt IG-Insights pro geposteten Post via Graph API und schreibt saves/reach
+ * in die DB. Insights sind erst ein paar Stunden nach dem Post verfügbar.
+ */
+export async function refreshInsights(): Promise<{ updated: number; skipped: string }> {
+	if (!igConfigured()) return { updated: 0, skipped: 'IG not configured' };
+	const token = env.IG_ACCESS_TOKEN!;
+
+	const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+	const { data } = await supabaseAdmin
+		.from('nureine_social_posts')
+		.select('id,ig_media_id')
+		.eq('status', 'posted')
+		.not('ig_media_id', 'is', null)
+		.gte('posted_at', since30d);
+
+	const posts = (data as { id: number; ig_media_id: string }[]) ?? [];
+	let updated = 0;
+
+	for (const p of posts) {
+		try {
+			// IG-Media-Insights: saved, reach, likes, shares, total_interactions.
+			const metrics = 'saved,reach,likes,shares,total_interactions';
+			const resp = await fetch(
+				`https://graph.facebook.com/${IG_V}/${p.ig_media_id}/insights?metric=${metrics}&access_token=${token}`
+			);
+			if (!resp.ok) continue; // manche Metriken fehlen je Medientyp → still skip
+			const json = (await resp.json()) as { data?: { name: string; values: { value: number }[] }[] };
+			const get = (name: string) => json.data?.find((m) => m.name === name)?.values?.[0]?.value ?? null;
+
+			const saves = get('saved');
+			const reach = get('reach');
+			if (saves === null && reach === null) continue;
+
+			await supabaseAdmin
+				.from('nureine_social_posts')
+				.update({ saves, reach, updated_at: new Date().toISOString() })
+				.eq('id', p.id);
+			updated += 1;
+		} catch (err) {
+			console.error('[social] insights failed for', p.id, err);
+		}
+	}
+
+	return { updated, skipped: '' };
+}
+
+// ---------------------------------------------------------------------------
+// IG-Stories — mehrere/Tag, mittlere Schwelle, über den Tag verteilt.
+// Hält den Account aktiv (Algo mag Frequenz) ohne den kuratierten Feed zu fluten.
+// Story = 9:16 share-card der Story. media_type=STORIES, läuft 24h.
+// ---------------------------------------------------------------------------
+
+/** Eine IG-Story posten (9:16 Bild). */
+async function igPostStory(imageUrl: string): Promise<string> {
+	const creationId = await igCreateContainer({ image_url: imageUrl, media_type: 'STORIES' });
+	return igPublish(creationId);
+}
+
+/**
+ * Postet die nächste fällige IG-Story. Wählt eine frische Story (≤36h, Wirkung ≥60),
+ * die heute noch nicht als Story lief. Max ~4/Tag (durch Cron-Zeiten gesteuert).
+ * No-op ohne IG-Token. Nutzt die 9:16 share-card.
+ */
+export async function publishStoryDue(): Promise<{ posted: boolean; reason: string; slug?: string }> {
+	if (!igConfigured()) return { posted: false, reason: 'IG not configured' };
+
+	// Tageslimit: max 4 Stories/Tag.
+	const todayStart = new Date();
+	todayStart.setUTCHours(0, 0, 0, 0);
+	const { count: storiesToday } = await supabaseAdmin
+		.from('nureine_social_posts')
+		.select('*', { count: 'exact', head: true })
+		.eq('platform', 'instagram_story')
+		.eq('status', 'posted')
+		.gte('posted_at', todayStart.toISOString());
+	if ((storiesToday ?? 0) >= 4) return { posted: false, reason: 'daily story limit (4)' };
+
+	// Frische, story-würdige Story die heute noch nicht als IG-Story lief.
+	const since36h = new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString();
+	const { data: posted } = await supabaseAdmin
+		.from('nureine_social_posts')
+		.select('story_id')
+		.eq('platform', 'instagram_story');
+	const usedIds = new Set((posted as { story_id: string }[] ?? []).map((r) => r.story_id));
+
+	const { data: cand } = await supabaseAdmin
+		.from('nureine_stories')
+		.select('id,title,subtitle,category,image_url,impact_score')
+		.gte('impact_score', 60)
+		.gte('created_at', since36h)
+		.order('impact_score', { ascending: false })
+		.limit(20);
+
+	const story = (cand as { id: string; title: string; subtitle: string | null; category: string; image_url: string | null; impact_score: number }[] ?? [])
+		.find((s) => !usedIds.has(s.id));
+	if (!story) return { posted: false, reason: 'no fresh story-worthy story' };
+
+	const slug = `${slugify(story.title)}-${story.id.slice(0, 8)}`;
+	const imageUrl = `${BASE_URL}/api/share-card/${slug}`;
+
+	try {
+		const mediaId = await igPostStory(imageUrl);
+		await supabaseAdmin.from('nureine_social_posts').insert({
+			story_id: story.id,
+			platform: 'instagram_story',
+			caption: '',
+			hashtags: [],
+			card_url: imageUrl,
+			og_url: `${BASE_URL}/api/og/${slug}`,
+			hook_type: 'zahl',
+			hook_style: 'image',
+			category: story.category,
+			is_carousel: false,
+			status: 'posted',
+			posted_at: new Date().toISOString(),
+			ig_media_id: mediaId,
+			scheduled_for: new Date().toISOString()
+		});
+		console.info('[social] story posted', slug, story.impact_score);
+		return { posted: true, reason: 'story posted', slug };
+	} catch (err) {
+		console.error('[social] story publish failed', err);
+		return { posted: false, reason: `failed: ${(err as Error).message}` };
+	}
 }

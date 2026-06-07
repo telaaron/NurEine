@@ -102,16 +102,29 @@ export function buildCaptionFromHook(story: {
 	igHook?: string | null;
 	dek: string;
 	source?: string;
-	slides?: { aufloesung?: string } | null;
+	slides?: { aufloesung?: string; stille?: string } | null;
 }): string {
-	const hook = (story.igHook || '').trim();
-	// Kontext = Carousel-Auflösung falls vorhanden, sonst der Dek (nicht der Hook!).
-	const context = (story.slides?.aufloesung || story.dek || '').trim();
+	// WICHTIG: Die Caption darf NIEMALS mit dem Hook starten — der steht schon
+	// auf Folie 1. Doppelung killt die Wirkung. Stattdessen liefert die Caption
+	// die SUBSTANZ (Auflösung/Kontext, der NICHT auf der Karte steht) + einen
+	// ruhigen Schluss + CTA. Erste Zeile = neuer Gedanke, nicht das Bild-Echo.
+	const hook = (story.igHook || '').trim().toLowerCase();
+	const aufloesung = (story.slides?.aufloesung || story.dek || '').trim();
+	const stille = (story.slides?.stille || '').trim();
+
 	const lines: string[] = [];
-	if (hook) lines.push(hook, '');
-	if (context && context !== hook) lines.push(context);
+	// Substanz zuerst — aber nur, wenn sie NICHT bloß der Hook ist.
+	if (aufloesung && aufloesung.toLowerCase() !== hook) {
+		lines.push(aufloesung);
+	} else if (story.dek && story.dek.trim().toLowerCase() !== hook) {
+		lines.push(story.dek.trim());
+	}
+	// Ruhiger Nachhall (Folie-3-Satz) als zweiter Absatz, wenn vorhanden + neu.
+	if (stille && stille.toLowerCase() !== hook && stille !== aufloesung) {
+		lines.push('', stille);
+	}
 	if (story.source) lines.push('', `Quelle: ${story.source}`);
-	lines.push('', 'Täglich eine belegte gute Nachricht → nureine.de');
+	lines.push('', 'Mehr belegte gute Nachrichten → nureine.de');
 	return lines.join('\n').trim();
 }
 

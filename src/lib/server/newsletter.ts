@@ -574,12 +574,16 @@ async function selectNewsletterStory(): Promise<HeroStory | null> {
     return t2 as HeroStory;
   }
 
-  // ── Tier 3: any unsent story ───────────────────────────────────────
+  // ── Tier 3: Notfall — ungesendete Story der letzten 7 Tage mit Wirkung ≥ 60.
+  // KEINE uralte Story mehr (das war der Bug: tagealte Story landete im Newsletter,
+  // wenn Tier 1/2 leer waren). Lieber kein Newsletter als ein verstaubter.
+  const since7d = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const { data: t3, error } = await supabaseAdmin
     .from('nureine_stories')
     .select(BASE_SELECT)
     .is('newsletter_sent_at', null)
-    .not('impact_score', 'is', null)
+    .gte('impact_score', 60)
+    .gte('created_at', since7d)
     .order('impact_score', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(1)
@@ -589,8 +593,12 @@ async function selectNewsletterStory(): Promise<HeroStory | null> {
     console.error('[newsletter] selectNewsletterStory error:', error);
     return null;
   }
-  console.log('[newsletter] story selected from tier 3 (any unsent)');
-  return (t3 as HeroStory) ?? null;
+  if (t3) {
+    console.log('[newsletter] story selected from tier 3 (≤7d, impact≥60)');
+    return t3 as HeroStory;
+  }
+  console.warn('[newsletter] no suitable story — skipping newsletter today (better empty than stale)');
+  return null;
 }
 
 /**

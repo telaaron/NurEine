@@ -21,7 +21,7 @@ export async function load() {
 		`${opener}\n\n${story.title}\n\n${story.dek}\n\n` +
 		`Manchmal tut so eine Nachricht einfach gut. 👉 nureine.de`;
 
-	const hashtags = hashtagsFor(story.category);
+	const hashtags = hashtagsFor(story.category, story.impactScore ?? 0);
 
 	return {
 		slug: story.slug,

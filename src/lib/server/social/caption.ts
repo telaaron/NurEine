@@ -19,17 +19,20 @@ export interface CaptionStoryInput {
 	source?: string;
 }
 
-const CATEGORY_HASHTAG: Record<string, string> = {
-	klima: '#klimaschutz',
-	gesundheit: '#globalhealth',
-	wissenschaft: '#wissenschaft',
-	gemeinschaft: '#gemeinsinn',
-	tiere: '#artenschutz',
-	kultur: '#kultur',
-	innovation: '#innovation'
+// Größere Hashtag-Pools pro Kategorie. Das System wählt rotierend einen Mix —
+// IG belohnt 8-12 RELEVANTE Hashtags (nicht 30 Spam). Mix aus Reichweite-Tags
+// (groß) + Nischen-Tags (gezielt). Performance-Lernen via Insights später.
+const CATEGORY_HASHTAGS: Record<string, string[]> = {
+	klima: ['#klimaschutz', '#klimawandel', '#nachhaltigkeit', '#erneuerbareenergien', '#umweltschutz', '#klimakrise', '#energiewende', '#zukunft'],
+	gesundheit: ['#globalhealth', '#gesundheit', '#medizin', '#forschung', '#prävention', '#wellbeing', '#publichealth', '#fortschrittmedizin'],
+	wissenschaft: ['#wissenschaft', '#forschung', '#science', '#durchbruch', '#innovation', '#zukunft', '#technologie', '#entdeckung'],
+	gemeinschaft: ['#gemeinsinn', '#solidarität', '#zusammenhalt', '#engagement', '#sozialeswandel', '#miteinander', '#hoffnung', '#menschlichkeit'],
+	tiere: ['#artenschutz', '#tierschutz', '#wildlife', '#naturschutz', '#biodiversität', '#tiere', '#rewilding', '#naturefirst'],
+	kultur: ['#kultur', '#bildung', '#gesellschaft', '#kunst', '#zukunft', '#wandel', '#inspiration', '#community'],
+	innovation: ['#innovation', '#technologie', '#zukunft', '#fortschritt', '#startup', '#nachhaltigetechnik', '#cleantech', '#techforgood']
 };
 
-const BASE_HASHTAGS = ['#gutenachrichten', '#positivenews', '#fortschritt'];
+const BASE_HASHTAGS = ['#gutenachrichten', '#positivenews', '#fortschritt', '#hoffnung', '#ehrlicherfortschritt'];
 
 /** Erkennt eine Zahl/Prozent im Titel — Signal für Hook-Typ "zahl". */
 function hasNumber(text: string): boolean {
@@ -47,12 +50,22 @@ export function pickHookType(story: CaptionStoryInput): HookType {
 	return story.impactScore % 2 === 0 ? 'frage' : 'kontrast';
 }
 
-/** Bis zu 5 gezielte Hashtags: 3 Basis + 1 Kategorie + (Platz für 1 manuell). */
-export function hashtagsFor(category: string): string[] {
-	const cat = CATEGORY_HASHTAG[category];
-	const tags = [...BASE_HASHTAGS];
-	if (cat && !tags.includes(cat)) tags.push(cat);
-	return tags.slice(0, 5);
+/**
+ * ~10 relevante Hashtags: 3 rotierende Basis + ~5 rotierende Kategorie-Tags.
+ * `seed` (z.B. impactScore oder Post-Zähler) rotiert die Auswahl deterministisch,
+ * damit nicht immer dieselben Tags laufen → mehr Reichweiten-Diversität + A/B-Daten.
+ */
+export function hashtagsFor(category: string, seed = 0): string[] {
+	const rotate = <T>(arr: T[], n: number, start: number): T[] => {
+		if (arr.length <= n) return arr;
+		const out: T[] = [];
+		for (let i = 0; i < n; i++) out.push(arr[(start + i) % arr.length]);
+		return out;
+	};
+	const base = rotate(BASE_HASHTAGS, 3, seed);
+	const catPool = CATEGORY_HASHTAGS[category] || [];
+	const cat = rotate(catPool, 5, seed);
+	return [...new Set([...base, ...cat])];
 }
 
 /**

@@ -89,7 +89,7 @@ export async function generateTodayDraft(): Promise<{
 	const caption = story.igHook
 		? buildCaptionFromHook(story)
 		: buildCaption(story, { hookType, withCta: false });
-	const hashtags = hashtagsFor(story.category);
+	const hashtags = hashtagsFor(story.category, postCount ?? 0);
 
 	const { error } = await supabaseAdmin.from('nureine_social_posts').insert({
 		story_id: story.id,

@@ -32,6 +32,15 @@
 		busy = null;
 	}
 
+	async function postNow(id: number) {
+		if (!confirm('Diesen Post JETZT auf Instagram veröffentlichen?')) return;
+		busy = id;
+		const { ok, data } = await api({ action: 'post-now', id });
+		if (ok) items = items.map((p) => (p.id === id ? { ...p, status: 'posted' } : p));
+		else alert('Posten fehlgeschlagen: ' + (data.error || 'unbekannt'));
+		busy = null;
+	}
+
 	async function saveEdits(p: any) {
 		busy = p.id;
 		const hashtags = (p._hashtagsStr ?? p.hashtags.join(' '))
@@ -130,6 +139,9 @@
 						{/if}
 						{#if p.status === 'draft' || p.status === 'skipped'}
 							<button type="button" disabled={busy === p.id} onclick={() => setStatus(p.id, 'approved')} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-sage); color: var(--color-paper);">Freigeben</button>
+						{/if}
+						{#if p.status !== 'posted'}
+							<button type="button" disabled={busy === p.id} onclick={() => postNow(p.id)} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-amber); color: var(--color-paper);">Jetzt posten ↗</button>
 						{/if}
 						{#if p.status === 'draft' || p.status === 'approved'}
 							<button type="button" disabled={busy === p.id} onclick={() => setStatus(p.id, 'skipped')} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: transparent; color: var(--color-rose); border: 1px solid var(--color-rose);">Verwerfen</button>

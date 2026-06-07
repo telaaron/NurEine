@@ -331,6 +331,44 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 	return { posted, failed, skipped: '' };
 }
 
+/** Postet EINEN Post sofort (Admin-„Jetzt posten"-Button). Bypassed Cron + Tageslimit. */
+export async function publishPostNow(id: number): Promise<{ ok: boolean; reason: string; mediaId?: string }> {
+	if (!igConfigured()) return { ok: false, reason: 'IG not configured' };
+
+	const { data } = await supabaseAdmin.from('nureine_social_posts').select('*').eq('id', id).maybeSingle();
+	const p = data as SocialPostRow | null;
+	if (!p) return { ok: false, reason: 'post not found' };
+	if (p.status === 'posted') return { ok: false, reason: 'already posted' };
+
+	const fullCaption = [p.caption, '', p.hashtags.join(' ')].join('\n').trim();
+	try {
+		let mediaId: string;
+		if (p.platform === 'instagram_story') {
+			mediaId = await igPostStory(p.card_url || '');
+		} else if (p.is_carousel) {
+			const urls = carouselUrlsFor(p);
+			if (!urls) throw new Error('cannot derive carousel urls');
+			mediaId = await igPostCarousel(urls, fullCaption);
+		} else {
+			const urls = carouselUrlsFor(p);
+			const imageUrl = urls?.[0] || p.card_url || p.og_url;
+			if (!imageUrl) throw new Error('no image url');
+			mediaId = await igPost(imageUrl, fullCaption);
+		}
+		await supabaseAdmin
+			.from('nureine_social_posts')
+			.update({ status: 'posted', posted_at: new Date().toISOString(), ig_media_id: mediaId, error: null, updated_at: new Date().toISOString() })
+			.eq('id', id);
+		return { ok: true, reason: 'posted', mediaId };
+	} catch (err) {
+		await supabaseAdmin
+			.from('nureine_social_posts')
+			.update({ status: 'failed', error: (err as Error).message.slice(0, 500), updated_at: new Date().toISOString() })
+			.eq('id', id);
+		return { ok: false, reason: (err as Error).message };
+	}
+}
+
 // ---------------------------------------------------------------------------
 // Insights — saves / reach / likes / shares automatisch ziehen (kein manuelles
 // Eintragen mehr). Läuft täglich für geposteten Content der letzten 30 Tage.

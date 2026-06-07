@@ -1,11 +1,12 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { verifyAdminRequest } from '$lib/server/auth';
-import { updateSocialPost, generateTodayDraft } from '$lib/server/social/queue';
+import { updateSocialPost, generateTodayDraft, publishPostNow } from '$lib/server/social/queue';
 
 // POST — admin actions on the social queue.
-//   { action: 'update', id, patch: { caption?, hashtags?, status?, saves?, reach?, scheduled_for? } }
-//   { action: 'generate' }   → manually trigger today's draft (dry-run friendly)
+//   { action: 'update', id, patch: { ... } }
+//   { action: 'generate' }   → manually trigger today's draft
+//   { action: 'post-now', id } → post this entry to Instagram right now
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	if (!verifyAdminRequest(cookies)) return json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -19,6 +20,14 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	if (body.action === 'generate') {
 		const result = await generateTodayDraft();
 		return json({ ok: true, ...result });
+	}
+
+	if (body.action === 'post-now') {
+		if (!body.id) return json({ error: 'id required' }, { status: 400 });
+		const result = await publishPostNow(body.id);
+		return result.ok
+			? json({ ok: true, reason: result.reason, mediaId: result.mediaId })
+			: json({ error: result.reason }, { status: 500 });
 	}
 
 	if (body.action === 'update') {

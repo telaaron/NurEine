@@ -24,6 +24,9 @@ export async function GET() {
 		{ loc: `${BASE_URL}/methodik`, priority: '0.7', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/stand-der-welt`, priority: '0.8', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/archiv`, priority: '0.8', changefreq: 'daily' },
+		...['klima', 'gesundheit', 'wissenschaft', 'gemeinschaft', 'tiere', 'kultur', 'innovation'].map(
+			(c) => ({ loc: `${BASE_URL}/archiv/${c}`, priority: '0.7', changefreq: 'daily' })
+		),
 		{ loc: `${BASE_URL}/karte`, priority: '0.7', changefreq: 'daily' },
 		{ loc: `${BASE_URL}/bei-dir`, priority: '0.6', changefreq: 'daily' },
 		{ loc: `${BASE_URL}/manifest`, priority: '0.5', changefreq: 'monthly' },

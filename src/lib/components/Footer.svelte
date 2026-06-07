@@ -44,6 +44,18 @@
 					<li><a class="hover:opacity-70" href={base + '/methodik'}>Methodik</a></li>
 				</ul>
 			</div>
+			<div>
+				<h3 class="footer-heading" style="color: var(--color-faint);">
+					Themen
+				</h3>
+				<ul class="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 text-sm">
+					<li><a class="hover:opacity-70" href={base + '/archiv/klima'}>Klima</a></li>
+					<li><a class="hover:opacity-70" href={base + '/archiv/gesundheit'}>Gesundheit</a></li>
+					<li><a class="hover:opacity-70" href={base + '/archiv/wissenschaft'}>Wissenschaft</a></li>
+					<li><a class="hover:opacity-70" href={base + '/archiv/tiere'}>Tiere</a></li>
+					<li><a class="hover:opacity-70" href={base + '/archiv/innovation'}>Innovation</a></li>
+				</ul>
+			</div>
 		</div>
 
 		<div

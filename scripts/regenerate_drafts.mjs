@@ -39,17 +39,20 @@ Untertitel: ${dek}
 Kategorie: ${cat}
 Wirkungsindex: ${impact}
 
-WICHTIG: Die gute Nachricht ins POSITIVE framen. Beispiel: nicht "40.000 Geckos gefangen"
-sondern "Handelsverbot rettet seltenen Gecko". Der Hook betont, was BESSER wird, nicht das Problem.
+WICHTIG: Die gute Nachricht ins POSITIVE framen. Nicht "40.000 Geckos gefangen" sondern "Gecko gerettet".
 
 Felder:
 emotion: "relief"|"wonder"|"hope"|"pride"|"warmth" (dominante).
-ig_hook: erste 1,5 Zeilen für Instagram (Emotion/positiver Fakt, NICHT Problem), max 90 Zeichen.
-slides: {"hook":"Folie1 max70","aufloesung":"Folie2 was+warum 2-3 Sätze max280, einfach nicht dumm","stille":"Folie3 ruhiger Schluss max90"}
-ig_caption: Instagram-Caption-Text UNTER dem Post. Darf hook/slides NICHT wiederholen — neuer
-  Blickwinkel: zusätzliche Zahl, überraschendes Detail, Einordnung, die Neugier weckt. 2-4 Sätze,
-  warm + konkret, kein Marketing-Sprech, max ein "→ nureine.de" am Ende.
-heroNumber: falls eine knackige Zahl (z.B. "603", "−60%", "11 Mio") existiert, sonst null.`;
+ig_hook: Folie-1-Hook der zum WISCHEN zwingt. NIEMALS die Schlagzeile (z.B. NICHT "EU beschließt
+  Tierschutzgesetz" — das gibt keinen Grund zu wischen). Stattdessen SPANNUNG/offene Schleife, deren
+  Auflösung erst Folie 2 bringt. Endet idealerweise mit Doppelpunkt, offener Frage oder Cliffhanger.
+  Max 110 Zeichen. GUT: "Millionen Hunde wurden bisher legal so gezüchtet, dass sie kaum atmen können. Das endet jetzt."
+slides: {"hook":"Folie1 = der ig_hook oder enge Variante, max 110 Zeichen, Spannung","aufloesung":"Folie2 = die AUFLÖSUNG was+warum 2-3 Sätze max280, einfach nicht dumm","stille":"Folie3 ruhiger Schluss max90"}
+ig_caption: Caption UNTER dem Post, die FÜR den Swipe arbeitet. Fasst die Story NICHT zusammen, liefert
+  die Auflösung NICHT. Macht neugierig + leitet zum Wischen (👇). 2-3 kurze Zeilen, warm + menschlich.
+  Am Ende neue Zeile "Quelle: <name>". GUT: "Millionen Hunde leiden still — weil wir niedliche Gesichter
+  mehr lieben als gesunde Tiere.\\nDas ändert sich jetzt. 👇"
+heroNumber: null (wird nicht mehr genutzt — Look ist immer illustriert).`;
 
 async function score(s) {
 	const r = await fetch('https://api.deepseek.com/chat/completions', {

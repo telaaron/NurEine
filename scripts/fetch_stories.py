@@ -638,13 +638,16 @@ wa_ok: true/false — Würde man das einer Freundin schicken? NUR true wenn ALLE
   (2) Keine Erklärung nötig, um es zu verstehen.
   (3) Emotional sofort zugänglich.
 
-ig_hook: Nur wenn ig_ok=true. Der INSTAGRAM-HOOK — die ersten 1,5 Zeilen, BEVOR Instagram "… mehr" abschneidet.
-  NICHT der Titel. Die EMOTION oder der überraschende Fakt. Max 90 Zeichen. Zwingt zum Weiterlesen, ohne Clickbait.
-  Stil: konkret, staunend, manchmal mit leiser System-Kritik ("warum hört man das nie?"). Nüchtern, nicht reißerisch.
-  Beispiel (Wildbrücke): "Drei Hirsche. Ein erster Tag. Eine neue Brücke."
-  Beispiel (Modellrechnung): "99% der Menschen könnten 2100 besser leben. Keine Utopie — eine Rechnung."
-  Beispiel (Kontrast): "China hat eine Autobahn gestoppt. Für Vögel. Echt jetzt."
-  Sonst null.
+ig_hook: Nur wenn ig_ok=true. Der INSTAGRAM-HOOK für Folie 1 — die ersten 1,5 Zeilen, die zum WISCHEN zwingen.
+  ⚠️ NIEMALS die Schlagzeile/der Titel. Eine Schlagzeile ("EU beschließt Tierschutzgesetz") gibt KEINEN Grund
+  zu wischen — die ganze Info steht schon da. Stattdessen: SPANNUNG aufbauen, eine offene Schleife, ein Problem
+  oder ein überraschender Einstieg, dessen Auflösung erst auf Folie 2 kommt. Idealerweise endet der Hook mit
+  einem Doppelpunkt, einer offenen Frage oder einem Cliffhanger. Max 110 Zeichen.
+  SCHLECHT (Schlagzeile): "EU beschließt erstes Tierschutzgesetz für Hunde und Katzen"
+  GUT (offene Schleife): "Millionen Hunde wurden bisher legal so gezüchtet, dass sie kaum atmen können. Das endet jetzt."
+  GUT (Spannung): "Drei Hirsche standen am ersten Tag vor der neuen Brücke. Was dann passierte, ändert alles."
+  GUT (Frage): "Was wäre, wenn die schlimmste Blindheits-Ursache eines Landes einfach verschwindet?"
+  Der Leser muss das GEFÜHL haben: "ich MUSS wissen wie's weitergeht". Sonst null.
 
 wa_opener: Nur wenn wa_ok=true. Ein PERSÖNLICHER WhatsApp-Einstieg in DEINER Stimme — wie ein Mensch,
   den etwas berührt hat, NICHT wie eine Institution. Max 80 Zeichen. Soll zur Emotion passen.
@@ -669,14 +672,15 @@ slides: Nur wenn ig_ok=true. Ein Objekt mit DREI kurzen Carousel-Texten, die AUF
   }}
   Sonst null.
 
-ig_caption: Nur wenn ig_ok=true. Der INSTAGRAM-CAPTION-TEXT unter dem Post. WICHTIG: dieser Text
-  darf NICHT den Hook oder die Folien-Texte (hook/aufloesung/stille) wiederholen — die sieht man
-  schon auf den Bildern. Die Caption liefert einen NEUEN Blickwinkel: eine zusätzliche Zahl, ein
-  überraschendes Detail, eine Einordnung oder einen Gedanken, der NEUGIER weckt oder die Geschichte
-  vertieft. 2-4 Sätze, warm + konkret, kein Marketing-Sprech, max ein dezenter "→ nureine.de" am Ende.
-  Beispiel (wenn das Bild "603 Dämme entfernt" zeigt): "Frei fließende Flüsse bringen Lachse zurück,
-  die seit Jahrzehnten verschwunden waren. Und das Beste: Viele Dämme wurden einfach abgerissen, weil
-  sie ohnehin niemand mehr brauchte. → nureine.de"
+ig_caption: Nur wenn ig_ok=true. Der INSTAGRAM-CAPTION-TEXT unter dem Post.
+  ⚠️ Die Caption darf die Story NICHT zusammenfassen und NICHT die Folien wiederholen. Wenn die Caption
+  schon die ganze Antwort liefert, gibt es keinen Grund mehr, die Folien zu wischen.
+  Die Caption ARBEITET FÜR DEN SWIPE: sie macht neugierig, baut Spannung/Emotion auf und leitet zum Wischen
+  ("👇" o.ä.), liefert aber die Auflösung NICHT. Erst ein emotionaler/überraschender Einstieg, der die
+  Tragweite andeutet, dann eine Brücke zum Wischen. 2-3 kurze Zeilen, warm + menschlich, kein Marketing-Sprech.
+  Format am Ende: eine neue Zeile, dann "Quelle: <Quellenname>" (falls bekannt).
+  SCHLECHT (fasst zusammen): "Endlich: EU verbietet Qualzucht bei Hunden und Katzen. Ein großer Schritt gegen Tierleid."
+  GUT (macht neugierig): "Millionen Hunde leiden still — weil wir niedliche Gesichter mehr lieben als gesunde Tiere.\\nDas ändert sich jetzt. 👇"
   Sonst null.
 
 Antworte ausschließlich mit validem JSON. Kein Text davor oder danach."""

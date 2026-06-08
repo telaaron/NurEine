@@ -83,16 +83,14 @@ export async function generateTodayDraft(): Promise<{
 	const story = await selectInstagramStory();
 	if (!story) return { created: false, reason: 'no instagram-worthy story today (kein Post)' };
 
-	// A/B-Folie-1-Stil alternierend (image/number) — Save-Tracking pro Stil.
-	// number nur wenn der Hook/Dek eine Held-Zahl hat, sonst immer image.
+	// KONSISTENTER Grid-Look: IMMER illustriert (image). number-Variante (dunkelgrün-Zahl)
+	// brach die visuelle Einheitlichkeit im Profil-Grid → raus. A/B läuft jetzt nur
+	// noch TEXTLICH (Hook-/Caption-Formulierung), nicht visuell.
 	const { count: postCount } = await supabaseAdmin
 		.from('nureine_social_posts')
 		.select('*', { count: 'exact', head: true })
 		.eq('platform', 'instagram');
-	const hasNumber = /\d[\d.,]*\s?(%|Mio|Mrd|Millionen|Milliarden)|\d[\d.,]{2,}/.test(
-		`${story.igHook || ''} ${story.dek || ''}`
-	);
-	const hookStyle = hasNumber && (postCount ?? 0) % 2 === 1 ? 'number' : 'image';
+	const hookStyle = 'image';
 
 	const hookType = pickHookType(story);
 	// Caption-Priorität: (1) KI-igCaption (eigener Blickwinkel, wiederholt Folien NICHT),

@@ -32,11 +32,19 @@
 		busy = null;
 	}
 
-	async function postNow(id: number) {
+	async function postNow(p: any) {
 		if (!confirm('Diesen Post JETZT auf Instagram veröffentlichen?')) return;
-		busy = id;
-		const { ok, data } = await api({ action: 'post-now', id });
-		if (ok) items = items.map((p) => (p.id === id ? { ...p, status: 'posted' } : p));
+		busy = p.id;
+		// Ungespeicherte Caption/Hashtag-Änderungen ZUERST speichern, sonst geht der alte Text live.
+		if (p._dirty) {
+			const hashtags = (p._hashtagsStr ?? p.hashtags.join(' '))
+				.split(/\s+/).map((t: string) => t.trim()).filter(Boolean);
+			const r = await api({ action: 'update', id: p.id, patch: { caption: p.caption, hashtags } });
+			if (!r.ok) { alert('Speichern fehlgeschlagen — nicht gepostet.'); busy = null; return; }
+			items = items.map((x) => (x.id === p.id ? { ...x, hashtags, _dirty: false } : x));
+		}
+		const { ok, data } = await api({ action: 'post-now', id: p.id });
+		if (ok) items = items.map((x) => (x.id === p.id ? { ...x, status: 'posted' } : x));
 		else alert('Posten fehlgeschlagen: ' + (data.error || 'unbekannt'));
 		busy = null;
 	}
@@ -141,7 +149,7 @@
 							<button type="button" disabled={busy === p.id} onclick={() => setStatus(p.id, 'approved')} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-sage); color: var(--color-paper);">Freigeben</button>
 						{/if}
 						{#if p.status !== 'posted'}
-							<button type="button" disabled={busy === p.id} onclick={() => postNow(p.id)} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-amber); color: var(--color-paper);">Jetzt posten ↗</button>
+							<button type="button" disabled={busy === p.id} onclick={() => postNow(p)} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-amber); color: var(--color-paper);">Jetzt posten ↗</button>
 						{/if}
 						{#if p.status === 'draft' || p.status === 'approved'}
 							<button type="button" disabled={busy === p.id} onclick={() => setStatus(p.id, 'skipped')} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: transparent; color: var(--color-rose); border: 1px solid var(--color-rose);">Verwerfen</button>

@@ -365,6 +365,26 @@
 					Jederzeit abbestellbar · Kein Spam
 				</p>
 			{/if}
+			<!-- Geschickt: Newsletter-Skeptiker zu IG abholen, statt sie ganz zu verlieren. -->
+			<p class="mt-1 text-xs" style="color: rgba(251,248,241,0.6); font-family: var(--font-serif);">
+				Lieber im Feed? Folg uns auf
+				<a
+					href="https://instagram.com/nureine.de"
+					target="_blank"
+					rel="noreferrer noopener"
+					onclick={() => track('cta_click', { cta: 'instagram_main' })}
+					class="inline-flex items-center gap-1 underline decoration-dotted underline-offset-2 hover:opacity-80"
+					style="color: var(--color-amber);"
+				>
+					<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+						<path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+						<line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+					</svg>
+					@nureine.de
+				</a>
+				— eine Geschichte, jeden Morgen.
+			</p>
 		</form>
 	</div>
 </section>

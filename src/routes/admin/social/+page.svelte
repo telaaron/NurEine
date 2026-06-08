@@ -15,6 +15,21 @@
 		if (ok) autopilot = r.autopilot;
 	}
 
+	let dryrun = $state(data.commentsDryrun);
+	let simResults = $state<{ text: string; reply: string | null; reason: string }[]>([]);
+	let simBusy = $state(false);
+
+	async function toggleDryrun() {
+		const { ok, data: r } = await api({ action: 'toggle-dryrun' });
+		if (ok) dryrun = r.dryrun;
+	}
+	async function simulate() {
+		simBusy = true;
+		const { ok, data: r } = await api({ action: 'simulate-comments' });
+		simBusy = false;
+		if (ok) simResults = r.results;
+	}
+
 	async function postAll() {
 		if (!confirm('ALLE freigegebenen + Entwurf-Posts JETZT auf Instagram veröffentlichen? (kann IG-Rate-Limit treffen)')) return;
 		postingAll = true;
@@ -138,6 +153,57 @@
 		</div>
 	</div>
 {/if}
+
+<!-- IG-Story-Statistiken -->
+<div class="mt-6 paper rounded-[10px] p-4" style="border: 1px solid var(--color-rule);">
+	<p class="text-xs uppercase tracking-wider mb-3" style="color: var(--color-amber); font-family: var(--font-mono);">IG-Stories</p>
+	<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+		<div><div class="text-2xl font-semibold" style="color: var(--color-ink);">{data.storyStats.today}</div><div class="text-xs" style="color: var(--color-muted);">heute gepostet</div></div>
+		<div><div class="text-2xl font-semibold" style="color: var(--color-ink);">{data.storyStats.total}</div><div class="text-xs" style="color: var(--color-muted);">gesamt (40 letzte)</div></div>
+		<div><div class="text-2xl font-semibold" style="color: var(--color-ink);">{data.storyStats.totalReach}</div><div class="text-xs" style="color: var(--color-muted);">Reach gesamt</div></div>
+		<div><div class="text-2xl font-semibold" style="color: var(--color-ink);">{data.storyStats.totalSaves}</div><div class="text-xs" style="color: var(--color-muted);">Saves gesamt</div></div>
+	</div>
+</div>
+
+<!-- KI-Kommentar-Interaktion -->
+<div class="mt-6 paper rounded-[10px] p-4" style="border: 1px solid var(--color-rule);">
+	<div class="flex items-center justify-between gap-3 flex-wrap mb-3">
+		<p class="text-xs uppercase tracking-wider" style="color: var(--color-amber); font-family: var(--font-mono);">KI-Kommentar-Antworten</p>
+		<div class="flex items-center gap-2">
+			<button type="button" onclick={toggleDryrun} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: {dryrun ? 'transparent' : 'var(--color-rose)'}; color: {dryrun ? 'var(--color-muted)' : 'var(--color-paper)'}; border: 1px solid {dryrun ? 'var(--color-rule-strong)' : 'var(--color-rose)'};">
+				{dryrun ? 'Dry-Run (testet nur)' : 'LIVE (antwortet echt)'}
+			</button>
+			<button type="button" disabled={simBusy} onclick={simulate} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-ink); color: var(--color-paper);">{simBusy ? '…' : 'Simulieren'}</button>
+		</div>
+	</div>
+
+	{#if simResults.length}
+		<p class="text-xs mb-2" style="color: var(--color-muted);">Simulation (Test-Kommentare → KI-Antwort):</p>
+		<div class="flex flex-col gap-2 mb-4">
+			{#each simResults as r}
+				<div class="text-sm p-3 rounded" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
+					<div style="color: var(--color-ink-soft);">💬 {r.text}</div>
+					<div class="mt-1" style="color: {r.reply ? 'var(--color-sage)' : 'var(--color-faint)'};">{r.reply ? '↳ ' + r.reply : '↳ (keine Antwort — ' + r.reason + ')'}</div>
+				</div>
+			{/each}
+		</div>
+	{/if}
+
+	{#if data.replies.length}
+		<p class="text-xs mb-2" style="color: var(--color-muted);">Echte Kommentare (letzte 20):</p>
+		<div class="flex flex-col gap-2">
+			{#each data.replies as rep}
+				<div class="text-sm p-3 rounded" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
+					<div style="color: var(--color-ink-soft);">💬 {rep.comment_text}</div>
+					{#if rep.reply_text}<div class="mt-1" style="color: var(--color-sage);">↳ {rep.reply_text}{#if rep.skipped_reason?.includes('dryrun')} <span style="color: var(--color-faint);">(nicht gepostet)</span>{/if}</div>
+					{:else}<div class="mt-1" style="color: var(--color-faint);">↳ übersprungen: {rep.skipped_reason}</div>{/if}
+				</div>
+			{/each}
+		</div>
+	{:else if !simResults.length}
+		<p class="text-sm" style="color: var(--color-faint);">Noch keine Kommentare. „Simulieren" testet die KI-Logik mit Beispiel-Kommentaren.</p>
+	{/if}
+</div>
 
 <div class="mt-6 flex flex-col gap-4">
 	{#each items as p (p.id)}

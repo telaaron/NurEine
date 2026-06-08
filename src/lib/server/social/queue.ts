@@ -446,14 +446,17 @@ async function igPostStory(imageUrl: string): Promise<string> {
 }
 
 /**
- * Postet die nächste fällige IG-Story. Wählt eine frische Story (≤36h, Wirkung ≥60),
- * die heute noch nicht als Story lief. Max ~4/Tag (durch Cron-Zeiten gesteuert).
- * No-op ohne IG-Token. Nutzt die 9:16 share-card.
+ * Postet die nächste fällige IG-Story. JEDE valide Story (≤72h) wird über den Tag
+ * verteilt zur IG-Story — der Cron feuert oft (z.B. stündlich), postet aber pro Lauf
+ * nur EINE, sodass eine natürliche Story-Kette über den Tag entsteht statt Spam-Block.
+ * No-op ohne IG-Token. Nutzt die 9:16 share-card (mit Wirkung-Badge).
  */
+const DAILY_STORY_LIMIT = 15;
+
 export async function publishStoryDue(): Promise<{ posted: boolean; reason: string; slug?: string }> {
 	if (!igConfigured()) return { posted: false, reason: 'IG not configured' };
 
-	// Tageslimit: max 4 Stories/Tag.
+	// Tageslimit (Schutz gegen Rate-Limit / Story-Overload).
 	const todayStart = new Date();
 	todayStart.setUTCHours(0, 0, 0, 0);
 	const { count: storiesToday } = await supabaseAdmin
@@ -462,10 +465,10 @@ export async function publishStoryDue(): Promise<{ posted: boolean; reason: stri
 		.eq('platform', 'instagram_story')
 		.eq('status', 'posted')
 		.gte('posted_at', todayStart.toISOString());
-	if ((storiesToday ?? 0) >= 4) return { posted: false, reason: 'daily story limit (4)' };
+	if ((storiesToday ?? 0) >= DAILY_STORY_LIMIT) return { posted: false, reason: `daily story limit (${DAILY_STORY_LIMIT})` };
 
-	// Frische, story-würdige Story die heute noch nicht als IG-Story lief.
-	const since36h = new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString();
+	// Jede Story die noch nicht als IG-Story lief (72h-Fenster, jede valide = impact≥50).
+	const since72h = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
 	const { data: posted } = await supabaseAdmin
 		.from('nureine_social_posts')
 		.select('story_id')
@@ -475,14 +478,14 @@ export async function publishStoryDue(): Promise<{ posted: boolean; reason: stri
 	const { data: cand } = await supabaseAdmin
 		.from('nureine_stories')
 		.select('id,title,subtitle,category,image_url,impact_score')
-		.gte('impact_score', 60)
-		.gte('created_at', since36h)
-		.order('impact_score', { ascending: false })
-		.limit(20);
+		.gte('impact_score', 50)
+		.gte('created_at', since72h)
+		.order('created_at', { ascending: false }) // neueste zuerst → aktuell
+		.limit(40);
 
 	const story = (cand as { id: string; title: string; subtitle: string | null; category: string; image_url: string | null; impact_score: number }[] ?? [])
 		.find((s) => !usedIds.has(s.id));
-	if (!story) return { posted: false, reason: 'no fresh story-worthy story' };
+	if (!story) return { posted: false, reason: 'no fresh story to post' };
 
 	const slug = `${slugify(story.title)}-${story.id.slice(0, 8)}`;
 	const imageUrl = `${BASE_URL}/api/share-card/${slug}`;

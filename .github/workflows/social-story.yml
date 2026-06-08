@@ -1,13 +1,10 @@
 name: Social — IG Story (verteilt)
 
-# Postet IG-Stories über den Tag verteilt (max 4/Tag, Guard im Code).
-# Hält den Account aktiv ohne den kuratierten Feed zu fluten.
+# Postet IG-Stories über den Tag verteilt — pro Lauf EINE, sodass eine natürliche
+# Story-Kette entsteht (max 15/Tag, Guard im Code). Stündlich 07-21 UTC.
 on:
   schedule:
-    - cron: '0 6 * * *'   # 08:00 CEST
-    - cron: '0 10 * * *'  # 12:00 CEST
-    - cron: '0 14 * * *'  # 16:00 CEST
-    - cron: '0 17 * * *'  # 19:00 CEST
+    - cron: '0 7-21 * * *'  # jede volle Stunde 07:00–21:00 UTC (09–23 CEST)
   workflow_dispatch:
 
 jobs:

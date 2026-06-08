@@ -101,9 +101,18 @@ async function postReply(commentId: string, message: string, token: string): Pro
  * Hauptlauf: neue Kommentare finden, klassifizieren, ggf. antworten.
  * Idempotent über nureine_social_replies (comment_id unique).
  */
-export async function replyToComments(): Promise<{ replied: number; skipped: number; reason: string }> {
-	if (!igConfigured()) return { replied: 0, skipped: 0, reason: 'IG/DeepSeek not configured' };
+export async function replyToComments(): Promise<{ replied: number; skipped: number; dryRun: boolean; reason: string }> {
+	if (!igConfigured()) return { replied: 0, skipped: 0, dryRun: false, reason: 'IG/DeepSeek not configured' };
 	const token = env.IG_ACCESS_TOKEN!;
+
+	// Dry-Run: KI klassifiziert + formuliert die Antwort, postet sie aber NICHT.
+	// Im Admin sichtbar (reply_text), du siehst den Ton, bevor real geantwortet wird.
+	const { data: drSetting } = await supabaseAdmin
+		.from('nureine_app_settings')
+		.select('value')
+		.eq('key', 'comments_dryrun')
+		.maybeSingle();
+	const dryRun = (drSetting as { value: string } | null)?.value !== 'false'; // Default: AN (sicher)
 
 	const mediaIds = await recentMediaIds();
 	let replied = 0;
@@ -136,6 +145,16 @@ export async function replyToComments(): Promise<{ replied: number; skipped: num
 				continue;
 			}
 
+			if (dryRun) {
+				// Antwort NICHT posten — nur speichern, was die KI antworten würde.
+				await supabaseAdmin.from('nureine_social_replies').insert({
+					comment_id: c.id, media_id: mediaId, comment_text: c.text.slice(0, 500),
+					reply_text: reply, skipped_reason: 'dryrun (nicht gepostet)'
+				});
+				replied += 1; // gezählt als "würde antworten"
+				continue;
+			}
+
 			const ok = await postReply(c.id, reply, token);
 			await supabaseAdmin.from('nureine_social_replies').insert({
 				comment_id: c.id, media_id: mediaId, comment_text: c.text.slice(0, 500),
@@ -146,5 +165,15 @@ export async function replyToComments(): Promise<{ replied: number; skipped: num
 		}
 	}
 
-	return { replied, skipped, reason: '' };
+	return { replied, skipped, dryRun, reason: '' };
+}
+
+/** Test-Kommentare einspeisen + klassifizieren (ohne echten IG-Post) — Logik-Beweis. */
+export async function simulateComments(samples: string[]): Promise<{ text: string; reply: string | null; reason: string }[]> {
+	const out: { text: string; reply: string | null; reason: string }[] = [];
+	for (const text of samples) {
+		const { reply, reason } = await classifyAndReply(text);
+		out.push({ text, reply, reason });
+	}
+	return out;
 }

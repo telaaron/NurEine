@@ -11,7 +11,7 @@ import { supabaseAdmin } from '$lib/server/supabase/client';
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	if (!verifyAdminRequest(cookies)) return json({ error: 'Unauthorized' }, { status: 401 });
 
-	let body: { action?: string; id?: number; patch?: Record<string, unknown> };
+	let body: { action?: string; id?: number; patch?: Record<string, unknown>; samples?: string[] };
 	try {
 		body = await request.json();
 	} catch {
@@ -60,6 +60,31 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 	if (body.action === 'get-autopilot') {
 		return json({ ok: true, autopilot: (await getAppSetting('social_autopilot')) === 'true' });
+	}
+
+	// Kommentar-Dry-Run-Toggle.
+	if (body.action === 'toggle-dryrun') {
+		const cur = await getAppSetting('comments_dryrun');
+		const next = cur === 'false' ? 'true' : 'false';
+		await setAppSetting('comments_dryrun', next);
+		return json({ ok: true, dryrun: next !== 'false' });
+	}
+
+	// Kommentar-Interaktion simulieren (Test-Kommentare → KI-Antwort, ohne IG-Post).
+	if (body.action === 'simulate-comments') {
+		const { simulateComments } = await import('$lib/server/social/comments');
+		const samples = Array.isArray(body.samples)
+			? (body.samples as string[]).slice(0, 8)
+			: [
+					'Wow, das wusste ich gar nicht — danke für die gute Nachricht! 🙏',
+					'Endlich mal was Positives in meinem Feed',
+					'Quelle? Klingt zu schön um wahr zu sein',
+					'Stimmt doch alles nicht, typische Propaganda',
+					'Wie kann ich euch unterstützen?',
+					'😍😍😍'
+				];
+		const results = await simulateComments(samples);
+		return json({ ok: true, results });
 	}
 
 	if (body.action === 'update') {

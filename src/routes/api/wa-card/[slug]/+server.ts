@@ -42,11 +42,13 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
 
 	const { Resvg } = await import('@resvg/resvg-js');
 	const png = new Resvg(svg, { fitTo: { mode: 'width', value: 1080 } }).render().asPng();
+	const sharp = (await import('sharp')).default;
+	const jpeg = await sharp(png).jpeg({ quality: 85, mozjpeg: true }).toBuffer();
 
 	setHeaders({
-		'Content-Type': 'image/png',
+		'Content-Type': 'image/jpeg',
 		'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
 		'CDN-Cache-Control': 'public, max-age=86400'
 	});
-	return new Response(new Uint8Array(png), { headers: { 'Content-Type': 'image/png' } });
+	return new Response(new Uint8Array(jpeg), { headers: { 'Content-Type': 'image/jpeg' } });
 };

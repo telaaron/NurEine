@@ -1,7 +1,8 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { verifyAdminRequest } from '$lib/server/auth';
-import { updateSocialPost, generateTodayDraft, publishPostNow } from '$lib/server/social/queue';
+import { updateSocialPost, generateTodayDraft, publishPostNow, getAppSetting, setAppSetting } from '$lib/server/social/queue';
+import { supabaseAdmin } from '$lib/server/supabase/client';
 
 // POST — admin actions on the social queue.
 //   { action: 'update', id, patch: { ... } }
@@ -28,6 +29,37 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		return result.ok
 			? json({ ok: true, reason: result.reason, mediaId: result.mediaId })
 			: json({ error: result.reason }, { status: 500 });
+	}
+
+	// Alle freigegebenen/draft-Posts jetzt veröffentlichen (Achtung: kann IG-Rate-Limit treffen).
+	if (body.action === 'post-all') {
+		const { data } = await supabaseAdmin
+			.from('nureine_social_posts')
+			.select('id')
+			.in('status', ['approved', 'draft'])
+			.eq('platform', 'instagram')
+			.order('scheduled_for', { ascending: true });
+		const ids = (data as { id: number }[] ?? []).map((r) => r.id);
+		let posted = 0;
+		const errors: string[] = [];
+		for (const id of ids) {
+			const r = await publishPostNow(id);
+			if (r.ok) posted += 1;
+			else errors.push(`#${id}: ${r.reason}`);
+		}
+		return json({ ok: true, posted, total: ids.length, errors });
+	}
+
+	// Autopilot-Toggle (DB-Setting, im Admin umschaltbar).
+	if (body.action === 'toggle-autopilot') {
+		const cur = await getAppSetting('social_autopilot');
+		const next = cur === 'true' ? 'false' : 'true';
+		await setAppSetting('social_autopilot', next);
+		return json({ ok: true, autopilot: next === 'true' });
+	}
+
+	if (body.action === 'get-autopilot') {
+		return json({ ok: true, autopilot: (await getAppSetting('social_autopilot')) === 'true' });
 	}
 
 	if (body.action === 'update') {

@@ -41,6 +41,17 @@ export interface SocialPostRow {
 }
 
 /** Nächster 07:30 lokaler Zeit (Europe/Berlin ≈ UTC+2 im Sommer) als ISO. */
+/** App-Setting lesen (z.B. social_autopilot). */
+export async function getAppSetting(key: string): Promise<string | null> {
+	const { data } = await supabaseAdmin.from('nureine_app_settings').select('value').eq('key', key).maybeSingle();
+	return (data as { value: string } | null)?.value ?? null;
+}
+
+/** App-Setting schreiben. */
+export async function setAppSetting(key: string, value: string): Promise<void> {
+	await supabaseAdmin.from('nureine_app_settings').upsert({ key, value, updated_at: new Date().toISOString() });
+}
+
 function slugify(text: string): string {
 	return text
 		.toLowerCase()
@@ -268,7 +279,8 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 	if (!igConfigured()) {
 		return { posted: 0, failed: 0, skipped: 'IG not configured (dry run)' };
 	}
-	const autopilot = env.SOCIAL_AUTOPILOT === 'true';
+	// Autopilot aus DB-Setting (im Admin toggelbar) ODER env-Fallback.
+	const autopilot = (await getAppSetting('social_autopilot')) === 'true' || env.SOCIAL_AUTOPILOT === 'true';
 	const statuses = autopilot ? ['approved', 'draft'] : ['approved'];
 
 	// GUARD: max 1 Feed-Post pro Tag (kein Spam, IG straft Bulk ab). Schon heute

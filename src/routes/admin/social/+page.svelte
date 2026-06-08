@@ -7,6 +7,24 @@
 	let analytics = $state(data.analytics);
 	let busy = $state<number | null>(null);
 	let genMsg = $state('');
+	let autopilot = $state(data.autopilot);
+	let postingAll = $state(false);
+
+	async function toggleAutopilot() {
+		const { ok, data: r } = await api({ action: 'toggle-autopilot' });
+		if (ok) autopilot = r.autopilot;
+	}
+
+	async function postAll() {
+		if (!confirm('ALLE freigegebenen + Entwurf-Posts JETZT auf Instagram veröffentlichen? (kann IG-Rate-Limit treffen)')) return;
+		postingAll = true;
+		const { ok, data: r } = await api({ action: 'post-all' });
+		postingAll = false;
+		if (ok) {
+			alert(`${r.posted}/${r.total} gepostet.` + (r.errors?.length ? '\nFehler:\n' + r.errors.join('\n') : ''));
+			location.reload();
+		} else alert('Fehlgeschlagen.');
+	}
 
 	// IG-Feed-Vorschau = Carousel-Folie 1 (4:5), mit A/B-Stil. Aus og_url abgeleitet.
 	function slideUrl(p: any, n: number): string {
@@ -84,8 +102,13 @@
 		<h1 class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">Social — Instagram-Queue</h1>
 		<p class="mt-1 text-sm" style="color: var(--color-muted);">Trockenlauf: Entwürfe prüfen, editieren, freigeben. Nichts geht ohne dein OK raus.</p>
 	</div>
-	<div class="flex items-center gap-3">
+	<div class="flex items-center gap-3 flex-wrap">
 		{#if genMsg}<span class="text-xs" style="color: var(--color-muted); font-family: var(--font-mono);">{genMsg}</span>{/if}
+		<!-- Autopilot-Toggle -->
+		<button type="button" onclick={toggleAutopilot} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: {autopilot ? 'var(--color-sage)' : 'transparent'}; color: {autopilot ? 'var(--color-paper)' : 'var(--color-muted)'}; border: 1px solid {autopilot ? 'var(--color-sage)' : 'var(--color-rule-strong)'};">
+			Autopilot: {autopilot ? 'AN' : 'aus'}
+		</button>
+		<button type="button" disabled={postingAll} onclick={postAll} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-amber); color: var(--color-paper);">{postingAll ? 'poste…' : 'Alle posten ↗'}</button>
 		<button type="button" onclick={generateNow} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-ink); color: var(--color-paper);">Heute-Entwurf erzeugen</button>
 	</div>
 </div>

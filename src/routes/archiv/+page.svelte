@@ -16,6 +16,12 @@
 		})
 	);
 
+	// Progressive Anzeige: nur die ersten N rendern (sonst hunderte img-Tags → riesiges DOM/HTML).
+	const PAGE = 24;
+	let shown = $state(PAGE);
+	$effect(() => { void active; void sortBy; shown = PAGE; }); // Filter/Sort-Wechsel → reset
+	const visible = $derived(filtered.slice(0, shown));
+
 	function pick(cat: (typeof cats)[number]) {
 		active = cat;
 		filterOpen = false;
@@ -115,10 +121,17 @@
 		{filtered.length} {filtered.length === 1 ? 'Geschichte' : 'Geschichten'}
 	</p>
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
-		{#each filtered as story, i (story.slug)}
+		{#each visible as story, i (story.slug)}
 			<div class="rise" style="animation-delay: {Math.min(i * 0.04, 0.6)}s;">
 				<StoryCard {story} />
 			</div>
 		{/each}
 	</div>
+	{#if shown < filtered.length}
+		<div class="mt-10 flex justify-center">
+			<button type="button" onclick={() => (shown += PAGE)} class="px-6 py-3 rounded-full text-sm font-medium" style="border: 1px solid var(--color-rule-strong); color: var(--color-ink);">
+				Mehr laden ({filtered.length - shown})
+			</button>
+		</div>
+	{/if}
 </section>

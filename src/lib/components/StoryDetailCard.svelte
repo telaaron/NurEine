@@ -24,7 +24,9 @@
 	let { story, toneFg = '#c87340', mode = 'sidebar', onClose }: Props = $props();
 
 	const localHeroSrc = $derived(getStoryHeroImageSrc(story.category, base));
-	const heroImageSrc = $derived(story.imageUrl?.startsWith('http') ? story.imageUrl : localHeroSrc);
+	const heroImageSrc = $derived(
+		story.imageUrl?.startsWith('http') ? `${base}/img?url=${encodeURIComponent(story.imageUrl)}&w=800` : localHeroSrc
+	);
 	const storyUrl = $derived(`${base}/geschichte/${story.slug}`);
 </script>
 

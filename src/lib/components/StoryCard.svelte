@@ -23,9 +23,11 @@
 	const isFeature = $derived(size === 'feature');
 	const t = $derived(toneStyles[story.tone]);
 	const staticImageSrc = $derived(getStoryHeroImageSrc(story.category, base));
-	const heroImageSrc = $derived(
-		story.hero && story.hero.startsWith('http') ? story.hero : staticImageSrc
-	);
+	// Remote-Bilder (Supabase-PNG ~1 MB) durch den WebP-Proxy → ~60-120 KB.
+	const isRemote = $derived(!!story.hero && story.hero.startsWith('http'));
+	const proxied = (w: number) => `${base}/img?url=${encodeURIComponent(story.hero || '')}&w=${w}`;
+	const heroImageSrc = $derived(isRemote ? proxied(600) : staticImageSrc);
+	const heroSrcset = $derived(isRemote ? `${proxied(400)} 400w, ${proxied(600)} 600w, ${proxied(900)} 900w` : undefined);
 
 	const storyUrl = $derived(`${baseUrl}/geschichte/${story.slug}`);
 
@@ -66,6 +68,8 @@
 		{#if heroImageSrc}
 			<img
 				src={heroImageSrc}
+				srcset={heroSrcset}
+				sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
 				alt=""
 				class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] group-hover:scale-[1.04]"
 				loading="lazy"

@@ -96,7 +96,7 @@
 			{#if story.imageUrl}
 				<div class="mt-8 rise rise-d4">
 					<div class="aspect-[4/3] rounded-[6px] overflow-hidden" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
-						<img src={story.imageUrl} alt="" class="w-full h-full object-cover" loading="eager" />
+						<img src={story.imageUrl.startsWith('http') ? `${base}/img?url=${encodeURIComponent(story.imageUrl)}&w=900` : story.imageUrl} alt="" class="w-full h-full object-cover" loading="eager" />
 					</div>
 				</div>
 			{/if}

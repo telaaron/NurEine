@@ -12,11 +12,11 @@
 	const tone = $derived(featured ? toneStyles[featured.tone] : toneStyles['amber']);
 	const rest = $derived(data.rest);
 
-	// Hero illustration: prefer the story's real image, else category illustration
+	// Hero illustration: prefer the story's real image (via WebP-Proxy), else category.
 	const featuredImg = $derived(
 		featured
 			? featured.hero && featured.hero.startsWith('http')
-				? featured.hero
+				? `${base}/img?url=${encodeURIComponent(featured.hero)}&w=900`
 				: getStoryHeroImageSrc(featured.category, base)
 			: ''
 	);

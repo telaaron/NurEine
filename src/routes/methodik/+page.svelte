@@ -6,25 +6,25 @@
 
 	const factors = [
 		{
-			w: '40 %',
+			w: 'Achse 1',
 			name: 'Reichweite',
 			q: 'Wie viele Menschen werden messbar positiv beeinflusst?',
 			detail:
 				'Geschätzte direkt betroffene Personen — belegt durch offizielle Quellen, NGO-Reports oder peer-reviewte Studien. Eine Therapie für 100.000 wiegt schwerer als ein lokaler Einzelfall.'
 		},
 		{
-			w: '35 %',
+			w: 'Achse 2',
 			name: 'Dauerhaftigkeit',
 			q: 'Hält die positive Wirkung an?',
 			detail:
 				'Strukturelle Veränderung (Gesetz, Infrastruktur, Heilung) zählt mehr als ein einmaliges Ereignis. Wir fragen: wirkt es noch in einem Jahr?'
 		},
 		{
-			w: '25 %',
+			w: 'Achse 3',
 			name: 'Belegbarkeit',
 			q: 'Wie hart sind die Daten?',
 			detail:
-				'Datenqualität der Quelle. Peer-reviewt = 100, etablierte Redaktion = 75, lokale Berichterstattung = 50. Niedrige Belegbarkeit deckelt den Gesamtwert.'
+				'Datenqualität der Quelle. Peer-reviewt = 100, etablierte Redaktion = 75, lokale Berichterstattung = 50. Reine Erkenntnisse ohne Lebenswirkung werden bewusst niedrig bewertet — auch wenn sie hart belegt sind.'
 		}
 	];
 </script>
@@ -48,12 +48,19 @@
 		stößt. Wenn du skeptisch bist: gut. Lies weiter.
 	</p>
 
-	<!-- Formula -->
+	<!-- Kernfrage statt starrer Formel -->
 	<div class="mt-10 p-6 sm:p-8 rounded-2xl text-center" style="background: var(--color-paper); border: 1px solid var(--color-rule); box-shadow: var(--shadow-sm);">
-		<p style="font-family: var(--font-mono); font-size: 0.9rem; color: var(--color-ink-soft); line-height: 1.8;">
-			Wirkung = <span style="color: var(--color-amber);">0,40</span>·Reichweite
-			+ <span style="color: var(--color-amber);">0,35</span>·Dauerhaftigkeit
-			+ <span style="color: var(--color-amber);">0,25</span>·Belegbarkeit
+		<p class="serif text-lg sm:text-xl leading-relaxed" style="color: var(--color-ink);">
+			Der Wirkungsindex misst <strong>eine</strong> Sache:<br />
+			Wie sehr verbessert diese Nachricht <span style="color: var(--color-amber);">konkret das Leben von Menschen</span>?
+		</p>
+		<p class="mt-4 text-sm leading-relaxed" style="color: var(--color-muted); font-family: var(--font-serif);">
+			Keine starre Multiplikation: Eine perfekt belegte Studie kann trotzdem wenig Wirkung haben,
+			wenn sie nichts verbessert. Drei Achsen fließen in die Bewertung ein —
+			Reichweite, Dauerhaftigkeit, Belegbarkeit — aber der Index folgt der Frage oben, nicht einer Formel.
+		</p>
+		<p class="mt-4 text-sm" style="color: var(--color-ink-soft);">
+			<a href={base + '/werte'} style="color: var(--color-amber); border-bottom: 1px solid var(--color-rule-strong);">Woran wir „Fortschritt" überhaupt messen →</a>
 		</p>
 	</div>
 

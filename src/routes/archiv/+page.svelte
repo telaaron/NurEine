@@ -106,8 +106,10 @@
 			<svg class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-faint);">
 				<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
 			</svg>
+			<!-- type=text statt search: 'search' rendert ein zweites natives Clear-X
+			     zusätzlich zu unserem → Doppel-Button. -->
 			<input
-				type="search"
+				type="text"
 				bind:value={query}
 				placeholder="Suchen — Thema, Ort, Stichwort…"
 				class="w-full pl-9 pr-8 py-1.5 rounded-full text-sm"
@@ -150,11 +152,11 @@
 
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 py-10 sm:py-14">
 	<p class="text-xs sm:text-sm mb-6 sm:mb-8" style="color: var(--color-muted);">
-		{filtered.length} {filtered.length === 1 ? 'Geschichte' : 'Geschichten'}{#if query} für „{query}"{/if}
+		{filtered.length} {filtered.length === 1 ? 'Geschichte' : 'Geschichten'}{#if query}{' '}für „{query}"{/if}
 	</p>
 	{#if filtered.length === 0}
 		<div class="py-16 text-center">
-			<p class="serif text-lg" style="color: var(--color-ink-soft);">Nichts gefunden{#if query} für „{query}"{/if}.</p>
+			<p class="serif text-lg" style="color: var(--color-ink-soft);">Nichts gefunden{#if query}{' '}für „{query}"{/if}.</p>
 			<p class="mt-2 text-sm" style="color: var(--color-muted);">Versuch ein anderes Stichwort, einen Ort oder eine Kategorie.</p>
 			{#if query}
 				<button type="button" onclick={() => (query = '')} class="mt-4 px-4 py-2 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Suche zurücksetzen</button>

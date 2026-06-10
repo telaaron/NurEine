@@ -71,18 +71,20 @@ export function buildStoryCard(input: StoryCardInput): string {
 	const accent = CATEGORY_ACCENT[category] || AMBER;
 	const catLabel = (CATEGORY_LABELS[category] || category).toUpperCase();
 	const hSize = headlineSize(title);
-	const dekShort = dek && dek.length > 120 ? dek.slice(0, 119) + '…' : dek;
+	// Subtitle gibt der Story TIEFE — ohne ihn ist die Karte eine leere Behauptung.
+	// Der Leser soll sofort das Warum + die Kern-Zahl sehen, nicht nur eine Headline.
+	const dekShort = dek && dek.length > 145 ? dek.slice(0, 144) + '…' : (dek || '');
 	const emotionTag = (emotion && EMOTION_TAG[emotion]) || 'gefunden · geteilt';
 
 	// WhatsApp-Status verdeckt oben (~280px Header) + unten (~400px Caption/Buttons).
 	// Darum: ALLES Wichtige in die sichere Mitte (y≈300–1480). Oben/unten nur Farbe.
 	// Kein langer Text — im Status liest niemand. Bild + kurze Headline + ein Tag.
-	const IMG_H = 760;
+	const IMG_H = 660;
 	const imageBlock = imageBase64
 		? `<img src="${imageBase64}" width="940" height="${IMG_H}" style="width:940px;height:${IMG_H}px;object-fit:cover;" />`
 		: `<div style="display:flex;width:940px;height:${IMG_H}px;align-items:center;justify-content:center;background:linear-gradient(150deg,#f0c9a0,#d98b52 60%,#b5673a);"><div style="font-family:'Space Grotesk';font-size:200px;font-weight:700;color:rgba(255,255,255,0.92);">N</div></div>`;
 
-	const waHSize = title.length <= 40 ? 64 : title.length <= 70 ? 54 : 46;
+	const waHSize = title.length <= 40 ? 60 : title.length <= 70 ? 52 : 44;
 
 	return `<!DOCTYPE html><html><body style="margin:0;width:${W}px;height:${H}px;background:${CANVAS};font-family:'Inter';display:flex;flex-direction:column;align-items:center;justify-content:center;">
 
@@ -101,17 +103,23 @@ export function buildStoryCard(input: StoryCardInput): string {
     </div>
 
     <!-- Headline (kurz, fett) -->
-    <div style="display:flex;font-family:'Space Grotesk';font-size:${waHSize}px;font-weight:700;color:${INK};line-height:1.05;letter-spacing:-0.03em;margin-top:44px;width:940px;">
+    <div style="display:flex;font-family:'Space Grotesk';font-size:${waHSize}px;font-weight:700;color:${INK};line-height:1.08;letter-spacing:-0.03em;margin-top:40px;width:940px;">
       ${esc(title)}
     </div>
 
-    <!-- Quelle/Logo-Zeile direkt unter Headline (kompakt, in der sicheren Zone) -->
-    <div style="display:flex;align-items:center;margin-top:36px;width:940px;">
+    <!-- Subtitle: das WARUM + die Kern-Zahl. Gibt der Story Substanz statt leerer Headline. -->
+    ${dekShort ? `<div style="display:flex;font-family:'Newsreader';font-size:34px;font-weight:400;color:${MUTED};line-height:1.34;margin-top:24px;width:940px;">${esc(dekShort)}</div>` : ''}
+
+    <!-- Markenzeile + klarer Verweis (kein Link-Sticker möglich → Profil-Hinweis) -->
+    <div style="display:flex;align-items:center;margin-top:40px;width:940px;">
       ${logoDataUri ? `<img src="${logoDataUri}" width="42" height="42" style="width:42px;height:42px;" />` : ''}
       <div style="font-family:'Space Grotesk';font-size:32px;font-weight:700;color:${INK};margin-left:14px;">NurEine</div>
-      ${impactScore ? `<div style="font-family:'Inter';font-size:28px;font-weight:600;color:${MUTED};margin-left:20px;">· belegt ${impactScore}/100</div>` : ''}
-      <div style="display:flex;flex:1;"></div>
-      <div style="font-family:'Inter';font-size:30px;font-weight:700;color:${AMBER};">nureine.de</div>
+      ${impactScore ? `<div style="font-family:'Inter';font-size:28px;font-weight:600;color:${MUTED};margin-left:20px;">· Wirkung ${impactScore}/100</div>` : ''}
+    </div>
+
+    <!-- Call-to-Action-Leiste: sagt dem Leser, wo er die ganze Story findet -->
+    <div style="display:flex;align-items:center;justify-content:center;margin-top:28px;width:940px;background:${AMBER};border-radius:100px;padding:22px 0;">
+      <div style="font-family:'Inter';font-size:30px;font-weight:700;color:#fff;letter-spacing:0.01em;">Ganze Geschichte → @nureine.de</div>
     </div>
 
   </div>

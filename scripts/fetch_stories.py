@@ -621,6 +621,24 @@ Ein Leser, der googeln muss, ist ein verlorener Leser.
    → Ausnahme: Strukturelle Änderungen IM Sport (z.B. "FIFA reformiert Sicherheitsregeln für alle Stadien").
    → gut_filter_reason: "sports_niche"
 
+=== MARKEN-KOMPASS: Wir sind eine NEWS-Plattform, kein Wissens-Blog ===
+
+NurEine bringt GUTE NACHRICHTEN — Dinge, die sich in der Welt zum Besseren VERÄNDERT haben.
+Wir sind NICHT „Galileo" oder ein Kuriositäten-Kanal. Frag dich bei jeder Story ehrlich:
+
+❌ KEIN Ratgeber / Lifestyle / How-To: "10 Sträucher für den Garten", "So gießt du Blumen richtig",
+   "5 Tipps für besseren Schlaf" → das ist KEINE Nachricht, das ist ein Ratgeber. → not_positive.
+❌ KEINE reine Wissens-Kuriosität OHNE Neuigkeit/Wirkung: "Warum der Himmel blau ist",
+   "Forscher erklären, wie Ameisen kommunizieren" → interessant, aber keine gute NACHRICHT. Im Zweifel
+   nur aufnehmen wenn es ein echter, frischer Durchbruch ist — dann aber niedriger Wirkungsindex (siehe unten).
+❌ KEIN Doom im Verkleidungs-Mantel: "Lage ist katastrophal, ABER ein Hoffnungsschimmer…" — wenn die Story
+   überwiegend von einem Problem/Bedrohung handelt und das Positive nur Beiwerk ist → not_positive.
+   Wir wollen den FORTSCHRITT in den Mittelpunkt, nicht die Krise mit Pflaster.
+✅ JA: etwas ist BESSER geworden, wurde GELÖST, jemand hat einen Sieg ERRUNGEN, eine Maßnahme WIRKT.
+
+Wenn die Story durchgeht, aber eigentlich nur „nett/interessant" ist (Kuriosität, Symbolik, sehr lokal),
+dann: is_nureine=true ABER impact_score niedrig (25-44). Der Wirkungsindex ist unser Qualitäts-Sortierer.
+
 === WAS WIR SUCHEN (Gold-Standard) ===
 
 Eine NurEine-Geschichte hat MINDESTENS eines dieser Merkmale:
@@ -693,7 +711,28 @@ impact_durability: 0-100 (Wie lange hält der Effekt an? Strukturveränderung=10
 
 impact_evidence: 0-100 (Peer-reviewed=100, etablierte Redaktion=75, lokal=50)
 
-impact_score: Integer 0-100. Formel: round(impact_reach_normalized * 0.4 + impact_durability * 0.35 + impact_evidence * 0.25) wobei impact_reach_normalized = min(100, log10(impact_reach + 1) * 20)
+impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
+  „Wie sehr verbessert diese Nachricht konkret das Leben von Menschen (oder den Zustand der Welt) ZUM BESSEREN?"
+  Es ist KEINE Formel aus Reichweite × Beleg × Dauer. Eine Studie kann perfekt belegt und uralt-stabil sein
+  und TROTZDEM wenig Wirkung haben (sie verbessert nichts, sie erklärt nur etwas).
+
+  Vergib den Score nach diesem Maßstab — sei STRENG, 100 ist die absolute Ausnahme:
+  • 85-100: Verändert STRUKTURELL das Leben vieler — neues Gesetz/Reform mit echtem Nutzen, Durchbruch der
+    Krankheit heilt/Armut senkt/Umwelt rettet, Technologie die nachweisbar >100.000 Menschen direkt hilft.
+    Beispiele: „Malaria-Impfstoff für Kinder zugelassen" (95), „Solarstrom überholt Kohle" (88, echte Energiewende).
+  • 65-84: Klarer, konkreter Fortschritt mit greifbarem Nutzen — ein gelöstes Problem, eine gute neue Regel,
+    eine wirksame Maßnahme, eine Art gerettet. Beispiele: „Nashörner kehren zurück und vermehren sich" (75).
+  • 45-64: Solide gute Entwicklung, regionaler/mittlerer Fortschritt, vielversprechender erster Schritt.
+  • 25-44: Nett, aber geringe reale Wirkung — wissenschaftliche ERKENNTNIS/Kuriosität OHNE direkten Nutzen
+    (interessant, aber verbessert nichts), Symbolisches, sehr Lokales, vager früher Forschungsstand.
+    ⚠️ HIERHIN gehören reine „Aha"-Studien: „Hauskatzen wurden früher domestiziert als gedacht",
+    „Sex beschleunigte die Evolution", „Ältester Baum entdeckt" — faszinierend fürs Archiv, aber KEINE
+    Wirkung auf das Leben von heute. NIEMALS 90+ nur weil peer-reviewed und das Thema groß ist.
+  • 1-24: Minimaler Impact, Grenzfall der gerade noch reinkommt.
+
+  Merksatz: Frag „Wird das Leben von irgendwem morgen messbar besser?" Wenn nein → max 44, egal wie gut belegt.
+  impact_reach/durability/evidence fülle separat ehrlich aus — aber der impact_score folgt dem Wirkungs-Maßstab
+  oben, NICHT einer Multiplikation der drei.
 
 kid_min_age: Wenn die Geschichte sich gut mit Kindern besprechen lässt: Mindestalter zum Erklären (integer, z.B. 6, 8, 10, 12). Wenn ungeeignet für Kinder (zu abstrakt, zu düster, kein kindgerechter Aufhänger): null.
 kid_explainer: Nur wenn kid_min_age gesetzt: EIN kurzer, kindgerechter Satz, der den schwierigsten Begriff der Geschichte erklärt (kein Belehrungston). Sonst null. Beispiel: "Extreme Armut bedeutet: von weniger als 2 Euro pro Tag leben müssen."

@@ -219,16 +219,56 @@ async function igCreateContainer(body: Record<string, unknown>): Promise<string>
 	return ((await resp.json()) as { id: string }).id;
 }
 
+/**
+ * Wartet bis der Media-Container FINISHED ist, BEVOR publiziert wird.
+ * Ohne das schlägt media_publish mit Code 9007 fehl ("Media ID is not available /
+ * Die Medien können noch nicht veröffentlicht werden"), weil IG das Bild
+ * (besonders frische, nicht-gecachte share-card-URLs) noch fetcht/verarbeitet.
+ * Pollt status_code: IN_PROGRESS → warten, FINISHED → ok, ERROR/EXPIRED → abbrechen.
+ */
+async function waitForContainer(creationId: string, maxWaitMs = 40000): Promise<void> {
+	const token = env.IG_ACCESS_TOKEN!;
+	const start = Date.now();
+	let delay = 2000;
+	while (Date.now() - start < maxWaitMs) {
+		const resp = await fetch(
+			`https://graph.facebook.com/${IG_V}/${creationId}?fields=status_code,status&access_token=${token}`
+		);
+		if (resp.ok) {
+			const j = (await resp.json()) as { status_code?: string; status?: string };
+			if (j.status_code === 'FINISHED') return;
+			if (j.status_code === 'ERROR' || j.status_code === 'EXPIRED') {
+				throw new Error(`IG container ${j.status_code}: ${j.status ?? ''}`.slice(0, 300));
+			}
+		}
+		await new Promise((r) => setTimeout(r, delay));
+		delay = Math.min(delay + 1500, 6000); // sanft hochfahren
+	}
+	// Timeout — trotzdem versuchen zu publizieren (igPublish retryt 9007 nochmal).
+}
+
 async function igPublish(creationId: string): Promise<string> {
 	const userId = env.IG_USER_ID!;
 	const token = env.IG_ACCESS_TOKEN!;
-	const resp = await fetch(`https://graph.facebook.com/${IG_V}/${userId}/media_publish`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ creation_id: creationId, access_token: token })
-	});
-	if (!resp.ok) throw new Error(`IG publish ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
-	return ((await resp.json()) as { id: string }).id;
+	// Erst auf FINISHED warten, dann publizieren (verhindert 9007-Race).
+	await waitForContainer(creationId);
+
+	for (let attempt = 0; attempt < 3; attempt++) {
+		const resp = await fetch(`https://graph.facebook.com/${IG_V}/${userId}/media_publish`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ creation_id: creationId, access_token: token })
+		});
+		if (resp.ok) return ((await resp.json()) as { id: string }).id;
+		const text = await resp.text();
+		// 9007 = noch nicht bereit → kurz warten + nochmal (max 3 Versuche).
+		if (text.includes('9007') && attempt < 2) {
+			await new Promise((r) => setTimeout(r, 5000));
+			continue;
+		}
+		throw new Error(`IG publish ${resp.status}: ${text.slice(0, 300)}`);
+	}
+	throw new Error('IG publish failed after retries');
 }
 
 /** Single-image feed post. */

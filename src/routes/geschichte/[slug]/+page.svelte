@@ -119,6 +119,29 @@
 				<span class="hidden sm:inline" style="color: var(--color-rule-strong);" aria-hidden="true">|</span>
 				<ShareBar url={storyUrl} title={story.title} text={story.dek} showLabel={true} />
 			</div>
+
+			{#if story.audioUrl}
+				<!-- Vorlesen: dezenter Player, nur für die wenigen vertonten Top-Stories. -->
+				<div class="mt-6 rise rise-d4 flex flex-col gap-2 p-4 rounded-[8px]" style="background: var(--color-canvas-soft); border: 1px solid var(--color-rule);">
+					<div class="flex items-center gap-2 text-xs" style="color: var(--color-muted);">
+						<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+							<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+							<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+							<path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+						</svg>
+						<span style="font-family: var(--font-mono); letter-spacing: 0.04em;">Lieber hören? Diese Geschichte vorgelesen.</span>
+					</div>
+					<!-- svelte-ignore a11y_media_has_caption -->
+					<audio
+						controls
+						preload="none"
+						src={story.audioUrl}
+						class="w-full"
+						style="height: 38px;"
+						onplay={() => track('audio_play', { slug: story.slug })}
+					></audio>
+				</div>
+			{/if}
 		</div>
 	</header>
 

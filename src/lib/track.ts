@@ -18,7 +18,8 @@ type EventName =
 	| 'ticker_click'
 	| 'archive_filter'
 	| 'story_submitted'
-	| 'story_shared';
+	| 'story_shared'
+	| 'audio_play';
 
 function sessionId(): string {
 	try {

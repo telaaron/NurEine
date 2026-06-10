@@ -760,6 +760,26 @@ impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
   impact_reach/durability/evidence fülle separat ehrlich aus — aber der impact_score folgt dem Wirkungs-Maßstab
   oben, NICHT einer Multiplikation der drei.
 
+impact_reach_score: 0-100 — die REICHWEITE als Balkenwert (für die sichtbare Aufschlüsselung).
+  Wie viele Menschen betrifft die gute Nachricht direkt? 100=Milliarden/global, 80=Millionen, 60=Hunderttausende,
+  40=Zehntausende, 20=lokal/wenige. WICHTIG: muss zum impact_score passen — eine Story mit niedrigem Gesamtscore
+  hat selten einen hohen Reichweite-Balken (Konsistenz vor Schönfärberei).
+
+impact_durability und impact_evidence (0-100) sind ebenfalls die Balkenwerte für Dauerhaftigkeit
+  ("Bleibt die Wirkung länger als eine Woche/ein Jahr?") und Belegbarkeit ("Wie hart sind die Daten?").
+  Alle drei Balken zusammen müssen den Gesamtscore PLAUSIBEL ergeben — kein Balken darf dem Gesamtbild
+  widersprechen (eine 25er-Kuriosität hat nicht drei 90er-Balken).
+
+impact_explainer: EIN deutscher Satz, der die RELEVANZ übersetzt (nicht die Methodik erklärt). Sagt einer
+  Leserin in Alltagssprache, warum sie das angeht. Max 140 Zeichen. KEINE Floskel, kein "Experten sagen".
+  GUT: „Diese Spritze könnte HIV-Neuinfektionen weltweit halbieren — zwei Mal im Jahr, mehr nicht."
+  SCHLECHT: „Die Studie wurde peer-reviewed und hat hohe Evidenz."
+
+share_hook: EIN fertiger Chat-Satz zum WEITERGEBEN (WhatsApp-ready), den man einem Freund schickt. Neugierig,
+  menschlich, überraschend — KEINE Schlagzeile, KEINE Werbung, kein Hashtag, kein Link. Max 160 Zeichen.
+  So formuliert, dass der Empfänger sofort mehr wissen will. GUT: „Stell dir vor: Eine Spritze, zweimal im Jahr,
+  und HIV hat kaum noch eine Chance. Genau das wurde gerade zugelassen."
+
 kid_min_age: Wenn die Geschichte sich gut mit Kindern besprechen lässt: Mindestalter zum Erklären (integer, z.B. 6, 8, 10, 12). Wenn ungeeignet für Kinder (zu abstrakt, zu düster, kein kindgerechter Aufhänger): null.
 kid_explainer: Nur wenn kid_min_age gesetzt: EIN kurzer, kindgerechter Satz, der den schwierigsten Begriff der Geschichte erklärt (kein Belehrungston). Sonst null. Beispiel: "Extreme Armut bedeutet: von weniger als 2 Euro pro Tag leben müssen."
 conversation_starter: Nur wenn kid_min_age gesetzt: EINE offene Frage fürs Familiengespräch (keine richtige Antwort, kein Lehrton). Sonst null. Beispiel: "Was würdest du tun, wenn du das Problem lösen müsstest?"
@@ -1529,6 +1549,10 @@ def run() -> None:
             story_record["ig_caption"] = _safe_text(result.get("ig_caption"), 600) if _ig_ok else None
             # Jugendschutz-Flag (default false). Verhüllt heikle Stories im Frontend dezent.
             story_record["sensitive"] = _safe_bool(result.get("sensitive"))
+            # Wirkungsindex-Aufschlüsselung (3. Balken-Achse + Relevanz-Satz + Teilen-Satz).
+            story_record["impact_reach_score"] = _safe_int(result.get("impact_reach_score"), lo=0, hi=100)
+            story_record["impact_explainer"] = _safe_text(result.get("impact_explainer"), 200)
+            story_record["share_hook"] = _safe_text(result.get("share_hook"), 220)
 
             # Parse published date
             raw_published = story_record["published_at"]

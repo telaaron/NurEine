@@ -45,6 +45,10 @@ export type SupabaseStory = {
   audio_url: string | null;
   // Jugendschutz-Flag (migration 00025).
   sensitive: boolean | null;
+  // Wirkungsindex-Aufschlüsselung (migration 00026).
+  impact_reach_score: number | null;
+  impact_explainer: string | null;
+  share_hook: string | null;
 };
 
 export type StoryResult = {
@@ -87,6 +91,12 @@ export type StoryResult = {
   igCaption: string | null;
   audioUrl: string | null;
   sensitive: boolean;
+  // Wirkungsindex-Aufschlüsselung
+  impactReach: number | null;
+  impactDurability: number | null;
+  impactEvidence: number | null;
+  impactExplainer: string | null;
+  shareHook: string | null;
 };
 
 // ---- Helpers ----
@@ -152,7 +162,12 @@ function mapStory(row: SupabaseStory): StoryResult {
     slides: row.slides ?? null,
     igCaption: row.ig_caption ?? null,
     audioUrl: row.audio_url ?? null,
-    sensitive: row.sensitive ?? false
+    sensitive: row.sensitive ?? false,
+    impactReach: row.impact_reach_score ?? null,
+    impactDurability: row.impact_durability ?? null,
+    impactEvidence: row.impact_evidence ?? null,
+    impactExplainer: row.impact_explainer ?? null,
+    shareHook: row.share_hook ?? null
   };
 }
 

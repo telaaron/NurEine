@@ -11,6 +11,25 @@
 	const tone = $derived(toneStyles[story.tone]);
 	const secs = $derived(sections(story.body));
 
+	// Wirkungsindex-Aufschlüsselung: die drei Achsen als Balken.
+	const axes = $derived([
+		{ label: 'Reichweite', value: story.impactReach, q: 'Wie viele Menschen betrifft es?' },
+		{ label: 'Dauerhaftigkeit', value: story.impactDurability, q: 'Bleibt die Wirkung länger als kurz?' },
+		{ label: 'Belegbarkeit', value: story.impactEvidence, q: 'Wie hart sind die Daten?' }
+	].filter((a) => typeof a.value === 'number'));
+	let methodOpen = $state(false);
+
+	// "Weitersagen"-Satz: gecachter share_hook, sonst Subtitle als Fallback.
+	const shareLine = $derived(story.shareHook || story.dek || story.title);
+	let shareCopied = $state(false);
+	function copyShareLine() {
+		navigator.clipboard?.writeText(shareLine).then(() => {
+			shareCopied = true;
+			setTimeout(() => (shareCopied = false), 1800);
+			track('story_shared', { slug: story.slug, via: 'share_hook' });
+		}).catch(() => {});
+	}
+
 	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
 	const storyUrl = $derived(`${baseUrl}/geschichte/${story.slug}`);
 
@@ -180,33 +199,84 @@
 					{story.impactScore}
 				</span>
 				<span class="text-base" style="color: var(--color-muted);">/ 100</span>
+				{#if data.impactPercentile != null && data.impactPercentile <= 25}
+					<span class="ml-auto text-xs px-2.5 py-1 rounded-full" style="background: {tone.bg}; color: {tone.fg}; font-weight: 600;">
+						Top {data.impactPercentile}% aller Geschichten
+					</span>
+				{/if}
 			</div>
+
+			<!-- Die drei Achsen als Balken — macht die Zahl nachvollziehbar. -->
+			{#if axes.length === 3}
+				<div class="mt-5 flex flex-col gap-3">
+					{#each axes as a}
+						<div>
+							<div class="flex items-baseline justify-between gap-3">
+								<span class="text-xs font-medium" style="color: var(--color-ink-soft);">{a.label}</span>
+								<span class="tnum text-xs" style="color: var(--color-muted);">{a.value}</span>
+							</div>
+							<div class="mt-1 h-2 rounded-full overflow-hidden" style="background: var(--color-rule);">
+								<div class="h-full rounded-full" style="width: {a.value}%; background: {tone.fg};"></div>
+							</div>
+							<p class="mt-1 text-[0.68rem]" style="color: var(--color-faint);">{a.q}</p>
+						</div>
+					{/each}
+				</div>
+			{/if}
+
+			<!-- Relevanz-Satz: übersetzt, warum es zählt (nicht Methodik). -->
 			<p
-				class="mt-3 text-sm leading-relaxed"
+				class="mt-5 text-sm leading-relaxed"
 				style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 			>
-				{story.impactNote}
+				{story.impactExplainer || story.impactNote}
 			</p>
-			<p class="mt-4 text-xs leading-relaxed" style="color: var(--color-muted);">
-				Der NurEine-Wirkungsindex bewertet, wie viele Menschen messbar positiv beeinflusst
-				werden — gewichtet nach Belegbarkeit, Reichweite und Dauerhaftigkeit. Methodik:
-				<a
-					class="underline"
-					href={base + '/methodik'}
-					style="color: var(--color-ink-soft);"
-				>
-					Methodik
-				</a>.
-			</p>
+
+			<!-- Aufklapp-Methodik für Neugierige. -->
+			<button type="button" onclick={() => (methodOpen = !methodOpen)}
+				class="mt-4 inline-flex items-center gap-1.5 text-xs hover:opacity-70"
+				style="color: var(--color-muted);">
+				<span style="transform: rotate({methodOpen ? 90 : 0}deg); transition: transform 0.2s;">▸</span>
+				Wie wird der Index berechnet?
+			</button>
+			{#if methodOpen}
+				<div class="mt-3 text-xs leading-relaxed flex flex-col gap-1.5" style="color: var(--color-muted);">
+					<p>Der Wirkungsindex misst eine Sache: <strong style="color: var(--color-ink-soft);">Wie sehr verbessert diese Nachricht konkret Leben?</strong> Drei Achsen fließen ein:</p>
+					<p><strong style="color: var(--color-ink-soft);">Reichweite</strong> — wie viele Menschen betrifft es direkt.</p>
+					<p><strong style="color: var(--color-ink-soft);">Dauerhaftigkeit</strong> — hält die Wirkung an oder ist sie ein Einzelmoment.</p>
+					<p><strong style="color: var(--color-ink-soft);">Belegbarkeit</strong> — wie hart sind die Daten (Peer-Review, etablierte Quelle).</p>
+					<p class="mt-1">Reine Erkenntnisse ohne Lebenswirkung werden bewusst niedrig bewertet, auch wenn sie gut belegt sind. <a class="underline" href={base + '/methodik'} style="color: var(--color-ink-soft);">Volle Methodik →</a></p>
+				</div>
+			{/if}
 		</aside>
 	</div>
 
-	<!-- Share CTA — editorial closer -->
-	<div class="relative mx-auto max-w-[680px] px-4 sm:px-6 lg:px-0 mt-10 sm:mt-14 text-center">
-		<p class="serif text-sm sm:text-base leading-relaxed" style="color: var(--color-muted); font-style: italic;">
+	<!-- Share CTA — editorial closer + fertiger Weitersagen-Satz (Reflex: kopieren & senden) -->
+	<div class="relative mx-auto max-w-[680px] px-4 sm:px-6 lg:px-0 mt-10 sm:mt-14">
+		<p class="serif text-sm sm:text-base leading-relaxed text-center" style="color: var(--color-muted); font-style: italic;">
 			Diese Geschichte ist zu gut, um sie für sich zu behalten.
 		</p>
-		<div class="mt-4 flex items-center justify-center">
+
+		<!-- So erzählst du es weiter: EINE fertige Version, ein Tap zum Kopieren. -->
+		<div class="mt-5 p-5 sm:p-6 rounded-[10px]" style="background: var(--color-canvas-soft); border: 1px solid var(--color-rule);">
+			<p class="eyebrow mb-3" style="color: {tone.fg};">So erzählst du es weiter</p>
+			<p class="serif text-base sm:text-lg leading-relaxed" style="color: var(--color-ink);">
+				„{shareLine}"
+			</p>
+			<button type="button" onclick={copyShareLine}
+				class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.97]"
+				style="background: {shareCopied ? 'var(--color-sage)' : 'var(--color-ink)'}; color: var(--color-paper);">
+				{#if shareCopied}
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+					Kopiert!
+				{:else}
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+					Satz kopieren
+				{/if}
+			</button>
+		</div>
+
+		<div class="mt-5 flex items-center justify-center">
 			<ShareBar url={storyUrl} title={story.title} text={story.dek} size={20} />
 		</div>
 	</div>

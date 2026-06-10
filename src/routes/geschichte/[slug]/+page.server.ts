@@ -27,5 +27,14 @@ export async function load({ params }: { params: { slug: string } }) {
 
 	const baseUrl = PUBLIC_BASE_URL || 'https://nureine.de';
 
-	return { story, next, prev, related, baseUrl };
+	// Perzentil: in den Top X% nach Wirkungsindex? Gibt der nackten Zahl einen Anker.
+	// Billig in-memory — allStories ist ohnehin geladen.
+	let impactPercentile: number | null = null;
+	if (allStories.length > 1 && typeof story.impactScore === 'number') {
+		const better = allStories.filter((s) => s.impactScore > story.impactScore).length;
+		// "Top X%" — gerundet, mind. 1.
+		impactPercentile = Math.max(1, Math.round((better / allStories.length) * 100));
+	}
+
+	return { story, next, prev, related, baseUrl, impactPercentile };
 }

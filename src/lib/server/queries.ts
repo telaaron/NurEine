@@ -248,20 +248,11 @@ export async function getStoryById(id: string): Promise<StoryResult | undefined>
  * Uses created_at (true insert time), not published_at (RSS date, lags 24h+).
  */
 export async function getLatestFeatured(): Promise<StoryResult | undefined> {
-  // 1. The story last sent as the daily newsletter — the "story of the day".
-  const { data: sent } = await supabaseAdmin
-    .from('nureine_stories')
-    .select('*')
-    .not('newsletter_sent_at', 'is', null)
-    .order('newsletter_sent_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (sent) return mapStory(sent as SupabaseStory);
-
-  // 2. Noch kein Newsletter — der Tagesaufmacher ist die STÄRKSTE frische Story
-  //    (höchster Wirkungsindex der letzten 48h), NICHT bloß die neueste. Sonst
-  //    landet eine schwache 55er-Story als Hero, nur weil sie zuletzt kam.
+  // Der Tagesaufmacher soll die BESTE aktuelle Geschichte sein — nicht die, die
+  // zufällig zuletzt im Newsletter ging (der Newsletter wählt nach anderem Mix
+  // und kann eine schwächere 55er-Story enthalten). Darum: stärkste frische Story
+  // (höchster Wirkungsindex, ≤48h) gewinnt; die Newsletter-Hero zählt nur mit,
+  // wenn sie ebenfalls frisch ist. So steht nie eine schwache Story groß oben.
   const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
   const { data: topFresh } = await supabaseAdmin
     .from('nureine_stories')
@@ -275,7 +266,19 @@ export async function getLatestFeatured(): Promise<StoryResult | undefined> {
 
   if (topFresh) return mapStory(topFresh as SupabaseStory);
 
-  // 3. Keine frische Story → stärkste Story overall.
+  // Fallback: die zuletzt als Newsletter versandte Story (Story des Tages),
+  // falls in 48h nichts Neues gescort wurde.
+  const { data: sent } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('*')
+    .not('newsletter_sent_at', 'is', null)
+    .order('newsletter_sent_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (sent) return mapStory(sent as SupabaseStory);
+
+  // Letzter Ausweg: stärkste Story overall.
   const all = await getAllStories();
   return [...all].sort((a, b) => b.impactScore - a.impactScore)[0];
 }

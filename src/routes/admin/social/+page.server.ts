@@ -2,14 +2,13 @@ import { listSocialPosts, socialAnalytics, getAppSetting } from '$lib/server/soc
 import { supabaseAdmin } from '$lib/server/supabase/client';
 
 export async function load() {
-	const [posts, analytics, autopilotVal, dryrunVal, storyRows, replyRows] = await Promise.all([
-		listSocialPosts(60),
+	const [allPosts, analytics, autopilotVal, storyRows, replyRows] = await Promise.all([
+		listSocialPosts(80),
 		socialAnalytics(),
 		getAppSetting('social_autopilot'),
-		getAppSetting('comments_dryrun'),
 		supabaseAdmin
 			.from('nureine_social_posts')
-			.select('id,category,saves,reach,posted_at,ig_media_id')
+			.select('id,category,saves,reach,posted_at,ig_media_id,card_url,story_id')
 			.eq('platform', 'instagram_story')
 			.eq('status', 'posted')
 			.order('posted_at', { ascending: false })
@@ -21,7 +20,12 @@ export async function load() {
 			.limit(20)
 	]);
 
-	const stories = (storyRows.data as { saves: number | null; reach: number | null; posted_at: string }[]) ?? [];
+	// Feed-Posts (Carousel/Einzelbild) und IG-Stories sind verschiedene Dinge —
+	// in der editierbaren Queue NUR Feed-Posts zeigen. Stories laufen automatisch
+	// (keine Caption, kein Approval) und erscheinen im eigenen Story-Block.
+	const posts = allPosts.filter((p) => p.platform === 'instagram');
+
+	const stories = (storyRows.data as { saves: number | null; reach: number | null; posted_at: string; card_url: string | null; category: string | null }[]) ?? [];
 	const storyStats = {
 		total: stories.length,
 		today: stories.filter((s) => new Date(s.posted_at).toDateString() === new Date().toDateString()).length,
@@ -33,8 +37,8 @@ export async function load() {
 		posts,
 		analytics,
 		autopilot: autopilotVal === 'true',
-		commentsDryrun: dryrunVal !== 'false',
 		storyStats,
+		recentStories: stories.slice(0, 12),
 		replies: (replyRows.data as { comment_text: string; reply_text: string | null; skipped_reason: string | null; replied_at: string }[]) ?? []
 	};
 }

@@ -73,6 +73,7 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
+ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 
 DEEPSEEK_MODEL = "deepseek-chat"
 DEEPSEEK_ENDPOINT = "https://api.deepseek.com/chat/completions"
@@ -84,8 +85,18 @@ FAL_NUM_IMAGES = 1
 FAL_POLL_INTERVAL = 3  # seconds between status polls (pro is slower)
 FAL_POLL_TIMEOUT = 180  # max seconds to wait for generation
 
-# Supabase Storage bucket for story images
+# ElevenLabs TTS (Vorlesen-Feature)
+# Free-Tier: ~10k chars/month. Danach: gpt-4o-mini-tts.
+ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "LruHrtVF6PSyGItz4mXh")  # George — ruhig, männlich, deutsch
+ELEVENLABS_MODEL = "eleven_multilingual_v2"
+ELEVENLABS_TTS_URL = f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}"
+
+# Supabase Storage buckets
 STORAGE_BUCKET = "story_images"
+AUDIO_STORAGE_BUCKET = "story_audio"
+
+# Audio feature: nur Top-2 Stories pro Run vertonen
+MAX_AUDIO_STORIES = 2
 
 # Source configuration: per-source limits & priority
 # Format: source_name -> {max_per_run, priority}
@@ -452,6 +463,80 @@ def supabase_upload_image(image_bytes: bytes, filename: str) -> str | None:
     return public_url
 
 
+def generate_audio_elevenlabs(text: str) -> bytes | None:
+    """Generate MP3 audio via ElevenLabs TTS API. Returns raw MP3 bytes or None."""
+    if not ELEVENLABS_API_KEY:
+        log.warning("  ELEVENLABS_API_KEY not set — skipping TTS generation.")
+        return None
+
+    # ElevenLabs free tier: max 5000 chars per request. Truncate to ~2000 chars
+    # (~2 Min. Lesezeit) — das reicht für unsere kompakten Stories.
+    MAX_CHARS = 2000
+    text_trimmed = text[:MAX_CHARS]
+    if len(text) > MAX_CHARS:
+        # Am letzten Satzende abschneiden
+        last_period = text_trimmed.rfind(".")
+        last_excl = text_trimmed.rfind("!")
+        last_ques = text_trimmed.rfind("?")
+        cut = max(last_period, last_excl, last_ques)
+        if cut > MAX_CHARS // 2:
+            text_trimmed = text[: cut + 1]
+
+    payload = {
+        "text": text_trimmed,
+        "model_id": ELEVENLABS_MODEL,
+        "voice_settings": {
+            "stability": 0.5,
+            "similarity_boost": 0.8,
+            "style": 0.1,
+            "speaker_boost": True,
+        },
+    }
+
+    headers = {
+        "xi-api-key": ELEVENLABS_API_KEY,
+        "Content-Type": "application/json",
+        "Accept": "audio/mpeg",
+    }
+
+    try:
+        resp = requests.post(
+            ELEVENLABS_TTS_URL,
+            headers=headers,
+            json=payload,
+            timeout=90,
+        )
+        if resp.status_code == 429:
+            log.warning("  ElevenLabs rate limit — skipping audio for this run.")
+            return None
+        resp.raise_for_status()
+        return resp.content
+    except requests.RequestException as exc:
+        log.error("  ElevenLabs TTS failed: %s", exc)
+        return None
+
+
+def upload_audio_to_storage(audio_bytes: bytes, filename: str) -> str | None:
+    """Upload MP3 audio to Supabase Storage (story_audio bucket). Returns public URL or None."""
+    upload_url = f"{SUPABASE_URL}/storage/v1/object/{AUDIO_STORAGE_BUCKET}/{filename}"
+    headers = {
+        "apikey": SUPABASE_SERVICE_KEY,  # type: ignore[arg-type]
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": "audio/mpeg",
+        "x-upsert": "true",
+    }
+    try:
+        resp = requests.post(upload_url, headers=headers, data=audio_bytes, timeout=60)
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        log.error("  Failed to upload audio to Supabase Storage: %s", exc)
+        return None
+
+    public_url = f"{SUPABASE_URL}/storage/v1/object/public/{AUDIO_STORAGE_BUCKET}/{filename}"
+    log.info("  Audio uploaded: %s", public_url)
+    return public_url
+
+
 def source_exists(source_url: str) -> bool:
     """Return True if a story with this source_url already exists in Supabase."""
     params = {"source_url": f"eq.{source_url}", "select": "id", "limit": "1"}
@@ -577,6 +662,8 @@ gut_filter_reason: null (wenn is_nureine=true) ODER einer von ["history_trap", "
 NUR wenn is_nureine=true, fülle zusätzlich:
 
 title: Ein einfacher Satz, den jeder versteht (max 80 Zeichen). Keine journalistische Schlagzeile — sag einfach, was passiert ist und warum es gut ist.
+  MUSS EIGENSTÄNDIG VERSTÄNDLICH sein: Eine Leserin, die den Artikel NICHT kennt, muss allein vom Titel begreifen, worum es geht und warum es gut ist.
+  ⚠️ KEINE unerklärten fremdsprachigen Eigennamen, Abkürzungen, Spitznamen oder Insider-Begriffe. Beispiel SCHLECHT: "Freiwillige dokumentieren jede Art in den Smokies" (was sind "die Smokies"? niemand weiß das). Beispiel GUT: "Im US-Nationalpark Great Smoky Mountains sind erstmals alle Tierarten erfasst". Ersetze oder erkläre jeden Begriff, den ein deutscher Durchschnittsleser nicht sofort einordnen kann (Ort → mit Land/Region; Abkürzung → ausschreiben; Eigenname → kurz erklären). Lieber 5 Zeichen mehr und klar als kryptisch.
 
 subtitle: Ein Satz, der das Ereignis mit seinem Warum verbindet (max 130 Zeichen). Nenne die wichtigste Zahl und erkläre kurz den dahinterstehenden Mechanismus.
 
@@ -1403,6 +1490,66 @@ def run() -> None:
                     first_error = str(exc)
 
             time.sleep(API_DELAY_SECONDS)
+
+    # ---- STAGE 8: Audio-TTS for top-2 stories (ElevenLabs) ----
+    if stories_added > 0 and ELEVENLABS_API_KEY:
+        log.info("--- Audio-TTS: Vertonung der Top-%d Stories ---", MAX_AUDIO_STORIES)
+        try:
+            top_stories = supabase_get(
+                "nureine_stories",
+                params={
+                    "select": "id,title,body_markdown,summary,impact_score",
+                    "audio_url": "is.null",
+                    "order": "impact_score.desc",
+                    "limit": str(MAX_AUDIO_STORIES),
+                },
+            )
+            audio_count = 0
+            for ts in top_stories:
+                ts_id = ts.get("id")
+                ts_title = ts.get("title", "")
+                # Vertonungstext: body_markdown bevorzugt, sonst summary
+                text_to_read = ts.get("body_markdown") or ts.get("summary") or ""
+                if not text_to_read or len(text_to_read) < 100:
+                    log.info("  Überspringe '%s' — zu wenig Text (%d Zeichen)", ts_title, len(text_to_read))
+                    continue
+
+                log.info("  Generiere Audio für '%s' (impact=%s, %d Zeichen)...",
+                         ts_title, ts.get("impact_score"), len(text_to_read))
+                mp3_bytes = generate_audio_elevenlabs(text_to_read)
+                public_url = None
+
+                if mp3_bytes:
+                    # Dateiname: story_id.mp3
+                    audio_filename = f"{ts_id}.mp3"
+                    public_url = upload_audio_to_storage(mp3_bytes, audio_filename)
+
+                # Fallback: OpenAI TTS via Supabase Edge Function
+                if not public_url:
+                    log.info("  ElevenLabs nicht verfügbar — Fallback auf OpenAI gpt-4o-mini-tts...")
+                    public_url = generate_audio_via_edge_function(text_to_read, ts_id)
+
+                if not public_url:
+                    continue
+
+                # audio_url in DB setzen via PATCH
+                patch_url = f"{SUPABASE_URL}/rest/v1/nureine_stories?id=eq.{ts_id}"
+                try:
+                    resp = requests.patch(
+                        patch_url,
+                        headers=supabase_headers(),
+                        json={"audio_url": public_url},
+                        timeout=15,
+                    )
+                    resp.raise_for_status()
+                    audio_count += 1
+                    log.info("  Audio gespeichert: %s", public_url)
+                except requests.RequestException as exc:
+                    log.error("  Failed to update audio_url for '%s': %s", ts_title, exc)
+
+            log.info("Audio-TTS complete — %d/%d stories vertont.", audio_count, len(top_stories))
+        except Exception as exc:
+            log.error("Audio-TTS stage failed: %s", exc)
 
     # Log summary
     if filter_reasons:

@@ -15,6 +15,7 @@
 		impactNote: string;
 		tone: 'amber' | 'sage' | 'rose' | 'sky';
 		hero: string;
+		audioUrl?: string | null;
 	};
 
 	type Props = { story: StoryCardData; size?: 'sm' | 'md' | 'lg' | 'feature'; baseUrl?: string };

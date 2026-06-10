@@ -36,6 +36,7 @@ export interface HeroStory {
   kid_min_age?: number | null;
   kid_explainer?: string | null;
   conversation_starter?: string | null;
+  audio_url?: string | null;
 }
 
 export interface Subscriber {
@@ -286,6 +287,7 @@ export function buildB2CHtml(
           <h2 class="nur-eine-text-primary" style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">${story.title}</h2>
           ${dek ? `<p class="nur-eine-text-dek" style="margin:0 0 22px;font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#4a3f35;line-height:1.5;letter-spacing:-0.005em;">${dek}</p>` : ''}
           <p class="nur-eine-text-body" style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">${summary}</p>
+          ${story.audio_url ? `<p style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#6b6359;">&#x1F50A; <a href="${url}" target="_blank" class="nur-eine-link" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">Lieber hören? Geschichte anhören &rarr;</a></p>` : ''}
         </td></tr>
 
         <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;" /></td></tr>
@@ -535,7 +537,7 @@ async function sendBrevoEmail(toEmail: string, subject: string, html: string): P
  */
 async function selectNewsletterStory(): Promise<HeroStory | null> {
   const BASE_SELECT =
-    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter';
+    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter,audio_url';
   const now = new Date();
 
   // ── Tier 1: last 24 h ──────────────────────────────────────────────
@@ -624,7 +626,7 @@ async function markStorySent(storyId: string): Promise<void> {
  */
 async function selectRankedStories(limit = 12): Promise<HeroStory[]> {
   const BASE_SELECT =
-    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter';
+    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter,audio_url';
   const now = Date.now();
 
   async function tier(sinceMs: number | null): Promise<HeroStory[]> {

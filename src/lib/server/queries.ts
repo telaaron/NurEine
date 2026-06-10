@@ -41,6 +41,8 @@ export type SupabaseStory = {
   wa_opener: string | null;
   slides: { hook: string; aufloesung: string; stille: string } | null;
   ig_caption: string | null;
+  // Vorlesen-Feature (migration 00024) — nur Top-Stories.
+  audio_url: string | null;
 };
 
 export type StoryResult = {
@@ -81,6 +83,7 @@ export type StoryResult = {
   waOpener: string | null;
   slides: { hook: string; aufloesung: string; stille: string } | null;
   igCaption: string | null;
+  audioUrl: string | null;
 };
 
 // ---- Helpers ----
@@ -144,7 +147,8 @@ function mapStory(row: SupabaseStory): StoryResult {
     igHook: row.ig_hook ?? null,
     waOpener: row.wa_opener ?? null,
     slides: row.slides ?? null,
-    igCaption: row.ig_caption ?? null
+    igCaption: row.ig_caption ?? null,
+    audioUrl: row.audio_url ?? null
   };
 }
 

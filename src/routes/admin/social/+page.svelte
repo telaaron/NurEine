@@ -15,21 +15,6 @@
 		if (ok) autopilot = r.autopilot;
 	}
 
-	let dryrun = $state(data.commentsDryrun);
-	let simResults = $state<{ text: string; reply: string | null; reason: string }[]>([]);
-	let simBusy = $state(false);
-
-	async function toggleDryrun() {
-		const { ok, data: r } = await api({ action: 'toggle-dryrun' });
-		if (ok) dryrun = r.dryrun;
-	}
-	async function simulate() {
-		simBusy = true;
-		const { ok, data: r } = await api({ action: 'simulate-comments' });
-		simBusy = false;
-		if (ok) simResults = r.results;
-	}
-
 	async function postAll() {
 		if (!confirm('ALLE freigegebenen + Entwurf-Posts JETZT auf Instagram veröffentlichen? (kann IG-Rate-Limit treffen)')) return;
 		postingAll = true;
@@ -154,58 +139,49 @@
 	</div>
 {/if}
 
-<!-- IG-Story-Statistiken -->
+<!-- IG-Stories: automatisch, kurze Eilmeldung (1 Bild, keine Slides, kein Approval) -->
 <div class="mt-6 paper rounded-[10px] p-4" style="border: 1px solid var(--color-rule);">
-	<p class="text-xs uppercase tracking-wider mb-3" style="color: var(--color-amber); font-family: var(--font-mono);">IG-Stories</p>
-	<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+	<p class="text-xs uppercase tracking-wider mb-1" style="color: var(--color-amber); font-family: var(--font-mono);">📱 IG-Stories — automatisch</p>
+	<p class="text-xs mb-3" style="color: var(--color-muted);">Jede frische Story läuft über den Tag verteilt als 9:16-Story (1 Bild, kurze Zusammenfassung). Keine Slides, kein Freigeben nötig.</p>
+	<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
 		<div><div class="text-2xl font-semibold" style="color: var(--color-ink);">{data.storyStats.today}</div><div class="text-xs" style="color: var(--color-muted);">heute gepostet</div></div>
 		<div><div class="text-2xl font-semibold" style="color: var(--color-ink);">{data.storyStats.total}</div><div class="text-xs" style="color: var(--color-muted);">gesamt (40 letzte)</div></div>
 		<div><div class="text-2xl font-semibold" style="color: var(--color-ink);">{data.storyStats.totalReach}</div><div class="text-xs" style="color: var(--color-muted);">Reach gesamt</div></div>
 		<div><div class="text-2xl font-semibold" style="color: var(--color-ink);">{data.storyStats.totalSaves}</div><div class="text-xs" style="color: var(--color-muted);">Saves gesamt</div></div>
 	</div>
-</div>
-
-<!-- KI-Kommentar-Interaktion -->
-<div class="mt-6 paper rounded-[10px] p-4" style="border: 1px solid var(--color-rule);">
-	<div class="flex items-center justify-between gap-3 flex-wrap mb-3">
-		<p class="text-xs uppercase tracking-wider" style="color: var(--color-amber); font-family: var(--font-mono);">KI-Kommentar-Antworten</p>
-		<div class="flex items-center gap-2">
-			<button type="button" onclick={toggleDryrun} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: {dryrun ? 'transparent' : 'var(--color-rose)'}; color: {dryrun ? 'var(--color-muted)' : 'var(--color-paper)'}; border: 1px solid {dryrun ? 'var(--color-rule-strong)' : 'var(--color-rose)'};">
-				{dryrun ? 'Dry-Run (testet nur)' : 'LIVE (antwortet echt)'}
-			</button>
-			<button type="button" disabled={simBusy} onclick={simulate} class="px-3 py-1.5 rounded-full text-xs font-medium" style="background: var(--color-ink); color: var(--color-paper);">{simBusy ? '…' : 'Simulieren'}</button>
-		</div>
-	</div>
-
-	{#if simResults.length}
-		<p class="text-xs mb-2" style="color: var(--color-muted);">Simulation (Test-Kommentare → KI-Antwort):</p>
-		<div class="flex flex-col gap-2 mb-4">
-			{#each simResults as r}
-				<div class="text-sm p-3 rounded" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
-					<div style="color: var(--color-ink-soft);">💬 {r.text}</div>
-					<div class="mt-1" style="color: {r.reply ? 'var(--color-sage)' : 'var(--color-faint)'};">{r.reply ? '↳ ' + r.reply : '↳ (keine Antwort — ' + r.reason + ')'}</div>
+	{#if data.recentStories.length}
+		<div class="flex gap-2 overflow-x-auto pb-1">
+			{#each data.recentStories as s}
+				<div class="shrink-0 text-center">
+					<img src={s.card_url} alt="Story" width="90" height="160" loading="lazy" style="width:90px;height:160px;object-fit:cover;border-radius:6px;border:1px solid var(--color-rule);" />
+					<div class="mt-1 text-xs" style="color: var(--color-faint); font-family: var(--font-mono);">{new Date(s.posted_at).toLocaleDateString('de-DE', { day:'2-digit', month:'2-digit' })}</div>
 				</div>
 			{/each}
 		</div>
 	{/if}
+</div>
 
+<!-- KI-Kommentar-Antworten (live, NurEine-Ton) -->
+<div class="mt-6 paper rounded-[10px] p-4" style="border: 1px solid var(--color-rule);">
+	<p class="text-xs uppercase tracking-wider mb-1" style="color: var(--color-amber); font-family: var(--font-mono);">KI-Kommentar-Antworten — live</p>
+	<p class="text-xs mb-3" style="color: var(--color-muted);">Antwortet automatisch auf positive/Frage-Kommentare. Troll/Spam/Hass werden still übersprungen.</p>
 	{#if data.replies.length}
-		<p class="text-xs mb-2" style="color: var(--color-muted);">Echte Kommentare (letzte 20):</p>
 		<div class="flex flex-col gap-2">
 			{#each data.replies as rep}
 				<div class="text-sm p-3 rounded" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
 					<div style="color: var(--color-ink-soft);">💬 {rep.comment_text}</div>
-					{#if rep.reply_text}<div class="mt-1" style="color: var(--color-sage);">↳ {rep.reply_text}{#if rep.skipped_reason?.includes('dryrun')} <span style="color: var(--color-faint);">(nicht gepostet)</span>{/if}</div>
+					{#if rep.reply_text}<div class="mt-1" style="color: var(--color-sage);">↳ {rep.reply_text}</div>
 					{:else}<div class="mt-1" style="color: var(--color-faint);">↳ übersprungen: {rep.skipped_reason}</div>{/if}
 				</div>
 			{/each}
 		</div>
-	{:else if !simResults.length}
-		<p class="text-sm" style="color: var(--color-faint);">Noch keine Kommentare. „Simulieren" testet die KI-Logik mit Beispiel-Kommentaren.</p>
+	{:else}
+		<p class="text-sm" style="color: var(--color-faint);">Noch keine Kommentare beantwortet.</p>
 	{/if}
 </div>
 
-<div class="mt-6 flex flex-col gap-4">
+<h2 class="mt-8 text-xs uppercase tracking-wider" style="color: var(--color-amber); font-family: var(--font-mono);">📷 Feed-Posts (Carousel) — Freigabe-Queue</h2>
+<div class="mt-3 flex flex-col gap-4">
 	{#each items as p (p.id)}
 		<div class="paper rounded-[10px] p-5" style="border: 1px solid var(--color-rule); box-shadow: var(--shadow-sm);">
 			<div class="flex gap-5 flex-col sm:flex-row">

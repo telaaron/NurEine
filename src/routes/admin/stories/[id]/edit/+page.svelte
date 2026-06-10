@@ -27,6 +27,28 @@
 	let featuredDate = $state('');
 
 	let saving = $state(false);
+	let audioGenerating = $state(false);
+	let audioStatus = $state('');
+	let audioUrl = $state('');
+
+	async function generateAudio() {
+		audioGenerating = true;
+		audioStatus = '';
+		try {
+			const res = await fetch(`/api/admin/stories/${story.id}/generate-audio`, { method: 'POST' });
+			const result = await res.json();
+			if (result.success) {
+				audioStatus = `✅ Audio generiert (${result.provider}): ${result.audio_url}`;
+				audioUrl = result.audio_url;
+			} else {
+				audioStatus = `❌ Fehler: ${result.error || 'Unbekannt'}`;
+			}
+		} catch (e) {
+			audioStatus = `❌ Netzwerkfehler: ${e}`;
+		} finally {
+			audioGenerating = false;
+		}
+	}
 
 	$effect(() => {
 		if (title === '') title = story.title;
@@ -49,6 +71,7 @@
 		pinned = !!story.pinned;
 		local = !!story.local;
 		featuredDate = story.featuredDate || '';
+		audioUrl = story.audioUrl || '';
 	});
 	let deleting = $state(false);
 	let error = $state('');

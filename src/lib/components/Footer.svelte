@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import ShareBar from '$lib/components/ShareBar.svelte';
+	import { showSensitive, toggleSensitive } from '$lib/sensitive';
 
 	const siteUrl = 'https://nureine.de';
 </script>
@@ -83,10 +84,23 @@
 					<ShareBar url={siteUrl} title="NurEine — Gute Nachrichten. Jeden Tag eine." text="Eine Geschichte am Tag. Mehr nicht. Anti-Doomscroll aus Teltow, Brandenburg." size={15} />
 				</span>
 			</div>
-			<p class="leading-relaxed">
-				Quellen: Reuters Solutions &middot; Mongabay &middot; WHO &middot; Nature &middot; Good News Network &middot; Positive.News &middot;
-				lokale Redaktionen
-			</p>
+			<div class="flex flex-col gap-2 sm:items-end">
+				<button
+					type="button"
+					onclick={toggleSensitive}
+					class="inline-flex items-center gap-2 hover:opacity-80"
+					title="Sensible Inhalte (heikle Themen) ein- oder ausblenden"
+				>
+					<span class="relative inline-flex items-center" style="width:34px;height:18px;border-radius:9999px;background:{$showSensitive ? 'var(--color-amber)' : 'var(--color-rule-strong)'};transition:background 0.2s;">
+						<span class="absolute" style="width:14px;height:14px;border-radius:9999px;background:#fff;top:2px;left:{$showSensitive ? '18px' : '2px'};transition:left 0.2s;"></span>
+					</span>
+					<span>Sensible Inhalte ungefiltert {$showSensitive ? 'an' : 'aus'}</span>
+				</button>
+				<p class="leading-relaxed">
+					Quellen: Reuters Solutions &middot; Mongabay &middot; WHO &middot; Nature &middot; Good News Network &middot; Positive.News &middot;
+					lokale Redaktionen
+				</p>
+			</div>
 		</div>
 	</div>
 </footer>

@@ -2,6 +2,7 @@
 	import { base } from '$app/paths';
 	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import { formatDate, toneStyles } from '$lib/utils';
+	import { showSensitive } from '$lib/sensitive';
 
 	type StoryCardData = {
 		slug: string;
@@ -23,9 +24,10 @@
 	let { story, size = 'md', baseUrl = 'https://nureine.de', revealSensitive = false }: Props = $props();
 
 	// Jugendschutz: heikle Stories standardmäßig verhüllt (Bild geblurrt + Hinweis),
-	// bis der Nutzer bewusst aufdeckt. revealSensitive (global) ODER lokaler Klick deckt auf.
+	// bis der Nutzer aufdeckt. Aufgedeckt durch: globalen Store (showSensitive),
+	// explizite Prop (revealSensitive) ODER lokalen Klick auf diese Karte.
 	let revealedLocal = $state(false);
-	const veiled = $derived(!!story.sensitive && !revealSensitive && !revealedLocal);
+	const veiled = $derived(!!story.sensitive && !$showSensitive && !revealSensitive && !revealedLocal);
 
 	function revealSensitiveCard(e: MouseEvent) {
 		e.preventDefault();

@@ -16,10 +16,22 @@
 		tone: 'amber' | 'sage' | 'rose' | 'sky';
 		hero: string;
 		audioUrl?: string | null;
+		sensitive?: boolean;
 	};
 
-	type Props = { story: StoryCardData; size?: 'sm' | 'md' | 'lg' | 'feature'; baseUrl?: string };
-	let { story, size = 'md', baseUrl = 'https://nureine.de' }: Props = $props();
+	type Props = { story: StoryCardData; size?: 'sm' | 'md' | 'lg' | 'feature'; baseUrl?: string; revealSensitive?: boolean };
+	let { story, size = 'md', baseUrl = 'https://nureine.de', revealSensitive = false }: Props = $props();
+
+	// Jugendschutz: heikle Stories standardmäßig verhüllt (Bild geblurrt + Hinweis),
+	// bis der Nutzer bewusst aufdeckt. revealSensitive (global) ODER lokaler Klick deckt auf.
+	let revealedLocal = $state(false);
+	const veiled = $derived(!!story.sensitive && !revealSensitive && !revealedLocal);
+
+	function revealSensitiveCard(e: MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+		revealedLocal = true;
+	}
 
 	const isFeature = $derived(size === 'feature');
 	const t = $derived(toneStyles[story.tone]);
@@ -62,6 +74,7 @@
 	style="border: 1px solid var(--color-rule); will-change: transform;"
 	onmouseenter={(e) => (e.currentTarget.style.borderColor = t.ring)}
 	onmouseleave={(e) => (e.currentTarget.style.borderColor = 'var(--color-rule)')}
+	onclick={(e) => { if (veiled) { e.preventDefault(); revealedLocal = true; } }}
 >
 	<div class="relative overflow-hidden {isFeature ? 'aspect-[4/3] lg:aspect-auto lg:w-1/2 lg:min-h-[420px]' : 'aspect-[4/3]'}"
 		style="background: var(--color-paper);"
@@ -73,6 +86,7 @@
 				sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 380px"
 				alt=""
 				class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] group-hover:scale-[1.04]"
+				style={veiled ? 'filter: blur(22px); transform: scale(1.1);' : ''}
 				loading="lazy"
 				decoding="async"
 			/>
@@ -112,6 +126,23 @@
 				</svg>
 			{/if}
 		</button>
+
+		{#if veiled}
+			<!-- Jugendschutz-Verhüllung: dezenter Hinweis + Aufdeck-Button über dem geblurrten Bild -->
+			<div class="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center px-4"
+				style="background: rgba(22,20,15,0.34); backdrop-filter: blur(2px);">
+				<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.92;">
+					<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+					<line x1="1" y1="1" x2="23" y2="23" />
+				</svg>
+				<span class="text-xs font-medium" style="color: #fff; opacity: 0.95;">Sensibler Inhalt</span>
+				<button type="button" onclick={revealSensitiveCard}
+					class="px-3 py-1.5 rounded-full text-xs font-medium"
+					style="background: rgba(255,252,245,0.92); color: var(--color-ink);">
+					Trotzdem ansehen
+				</button>
+			</div>
+		{/if}
 	</div>
 	<div class="p-4 sm:p-5 lg:p-6 flex flex-col flex-1 {isFeature ? 'lg:w-1/2 lg:justify-center lg:p-8 xl:p-10' : ''}">
 		<div class="flex items-center gap-2 meta" style="color: var(--color-faint);">
@@ -132,7 +163,7 @@
 			{story.title}
 		</h3>
 		<p
-			class="card-dek mt-2 sm:mt-3 leading-relaxed {isFeature ? 'line-clamp-4 lg:text-base' : 'line-clamp-3'}"
+			class="card-dek mt-2 sm:mt-3 leading-relaxed {isFeature ? 'line-clamp-5 lg:text-base' : 'line-clamp-4'}"
 			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 		>
 			{story.dek}

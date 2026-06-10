@@ -695,6 +695,14 @@ body: Ein ausführlicher journalistischer Artikel in deutscher Sprache. Schreibe
 
 category: eine von [klima, gesundheit, wissenschaft, gemeinschaft, tiere, kultur, innovation]
 
+sensitive: true/false — Ist das Thema potenziell HEIKEL / nicht ohne Weiteres jugendfrei?
+  true NUR bei: explizit sexuellem Inhalt, drastischer Gewalt/Tod im Vordergrund, Drogen/Sucht als
+  Hauptthema, oder anderem Inhalt, den man Kindern nicht ungefiltert zeigen würde.
+  ⚠️ Ein wissenschaftlicher Bezug zu Fortpflanzung/Evolution allein ist NICHT heikel (false).
+  Beispiel true: Artikel über Pornografie-Industrie, explizite Gewaltdarstellung.
+  Beispiel false: "Sexuelle Fortpflanzung beschleunigte die Evolution" (Biologie, sachlich).
+  Im Zweifel false. Das Flag verhüllt die Story im Frontend nur dezent, blockt sie nicht.
+
 region: Ländername auf Deutsch
 
 region_code: ISO 3166-1 alpha-2
@@ -1501,6 +1509,8 @@ def run() -> None:
             )
             story_record["slides"] = _safe_slides(result.get("slides")) if _ig_ok else None
             story_record["ig_caption"] = _safe_text(result.get("ig_caption"), 600) if _ig_ok else None
+            # Jugendschutz-Flag (default false). Verhüllt heikle Stories im Frontend dezent.
+            story_record["sensitive"] = _safe_bool(result.get("sensitive"))
 
             # Parse published date
             raw_published = story_record["published_at"]

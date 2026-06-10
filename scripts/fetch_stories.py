@@ -323,6 +323,16 @@ _ENGLISH_FLUFF_PATTERNS = [
     r"\b(premier league|nfl|nba)\b",
 ]
 
+# Ratgeber/Lifestyle/How-To — NurEine ist eine News-Plattform, kein Service-Blog.
+# Eng gefasst auf eindeutige Ratgeber-Titel (Listen, How-To, Hausmittel).
+_GERMAN_RATGEBER_PATTERNS = [
+    r"^\d+\s+(tipps|tricks|gründe|dinge|wege|ideen|rezepte|übungen)\b",  # "7 Tipps …"
+    r"\b\d+\s+(heimische|pflanzen|sträucher|kräuter|lebensmittel)\b.*\bfür\b",  # "10 Sträucher für …"
+    r"\bso\s+(gelingt|klappt|geht|machst du|pflegst du|sparst du)\b",  # "So gelingt …"
+    r"\b(ratgeber|anleitung|checkliste|hausmittel gegen|das hilft (wirklich )?gegen)\b",
+    r"\b(tipps|tricks)\s+(für|gegen|zum)\b",  # "Tipps für besseren Schlaf"
+]
+
 # Heuristic: titles that strongly suggest a Good News article
 # These bypass the negative/fluff check
 _STRONG_POSITIVE_SIGNALS = [
@@ -345,6 +355,14 @@ def _prefilter_entry(entry: feedparser.FeedParserDict, source_name: str) -> tupl
     title = (entry.get("title", "") or "").lower()
 
     # NUR der Titel wird geprüft (Description triggerte zu viele false-positives).
+    # 0. RATGEBER/LIFESTYLE raus (wir sind News, kein Service-Blog). Läuft VOR den
+    #    Positiv-Signalen, weil "10 Sträucher … für den Garten" sonst durchrutscht.
+    #    Sehr eng gefasst auf eindeutige How-To/Listen-Titel, damit echte News
+    #    ("10 Jahre Fortschritt bei …") nicht fälschlich fliegen.
+    for pattern in _GERMAN_RATGEBER_PATTERNS:
+        if re.search(pattern, title, re.IGNORECASE):
+            return True, f"ratgeber:{pattern}"
+
     # 1. Starke Positiv-Signale → immer durchlassen.
     for pattern in _STRONG_POSITIVE_SIGNALS:
         if re.search(pattern, title, re.IGNORECASE):

@@ -697,7 +697,9 @@ gut_filter_reason: null (wenn is_nureine=true) ODER einer von ["history_trap", "
 
 NUR wenn is_nureine=true, fülle zusätzlich:
 
-title: Ein einfacher Satz, den jeder versteht (max 80 Zeichen). Keine journalistische Schlagzeile — sag einfach, was passiert ist und warum es gut ist.
+title: Ein einfacher Satz, den jeder versteht (max 65 Zeichen — KURZ + auf den Punkt, passt sonst nicht
+  sauber auf die Karten). Keine journalistische Schlagzeile — sag einfach, was passiert ist und warum es gut ist.
+  Lieber knapp und klar als vollständig: "Solarstrom überholt Kohle in den USA" reicht, kein "erstmals seit…".
   MUSS EIGENSTÄNDIG VERSTÄNDLICH sein: Eine Leserin, die den Artikel NICHT kennt, muss allein vom Titel begreifen, worum es geht und warum es gut ist.
   ⚠️ KEINE unerklärten fremdsprachigen Eigennamen, Abkürzungen, Spitznamen oder Insider-Begriffe. Beispiel SCHLECHT: "Freiwillige dokumentieren jede Art in den Smokies" (was sind "die Smokies"? niemand weiß das). Beispiel GUT: "Im US-Nationalpark Great Smoky Mountains sind erstmals alle Tierarten erfasst". Ersetze oder erkläre jeden Begriff, den ein deutscher Durchschnittsleser nicht sofort einordnen kann (Ort → mit Land/Region; Abkürzung → ausschreiben; Eigenname → kurz erklären). Lieber 5 Zeichen mehr und klar als kryptisch.
 

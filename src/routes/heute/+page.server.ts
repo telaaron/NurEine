@@ -14,10 +14,11 @@ export async function load() {
 		? buildCaptionFromHook(story)
 		: buildCaption(story, { hookType, withCta: true });
 
-	// WhatsApp-Status: KURZ. Niemand liest lange Texte im Status. Die Karte trägt
-	// die Story — der Begleittext ist nur ein persönlicher Funke + Link. Ein Satz.
-	const opener = story.waOpener || 'Das hat mich heute kurz innehalten lassen.';
-	const whatsappCaption = `${opener}\n👉 nureine.de`;
+	// WhatsApp-Status: KURZ + der echte Funke. Der "krass, warum bekommt man das
+	// sonst nirgends mit?"-Spirit gehört als BEGLEITTEXT unter die Karte, NICHT aufs
+	// Bild. share_hook (der fertige Weitersagen-Satz) führt, sonst waOpener.
+	const spark = story.shareHook || story.waOpener || 'Krass, warum bekommt man das sonst nirgends mit?';
+	const whatsappCaption = `${spark}\n👉 nureine.de`;
 
 	const hashtags = hashtagsFor(story.category, story.impactScore ?? 0);
 
@@ -32,6 +33,7 @@ export async function load() {
 		slides: story.slides,
 		igCaption,
 		whatsappCaption,
+		shareHook: story.shareHook,
 		hashtags
 	};
 }

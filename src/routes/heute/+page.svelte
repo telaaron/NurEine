@@ -3,10 +3,12 @@
 	import { track } from '$lib/track';
 	let { data } = $props();
 
-	const waUrl = $derived(`${base}/api/wa-card/${data.slug}`); // WhatsApp, unbranded 9:16
-	const storyUrl = $derived(`${base}/api/share-card/${data.slug}`); // IG-Story, branded 9:16
+	// WhatsApp-Karte = die share-card (IG-Story-Stil): klare Headline + Subtitle +
+	// Wirkung-Badge + CTA, weniger Branding, echter Mehrwert. Der "krass…"-Funke
+	// steht als Begleittext darunter (whatsappCaption), NICHT auf dem Bild.
+	const storyUrl = $derived(`${base}/api/share-card/${data.slug}`); // IG-Story, 9:16
 	const ogUrl = $derived(`${base}/api/og/${data.slug}`);
-	const cardUrl = waUrl; // alias für bestehende Referenzen
+	const cardUrl = $derived(storyUrl); // WhatsApp + IG nutzen dieselbe inhaltsreiche 9:16-Karte
 
 	// Share-Tracking: welcher Kanal/Format wird wirklich genutzt? Wertvollste Frühdaten.
 	function shared(format: 'whatsapp' | 'instagram' | 'og' | 'text', via: string) {
@@ -56,7 +58,7 @@
 			<div class="rounded-xl overflow-hidden" style="box-shadow: var(--shadow-md); border:1px solid var(--color-rule);">
 				<img src={cardUrl} alt="Hochformat-Karte" width="100%" loading="eager" style="display:block;width:100%;aspect-ratio:9/16;object-fit:cover;" />
 			</div>
-			<a href={cardUrl} download={`nureine-${data.slug}-story.png`} onclick={() => shared('whatsapp', 'download')} class="mt-2 block text-center px-4 py-2.5 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Herunterladen ↓</a>
+			<a href={cardUrl} download={`nureine-${data.slug}-story.jpg`} onclick={() => shared('whatsapp', 'download')} class="mt-2 block text-center px-4 py-2.5 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Herunterladen ↓</a>
 		</div>
 		<div>
 			<p class="text-xs uppercase tracking-wider mb-2" style="color: var(--color-muted); font-family: var(--font-mono);">Feed / Link (1.91:1)</p>

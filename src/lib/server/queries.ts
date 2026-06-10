@@ -259,20 +259,25 @@ export async function getLatestFeatured(): Promise<StoryResult | undefined> {
 
   if (sent) return mapStory(sent as SupabaseStory);
 
-  // 2. No newsletter sent yet — show the freshest scored story so the page lives.
-  const { data: fresh } = await supabaseAdmin
+  // 2. Noch kein Newsletter — der Tagesaufmacher ist die STÄRKSTE frische Story
+  //    (höchster Wirkungsindex der letzten 48h), NICHT bloß die neueste. Sonst
+  //    landet eine schwache 55er-Story als Hero, nur weil sie zuletzt kam.
+  const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+  const { data: topFresh } = await supabaseAdmin
     .from('nureine_stories')
     .select('*')
     .not('impact_score', 'is', null)
+    .gte('created_at', since48h)
+    .order('impact_score', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
-  if (fresh) return mapStory(fresh as SupabaseStory);
+  if (topFresh) return mapStory(topFresh as SupabaseStory);
 
-  // 3. Last-resort: highest-impact story overall.
+  // 3. Keine frische Story → stärkste Story overall.
   const all = await getAllStories();
-  return all[0];
+  return [...all].sort((a, b) => b.impactScore - a.impactScore)[0];
 }
 
 // ---------------------------------------------------------------------------

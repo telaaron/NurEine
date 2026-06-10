@@ -39,6 +39,7 @@
 	let newsletterEmail = $state('');
 	let newsletterStatus = $state('');
 	let newsletterLoading = $state(false);
+	let newsletterSuccess = $state(false);
 
 	async function handleNewsletterSubmit(e: SubmitEvent) {
 		e.preventDefault();
@@ -59,12 +60,15 @@
 			const result = await res.json();
 			if (res.ok) {
 				track('newsletter_signup', { source: 'homepage' });
-				newsletterStatus = result.message || 'Fast geschafft! Bitte überprüfe dein Postfach.';
+				newsletterSuccess = true;
+				newsletterStatus = result.message || '';
 				newsletterEmail = '';
 			} else {
+				newsletterSuccess = false;
 				newsletterStatus = result.error || 'Ein Fehler ist aufgetreten. Bitte versuche es später erneut.';
 			}
 		} catch {
+			newsletterSuccess = false;
 			newsletterStatus = 'Ein Fehler ist aufgetreten. Bitte versuche es später erneut.';
 		} finally {
 			newsletterLoading = false;
@@ -330,6 +334,32 @@
 				Hintergrund, Quellen und gemessenem Wirkungsindex.
 			</p>
 		</div>
+		{#if newsletterSuccess}
+			<!-- Idiotensicherer Erfolgs-Block: großer, klarer nächster Schritt statt Mini-Text. -->
+			<div class="relative lg:col-span-5 flex flex-col items-center text-center gap-4 rounded-2xl p-7 sm:p-9"
+				style="background: rgba(189,106,53,0.14); border: 1px solid rgba(189,106,53,0.4);">
+				<div class="flex items-center justify-center w-16 h-16 rounded-full" style="background: var(--color-amber);">
+					<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+						<polyline points="22,6 12,13 2,6"></polyline>
+					</svg>
+				</div>
+				<div>
+					<p class="display text-xl sm:text-2xl" style="color: var(--color-paper); font-weight: 600;">Fast geschafft!</p>
+					<p class="mt-2 text-sm sm:text-base leading-relaxed" style="color: rgba(251,248,241,0.88); font-family: var(--font-serif);">
+						Wir haben dir eine <strong>Bestätigungs-Mail</strong> geschickt.<br />
+						Öffne dein Postfach und klick auf den Link darin — dann bist du dabei.
+					</p>
+				</div>
+				<p class="text-xs" style="color: rgba(251,248,241,0.55); font-family: var(--font-mono);">
+					Nichts gekommen? Schau im Spam-Ordner.
+				</p>
+				<button type="button" onclick={() => { newsletterSuccess = false; newsletterStatus = ''; }}
+					class="text-xs underline underline-offset-2 hover:opacity-80" style="color: var(--color-amber);">
+					Andere E-Mail eintragen
+				</button>
+			</div>
+		{:else}
 		<form
 			class="relative lg:col-span-5 flex flex-col gap-3"
 			onsubmit={handleNewsletterSubmit}
@@ -386,5 +416,6 @@
 				— eine Geschichte, jeden Morgen.
 			</p>
 		</form>
+		{/if}
 	</div>
 </section>

@@ -234,7 +234,7 @@ export function buildB2CHtml(
   <meta name="supported-color-schemes" content="light" />
   <!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting" /><!--<![endif]-->
 </head>
-<body style="margin:0;padding:0;background:#f5f1ea url('${PNG_CANVAS}');-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<body style="margin:0;padding:0;background-color:#f5f1ea;background-image:url('${PNG_CANVAS}');-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
   <style type="text/css">
     :root { color-scheme: light; supported-color-schemes: light; }
     [data-ogsc] .nur-eine-bg { background: #f5f1ea url('${PNG_CANVAS}') !important; }
@@ -267,7 +267,7 @@ export function buildB2CHtml(
       .nur-eine-link { color: #c87340 !important; }
     }
   </style>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background:#f5f1ea url('${PNG_CANVAS}');" class="nur-eine-bg">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background-color:#f5f1ea;background-image:url('${PNG_CANVAS}');" class="nur-eine-bg">
     <tr><td align="center" style="padding:40px 16px 32px;">
 
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
@@ -275,7 +275,7 @@ export function buildB2CHtml(
         <tr><td class="nur-eine-text-faint" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;">Eine Geschichte am Tag. Mehr nicht.</td></tr>
       </table>
 
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#faf6ee" style="max-width:600px;width:100%;background:#faf6ee url('${PNG_CARD}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#faf6ee" style="max-width:600px;width:100%;background-color:#faf6ee;background-image:url('${PNG_CARD}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
 
         ${header}
 
@@ -302,7 +302,7 @@ export function buildB2CHtml(
 
         <tr><td style="padding:0 40px 32px;">
           <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-            <td class="nur-eine-cta" style="background:#1a1815 url('${PNG_INK}');border-radius:9999px;text-align:center;">
+            <td class="nur-eine-cta" bgcolor="#1a1815" style="background-color:#1a1815;background-image:url('${PNG_INK}');border-radius:9999px;text-align:center;">
               <a href="${url}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen &rarr;</a>
             </td>
           </tr></table>
@@ -369,25 +369,25 @@ export function buildB2BHtml(
   return `<!DOCTYPE html>
 <html lang="de">
 <head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/><meta name="supported-color-schemes" content="light"/><!--[if !mso]><!--><meta name="x-apple-disable-message-reformatting"/><!--<![endif]--></head>
-<body style="margin:0;padding:0;background:#f5f1ea url('${PNG_CANVAS}');-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<body style="margin:0;padding:0;background-color:#f5f1ea;background-image:url('${PNG_CANVAS}');-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
 <style type="text/css">:root{color-scheme:light;supported-color-schemes:light;}
-[data-ogsc] .nur-eine-bg{background:#f5f1ea url('${PNG_CANVAS}')!important;}
-[data-ogsc] .nur-eine-card{background:#faf6ee url('${PNG_CARD}')!important;}
-[data-ogsc] .nur-eine-cta{background:#1a1815 url('${PNG_INK}')!important;}
+[data-ogsc] .nur-eine-bg{background-color:#f5f1ea;background-image:url('${PNG_CANVAS}')!important;}
+[data-ogsc] .nur-eine-card{background-color:#faf6ee;background-image:url('${PNG_CARD}')!important;}
+[data-ogsc] .nur-eine-cta{background-color:#1a1815;background-image:url('${PNG_INK}')!important;}
 [data-ogsc] .nur-eine-text-primary{color:#1a1815!important;}
 [data-ogsc] .nur-eine-text-body{color:#3a342c!important;}
 [data-ogsc] .nur-eine-text-faint{color:#9a9087!important;}
 [data-ogsc] .nur-eine-text-muted{color:#6b6359!important;}
-[data-ogsb] .nur-eine-bg{background:#f5f1ea url('${PNG_CANVAS}')!important;}
-[data-ogsb] .nur-eine-card{background:#faf6ee url('${PNG_CARD}')!important;}
-[data-ogsb] .nur-eine-cta{background:#1a1815 url('${PNG_INK}')!important;}
+[data-ogsb] .nur-eine-bg{background-color:#f5f1ea;background-image:url('${PNG_CANVAS}')!important;}
+[data-ogsb] .nur-eine-card{background-color:#faf6ee;background-image:url('${PNG_CARD}')!important;}
+[data-ogsb] .nur-eine-cta{background-color:#1a1815;background-image:url('${PNG_INK}')!important;}
 [data-ogsb] .nur-eine-text-primary{color:#1a1815!important;}
 [data-ogsb] .nur-eine-text-body{color:#3a342c!important;}
 [data-ogsb] .nur-eine-text-faint{color:#9a9087!important;}
 [data-ogsb] .nur-eine-text-muted{color:#6b6359!important;}
-@media (prefers-color-scheme:dark){.nur-eine-bg{background:#f5f1ea url('${PNG_CANVAS}')!important;}.nur-eine-card{background:#faf6ee url('${PNG_CARD}')!important;}.nur-eine-cta{background:#1a1815 url('${PNG_INK}')!important;}.nur-eine-text-primary{color:#1a1815!important;}.nur-eine-text-body{color:#3a342c!important;}.nur-eine-text-faint{color:#9a9087!important;}.nur-eine-text-muted{color:#6b6359!important;}}
+@media (prefers-color-scheme:dark){.nur-eine-bg{background-color:#f5f1ea;background-image:url('${PNG_CANVAS}')!important;}.nur-eine-card{background-color:#faf6ee;background-image:url('${PNG_CARD}')!important;}.nur-eine-cta{background-color:#1a1815;background-image:url('${PNG_INK}')!important;}.nur-eine-text-primary{color:#1a1815!important;}.nur-eine-text-body{color:#3a342c!important;}.nur-eine-text-faint{color:#9a9087!important;}.nur-eine-text-muted{color:#6b6359!important;}}
 </style>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background:#f5f1ea url('${PNG_CANVAS}');" class="nur-eine-bg">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background-color:#f5f1ea;background-image:url('${PNG_CANVAS}');" class="nur-eine-bg">
 <tr><td align="center" style="padding:40px 16px 32px;">
 
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
@@ -396,7 +396,7 @@ export function buildB2BHtml(
 ${logoHtml}
 </table>
 
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#faf6ee" style="max-width:600px;width:100%;background:#faf6ee url('${PNG_CARD}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" bgcolor="#faf6ee" style="max-width:600px;width:100%;background-color:#faf6ee;background-image:url('${PNG_CARD}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);box-shadow:0 1px 3px rgba(26,24,21,0.04);" class="nur-eine-card">
 
 ${header}
 
@@ -426,7 +426,7 @@ ${brandingHtml}
 
 <tr><td style="padding:24px 40px 32px;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td class="nur-eine-cta" style="background:#1a1815 url('${PNG_INK}');border-radius:9999px;text-align:center;">
+<td class="nur-eine-cta" bgcolor="#1a1815" style="background-color:#1a1815;background-image:url('${PNG_INK}');border-radius:9999px;text-align:center;">
 <a href="${url}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Hat dir das den Morgen versch&ouml;nert? Teile diese Story &rarr;</a>
 </td></tr></table>
 </td></tr>
@@ -1009,14 +1009,14 @@ function buildWorldMetricsHtml(m: WorldMetricRow, email: string, token: string):
   const pct = Math.round(metricImprovementPct(m));
   return `<!DOCTYPE html>
 <html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta name="color-scheme" content="light"/></head>
-<body style="margin:0;padding:0;background:#f5f1ea url('${PNG_CANVAS}');">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background:#f5f1ea url('${PNG_CANVAS}');">
+<body style="margin:0;padding:0;background-color:#f5f1ea;background-image:url('${PNG_CANVAS}');">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f5f1ea" style="background-color:#f5f1ea;background-image:url('${PNG_CANVAS}');">
 <tr><td align="center" style="padding:40px 16px 32px;">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;margin-bottom:20px;">
 <tr><td style="font-family:Georgia,serif;font-size:22px;color:#1a1815;text-align:center;letter-spacing:0.02em;padding-bottom:8px;">NurEine</td></tr>
 <tr><td style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;text-align:center;text-transform:uppercase;letter-spacing:0.14em;">Der Stand der Welt</td></tr>
 </table>
-<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#faf6ee url('${PNG_CARD}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#faf6ee;background-image:url('${PNG_CARD}');border-radius:10px;overflow:hidden;border:1px solid rgba(26,24,21,0.10);">
 <tr><td style="padding:36px 40px 8px;">
 <p style="margin:0 0 6px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:10px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:#bd6a35;">Diesen Monat bewegt</p>
 <h2 style="margin:0 0 14px;font-family:Georgia,serif;font-size:26px;font-weight:400;color:#1a1815;line-height:1.2;">${escapeForHtml(m.label)}</h2>
@@ -1031,7 +1031,7 @@ Dieselbe Welt. Eine andere Geschichte. Auf den Metriken, die wirklich z&auml;hle
 </td></tr>
 <tr><td style="padding:0 40px 36px;">
 <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-<td style="background:#1a1815 url('${PNG_INK}');border-radius:9999px;text-align:center;">
+<td style="background-color:#1a1815;background-image:url('${PNG_INK}');border-radius:9999px;text-align:center;">
 <a href="${dashUrl}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Alle Metriken ansehen &rarr;</a>
 </td></tr></table>
 </td></tr>

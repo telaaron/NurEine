@@ -19,6 +19,26 @@
 	].filter((a) => typeof a.value === 'number'));
 	let methodOpen = $state(false);
 
+	// Reporter-Beat-Transparenz: welcher Beat hat sie gefunden, welcher Quellentyp.
+	const BEAT_LABELS: Record<string, string> = {
+		'klima-energie': 'Klima & Energie',
+		'gesundheit-forschung': 'Gesundheit & Forschung',
+		'gesellschaft-bildung': 'Gesellschaft & Bildung',
+		'innovation-wirtschaft': 'Innovation & Wirtschaft',
+		'staedte-kommunen': 'Städte & Kommunen'
+	};
+	const SOURCE_TYPE_LABELS: Record<string, string> = {
+		peer_review: 'Peer-Review',
+		official_stats: 'Offizielle Statistik',
+		registry: 'Register',
+		open_data: 'Open Data',
+		gov: 'Behörde',
+		ngo: 'NGO',
+		media: 'Fachquelle'
+	};
+	const beatLabel = $derived(story.beat ? BEAT_LABELS[story.beat] ?? null : null);
+	const sourceTypeLabel = $derived(story.sourceType ? SOURCE_TYPE_LABELS[story.sourceType] ?? null : null);
+
 	// "Weitersagen"-Satz: gecachter share_hook, sonst Subtitle als Fallback.
 	const shareLine = $derived(story.shareHook || story.dek || story.title);
 	let shareCopied = $state(false);
@@ -111,6 +131,18 @@
 			>
 				{story.dek}
 			</p>
+
+			{#if beatLabel}
+				<!-- Reporter-Transparenz: welcher Beat hat die Story gefunden + Quellentyp. -->
+				<div class="mt-5 inline-flex items-center gap-2 rise rise-d3 px-3 py-1.5 rounded-full text-xs"
+					style="background: {tone.bg}; color: {tone.fg}; border: 1px solid {tone.ring};">
+					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+						<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+					</svg>
+					<span style="font-weight: 600;">Beat: {beatLabel}</span>
+					{#if sourceTypeLabel}<span style="opacity: 0.7;">· {sourceTypeLabel}</span>{/if}
+				</div>
+			{/if}
 
 			{#if story.imageUrl}
 				<div class="mt-8 rise rise-d4">

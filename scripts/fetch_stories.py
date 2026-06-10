@@ -1348,6 +1348,10 @@ def run() -> None:
 
         source_name = source.get("name", "Unbekannte Quelle")
         feed_url = source.get("url")
+        # Reporter-Beat-Zuordnung (REPORTER_BOTS.md): Story erbt Beat + Quellentyp
+        # ihrer Quelle für die Transparenz-Anzeige. NULL für Legacy-Quellen.
+        source_beat = source.get("beat")
+        source_kind = source.get("source_type")
         if not feed_url:
             log.warning("Source '%s' has no URL — skipping.", source_name)
             continue
@@ -1553,6 +1557,11 @@ def run() -> None:
             story_record["impact_reach_score"] = _safe_int(result.get("impact_reach_score"), lo=0, hi=100)
             story_record["impact_explainer"] = _safe_text(result.get("impact_explainer"), 200)
             story_record["share_hook"] = _safe_text(result.get("share_hook"), 220)
+            # Reporter-Beat-Herkunft (Transparenz: welcher Beat / Quellentyp).
+            if source_beat:
+                story_record["beat"] = source_beat
+            if source_kind:
+                story_record["source_type"] = source_kind
 
             # Parse published date
             raw_published = story_record["published_at"]

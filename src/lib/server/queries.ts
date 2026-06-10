@@ -49,6 +49,9 @@ export type SupabaseStory = {
   impact_reach_score: number | null;
   impact_explainer: string | null;
   share_hook: string | null;
+  // Reporter-Beats (migration 00027).
+  beat: string | null;
+  source_type: string | null;
 };
 
 export type StoryResult = {
@@ -97,6 +100,9 @@ export type StoryResult = {
   impactEvidence: number | null;
   impactExplainer: string | null;
   shareHook: string | null;
+  // Reporter-Beats
+  beat: string | null;
+  sourceType: string | null;
 };
 
 // ---- Helpers ----
@@ -167,7 +173,9 @@ function mapStory(row: SupabaseStory): StoryResult {
     impactDurability: row.impact_durability ?? null,
     impactEvidence: row.impact_evidence ?? null,
     impactExplainer: row.impact_explainer ?? null,
-    shareHook: row.share_hook ?? null
+    shareHook: row.share_hook ?? null,
+    beat: row.beat ?? null,
+    sourceType: row.source_type ?? null
   };
 }
 

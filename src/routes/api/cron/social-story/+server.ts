@@ -7,6 +7,7 @@ import { json } from '@sveltejs/kit';
 import { CRON_SECRET } from '$env/static/private';
 import { publishStoryDue } from '$lib/server/social/queue';
 
+// 60s: CDN-Vorwärmen (~6s Render) + IG-Container-Polling bis FINISHED + Publish-Retry.
 export const config = { maxDuration: 60 };
 
 export async function POST({ request }) {

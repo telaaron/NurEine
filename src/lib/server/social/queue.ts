@@ -226,7 +226,7 @@ async function igCreateContainer(body: Record<string, unknown>): Promise<string>
  * (besonders frische, nicht-gecachte share-card-URLs) noch fetcht/verarbeitet.
  * Pollt status_code: IN_PROGRESS → warten, FINISHED → ok, ERROR/EXPIRED → abbrechen.
  */
-async function waitForContainer(creationId: string, maxWaitMs = 40000): Promise<void> {
+async function waitForContainer(creationId: string, maxWaitMs = 25000): Promise<void> {
 	const token = env.IG_ACCESS_TOKEN!;
 	const start = Date.now();
 	let delay = 2000;
@@ -529,6 +529,15 @@ export async function publishStoryDue(): Promise<{ posted: boolean; reason: stri
 
 	const slug = `${slugify(story.title)}-${story.id.slice(0, 8)}`;
 	const imageUrl = `${BASE_URL}/api/share-card/${slug}`;
+
+	// CDN VORWÄRMEN: Wir fetchen die share-card einmal selbst, damit sie im CDN
+	// liegt, BEVOR IG sie abruft. Sonst muss IG die ~6s-Satori-Render abwarten →
+	// Container bleibt zu lange IN_PROGRESS → 9007 / Timeout. Warm = IG-Fetch instant.
+	try {
+		await fetch(imageUrl, { signal: AbortSignal.timeout(20000) });
+	} catch {
+		// Vorwärmen optional — schlägt es fehl, versucht IG es trotzdem.
+	}
 
 	try {
 		const mediaId = await igPostStory(imageUrl);

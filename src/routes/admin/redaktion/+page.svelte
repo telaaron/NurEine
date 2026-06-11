@@ -128,3 +128,23 @@
 		{/each}
 	</div>
 </div>
+
+<!-- Nutzer-Feedback (von /roadmap) -->
+<div class="mt-6 paper rounded-[10px] p-4" style="border:1px solid var(--color-rule);">
+	<p class="text-xs uppercase tracking-wider mb-3" style="color: var(--color-amber); font-family: var(--font-mono);">Nutzer-Feedback ({data.feedback.length})</p>
+	<div class="flex flex-col gap-2">
+		{#each data.feedback as f}
+			{@const kindColor = f.kind === 'bug' ? 'var(--color-rose)' : f.kind === 'praise' ? 'var(--color-sage)' : 'var(--color-amber)'}
+			<div class="text-sm p-3 rounded" style="background: var(--color-paper); border:1px solid var(--color-rule);">
+				<div class="flex items-center gap-2 mb-1">
+					<span class="text-[0.6rem] uppercase tracking-wider px-2 py-0.5 rounded-full" style="background: {kindColor}; color:#fff; font-family: var(--font-mono);">{f.kind}</span>
+					<span class="text-xs" style="color: var(--color-faint);">{new Date(f.created_at).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' })}</span>
+					{#if f.email}<span class="text-xs" style="color: var(--color-muted);">· {f.email}</span>{/if}
+				</div>
+				<p style="color: var(--color-ink-soft);">{f.message}</p>
+			</div>
+		{:else}
+			<p class="text-sm" style="color: var(--color-faint);">Noch kein Feedback eingegangen.</p>
+		{/each}
+	</div>
+</div>

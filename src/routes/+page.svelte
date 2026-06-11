@@ -419,3 +419,11 @@
 		{/if}
 	</div>
 </section>
+
+<!-- Dezenter Mitmach-Hinweis: NurEine entsteht offen. Kein Lärm, eine Zeile. -->
+<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-2">
+	<p class="text-center text-sm" style="color: var(--color-muted); font-family: var(--font-serif);">
+		NurEine entsteht im Offenen.
+		<a href={base + '/roadmap'} class="underline decoration-dotted underline-offset-2 hover:opacity-70" style="color: var(--color-amber);">Sieh unsere Roadmap &amp; gib Feedback →</a>
+	</p>
+</section>

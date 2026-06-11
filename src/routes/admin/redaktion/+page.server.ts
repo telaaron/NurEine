@@ -5,7 +5,7 @@ import { supabaseAdmin } from '$lib/server/supabase/client';
 export async function load() {
 	const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-	const [sourcesRes, logRes, recentRes] = await Promise.all([
+	const [sourcesRes, logRes, recentRes, feedbackRes] = await Promise.all([
 		supabaseAdmin
 			.from('nureine_rss_sources')
 			.select('name,beat,source_type,is_primary,active')
@@ -19,7 +19,12 @@ export async function load() {
 			.from('nureine_fetch_log')
 			.select('ran_at,source_name,beat,title,decision,reason,impact_score')
 			.order('ran_at', { ascending: false })
-			.limit(60)
+			.limit(60),
+		supabaseAdmin
+			.from('nureine_feedback')
+			.select('created_at,kind,message,email,status')
+			.order('created_at', { ascending: false })
+			.limit(40)
 	]);
 
 	const sources = (sourcesRes.data as { name: string; beat: string | null; source_type: string | null; is_primary: boolean; active: boolean }[]) ?? [];
@@ -65,6 +70,7 @@ export async function load() {
 		scoreBuckets,
 		sourcesByBeat: [...sourcesByBeat.entries()].map(([beat, list]) => ({ beat, sources: list })),
 		recent,
+		feedback: (feedbackRes.data as { created_at: string; kind: string; message: string; email: string | null; status: string }[]) ?? [],
 		totalSources: sources.length,
 		activeSources: sources.filter((s) => s.active).length
 	};

@@ -54,7 +54,7 @@ export async function POST({ params, fetch, url }) {
   // 2. ElevenLabs probieren
   if (ELEVENLABS_API_KEY) {
     const trimmed = trimToSentenceEnd(textToRead, MAX_CHARS);
-    const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID || '9BWtsMINqrJLrRnm1DdZ'}`;
+    const ttsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID || 'JBFqnCBsd6RMkjVDRZzb'}`;
 
     try {
       const resp = await fetch(ttsUrl, {

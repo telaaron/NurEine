@@ -87,7 +87,7 @@ FAL_POLL_TIMEOUT = 180  # max seconds to wait for generation
 
 # ElevenLabs TTS (Vorlesen-Feature)
 # Free-Tier: ~10k chars/month. Danach: gpt-4o-mini-tts.
-ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "LruHrtVF6PSyGItz4mXh")  # George — ruhig, männlich, deutsch
+ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb")  # George — ruhig, männlich, deutsch
 ELEVENLABS_MODEL = "eleven_multilingual_v2"
 ELEVENLABS_TTS_URL = f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}"
 

@@ -3,6 +3,7 @@ import { json, error } from '@sveltejs/kit';
 // static-Import würde sonst den Build crashen, sobald die Var fehlt.
 import { env } from '$env/dynamic/private';
 import { createClient } from '@supabase/supabase-js';
+import { verifyAdminRequest } from '$lib/server/auth';
 
 const ELEVENLABS_API_KEY = env.ELEVENLABS_API_KEY;
 const ELEVENLABS_VOICE_ID = env.ELEVENLABS_VOICE_ID;
@@ -10,16 +11,42 @@ const OPENAI_TTS_API_KEY = env.OPENAI_TTS_API_KEY;
 const SUPABASE_URL = env.SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = env.SUPABASE_SERVICE_KEY!;
 
-const ELEVENLABS_MODEL = 'eleven_multilingual_v2';
+// v3: unterstützt Audio-Tags ([warmly], [thoughtful pause] …) für ausdrucksstärkere,
+// zur Story passende Betonung. Fallback v2 nur falls v3 mal nicht verfügbar.
+const ELEVENLABS_MODEL = 'eleven_v3';
 const AUDIO_BUCKET = 'story_audio';
 const MAX_CHARS = 2000;
+
+// Emotion (relief/wonder/hope/pride/warmth) → passender Eröffnungs-Audio-Tag + Grundton.
+// Dezent: ein Tag am Anfang setzt den Ton, der Rest bleibt natürlich (kein Tag-Spam).
+const EMOTION_TAGS: Record<string, string> = {
+	relief: '[gently]',
+	wonder: '[with quiet wonder]',
+	hope: '[warmly]',
+	pride: '[warmly]',
+	warmth: '[warmly]'
+};
+
+/** Setzt einen dezenten Eröffnungs-Tag + eine Atempause nach dem ersten Satz. */
+function withAudioTags(text: string, emotion: string | null): string {
+	const opener = (emotion && EMOTION_TAGS[emotion]) || '[warmly]';
+	// Nach dem ersten Satz eine kurze, natürliche Pause einfügen (max. 1×, dezent).
+	const firstStop = text.search(/[.!?]\s/);
+	if (firstStop > 20 && firstStop < text.length - 10) {
+		const head = text.slice(0, firstStop + 1);
+		const tail = text.slice(firstStop + 1).trimStart();
+		return `${opener} ${head} [thoughtful pause] ${tail}`;
+	}
+	return `${opener} ${text}`;
+}
 
 /**
  * POST /api/admin/stories/[id]/generate-audio
  * Generiert Audio via ElevenLabs (oder OpenAI Fallback) für eine einzelne Story.
  * Nur für Admin-Tests und manuelles Nachgenerieren.
  */
-export async function POST({ params, fetch, url }) {
+export async function POST({ params, fetch, url, cookies }) {
+  if (!verifyAdminRequest(cookies)) return json({ error: 'Unauthorized' }, { status: 401 });
   const storyId = params.id;
   // Token-Spar-Modus: 'summary' (default) liest nur die 4-Satz-Zusammenfassung
   // (~400 Zeichen), 'full' den ganzen Artikel. Default summary, damit Tests +
@@ -33,7 +60,7 @@ export async function POST({ params, fetch, url }) {
 
   const { data: story, error: fetchErr } = await supabase
     .from('nureine_stories')
-    .select('id,title,body_markdown,summary,audio_url')
+    .select('id,title,body_markdown,summary,audio_url,emotion')
     .eq('id', storyId)
     .single();
 
@@ -41,12 +68,16 @@ export async function POST({ params, fetch, url }) {
     throw error(404, 'Story nicht gefunden');
   }
 
-  const textToRead = mode === 'full'
+  const rawText = mode === 'full'
     ? (story.body_markdown || story.summary || '')
     : (story.summary || story.body_markdown || '');
-  if (textToRead.length < 60) {
+  if (rawText.length < 60) {
     throw error(400, 'Zu wenig Text in der Story (min. 60 Zeichen)');
   }
+  // Audio-Tags nach Story-Emotion (dezent) — nur fürs ausdrucksstärkere v3-Modell.
+  const textToRead = ELEVENLABS_MODEL === 'eleven_v3'
+    ? withAudioTags(rawText, story.emotion)
+    : rawText;
 
   let audioUrl: string | null = null;
   let provider: string = 'none';
@@ -168,8 +199,33 @@ export async function POST({ params, fetch, url }) {
     success: true,
     audio_url: audioUrl,
     provider,
+    model: ELEVENLABS_MODEL,
+    emotion: story.emotion ?? null,
+    chars: textToRead.length,
     story_title: story.title
   });
+}
+
+/**
+ * DELETE /api/admin/stories/[id]/generate-audio
+ * Entfernt die Vertonung spurlos: löscht die MP3 aus dem Storage UND setzt
+ * audio_url=null, sodass der Player im Artikel verschwindet.
+ */
+export async function DELETE({ params, cookies }) {
+  if (!verifyAdminRequest(cookies)) return json({ error: 'Unauthorized' }, { status: 401 });
+  const storyId = params.id;
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+    auth: { autoRefreshToken: false, persistSession: false }
+  });
+  // Storage-Datei löschen (best-effort) …
+  await supabase.storage.from(AUDIO_BUCKET).remove([`${storyId}.mp3`]).catch(() => {});
+  // … und die Verknüpfung in der Story entfernen.
+  const { error: updErr } = await supabase
+    .from('nureine_stories')
+    .update({ audio_url: null })
+    .eq('id', storyId);
+  if (updErr) return json({ error: 'DB-Update fehlgeschlagen' }, { status: 500 });
+  return json({ success: true });
 }
 
 function trimToSentenceEnd(text: string, maxChars: number): string {

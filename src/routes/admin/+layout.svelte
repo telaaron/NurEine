@@ -2,31 +2,32 @@
 	import { base } from '$app/paths';
 	import { page } from '$app/stores';
 
-	let { children } = $props();
+	let { children, data } = $props();
 
-	const navGroups = [
+	const navGroups = $derived([
 		{
 			title: 'Überblick',
-			items: [{ href: '/admin', label: 'Dashboard', icon: 'grid' }]
+			items: [{ href: '/admin', label: 'Dashboard', icon: 'grid', badge: 0 }]
 		},
 		{
 			title: 'Inhalt',
 			items: [
-				{ href: '/admin/stories', label: 'Stories', icon: 'doc' },
-				{ href: '/admin/redaktion', label: 'Redaktion', icon: 'search' },
-				{ href: '/admin/submissions', label: 'Einsendungen', icon: 'inbox' },
-				{ href: '/admin/social', label: 'Social', icon: 'share' }
+				{ href: '/admin/stories', label: 'Stories', icon: 'doc', badge: 0 },
+				{ href: '/admin/redaktion', label: 'Redaktion', icon: 'search', badge: data?.newFeedback ?? 0 },
+				{ href: '/admin/audio', label: 'Vorlesen', icon: 'volume', badge: 0 },
+				{ href: '/admin/submissions', label: 'Einsendungen', icon: 'inbox', badge: 0 },
+				{ href: '/admin/social', label: 'Social', icon: 'share', badge: 0 }
 			]
 		},
 		{
 			title: 'Wachstum',
 			items: [
-				{ href: '/admin/audience', label: 'Audience', icon: 'users' },
-				{ href: '/admin/b2b', label: 'B2B Pipeline', icon: 'briefcase' },
-				{ href: '/admin/delivery', label: 'Delivery', icon: 'send' }
+				{ href: '/admin/audience', label: 'Audience', icon: 'users', badge: 0 },
+				{ href: '/admin/b2b', label: 'B2B Pipeline', icon: 'briefcase', badge: 0 },
+				{ href: '/admin/delivery', label: 'Delivery', icon: 'send', badge: 0 }
 			]
 		}
-	];
+	]);
 
 	function isActive(path: string) {
 		return $page.url.pathname === path;
@@ -45,6 +46,7 @@
 		{:else if name === 'users'}<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
 		{:else if name === 'briefcase'}<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
 		{:else if name === 'send'}<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+		{:else if name === 'volume'}<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
 		{/if}
 	</svg>
 {/snippet}
@@ -79,7 +81,10 @@
 							onmouseleave={(e) => { if (!isActive(item.href)) e.currentTarget.style.background = 'transparent'; }}
 						>
 							<span style="opacity: {isActive(item.href) ? '1' : '0.6'};">{@render icon(item.icon)}</span>
-							{item.label}
+							<span class="flex-1">{item.label}</span>
+							{#if item.badge > 0}
+								<span class="inline-flex items-center justify-center text-[0.6rem] font-bold rounded-full" style="min-width:18px;height:18px;padding:0 5px;background: var(--color-rose); color:#fff;">{item.badge}</span>
+							{/if}
 						</a>
 					{/each}
 				</div>

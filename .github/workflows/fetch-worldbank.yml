@@ -1,0 +1,29 @@
+name: Daten-Reporter — Weltbank-Indikatoren
+
+# Der Anti-Lärm-Moat: erkennt messbare Fortschritte in offiziellen Weltbank-Daten
+# (Kindersterblichkeit, Armut, Trinkwasser, Bildung), die nie als Schlagzeile
+# erscheinen. Wöchentlich — solche Indikatoren ändern sich nur langsam.
+on:
+  schedule:
+    - cron: '30 5 * * 1'  # Montags 05:30 UTC
+  workflow_dispatch:
+
+jobs:
+  worldbank:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install deps
+        run: pip install -r requirements.txt || pip install requests feedparser
+      - name: Run Weltbank data reporter
+        working-directory: scripts
+        run: python3 fetch_worldbank.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          FAL_KEY: ${{ secrets.FAL_KEY }}

@@ -1,0 +1,20 @@
+name: Social — Threads (täglich)
+
+# Postet die stärkste frische Story auf Threads (1/Tag). No-op ohne Threads-Token.
+on:
+  schedule:
+    - cron: '15 8 * * *'  # 08:15 UTC (10:15 CEST) — nach dem Vormittags-Fetch
+  workflow_dispatch:
+
+jobs:
+  threads:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Threads post
+        run: |
+          curl -fsS -X POST "${BASE_URL}/api/cron/social-threads" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -w "\nHTTP %{http_code}\n"
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

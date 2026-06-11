@@ -47,6 +47,21 @@
 		}
 	}
 
+	// Health-Check: prüft welche Keys gesetzt sind + ob ElevenLabs lebt.
+	let health = $state<{ keys?: Record<string, unknown>; elevenlabs?: { ok: boolean; detail: string } } | null>(null);
+	let healthLoading = $state(false);
+	async function checkHealth() {
+		healthLoading = true;
+		try {
+			const res = await fetch('/api/admin/health');
+			health = await res.json();
+		} catch {
+			health = null;
+		} finally {
+			healthLoading = false;
+		}
+	}
+
 	// Vorlesen-Test: generiert EINE Audio aus der Hero-Story (Token-sparsam, nur
 	// Zusammenfassung). Kein Auto-Verbrauch — nur auf Klick.
 	let audioMode = $state<'summary' | 'full'>('summary');
@@ -456,8 +471,29 @@
 			class="px-5 py-2.5 rounded-full text-sm font-medium disabled:opacity-50" style="background: var(--color-amber); color: var(--color-paper);">
 			{audioLoading ? 'Generiere…' : '🔊 Audio generieren'}
 		</button>
+		<button type="button" disabled={healthLoading} onclick={checkHealth}
+			class="px-4 py-2.5 rounded-full text-sm font-medium disabled:opacity-50" style="background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);">
+			{healthLoading ? '…' : 'Status prüfen'}
+		</button>
 		{#if audioStatus}<span class="text-xs" style="color: var(--color-muted);">{audioStatus}</span>{/if}
 	</div>
+
+	{#if health}
+		<div class="mt-4 p-4 rounded-[10px] text-xs" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
+			<div class="flex items-center gap-2 mb-2">
+				<span style="width:8px;height:8px;border-radius:8px;background:{health.elevenlabs?.ok ? 'var(--color-sage)' : 'var(--color-rose)'};"></span>
+				<span class="font-semibold" style="color: var(--color-ink);">ElevenLabs: {health.elevenlabs?.ok ? 'erreichbar' : 'PROBLEM'}</span>
+			</div>
+			<p style="color: var(--color-muted);">{health.elevenlabs?.detail}</p>
+			{#if health.keys}
+				<div class="mt-3 flex flex-wrap gap-x-4 gap-y-1" style="font-family: var(--font-mono); color: var(--color-faint);">
+					{#each Object.entries(health.keys) as [k, v]}
+						<span>{k}: <span style="color: {v === true ? 'var(--color-sage)' : v === false ? 'var(--color-rose)' : 'var(--color-muted)'};">{v === true ? '✓' : v === false ? '✗ fehlt' : v}</span></span>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	{/if}
 	{#if audioUrl}
 		<!-- svelte-ignore a11y_media_has_caption -->
 		<audio controls src={audioUrl} class="mt-4 w-full" style="height:40px;"></audio>

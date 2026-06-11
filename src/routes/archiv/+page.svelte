@@ -1,5 +1,6 @@
 <script lang="ts">
 	import StoryCard from '$lib/components/StoryCard.svelte';
+	import { page } from '$app/stores';
 
 	let { data } = $props();
 	const stories = $derived(data.stories);
@@ -9,7 +10,8 @@
 	// Default: stärkste Wirkung zuerst (kuratiertes Gefühl). Manuell auf Datum wechselbar.
 	let sortBy = $state<'date' | 'impact'>('impact');
 	let filterOpen = $state(false);
-	let query = $state('');
+	// Suchbegriff aus ?q= übernehmen (Sitelinks-Searchbox / Deep-Links).
+	let query = $state($page.url.searchParams.get('q') ?? '');
 
 	// Volltext-Suche: findet über Titel, Untertitel, Fließtext, Kategorie UND Region —
 	// nicht nur Titel. Mehrere Wörter = UND-Verknüpfung (jedes Wort muss vorkommen).

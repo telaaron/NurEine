@@ -98,11 +98,34 @@
 
         {@html `<script type="application/ld+json">${JSON.stringify({
                 '@context': 'https://schema.org',
-                '@type': 'Organization',
-                name: 'NurEine',
-                url: 'https://nureine.de',
-                logo: 'https://nureine.de/NurEine.svg',
-                description: 'Eine kuratierte gute Nachricht pro Tag — werbefrei, ohne Algorithmus.'
+                '@graph': [
+                        {
+                                '@type': 'Organization',
+                                '@id': 'https://nureine.de/#org',
+                                name: 'NurEine',
+                                url: 'https://nureine.de',
+                                logo: 'https://nureine.de/NurEine.svg',
+                                description: 'NurEine ist eine Good-News-Plattform aus Teltow (Brandenburg). Sie misst Fortschritt daran, ob Menschen gesünder, sicherer, freier und verbundener leben — überparteilich, auf Basis der Human-Flourishing-Forschung. Jede Geschichte bekommt einen transparenten Wirkungsindex (0–100).',
+                                slogan: 'Eine Geschichte am Tag. Mehr nicht.',
+                                foundingDate: '2026',
+                                foundingLocation: 'Teltow, Brandenburg, Deutschland',
+                                knowsAbout: ['Gesundheit', 'Bildung', 'Ökologie', 'Sicherheit', 'Gemeinschaft', 'Innovation', 'Selbstbestimmung', 'Konstruktiver Journalismus', 'Good News'],
+                                sameAs: ['https://instagram.com/nureine.de']
+                        },
+                        {
+                                '@type': 'WebSite',
+                                '@id': 'https://nureine.de/#website',
+                                url: 'https://nureine.de',
+                                name: 'NurEine',
+                                publisher: { '@id': 'https://nureine.de/#org' },
+                                inLanguage: 'de-DE',
+                                potentialAction: {
+                                        '@type': 'SearchAction',
+                                        target: { '@type': 'EntryPoint', urlTemplate: 'https://nureine.de/archiv?q={search_term_string}' },
+                                        'query-input': 'required name=search_term_string'
+                                }
+                        }
+                ]
         })}</scr` + `ipt>`}
 </svelte:head>
 

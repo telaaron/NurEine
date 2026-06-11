@@ -96,7 +96,11 @@ STORAGE_BUCKET = "story_images"
 AUDIO_STORAGE_BUCKET = "story_audio"
 
 # Audio feature: nur Top-2 Stories pro Run vertonen
-MAX_AUDIO_STORIES = 2
+# Vorlesen ist standardmäßig AUS (Token-Schutz). Erst scharf, wenn AUDIO_AUTOGEN=true
+# gesetzt wird (nach erfolgreichem Admin-Test). Dann nur 1 Story/Tag, nur Zusammenfassung
+# (~400 Zeichen → ~12k/Monat, knapp im Free-Tier).
+AUDIO_AUTOGEN = os.environ.get("AUDIO_AUTOGEN", "").lower() == "true"
+MAX_AUDIO_STORIES = 1
 
 # Source configuration: per-source limits & priority
 # Format: source_name -> {max_per_run, priority}
@@ -1681,9 +1685,9 @@ def run() -> None:
 
             time.sleep(API_DELAY_SECONDS)
 
-    # ---- STAGE 8: Audio-TTS for top-2 stories (ElevenLabs) ----
-    if stories_added > 0 and ELEVENLABS_API_KEY:
-        log.info("--- Audio-TTS: Vertonung der Top-%d Stories ---", MAX_AUDIO_STORIES)
+    # ---- STAGE 8: Audio-TTS (ElevenLabs) — nur wenn AUDIO_AUTOGEN=true (Token-Schutz) ----
+    if stories_added > 0 and ELEVENLABS_API_KEY and AUDIO_AUTOGEN:
+        log.info("--- Audio-TTS: Vertonung der Top-%d Stories (nur Zusammenfassung) ---", MAX_AUDIO_STORIES)
         try:
             top_stories = supabase_get(
                 "nureine_stories",
@@ -1698,9 +1702,10 @@ def run() -> None:
             for ts in top_stories:
                 ts_id = ts.get("id")
                 ts_title = ts.get("title", "")
-                # Vertonungstext: body_markdown bevorzugt, sonst summary
-                text_to_read = ts.get("body_markdown") or ts.get("summary") or ""
-                if not text_to_read or len(text_to_read) < 100:
+                # Token-Spar-Modus: nur die Zusammenfassung vorlesen (~400 Zeichen),
+                # NICHT den ganzen Artikel — schont das ElevenLabs-Kontingent.
+                text_to_read = ts.get("summary") or ts.get("body_markdown") or ""
+                if not text_to_read or len(text_to_read) < 60:
                     log.info("  Überspringe '%s' — zu wenig Text (%d Zeichen)", ts_title, len(text_to_read))
                     continue
 

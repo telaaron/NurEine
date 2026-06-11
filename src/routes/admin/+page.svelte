@@ -46,6 +46,33 @@
 			default: return 'var(--color-muted)';
 		}
 	}
+
+	// Vorlesen-Test: generiert EINE Audio aus der Hero-Story (Token-sparsam, nur
+	// Zusammenfassung). Kein Auto-Verbrauch — nur auf Klick.
+	let audioMode = $state<'summary' | 'full'>('summary');
+	let audioStatus = $state('');
+	let audioUrl = $state('');
+	let audioLoading = $state(false);
+	async function testAudio() {
+		if (!heroStory?.id || audioLoading) return;
+		audioLoading = true;
+		audioStatus = 'Generiere Audio…';
+		audioUrl = '';
+		try {
+			const res = await fetch(`/api/admin/stories/${heroStory.id}/generate-audio?mode=${audioMode}`, { method: 'POST' });
+			const r = await res.json();
+			if (res.ok && r.audio_url) {
+				audioUrl = r.audio_url;
+				audioStatus = `Fertig (${r.provider}).`;
+			} else {
+				audioStatus = r.error || r.message || 'Fehlgeschlagen.';
+			}
+		} catch {
+			audioStatus = 'Verbindungsfehler.';
+		} finally {
+			audioLoading = false;
+		}
+	}
 </script>
 
 <!-- ===== MODUL 1: HUD (Heads Up Display) ===== -->
@@ -401,6 +428,40 @@
 			{/if}
 		</form>
 	</div>
+</div>
+
+<!-- ===== Vorlesen-Test (ElevenLabs, Token-sparsam) ===== -->
+<div class="mt-8 paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
+	<div class="flex items-center justify-between gap-3 flex-wrap">
+		<div>
+			<h2 class="display text-lg" style="color: var(--color-ink);">Vorlesen testen</h2>
+			<p class="mt-1 text-xs" style="color: var(--color-muted);">
+				Generiert EINE Audio aus der aktuellen Hero-Story{#if heroStory}: „{heroStory.title}"{/if}.
+				Nur auf Klick — kein automatischer Verbrauch. Zusammenfassung ≈ 400 Zeichen.
+			</p>
+		</div>
+		<div class="flex items-center gap-2">
+			<button type="button" onclick={() => (audioMode = 'summary')} class="px-3 py-1.5 rounded-full text-xs font-medium"
+				style={audioMode === 'summary' ? 'background: var(--color-ink); color: var(--color-paper);' : 'background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);'}>
+				Zusammenfassung
+			</button>
+			<button type="button" onclick={() => (audioMode = 'full')} class="px-3 py-1.5 rounded-full text-xs font-medium"
+				style={audioMode === 'full' ? 'background: var(--color-ink); color: var(--color-paper);' : 'background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);'}>
+				Ganzer Artikel
+			</button>
+		</div>
+	</div>
+	<div class="mt-4 flex items-center gap-3 flex-wrap">
+		<button type="button" disabled={audioLoading || !heroStory} onclick={testAudio}
+			class="px-5 py-2.5 rounded-full text-sm font-medium disabled:opacity-50" style="background: var(--color-amber); color: var(--color-paper);">
+			{audioLoading ? 'Generiere…' : '🔊 Audio generieren'}
+		</button>
+		{#if audioStatus}<span class="text-xs" style="color: var(--color-muted);">{audioStatus}</span>{/if}
+	</div>
+	{#if audioUrl}
+		<!-- svelte-ignore a11y_media_has_caption -->
+		<audio controls src={audioUrl} class="mt-4 w-full" style="height:40px;"></audio>
+	{/if}
 </div>
 
 <div class="mt-8 pb-8">

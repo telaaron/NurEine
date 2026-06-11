@@ -19,8 +19,12 @@ const MAX_CHARS = 2000;
  * Generiert Audio via ElevenLabs (oder OpenAI Fallback) für eine einzelne Story.
  * Nur für Admin-Tests und manuelles Nachgenerieren.
  */
-export async function POST({ params, fetch }) {
+export async function POST({ params, fetch, url }) {
   const storyId = params.id;
+  // Token-Spar-Modus: 'summary' (default) liest nur die 4-Satz-Zusammenfassung
+  // (~400 Zeichen), 'full' den ganzen Artikel. Default summary, damit Tests +
+  // der Live-Betrieb nicht das ElevenLabs-Kontingent sprengen.
+  const mode = url.searchParams.get('mode') === 'full' ? 'full' : 'summary';
 
   // 1. Story-Daten laden
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
@@ -37,9 +41,11 @@ export async function POST({ params, fetch }) {
     throw error(404, 'Story nicht gefunden');
   }
 
-  const textToRead = story.body_markdown || story.summary || '';
-  if (textToRead.length < 100) {
-    throw error(400, 'Zu wenig Text in der Story (min. 100 Zeichen)');
+  const textToRead = mode === 'full'
+    ? (story.body_markdown || story.summary || '')
+    : (story.summary || story.body_markdown || '');
+  if (textToRead.length < 60) {
+    throw error(400, 'Zu wenig Text in der Story (min. 60 Zeichen)');
   }
 
   let audioUrl: string | null = null;

@@ -25,7 +25,7 @@ import os
 import sys
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from io import BytesIO
 from typing import Any
 
@@ -1400,8 +1400,25 @@ def run() -> None:
     # Track filter reasons for cron_runs auditing
     filter_reasons: dict[str, int] = {}
 
-    # In-memory deduplication: track titles we've already inserted this run
+    # Dedup über Titel-Wortüberlappung. WICHTIG: mit bestehenden DB-Titeln der letzten
+    # 7 Tage VORLADEN — sonst greift der Near-Duplicate-Check nur INNERHALB eines Laufs
+    # und dieselbe Meldung aus zwei Quellen (z.B. Grist 07:35 + Mongabay 19:04) landet
+    # doppelt. Cross-Run-Schutz.
     seen_titles_normalized: list[str] = []
+    try:
+        _recent_iso = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+        _recent = supabase_get(
+            "nureine_stories",
+            params={"select": "title", "created_at": f"gte.{_recent_iso}", "limit": "500"},
+        )
+        for _row in _recent:
+            _t = re.sub(r"[^a-z0-9äöüß\s]", "", (_row.get("title") or "").lower())
+            _t = re.sub(r"\s+", " ", _t).strip()
+            if _t:
+                seen_titles_normalized.append(_t)
+        log.info("Dedup vorgeladen mit %d DB-Titeln (letzte 7 Tage)", len(seen_titles_normalized))
+    except Exception as exc:  # noqa: BLE001 — Vorladen optional, Lauf läuft auch ohne
+        log.warning("Konnte bestehende Titel nicht vorladen (Dedup nur innerhalb Lauf): %s", exc)
 
     # 1. Load sources
     sources = load_active_sources()

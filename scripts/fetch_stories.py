@@ -120,7 +120,7 @@ SOURCE_CONFIG: dict[str, dict[str, int]] = {
     "Utopia.de":            {"max_per_run": 5,  "priority": 3},
     # Priority 4 — Broken or empty feeds, sampled rarely
     "Nature News":          {"max_per_run": 3,  "priority": 4},
-    "WHO News":             {"max_per_run": 3,  "priority": 4},
+    # (WHO News → jetzt priority 2 als Reporter-Primärquelle, siehe unten)
     # ── 2026-06-07: neue Quellen. Positive-News-Feeds höher, Science moderat.
     # Limits bewusst eng, damit 21 Quellen zusammen nicht die Laufzeit sprengen.
     "Reasons to be Cheerful": {"max_per_run": 10, "priority": 1},
@@ -136,11 +136,24 @@ SOURCE_CONFIG: dict[str, dict[str, int]] = {
     "MIT Technology Review":  {"max_per_run": 5,  "priority": 3},
     "Futura Sciences":        {"max_per_run": 5,  "priority": 3},
     "Tagesschau Wissen":      {"max_per_run": 5,  "priority": 3},
+    # ── 2026-06-11: Reporter-Beat-Quellen. Primärquellen (offizielle Statistik /
+    # Peer-Review) priority 2, damit sie nicht hinter Low-Conversion verhungern.
+    "WHO News":               {"max_per_run": 4,  "priority": 2},
+    "UN News":                {"max_per_run": 5,  "priority": 2},
+    "Johns Hopkins Hub":      {"max_per_run": 5,  "priority": 2},
+    "ScienceDaily Tech":      {"max_per_run": 5,  "priority": 2},
+    "The Conversation":       {"max_per_run": 6,  "priority": 2},
+    "Medical Xpress":         {"max_per_run": 6,  "priority": 3},
+    "STAT News":              {"max_per_run": 5,  "priority": 3},
+    "CleanTechnica":          {"max_per_run": 6,  "priority": 3},
+    "pv magazine":            {"max_per_run": 5,  "priority": 3},
+    "Yale Climate Connections": {"max_per_run": 5, "priority": 3},
+    "TechXplore":             {"max_per_run": 5,  "priority": 3},
 }
-# max_per_run 6→10: gründlicher beobachten (auch kleinere/tiefere Meldungen je Quelle
-# werden bewertet, nicht nur die Top-Schlagzeilen). Reporter-Ansatz: jede Meldung neutral
-# scoren statt nur den Lärm oben abzugreifen.
-DEFAULT_SOURCE_CONFIG = {"max_per_run": 10, "priority": 3}
+# max_per_run 6→8: gründlicher beobachten (auch kleinere/tiefere Meldungen je Quelle),
+# aber moderat — bei 13+ Quellen würde 10 das 30-Min-GitHub-Timeout reißen (Runs wurden
+# gecancelt). 8 ist der Kompromiss zwischen Tiefe und Laufzeit.
+DEFAULT_SOURCE_CONFIG = {"max_per_run": 8, "priority": 3}
 
 # ---------------------------------------------------------------------------
 # Category safety — the DB CHECK constraint only permits these seven values.
@@ -283,8 +296,10 @@ def normalize_category(raw: Any) -> str:
     log.warning("  Unknown category '%s' -> '%s' (fallback)", cat or "(empty)", CATEGORY_FALLBACK)
     return CATEGORY_FALLBACK
 
-# Safety limit to avoid runaway loops (sum of max_per_run = 91, well within this)
-MAX_ARTICLES_PER_RUN = 120
+# Harte Laufzeit-Bremse gegen das 30-Min-GitHub-Timeout. Bei 30+ Quellen kann die
+# Summe der Per-Source-Limits darüber liegen — dann greift dieser Deckel zuerst und
+# der Lauf bleibt unter dem Timeout (Runs wurden sonst gecancelt).
+MAX_ARTICLES_PER_RUN = 110
 # Pause between API calls (seconds) to stay within rate limits
 API_DELAY_SECONDS = 1.5
 # Extra delay after image generation

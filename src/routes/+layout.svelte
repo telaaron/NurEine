@@ -100,16 +100,31 @@
                 '@context': 'https://schema.org',
                 '@graph': [
                         {
-                                '@type': 'Organization',
+                                // NewsMediaOrganization (nicht nur Organization): signalisiert Google
+                                // klar „dies ist ein Nachrichten-Anbieter" → relevanter fürs Knowledge Panel.
+                                '@type': 'NewsMediaOrganization',
                                 '@id': 'https://nureine.de/#org',
                                 name: 'NurEine',
+                                alternateName: ['NurEine.de', 'Nur Eine'],
                                 url: 'https://nureine.de',
-                                logo: 'https://nureine.de/NurEine.svg',
+                                logo: {
+                                        '@type': 'ImageObject',
+                                        url: 'https://nureine.de/NurEine.svg',
+                                        caption: 'NurEine'
+                                },
+                                image: 'https://nureine.de/og-default.jpeg',
                                 description: 'NurEine ist eine Good-News-Plattform aus Teltow (Brandenburg). Sie misst Fortschritt daran, ob Menschen gesünder, sicherer, freier und verbundener leben — überparteilich, auf Basis der Human-Flourishing-Forschung. Jede Geschichte bekommt einen transparenten Wirkungsindex (0–100).',
                                 slogan: 'Eine Geschichte am Tag. Mehr nicht.',
                                 foundingDate: '2026',
-                                foundingLocation: 'Teltow, Brandenburg, Deutschland',
-                                knowsAbout: ['Gesundheit', 'Bildung', 'Ökologie', 'Sicherheit', 'Gemeinschaft', 'Innovation', 'Selbstbestimmung', 'Konstruktiver Journalismus', 'Good News'],
+                                foundingLocation: {
+                                        '@type': 'Place',
+                                        address: { '@type': 'PostalAddress', addressLocality: 'Teltow', addressRegion: 'Brandenburg', addressCountry: 'DE' }
+                                },
+                                areaServed: { '@type': 'Place', name: 'Deutschsprachiger Raum (DACH)' },
+                                knowsAbout: ['Gesundheit', 'Bildung', 'Ökologie', 'Sicherheit', 'Gemeinschaft', 'Innovation', 'Selbstbestimmung', 'Konstruktiver Journalismus', 'Good News', 'Lösungsjournalismus'],
+                                ethicsPolicy: 'https://nureine.de/werte',
+                                diversityPolicy: 'https://nureine.de/werte',
+                                publishingPrinciples: 'https://nureine.de/methodik',
                                 sameAs: ['https://instagram.com/nureine.de']
                         },
                         {
@@ -117,6 +132,7 @@
                                 '@id': 'https://nureine.de/#website',
                                 url: 'https://nureine.de',
                                 name: 'NurEine',
+                                alternateName: 'NurEine — Gute Nachrichten',
                                 publisher: { '@id': 'https://nureine.de/#org' },
                                 inLanguage: 'de-DE',
                                 potentialAction: {

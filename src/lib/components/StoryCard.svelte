@@ -18,6 +18,7 @@
 		hero: string;
 		audioUrl?: string | null;
 		sensitive?: boolean;
+		createdAt?: string;
 	};
 
 	type Props = { story: StoryCardData; size?: 'sm' | 'md' | 'lg' | 'feature'; baseUrl?: string; revealSensitive?: boolean };
@@ -28,6 +29,20 @@
 	// explizite Prop (revealSensitive) ODER lokalen Klick auf diese Karte.
 	let revealedLocal = $state(false);
 	const veiled = $derived(!!story.sensitive && !$showSensitive && !revealSensitive && !revealedLocal);
+
+	// Frische-Badge — dezent, kein Doom-Scroll-Trigger: nur 'neu' (≤6h) oder 'heute'.
+	// Nutzt createdAt (DB-Insert), sonst publishedAt als Fallback.
+	const freshness = $derived.by(() => {
+		const ts = story.createdAt || story.publishedAt;
+		if (!ts) return null;
+		const ageH = (Date.now() - new Date(ts).getTime()) / 3.6e6;
+		if (ageH < 0) return null;
+		if (ageH <= 6) return 'neu';
+		const d = new Date(ts);
+		const now = new Date();
+		if (d.toDateString() === now.toDateString()) return 'heute';
+		return null;
+	});
 
 	function revealSensitiveCard(e: MouseEvent) {
 		e.preventDefault();
@@ -107,6 +122,15 @@
 			>
 				{story.category}
 			</span>
+			{#if freshness}
+				<span
+					class="badge px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full backdrop-blur-sm inline-flex items-center gap-1"
+					style="background: {freshness === 'neu' ? 'var(--color-amber)' : 'rgba(255,252,245,0.75)'}; color: {freshness === 'neu' ? '#fff' : 'var(--color-muted)'}; border: 1px solid {freshness === 'neu' ? 'var(--color-amber)' : 'var(--color-rule)'};"
+				>
+					{#if freshness === 'neu'}<span style="width:5px;height:5px;border-radius:5px;background:#fff;"></span>{/if}
+					{freshness === 'neu' ? 'neu' : 'heute'}
+				</span>
+			{/if}
 		</div>
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<button

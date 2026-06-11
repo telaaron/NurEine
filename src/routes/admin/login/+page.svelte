@@ -25,7 +25,7 @@
 
 <section class="min-h-screen flex items-center justify-center" style="background: var(--color-canvas);">
 	<div class="paper p-10 rounded-[8px] w-full max-w-sm" style="border: 1px solid var(--color-rule);">
-		<h1 class="serif text-2xl" style="color: var(--color-ink);">Admin Login</h1>
+		<h1 class="display text-2xl" style="color: var(--color-ink);">Admin Login</h1>
 		<form onsubmit={handleSubmit} class="mt-8 space-y-4">
 			<label class="block">
 				<span class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Benutzername</span>

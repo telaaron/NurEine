@@ -269,7 +269,7 @@
 <!-- Form -->
 {#if showForm}
 	<div class="mt-6 paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
-		<h2 class="serif text-base" style="color: var(--color-ink);">
+		<h2 class="display text-base" style="color: var(--color-ink);">
 			{editId ? 'Kunde bearbeiten' : 'Neuen B2B Kunden anlegen'}
 		</h2>
 		<form onsubmit={handleSubmit} class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -462,7 +462,7 @@
 			</div>
 			<!-- Branding / White-Label Einstellungen -->
 			<div class="md:col-span-2 pt-4 border-t" style="border-color: var(--color-rule);">
-				<h3 class="serif text-base mb-3" style="color: var(--color-ink);">Branding</h3>
+				<h3 class="display text-base mb-3" style="color: var(--color-ink);">Branding</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div class="flex items-center gap-3">
 						<label class="relative inline-flex items-center cursor-pointer">

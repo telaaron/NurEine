@@ -80,7 +80,7 @@
 </script>
 
 <div class="flex items-center justify-between">
-	<h1 class="serif text-2xl" style="color: var(--color-ink);">Neue Story</h1>
+	<h1 class="display text-2xl" style="color: var(--color-ink);">Neue Story</h1>
 	<div class="flex gap-3">
 		<a
 			href={base + '/admin/stories'}

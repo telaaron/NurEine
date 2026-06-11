@@ -57,7 +57,7 @@
 	<!-- MRR Card -->
 	<div class="paper p-4 sm:p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-sage);">MRR</p>
-		<p class="serif text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">
+		<p class="display text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">
 			{b2bStats.mrr.toLocaleString('de-DE')} €
 		</p>
 		<p class="text-xs mt-1" style="color: var(--color-muted);">
@@ -68,7 +68,7 @@
 	<!-- Aktive Piloten -->
 	<div class="paper p-4 sm:p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-amber);">Aktive Piloten</p>
-		<p class="serif text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">{b2bStats.pilotCount}</p>
+		<p class="display text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">{b2bStats.pilotCount}</p>
 		{#if b2bStats.pilotsExpiringSoon > 0}
 			<p class="text-xs mt-1 font-medium" style="color: var(--color-rose);">
 				{b2bStats.pilotsExpiringSoon} läuft in &lt;3 Tagen ab!
@@ -81,14 +81,14 @@
 	<!-- Abonnenten -->
 	<div class="paper p-4 sm:p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-sky);">Abonnenten</p>
-		<p class="serif text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">{subscribers.total}</p>
+		<p class="display text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">{subscribers.total}</p>
 		<p class="text-xs mt-1" style="color: var(--color-muted);">{subscribers.confirmed} bestätigt</p>
 	</div>
 
 	<!-- B2B Total -->
 	<div class="paper p-4 sm:p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-ink-soft);">B2B Clients</p>
-		<p class="serif text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">{b2bStats.activeClients}</p>
+		<p class="display text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">{b2bStats.activeClients}</p>
 		<p class="text-xs mt-1" style="color: var(--color-muted);">
 			{b2bStats.pilotCount} Pilot · {b2bStats.payingCount} Paid
 		</p>
@@ -194,7 +194,7 @@
 	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<div class="flex items-start justify-between gap-4 flex-wrap">
 			<div class="flex-1 min-w-0">
-				<h2 class="serif text-lg" style="color: var(--color-ink);">Nächste Hero-Story</h2>
+				<h2 class="display text-lg" style="color: var(--color-ink);">Nächste Hero-Story</h2>
 				{#if heroStory}
 					<div class="mt-3 flex items-start gap-4">
 						{#if heroStory.imageUrl}
@@ -206,7 +206,7 @@
 							/>
 						{/if}
 						<div class="min-w-0">
-							<p class="serif text-base" style="color: var(--color-ink);">{heroStory.title}</p>
+							<p class="display text-base" style="color: var(--color-ink);">{heroStory.title}</p>
 							<p class="text-xs mt-1" style="color: var(--color-muted);">
 								{heroStory.category} · Impact {heroStory.impactScore}/100
 							</p>
@@ -246,7 +246,7 @@
 	<!-- B2B Pipeline Vorschau -->
 	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<div class="flex items-center justify-between">
-			<h2 class="serif text-lg" style="color: var(--color-ink);">B2B Pipeline</h2>
+			<h2 class="display text-lg" style="color: var(--color-ink);">B2B Pipeline</h2>
 			<a
 				href={base + '/admin/b2b'}
 				class="text-xs px-3 py-1 rounded-full"
@@ -258,21 +258,21 @@
 		<div class="mt-4 flex gap-4 text-sm">
 			<div class="flex-1 text-center paper p-3 rounded-[4px]" style="border: 1px solid var(--color-rule);">
 				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Lead</p>
-				<p class="serif text-2xl mt-1" style="color: var(--color-ink);">
+				<p class="display text-2xl mt-1" style="color: var(--color-ink);">
 					{b2bStats.activeClients - b2bStats.pilotCount - b2bStats.payingCount}
 				</p>
 			</div>
 			<div class="flex-1 text-center paper p-3 rounded-[4px]" style="border: 1px solid var(--color-amber);">
 				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-amber);">Pilot</p>
-				<p class="serif text-2xl mt-1" style="color: var(--color-ink);">{b2bStats.pilotCount}</p>
+				<p class="display text-2xl mt-1" style="color: var(--color-ink);">{b2bStats.pilotCount}</p>
 			</div>
 			<div class="flex-1 text-center paper p-3 rounded-[4px]" style="border: 1px solid var(--color-sage);">
 				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-sage);">Paid</p>
-				<p class="serif text-2xl mt-1" style="color: var(--color-ink);">{b2bStats.payingCount}</p>
+				<p class="display text-2xl mt-1" style="color: var(--color-ink);">{b2bStats.payingCount}</p>
 			</div>
 			<div class="flex-1 text-center paper p-3 rounded-[4px]" style="border: 1px solid var(--color-muted);">
 				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Churned</p>
-				<p class="serif text-2xl mt-1" style="color: var(--color-ink);">{b2bStats.churnedCount}</p>
+				<p class="display text-2xl mt-1" style="color: var(--color-ink);">{b2bStats.churnedCount}</p>
 			</div>
 		</div>
 	</div>
@@ -280,7 +280,7 @@
 	<!-- Delivery Log Mini -->
 	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<div class="flex items-center justify-between">
-			<h2 class="serif text-lg" style="color: var(--color-ink);">Letzte Auslieferungen</h2>
+			<h2 class="display text-lg" style="color: var(--color-ink);">Letzte Auslieferungen</h2>
 			<a
 				href={base + '/admin/delivery'}
 				class="text-xs px-3 py-1 rounded-full"
@@ -317,7 +317,7 @@
 <div class="mt-10">
 	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<div class="flex items-center justify-between">
-			<h2 class="serif text-lg" style="color: var(--color-ink);">Audience</h2>
+			<h2 class="display text-lg" style="color: var(--color-ink);">Audience</h2>
 			<a
 				href={base + '/admin/audience'}
 				class="text-xs px-3 py-1 rounded-full"
@@ -329,15 +329,15 @@
 		<div class="mt-4 grid grid-cols-3 gap-3">
 			<div class="paper p-3 rounded-[4px] text-center" style="border: 1px solid var(--color-rule);">
 				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Total</p>
-				<p class="serif text-xl mt-1" style="color: var(--color-ink);">{subscribers.total}</p>
+				<p class="display text-xl mt-1" style="color: var(--color-ink);">{subscribers.total}</p>
 			</div>
 			<div class="paper p-3 rounded-[4px] text-center" style="border: 1px solid var(--color-rule);">
 				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">Bestätigt</p>
-				<p class="serif text-xl mt-1" style="color: var(--color-ink);">{subscribers.confirmed}</p>
+				<p class="display text-xl mt-1" style="color: var(--color-ink);">{subscribers.confirmed}</p>
 			</div>
 			<div class="paper p-3 rounded-[4px] text-center" style="border: 1px solid var(--color-rule);">
 				<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">B2B</p>
-				<p class="serif text-xl mt-1" style="color: var(--color-ink);">{subscribers.b2b}</p>
+				<p class="display text-xl mt-1" style="color: var(--color-ink);">{subscribers.b2b}</p>
 			</div>
 		</div>
 	</div>
@@ -347,12 +347,12 @@
 <div class="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
 	<!-- Kategorien -->
 	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
-		<h2 class="serif text-lg" style="color: var(--color-ink);">Kategorien</h2>
+		<h2 class="display text-lg" style="color: var(--color-ink);">Kategorien</h2>
 		<div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
 			{#each Object.entries(categories) as [cat, count]}
 				<div class="paper p-3 rounded-[4px] text-center" style="border: 1px solid var(--color-rule);">
 					<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-faint);">{cat}</p>
-					<p class="serif text-xl mt-1" style="color: var(--color-ink);">{count}</p>
+					<p class="display text-xl mt-1" style="color: var(--color-ink);">{count}</p>
 				</div>
 			{/each}
 		</div>
@@ -360,7 +360,7 @@
 
 	<!-- Test-Newsletter -->
 	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
-		<h2 class="serif text-lg" style="color: var(--color-ink);">Test-Newsletter senden</h2>
+		<h2 class="display text-lg" style="color: var(--color-ink);">Test-Newsletter senden</h2>
 		<p class="mt-1 text-xs" style="color: var(--color-muted);">Sendet eine Test-E-Mail mit der aktuellen Hero-Story.</p>
 		<form
 			onsubmit={(e) => { e.preventDefault(); sendTestNewsletter(); }}

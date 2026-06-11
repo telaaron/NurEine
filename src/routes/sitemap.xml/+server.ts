@@ -21,6 +21,7 @@ export async function GET() {
 		{ loc: `${BASE_URL}/`, priority: '1.0', changefreq: 'daily' },
 		{ loc: `${BASE_URL}/warum`, priority: '0.9', changefreq: 'monthly' },
 			{ loc: `${BASE_URL}/werte`, priority: '0.9', changefreq: 'monthly' },
+			{ loc: `${BASE_URL}/redaktion`, priority: '0.8', changefreq: 'weekly' },
 		{ loc: `${BASE_URL}/einreichen`, priority: '0.6', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/methodik`, priority: '0.7', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/stand-der-welt`, priority: '0.8', changefreq: 'monthly' },

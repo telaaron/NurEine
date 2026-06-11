@@ -28,6 +28,7 @@
 				<ul class="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 text-sm">
 					<li><a class="hover:opacity-70" href={base + '/warum'}>Warum NurEine?</a></li>
 					<li><a class="hover:opacity-70" href={base + '/werte'}>Unsere Werte</a></li>
+					<li><a class="hover:opacity-70" href={base + '/redaktion'}>So arbeiten wir</a></li>
 					<li><a class="hover:opacity-70" href={base + '/stand-der-welt'}>Der Stand der Welt</a></li>
 					<li><a class="hover:opacity-70" href={base + '/archiv'}>Archiv</a></li>
 					<li><a class="hover:opacity-70" href={base + '/karte'}>Karte der Hoffnung</a></li>

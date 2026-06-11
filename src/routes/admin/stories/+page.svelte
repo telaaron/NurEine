@@ -7,7 +7,7 @@
 </script>
 
 <div class="flex items-center justify-between">
-	<h1 class="serif text-2xl" style="color: var(--color-ink);">Stories</h1>
+	<h1 class="display text-3xl" style="color: var(--color-ink); font-weight: 600;">Stories</h1>
 	<a
 		href={base + '/admin/stories/new'}
 		class="px-4 py-2 rounded-full text-sm font-medium"
@@ -21,7 +21,7 @@
 	{#each stories as story}
 		<a
 			href={base + '/admin/stories/' + story.id + '/edit'}
-			class="paper block p-4 rounded-[6px] hover:opacity-90 transition-all"
+			class="paper block p-4 rounded-[10px] hover:opacity-90 transition-all"
 			style="border: 1px solid var(--color-rule);"
 		>
 			<div class="flex items-center justify-between">

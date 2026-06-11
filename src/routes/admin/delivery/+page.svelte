@@ -19,7 +19,7 @@
 	}
 </script>
 
-<h1 class="serif text-2xl" style="color: var(--color-ink);">Delivery Log</h1>
+<h1 class="display text-3xl" style="color: var(--color-ink); font-weight: 600;">Delivery Log</h1>
 <p class="mt-1 text-sm" style="color: var(--color-muted);">Cronjob-Historie und B2B-Auslieferungen. Fehler erkennen, bevor der Kunde anruft.</p>
 
 <div class="mt-6 flex flex-wrap gap-3 items-center justify-between">
@@ -68,7 +68,7 @@
 	</div>
 </div>
 
-<div class="mt-6 paper rounded-[6px] overflow-hidden" style="border: 1px solid var(--color-rule);">
+<div class="mt-6 paper rounded-[10px] overflow-hidden" style="border: 1px solid var(--color-rule);">
 	<div class="overflow-x-auto">
 		<table class="w-full text-sm">
 			<thead>

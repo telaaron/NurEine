@@ -189,7 +189,7 @@
 				type="text"
 				bind:value={title}
 				oninput={generateSlug}
-				class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+				class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 				style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 				required
 			/>
@@ -200,7 +200,7 @@
 			<input
 				type="text"
 				bind:value={slug}
-				class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+				class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 				style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink); font-family: monospace;"
 			/>
 		</div>
@@ -210,7 +210,7 @@
 			<input
 				type="date"
 				bind:value={publishedAt}
-				class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+				class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 				style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 			/>
 		</div>
@@ -219,7 +219,7 @@
 			<label class="block text-xs uppercase tracking-[0.12em] mb-1" style="color: var(--color-muted);">Dek (Untertitel)</label>
 			<textarea
 				bind:value={dek}
-				class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+				class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 				style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 				rows="2"
 			></textarea>
@@ -229,7 +229,7 @@
 			<label class="block text-xs uppercase tracking-[0.12em] mb-1" style="color: var(--color-muted);">Body (Storytext)</label>
 			<textarea
 				bind:value={body}
-				class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+				class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 				style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink); font-family: monospace;"
 				rows="12"
 			></textarea>
@@ -244,7 +244,7 @@
 				<label class="block text-xs uppercase tracking-[0.12em] mb-1" style="color: var(--color-muted);">Kategorie</label>
 				<select
 					bind:value={category}
-					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+					class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 				>
 					{#each categories as cat}
@@ -257,7 +257,7 @@
 				<label class="block text-xs uppercase tracking-[0.12em] mb-1" style="color: var(--color-muted);">Tone/Color</label>
 				<select
 					bind:value={tone}
-					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+					class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 				>
 					{#each tones as t}
@@ -271,7 +271,7 @@
 				<input
 					type="text"
 					bind:value={imageUrl}
-					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+					class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 					placeholder="https://xxx.supabase.co/storage/v1/object/public/story_images/..."
 				/>
@@ -283,7 +283,7 @@
 					type="text"
 					bind:value={region}
 					placeholder="z. B. Europa"
-					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+					class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 				/>
 			</div>
@@ -294,7 +294,7 @@
 					type="text"
 					bind:value={country}
 					placeholder="z. B. Deutschland"
-					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+					class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 				/>
 			</div>
@@ -305,7 +305,7 @@
 					type="text"
 					bind:value={source}
 					placeholder="z. B. The Guardian"
-					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+					class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 				/>
 			</div>
@@ -316,7 +316,7 @@
 					type="url"
 					bind:value={sourceUrl}
 					placeholder="https://…"
-					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+					class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 				/>
 			</div>
@@ -345,7 +345,7 @@
 					bind:value={readingMinutes}
 					min="1"
 					max="30"
-					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+					class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 				/>
 			</div>
@@ -356,7 +356,7 @@
 					type="number"
 					bind:value={coordsX}
 					step="0.01"
-					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+					class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 				/>
 			</div>
@@ -367,7 +367,7 @@
 					type="number"
 					bind:value={coordsY}
 					step="0.01"
-					class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+					class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 					style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 				/>
 			</div>
@@ -379,7 +379,7 @@
 				type="text"
 				bind:value={impactNote}
 				placeholder="z. B. „120.000 Menschen profitieren“"
-				class="w-full px-4 py-2.5 rounded-[6px] text-sm"
+				class="w-full px-4 py-2.5 rounded-[10px] text-sm"
 				style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 			/>
 		</div>
@@ -402,7 +402,7 @@
 			<input
 				type="date"
 				bind:value={featuredDate}
-				class="w-full max-w-xs px-4 py-2.5 rounded-[6px] text-sm"
+				class="w-full max-w-xs px-4 py-2.5 rounded-[10px] text-sm"
 				style="border: 1px solid var(--color-rule); background: var(--color-paper); color: var(--color-ink);"
 			/>
 			<p class="text-xs mt-1" style="color: var(--color-faint);">Nur setzen, wenn die Story auf der Startseite vorgestellt werden soll.</p>

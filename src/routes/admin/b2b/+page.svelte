@@ -245,7 +245,7 @@
 	}
 </script>
 
-<h1 class="serif text-2xl" style="color: var(--color-ink);">B2B Pipeline</h1>
+<h1 class="display text-3xl" style="color: var(--color-ink); font-weight: 600;">B2B Pipeline</h1>
 <p class="mt-1 text-sm" style="color: var(--color-muted);">Unternehmen verwalten – von Lead bis Paying Customer.</p>
 
 <div class="mt-6 flex gap-3">
@@ -268,7 +268,7 @@
 
 <!-- Form -->
 {#if showForm}
-	<div class="mt-6 paper p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
+	<div class="mt-6 paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<h2 class="serif text-base" style="color: var(--color-ink);">
 			{editId ? 'Kunde bearbeiten' : 'Neuen B2B Kunden anlegen'}
 		</h2>
@@ -536,7 +536,7 @@
 {/if}
 
 <!-- Clients table -->
-<div class="mt-8 paper rounded-[6px] overflow-hidden" style="border: 1px solid var(--color-rule);">
+<div class="mt-8 paper rounded-[10px] overflow-hidden" style="border: 1px solid var(--color-rule);">
 	<div class="overflow-x-auto">
 		<table class="w-full text-sm">
 			<thead>

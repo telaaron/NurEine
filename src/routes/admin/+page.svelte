@@ -49,12 +49,13 @@
 </script>
 
 <!-- ===== MODUL 1: HUD (Heads Up Display) ===== -->
-<h1 class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">Command Center</h1>
-<p class="mt-1 text-sm" style="color: var(--color-muted);">Der Puls deines Business auf einen Blick.</p>
+<p class="text-xs uppercase tracking-[0.18em] mb-2" style="color: var(--color-amber); font-family: var(--font-mono);">Cockpit</p>
+<h1 class="display text-3xl" style="color: var(--color-ink); font-weight: 600;">Command Center</h1>
+<p class="mt-2 text-sm" style="color: var(--color-muted);">Der Puls deines Business auf einen Blick.</p>
 
 <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
 	<!-- MRR Card -->
-	<div class="paper p-4 sm:p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
+	<div class="paper p-4 sm:p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-sage);">MRR</p>
 		<p class="serif text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">
 			{b2bStats.mrr.toLocaleString('de-DE')} €
@@ -65,7 +66,7 @@
 	</div>
 
 	<!-- Aktive Piloten -->
-	<div class="paper p-4 sm:p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
+	<div class="paper p-4 sm:p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-amber);">Aktive Piloten</p>
 		<p class="serif text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">{b2bStats.pilotCount}</p>
 		{#if b2bStats.pilotsExpiringSoon > 0}
@@ -78,14 +79,14 @@
 	</div>
 
 	<!-- Abonnenten -->
-	<div class="paper p-4 sm:p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
+	<div class="paper p-4 sm:p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-sky);">Abonnenten</p>
 		<p class="serif text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">{subscribers.total}</p>
 		<p class="text-xs mt-1" style="color: var(--color-muted);">{subscribers.confirmed} bestätigt</p>
 	</div>
 
 	<!-- B2B Total -->
-	<div class="paper p-4 sm:p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
+	<div class="paper p-4 sm:p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<p class="text-xs uppercase tracking-[0.16em]" style="color: var(--color-ink-soft);">B2B Clients</p>
 		<p class="serif text-3xl sm:text-4xl mt-2" style="color: var(--color-ink);">{b2bStats.activeClients}</p>
 		<p class="text-xs mt-1" style="color: var(--color-muted);">
@@ -190,7 +191,7 @@
 
 <!-- ===== Nächste Hero-Story Preview ===== -->
 <div class="mt-10">
-	<div class="paper p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
+	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<div class="flex items-start justify-between gap-4 flex-wrap">
 			<div class="flex-1 min-w-0">
 				<h2 class="serif text-lg" style="color: var(--color-ink);">Nächste Hero-Story</h2>
@@ -200,7 +201,7 @@
 							<img
 								src={heroStory.imageUrl}
 								alt=""
-								class="w-16 h-16 rounded-[6px] object-cover shrink-0"
+								class="w-16 h-16 rounded-[10px] object-cover shrink-0"
 								style="border: 1px solid var(--color-rule);"
 							/>
 						{/if}
@@ -243,7 +244,7 @@
 <!-- ===== MODUL 2 + 4: B2B Pipeline & Delivery Log Mini ===== -->
 <div class="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
 	<!-- B2B Pipeline Vorschau -->
-	<div class="paper p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
+	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<div class="flex items-center justify-between">
 			<h2 class="serif text-lg" style="color: var(--color-ink);">B2B Pipeline</h2>
 			<a
@@ -277,7 +278,7 @@
 	</div>
 
 	<!-- Delivery Log Mini -->
-	<div class="paper p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
+	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<div class="flex items-center justify-between">
 			<h2 class="serif text-lg" style="color: var(--color-ink);">Letzte Auslieferungen</h2>
 			<a
@@ -314,7 +315,7 @@
 
 <!-- ===== MODUL 3: Audience Mini ===== -->
 <div class="mt-10">
-	<div class="paper p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
+	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<div class="flex items-center justify-between">
 			<h2 class="serif text-lg" style="color: var(--color-ink);">Audience</h2>
 			<a
@@ -345,7 +346,7 @@
 <!-- ===== Kategorien & Test-Newsletter ===== -->
 <div class="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
 	<!-- Kategorien -->
-	<div class="paper p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
+	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<h2 class="serif text-lg" style="color: var(--color-ink);">Kategorien</h2>
 		<div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
 			{#each Object.entries(categories) as [cat, count]}
@@ -358,7 +359,7 @@
 	</div>
 
 	<!-- Test-Newsletter -->
-	<div class="paper p-6 rounded-[6px]" style="border: 1px solid var(--color-rule);">
+	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
 		<h2 class="serif text-lg" style="color: var(--color-ink);">Test-Newsletter senden</h2>
 		<p class="mt-1 text-xs" style="color: var(--color-muted);">Sendet eine Test-E-Mail mit der aktuellen Hero-Story.</p>
 		<form

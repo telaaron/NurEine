@@ -88,7 +88,7 @@
 	}
 </script>
 
-<h1 class="serif text-2xl" style="color: var(--color-ink);">Audience Panel</h1>
+<h1 class="display text-3xl" style="color: var(--color-ink); font-weight: 600;">Audience Panel</h1>
 <p class="mt-1 text-sm" style="color: var(--color-muted);">
 	Verwalte alle Abonnenten. {selected.size > 0 ? `${selected.size} ausgewählt.` : ''}
 </p>
@@ -146,7 +146,7 @@
 
 <!-- Bestätigungsdialog -->
 {#if confirmDelete}
-	<div class="mt-4 p-4 rounded-[6px] text-sm" style="background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;">
+	<div class="mt-4 p-4 rounded-[10px] text-sm" style="background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b;">
 		<p class="font-medium">
 			{confirmDelete === 'bulk'
 				? `${selected.size} Abonnent${selected.size === 1 ? '' : 'en'} wirklich löschen?`
@@ -174,7 +174,7 @@
 	</div>
 {/if}
 
-<div class="mt-6 paper rounded-[6px] overflow-hidden" style="border: 1px solid var(--color-rule);">
+<div class="mt-6 paper rounded-[10px] overflow-hidden" style="border: 1px solid var(--color-rule);">
 	<div class="overflow-x-auto">
 		<table class="w-full text-sm">
 			<thead>

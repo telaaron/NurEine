@@ -18,7 +18,7 @@
 	}
 </script>
 
-<h1 class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">Einsendungen</h1>
+<h1 class="display text-3xl" style="color: var(--color-ink); font-weight: 600;">Einsendungen</h1>
 <p class="mt-1 text-sm" style="color: var(--color-muted);">Community-eingereichte Geschichten. Genehmigte manuell als Story anlegen.</p>
 
 <div class="mt-6 flex flex-col gap-3">

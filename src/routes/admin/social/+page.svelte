@@ -99,7 +99,7 @@
 
 <div class="flex items-center justify-between gap-4 flex-wrap">
 	<div>
-		<h1 class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">Social — Instagram-Queue</h1>
+		<h1 class="display text-3xl" style="color: var(--color-ink); font-weight: 600;">Social — Instagram-Queue</h1>
 		<p class="mt-1 text-sm" style="color: var(--color-muted);">Trockenlauf: Entwürfe prüfen, editieren, freigeben. Nichts geht ohne dein OK raus.</p>
 	</div>
 	<div class="flex items-center gap-3 flex-wrap">

@@ -76,16 +76,36 @@ Bots erweitern **Schritt 1** (Beat-spezifische Primärquellen) und ergänzen die
 - **/redaktion-Seite** (später): zeigt je Beat die monitorten Quellen + die
   letzten Funde. "So arbeiten wir" als Vertrauenssignal.
 
-## Umsetzungsreihenfolge
+## Umsetzungsstand
 
 1. ✅ **Konzept-Doc** (dieses Dokument).
-2. **DB:** Migration `beat` + `source_type` auf Stories + Quellen.
-3. **Beat 1 — Klima & Energie lauffähig:** Primärquellen-Katalog (IRENA/Ember/
-   Our World in Data/Global Forest Watch) als eigener Fetch, durch die bestehende
-   Pipeline, mit Beat-Tag. Beweist den Anti-Lärm-Ansatz.
-4. **Transparenz-Badge** auf Detailseite.
-5. **Beats 2-5** nach dem Muster von Beat 1.
-6. **/redaktion-Seite** als öffentliches Vertrauenssignal.
+2. ✅ **DB:** Migration 00027 (`beat` + `source_type` auf Stories + Quellen),
+   00028 (`nureine_fetch_log` für Monitoring).
+3. ✅ **Beats 1-4 verdrahtet** (13 Quellen, beat+source_type-getaggt):
+   - **Klima & Energie:** Grist, CleanTechnica, pv magazine, Yale Climate.
+   - **Gesundheit & Forschung:** WHO (official_stats, primär), Medical Xpress,
+     STAT News, Johns Hopkins Hub (peer_review, primär).
+   - **Gesellschaft & Bildung:** UN News (primär), The Conversation,
+     Our World in Data (official_stats, primär).
+   - **Innovation & Wirtschaft:** ScienceDaily Tech (peer_review, primär), TechXplore.
+4. ✅ **Transparenz-Badge** auf Detailseite ("Beat: … · Quellentyp").
+5. ✅ **Gründlicher beobachten:** max_per_run 6→10 — auch kleinere/tiefere Meldungen
+   je Quelle werden neutral bewertet, nicht nur die Top-Schlagzeilen.
+6. ✅ **Rejection-Logging:** jede Pipeline-Entscheidung (accepted / rejected_ai /
+   rejected_prefilter + Grund + Score) landet in `nureine_fetch_log`.
+7. ✅ **/admin/redaktion** Monitor: Quellen je Beat, Aufnahme/Ablehnung + Gründe,
+   Score-Verteilung, letzte Entscheidungen.
+
+## Noch offen (Phase 2)
+
+- **Beat 5 — Städte & Kommunen:** verlässliche RSS-Feeds sind rar → braucht
+  Open-Data-/API-Anbindung (kommunale Portale, C40, EU-Programme).
+- **Echte Daten-Primärquellen per API:** WHO/Weltbank/OWID liefern Statistik-Updates
+  ("Malaria-Tote -30%"), die NIE als Artikel erscheinen. Größter Moat. Pro API ein
+  eigener Adapter, der Datenpunkte in bewertbare Story-Kandidaten übersetzt.
+  (IRENA/Ember/EEA/CarbonBrief-RSS blocken Bots mit 403 → ebenfalls API-Pfad.)
+- **/redaktion-Seite öffentlich:** das Admin-Monitoring als öffentliches
+  Vertrauenssignal aufbereiten ("So arbeiten wir, diese Quellen, diese Funde").
 
 ## Leitprinzipien
 

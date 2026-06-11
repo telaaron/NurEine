@@ -137,7 +137,10 @@ SOURCE_CONFIG: dict[str, dict[str, int]] = {
     "Futura Sciences":        {"max_per_run": 5,  "priority": 3},
     "Tagesschau Wissen":      {"max_per_run": 5,  "priority": 3},
 }
-DEFAULT_SOURCE_CONFIG = {"max_per_run": 6, "priority": 3}
+# max_per_run 6→10: gründlicher beobachten (auch kleinere/tiefere Meldungen je Quelle
+# werden bewertet, nicht nur die Top-Schlagzeilen). Reporter-Ansatz: jede Meldung neutral
+# scoren statt nur den Lärm oben abzugreifen.
+DEFAULT_SOURCE_CONFIG = {"max_per_run": 10, "priority": 3}
 
 # ---------------------------------------------------------------------------
 # Category safety — the DB CHECK constraint only permits these seven values.
@@ -1324,6 +1327,32 @@ def log_cron_run(
         log.error("Failed to log cron run: %s", exc)
 
 
+def log_fetch_decision(
+    source_name: str,
+    beat: str | None,
+    title: str,
+    decision: str,
+    reason: str | None = None,
+    impact_score: int | None = None,
+) -> None:
+    """Protokolliert eine Redaktions-Entscheidung (Reporter-Transparenz, /admin/redaktion).
+
+    decision: 'accepted' | 'rejected_prefilter' | 'rejected_ai'. Best-effort —
+    ein Logging-Fehler darf den Fetch-Lauf NIE abbrechen.
+    """
+    try:
+        supabase_post("nureine_fetch_log", {
+            "source_name": source_name[:120] if source_name else None,
+            "beat": beat,
+            "title": (title or "")[:300],
+            "decision": decision,
+            "reason": (reason or "")[:120] or None,
+            "impact_score": impact_score,
+        })
+    except Exception as exc:  # noqa: BLE001 — Logging darf nie den Lauf killen
+        log.debug("fetch-log write failed: %s", exc)
+
+
 def run() -> None:
     """Main execution: fetch feeds, analyze, generate images, insert.
 
@@ -1437,6 +1466,10 @@ def run() -> None:
                 filter_reasons[prefilter_reason] = filter_reasons.get(prefilter_reason, 0) + 1
                 articles_prefiltered += 1
                 log.debug("  Pre-filtered: %s (reason=%s)", entry.get("title", "")[:60], prefilter_reason)
+                # Inhaltliche Ablehnungen protokollieren (broken_entry ist Rauschen → skip).
+                if not prefilter_reason.startswith("broken"):
+                    log_fetch_decision(source_name, source_beat, entry.get("title", ""),
+                                       "rejected_prefilter", prefilter_reason)
                 continue
 
             # ---- STAGE 2: Dedup check (Supabase query) ----
@@ -1476,6 +1509,7 @@ def run() -> None:
                 reason = gut_filter_reason or "unknown"
                 filter_reasons[reason] = filter_reasons.get(reason, 0) + 1
                 log.info("  Rejected (is_nureine=false, reason=%s): %s", reason, entry.get("title", "(kein Titel)"))
+                log_fetch_decision(source_name, source_beat, entry.get("title", ""), "rejected_ai", reason)
                 time.sleep(API_DELAY_SECONDS)
                 continue
 
@@ -1605,6 +1639,8 @@ def run() -> None:
             try:
                 supabase_post("nureine_stories", story_record)
                 stories_added += 1
+                log_fetch_decision(source_name, source_beat, story_record.get("title", ""),
+                                   "accepted", None, story_record.get("impact_score"))
                 log.info(
                     "  INSERTED: %s [%s — %s] image=%s",
                     story_record.get("title", ""),

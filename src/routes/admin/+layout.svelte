@@ -9,6 +9,7 @@
 		{ href: '/admin/audience', label: 'Audience' },
 		{ href: '/admin/b2b', label: 'B2B Pipeline' },
 		{ href: '/admin/stories', label: 'Stories' },
+		{ href: '/admin/redaktion', label: 'Redaktion' },
 		{ href: '/admin/submissions', label: 'Einsendungen' },
 		{ href: '/admin/social', label: 'Social' },
 		{ href: '/admin/delivery', label: 'Delivery' },

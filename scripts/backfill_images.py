@@ -50,6 +50,7 @@ load_dotenv()
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 
 FAL_ENDPOINT = "https://fal.run/fal-ai/flux-pro"
 FAL_IMAGE_SIZE = "landscape_4_3"  # 1024x768
@@ -208,8 +209,68 @@ CATEGORY_ACCENT_COLOURS: dict[str, str] = {
 }
 
 
+# Motiv-Wahl-Regel — identisch zur Pipeline (fetch_stories.py ANALYSIS_PROMPT, image_prompt).
+# URSACHE des Wiederholungs-Bugs vom 2026-06-12: vorher kam das Motiv aus 7 festen
+# Kategorie-Templates → 11× Hände, 9× Herz, 7× Glühbirne. Jetzt wählt DeepSeek das
+# Kern-Symbol PRO STORY; die Templates unten sind nur noch Not-Fallback ohne DeepSeek.
+DEEPSEEK_MOTIF_PROMPT = """Du bist Art Director einer Good-News-Plattform und baust einen FLUX.1-Bild-Prompt.
+
+⚠️ MOTIV-WAHL — DER HÄUFIGSTE FEHLER: Das Symbol muss den KERN der guten Nachricht zeigen, NICHT ein
+wörtliches/oberflächliches Objekt aus dem Titel und NICHT ein generisches Kategorie-Symbol. Denke einen Schritt weiter:
+  - SCHLECHT (wörtlich): "Bor-Nanobälle" → ein Fußball. NIEMALS. Stattdessen: leuchtendes Molekül-Gittermuster aus Papier.
+  - SCHLECHT (generisch): Glühbirne für jede Innovations-Story, Herz für jede Gesundheits-Story, Hände für jede
+    Gesellschafts-Story. NIEMALS — das Motiv muss DIESE eine Story erzählen.
+  - GUT: "Solarstrom überholt Kohle" → Sonne über stilisierter Landschaft, ein Kohlestück verblassend.
+  - GUT: "Nashörner kehren zurück" → ein Nashorn-Umriss aus Papier in sanfter Savannen-Landschaft.
+Wähle ein Motiv, das (a) eindeutig zum eigentlichen Thema passt, (b) positiv/hoffnungsvoll wirkt,
+(c) ohne Bildunterschrift verständlich ist. KEINE Menschen-Gesichter, KEINE Markenlogos, KEIN Text im Bild.
+
+Antworte mit GENAU EINER Zeile, exakt in diesem Format (Farbe wähle aus: terracotta orange, sage green, rose red, sky blue):
+Warm paper collage editorial illustration of [PASSENDES KERN-SYMBOL], made of layered matte paper cutouts on warm off-white #f5f1ea canvas. Accented in [FARBE]. Visible paper grain texture, soft cast shadows between paper layers. Flat semi-abstract premium magazine style. No text. No 3D, no photorealism, no glossy materials.
+
+Keine Anführungszeichen, kein Markdown, keine Erklärung.
+
+Artikel-Titel: {title}
+Kategorie: {category}
+Zusammenfassung: {summary}"""
+
+
+def build_image_prompt_deepseek(story: dict[str, Any]) -> str | None:
+    """Story-individuelles Motiv via DeepSeek (gleiche Regel wie die Pipeline)."""
+    if not DEEPSEEK_API_KEY:
+        return None
+    prompt = DEEPSEEK_MOTIF_PROMPT.format(
+        title=story.get("title", ""),
+        category=story.get("category", ""),
+        summary=(story.get("summary") or story.get("body_markdown") or "")[:600],
+    )
+    try:
+        resp = requests.post(
+            "https://api.deepseek.com/chat/completions",
+            headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}", "Content-Type": "application/json"},
+            json={
+                "model": "deepseek-chat",
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.7,
+                "max_tokens": 300,
+            },
+            timeout=60,
+        )
+        resp.raise_for_status()
+        raw = resp.json()["choices"][0]["message"]["content"].strip()
+    except (requests.RequestException, KeyError, IndexError) as exc:
+        log.warning("  DeepSeek-Motiv fehlgeschlagen: %s", exc)
+        return None
+    for line in raw.splitlines():
+        line = line.strip().strip('"').strip("`").strip()
+        if line.lower().startswith("warm paper collage") and len(line) > 80:
+            return line
+    log.warning("  DeepSeek-Antwort ohne gültigen Prompt: %.120s", raw)
+    return None
+
+
 def build_image_prompt(story: dict[str, Any]) -> str:
-    """Build a FLUX.1 image prompt from story metadata."""
+    """Build a FLUX.1 image prompt from story metadata (Fallback ohne DeepSeek)."""
     title = story.get("title", "")
     category = story.get("category", "")
     region = story.get("region", "")
@@ -245,15 +306,31 @@ def build_image_prompt(story: dict[str, Any]) -> str:
 # Main
 # ---------------------------------------------------------------------------
 def run() -> None:
-    # 1. Fetch all stories without image_url
-    log.info("Fetching stories without image_url...")
-    params: dict[str, str] = {
-        "image_url": "is.null",
-        "select": "id,title,category,region,body_markdown",
-    }
-    stories = supabase_get("nureine_stories", params=params)
+    # Modus --ids <datei>: regeneriert Bilder für diese Story-IDs (eine ID pro Zeile),
+    # auch wenn image_url schon gesetzt ist (z. B. nach dem Template-Motiv-Bug).
+    ids_file = None
+    if "--ids" in sys.argv[1:]:
+        ids_file = sys.argv[sys.argv.index("--ids") + 1]
+
+    select = "id,title,category,region,summary,body_markdown,image_url"
+    if ids_file:
+        with open(ids_file) as f:
+            ids = [line.strip() for line in f if line.strip()]
+        log.info("Regeneriere Bilder für %d Story-IDs aus %s ...", len(ids), ids_file)
+        stories = []
+        for chunk_start in range(0, len(ids), 50):
+            chunk = ids[chunk_start : chunk_start + 50]
+            stories += supabase_get(
+                "nureine_stories",
+                params={"select": select, "id": f"in.({','.join(chunk)})"},
+            )
+    else:
+        log.info("Fetching stories without image_url...")
+        stories = supabase_get(
+            "nureine_stories", params={"image_url": "is.null", "select": select}
+        )
     total = len(stories)
-    log.info("Found %d stories without images.", total)
+    log.info("Found %d stories to process.", total)
 
     if total == 0:
         log.info("Nothing to do.")
@@ -267,8 +344,11 @@ def run() -> None:
         title = story.get("title", "(kein Titel)")
         log.info("[%d/%d] %s", i + 1, total, title)
 
-        # 2. Build image prompt
-        prompt = build_image_prompt(story)
+        # 2. Build image prompt — Story-Motiv via DeepSeek, Template nur als Not-Fallback.
+        prompt = build_image_prompt_deepseek(story)
+        if not prompt:
+            log.warning("  Fallback auf Kategorie-Template (DeepSeek nicht verfügbar).")
+            prompt = build_image_prompt(story)
         log.info("  Prompt: %.120s...", prompt)
 
         # 3. Generate image
@@ -322,9 +402,17 @@ def run() -> None:
             failed += 1
             continue
 
-        # 5. Update the story record
+        # 5. Update the story record (+ altes Bild aufräumen, falls Regeneration)
+        old_url = story.get("image_url")
         try:
             supabase_patch("nureine_stories", {"image_url": public_url}, story_id)
+            if old_url and f"/{STORAGE_BUCKET}/" in old_url:
+                old_key = old_url.split(f"/{STORAGE_BUCKET}/", 1)[1]
+                requests.delete(
+                    f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{old_key}",
+                    headers=supabase_headers(),
+                    timeout=30,
+                )
             log.info("  Updated story %s", story_id)
             success += 1
         except requests.RequestException as exc:

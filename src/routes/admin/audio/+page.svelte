@@ -138,7 +138,7 @@
 		<div class="h-full rounded-full" style="width: {pct}%; background: {pct > 85 ? 'var(--color-rose)' : 'var(--color-amber)'};"></div>
 	</div>
 	<p class="mt-2 text-xs" style="color: var(--color-faint);">
-		{#if data.usage}{pct}% des Free-Tier-Richtwerts genutzt. Bei ~400 Zeichen/Story reicht das für ~{Math.max(0, Math.floor((FREE_LIMIT - used) / 400))} weitere Vertonungen.{:else}Nutzung nicht abrufbar (Key fehlt oder API nicht erreichbar).{/if}
+		{#if data.usage}{pct}% des Free-Tier-Richtwerts genutzt. Rest ≈ {Math.max(0, Math.floor((FREE_LIMIT - used) / 600))} Zusammenfassungen (Ø ~600 Zeichen gemessen, inkl. v3-Tags) bzw. {Math.max(0, Math.floor((FREE_LIMIT - used) / 2000))} ganze Artikel (bis 2.000 Zeichen).{:else}Nutzung nicht abrufbar (Key fehlt oder API nicht erreichbar).{/if}
 	</p>
 </div>
 

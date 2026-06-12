@@ -444,6 +444,7 @@ export async function refreshInsights(): Promise<{ updated: number; skipped: str
 
 	const posts = (data as { id: number; ig_media_id: string }[]) ?? [];
 	let updated = 0;
+	let firstError: string | null = null;
 
 	for (const p of posts) {
 		try {
@@ -452,7 +453,16 @@ export async function refreshInsights(): Promise<{ updated: number; skipped: str
 			const resp = await fetch(
 				`https://graph.facebook.com/${IG_V}/${p.ig_media_id}/insights?metric=${metrics}&access_token=${token}`
 			);
-			if (!resp.ok) continue; // manche Metriken fehlen je Medientyp → still skip
+			if (!resp.ok) {
+				// manche Metriken fehlen je Medientyp → skip; erste Fehlerursache
+				// trotzdem festhalten, sonst sieht "updated:0" wie Erfolg aus
+				if (!firstError) {
+					const body = await resp.text().catch(() => '');
+					firstError = `media ${p.ig_media_id}: HTTP ${resp.status} ${body.slice(0, 300)}`;
+					console.error('[social] insights request failed:', firstError);
+				}
+				continue;
+			}
 			const json = (await resp.json()) as { data?: { name: string; values: { value: number }[] }[] };
 			const get = (name: string) => json.data?.find((m) => m.name === name)?.values?.[0]?.value ?? null;
 
@@ -470,7 +480,7 @@ export async function refreshInsights(): Promise<{ updated: number; skipped: str
 		}
 	}
 
-	return { updated, skipped: '' };
+	return { updated, skipped: updated === 0 && firstError ? firstError : '' };
 }
 
 // ---------------------------------------------------------------------------

@@ -7,7 +7,10 @@
 	const navGroups = $derived([
 		{
 			title: 'Überblick',
-			items: [{ href: '/admin', label: 'Dashboard', icon: 'grid', badge: 0 }]
+			items: [
+				{ href: '/admin', label: 'Dashboard', icon: 'grid', badge: 0 },
+				{ href: '/admin/kosten', label: 'Kosten', icon: 'coins', badge: 0 }
+			]
 		},
 		{
 			title: 'Inhalt',
@@ -47,6 +50,7 @@
 		{:else if name === 'briefcase'}<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
 		{:else if name === 'send'}<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
 		{:else if name === 'volume'}<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+		{:else if name === 'coins'}<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>
 		{/if}
 	</svg>
 {/snippet}

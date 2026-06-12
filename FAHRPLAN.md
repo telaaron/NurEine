@@ -51,9 +51,14 @@
 
 ## Einmalige Technik-Reste (zwischendurch, je <15 Min)
 
-- [ ] **IG-Token mit `instagram_manage_insights` neu ziehen** — sobald ich dir
-      nach dem Deploy die genaue Fehlerursache bestätige. Anleitung: Memory
-      „Der Token-Weg" + BACKLOG #3. Ohne das bleibt Saves/Reach blind.
+- [ ] **IG-Token mit `instagram_manage_insights` neu ziehen.** Diagnose bestätigt
+      (2026-06-13): Graph-API Code 10 „Application does not have permission" —
+      der App/dem Token fehlt die Insights-Berechtigung. Weg: Meta-App-Dashboard
+      → App „NurEine Poster" → Berechtigung `instagram_manage_insights` hinzufügen,
+      dann OAuth-URL aus Memory „Der Token-Weg" MIT diesem Scope erweitern, neuen
+      Page-Token in Vercel setzen. ZWISCHENLÖSUNG LÄUFT: Likes/Kommentare werden
+      seit heute nächtlich automatisch gezogen (22:00 UTC) — Saves/Reach bleiben
+      blind bis zum neuen Token.
 - [ ] Vercel: prüfen, dass ELEVENLABS_API_KEY + FAL_KEY in production stehen
       (laut Memory seit 11.06. drin — einmal /admin „Status prüfen" klicken)
 - [ ] Brevo Starter einplanen, sobald >250 Abonnenten (Free-Limit 300 Mails/Tag)

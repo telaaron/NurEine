@@ -462,6 +462,21 @@ export async function refreshInsights(): Promise<{ updated: number; skipped: str
 					firstError = `media ${p.ig_media_id}: HTTP ${resp.status} ${body.slice(0, 300)}`;
 					console.error('[social] insights request failed:', firstError);
 				}
+				// Fallback ohne instagram_manage_insights (Fehlercode 10):
+				// like_count/comments_count gehen mit dem Basis-Token.
+				const fb = await fetch(
+					`https://graph.facebook.com/${IG_V}/${p.ig_media_id}?fields=like_count,comments_count&access_token=${token}`
+				);
+				if (fb.ok) {
+					const j = (await fb.json()) as { like_count?: number; comments_count?: number };
+					if (j.like_count !== undefined || j.comments_count !== undefined) {
+						await supabaseAdmin
+							.from('nureine_social_posts')
+							.update({ likes: j.like_count ?? null, comments: j.comments_count ?? null, updated_at: new Date().toISOString() })
+							.eq('id', p.id);
+						updated += 1;
+					}
+				}
 				continue;
 			}
 			const json = (await resp.json()) as { data?: { name: string; values: { value: number }[] }[] };

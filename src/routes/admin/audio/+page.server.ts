@@ -1,11 +1,35 @@
 import { supabaseAdmin } from '$lib/server/supabase/client';
 import { env } from '$env/dynamic/private';
+import { getAppSetting } from '$lib/server/social/queue';
 
-// Audio-Cockpit: alle Vertonungen + ElevenLabs-Nutzung (Zeichen) der letzten 30 Tage.
-export async function load() {
+export interface AudioStoryRow {
+	id: string;
+	title: string;
+	category: string;
+	impact_score: number;
+	emotion: string | null;
+	audio_url: string | null;
+	created_at: string;
+}
+
+// Audio-Cockpit: alle Vertonungen + ElevenLabs-Nutzung (Zeichen) der letzten 30 Tage
+// + Volltext-Suche über ALLE Stories (nachträglich vertonen / löschen) + Autopilot-Status.
+export async function load({ url }) {
 	const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+	const q = (url.searchParams.get('q') ?? '').trim();
 
-	const [voicedRes, candidatesRes] = await Promise.all([
+	// Suche über den gesamten Bestand — jede Story ist vertonbar/verwaltbar.
+	let searchQuery = supabaseAdmin
+		.from('nureine_stories')
+		.select('id,title,category,impact_score,emotion,audio_url,created_at')
+		.order('created_at', { ascending: false })
+		.limit(30);
+	if (q) {
+		const like = `%${q.replace(/[%_]/g, '')}%`;
+		searchQuery = searchQuery.or(`title.ilike.${like},category.ilike.${like}`);
+	}
+
+	const [voicedRes, candidatesRes, searchRes, autopilotVal] = await Promise.all([
 		// Bereits vertonte Stories.
 		supabaseAdmin
 			.from('nureine_stories')
@@ -21,7 +45,9 @@ export async function load() {
 			.gte('created_at', since30d)
 			.gte('impact_score', 60)
 			.order('impact_score', { ascending: false })
-			.limit(20)
+			.limit(20),
+		searchQuery,
+		getAppSetting('audio_autopilot')
 	]);
 
 	// ElevenLabs-Nutzung (Zeichen) — usage/character-stats braucht KEIN user_read.
@@ -53,6 +79,9 @@ export async function load() {
 	return {
 		voiced: (voicedRes.data as { id: string; title: string; category: string; impact_score: number; audio_url: string; emotion: string | null; created_at: string }[]) ?? [],
 		candidates: (candidatesRes.data as { id: string; title: string; category: string; impact_score: number; emotion: string | null }[]) ?? [],
+		search: ((searchRes.data as AudioStoryRow[]) ?? []),
+		q,
+		autopilot: autopilotVal === 'true',
 		usage,
 		audioConfigured: !!env.ELEVENLABS_API_KEY
 	};

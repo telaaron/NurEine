@@ -38,6 +38,66 @@
 		}
 	}
 
+	// Auto-Vertonung (Pipeline Stage 8) scharf stellen / pausieren.
+	let autopilot = $state(data.autopilot);
+	let toggling = $state(false);
+	async function toggleAutopilot() {
+		if (toggling) return;
+		toggling = true;
+		try {
+			const res = await fetch(`${base}/api/admin/audio`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ action: 'toggle-autopilot' })
+			});
+			const r = await res.json();
+			if (res.ok) autopilot = r.autopilot;
+		} finally {
+			toggling = false;
+		}
+	}
+
+	// Verwaltung: Suche über alle Stories — nachträglich vertonen / löschen.
+	let rows = $state(data.search);
+	$effect(() => {
+		rows = data.search;
+	});
+	let rowBusy = $state('');
+	async function generateRow(id: string, mode: 'summary' | 'full') {
+		if (rowBusy) return;
+		rowBusy = id;
+		try {
+			const res = await fetch(`${base}/api/admin/stories/${id}/generate-audio?mode=${mode}`, { method: 'POST' });
+			const r = await res.json();
+			if (res.ok && r.audio_url) {
+				rows = rows.map((s) => (s.id === id ? { ...s, audio_url: r.audio_url + '?t=' + Date.now() } : s));
+			} else {
+				alert(r.error || r.message || 'Vertonen fehlgeschlagen.');
+			}
+		} catch {
+			alert('Verbindungsfehler.');
+		} finally {
+			rowBusy = '';
+		}
+	}
+	async function deleteRow(id: string, title: string) {
+		if (!confirm(`Vertonung von „${title}" wirklich löschen? Der Player verschwindet aus dem Artikel.`)) return;
+		rowBusy = id;
+		try {
+			const res = await fetch(`${base}/api/admin/stories/${id}/generate-audio`, { method: 'DELETE' });
+			if (res.ok) {
+				rows = rows.map((s) => (s.id === id ? { ...s, audio_url: null } : s));
+				voiced = voiced.filter((v) => v.id !== id);
+			} else {
+				alert('Löschen fehlgeschlagen.');
+			}
+		} catch {
+			alert('Verbindungsfehler.');
+		} finally {
+			rowBusy = '';
+		}
+	}
+
 	let deleting = $state('');
 	async function remove(id: string, title: string) {
 		if (!confirm(`Vertonung von „${title}" wirklich löschen? Der Player verschwindet aus dem Artikel.`)) return;
@@ -82,6 +142,26 @@
 	</p>
 </div>
 
+<!-- Auto-Vertonung scharf stellen -->
+<div class="mt-6 paper rounded-[10px] p-5" style="border: 1px solid {autopilot ? 'var(--color-sage)' : 'var(--color-rule)'};">
+	<div class="flex items-center justify-between gap-3 flex-wrap">
+		<div>
+			<h2 class="display text-lg" style="color: var(--color-ink);">Auto-Vertonung</h2>
+			<p class="mt-1 text-xs" style="color: var(--color-muted);">
+				Scharf = Pipeline vertont nach jedem Fetch-Run automatisch die stärkste unvertonte Story
+				(nur Zusammenfassung, v3 + Emotions-Tags, max. 1/Run → bis 4/Tag).
+			</p>
+		</div>
+		<button type="button" disabled={toggling} onclick={toggleAutopilot}
+			class="px-4 py-2 rounded-full text-sm font-medium disabled:opacity-50"
+			style={autopilot
+				? 'background: var(--color-sage); color: var(--color-paper);'
+				: 'background: transparent; color: var(--color-muted); border: 1px solid var(--color-rule-strong);'}>
+			{toggling ? '…' : autopilot ? 'SCHARF — klick zum Pausieren' : 'aus — klick zum Scharfstellen'}
+		</button>
+	</div>
+</div>
+
 <!-- Test-Vertonung -->
 <div class="mt-6 paper rounded-[10px] p-5" style="border: 1px solid var(--color-rule);">
 	<h2 class="display text-lg" style="color: var(--color-ink);">Test-Vertonung</h2>
@@ -103,6 +183,62 @@
 		<!-- svelte-ignore a11y_media_has_caption -->
 		<audio controls src={lastUrl} class="mt-3 w-full" style="height:40px;"></audio>
 	{/if}
+</div>
+
+<!-- Alle Geschichten verwalten -->
+<div class="mt-6 paper rounded-[10px] p-5" style="border: 1px solid var(--color-rule);">
+	<h2 class="display text-lg" style="color: var(--color-ink);">Alle Geschichten</h2>
+	<p class="mt-1 text-xs" style="color: var(--color-muted);">Jede Story durchsuchen, nachträglich vertonen oder die Vertonung spurlos entfernen.</p>
+	<form method="GET" class="mt-3 flex gap-2">
+		<input type="text" name="q" value={data.q} placeholder="Titel oder Kategorie suchen…"
+			class="flex-1 px-3 py-2 rounded-[10px] text-sm"
+			style="background: var(--color-paper); border: 1px solid var(--color-rule); color: var(--color-ink);" />
+		<button type="submit" class="px-4 py-2 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Suchen</button>
+		{#if data.q}
+			<a href="?" class="px-4 py-2 rounded-full text-sm font-medium" style="color: var(--color-muted); border: 1px solid var(--color-rule);">Zurücksetzen</a>
+		{/if}
+	</form>
+	<div class="mt-4 flex flex-col gap-2">
+		{#each rows as s (s.id)}
+			<div class="p-3 rounded-[10px]" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
+				<div class="flex items-center justify-between gap-3 flex-wrap">
+					<div class="min-w-0">
+						<a href={base + '/geschichte/' + slugify(s.title, s.id)} target="_blank" class="font-medium text-sm hover:opacity-70" style="color: var(--color-ink);">{s.title}</a>
+						<div class="text-xs mt-0.5" style="color: var(--color-faint);">
+							{s.category} · Wirkung {s.impact_score} · {s.emotion ?? '—'} · {new Date(s.created_at).toLocaleDateString('de-DE')}
+							{#if s.audio_url}<span style="color: var(--color-sage);"> · vertont</span>{/if}
+						</div>
+					</div>
+					<div class="flex items-center gap-2">
+						{#if s.audio_url}
+							<button type="button" disabled={rowBusy === s.id} onclick={() => deleteRow(s.id, s.title)}
+								class="px-3 py-1.5 rounded-full text-xs font-medium disabled:opacity-50"
+								style="background: transparent; color: var(--color-rose); border: 1px solid var(--color-rose);">
+								{rowBusy === s.id ? '…' : 'Löschen'}
+							</button>
+						{:else}
+							<button type="button" disabled={rowBusy === s.id} onclick={() => generateRow(s.id, 'summary')}
+								class="px-3 py-1.5 rounded-full text-xs font-medium disabled:opacity-50"
+								style="background: var(--color-amber); color: var(--color-paper);">
+								{rowBusy === s.id ? 'Generiere…' : '🔊 Zusammenfassung'}
+							</button>
+							<button type="button" disabled={rowBusy === s.id} onclick={() => generateRow(s.id, 'full')}
+								class="px-3 py-1.5 rounded-full text-xs font-medium disabled:opacity-50"
+								style="background: transparent; color: var(--color-ink-soft); border: 1px solid var(--color-rule-strong);">
+								Ganzer Artikel
+							</button>
+						{/if}
+					</div>
+				</div>
+				{#if s.audio_url}
+					<!-- svelte-ignore a11y_media_has_caption -->
+					<audio controls preload="none" src={s.audio_url} class="mt-2 w-full" style="height:34px;"></audio>
+				{/if}
+			</div>
+		{:else}
+			<p class="text-sm" style="color: var(--color-faint);">Keine Treffer{data.q ? ` für „${data.q}"` : ''}.</p>
+		{/each}
+	</div>
 </div>
 
 <!-- Vertonte Stories -->

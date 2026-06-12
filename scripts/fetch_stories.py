@@ -88,19 +88,31 @@ FAL_POLL_TIMEOUT = 180  # max seconds to wait for generation
 # ElevenLabs TTS (Vorlesen-Feature)
 # Free-Tier: ~10k chars/month. Danach: gpt-4o-mini-tts.
 ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb")  # George — ruhig, männlich, deutsch
-ELEVENLABS_MODEL = "eleven_multilingual_v2"
+# v3 unterstützt Audio-Tags ([warmly], [thoughtful pause] …) — gleicher Stand wie der
+# Admin-Endpoint generate-audio. Fallback auf multilingual_v2 nur falls v3 mal wegfällt.
+ELEVENLABS_MODEL = "eleven_v3"
 ELEVENLABS_TTS_URL = f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVENLABS_VOICE_ID}"
 
 # Supabase Storage buckets
 STORAGE_BUCKET = "story_images"
 AUDIO_STORAGE_BUCKET = "story_audio"
 
-# Audio feature: nur Top-2 Stories pro Run vertonen
-# Vorlesen ist standardmäßig AUS (Token-Schutz). Erst scharf, wenn AUDIO_AUTOGEN=true
-# gesetzt wird (nach erfolgreichem Admin-Test). Dann nur 1 Story/Tag, nur Zusammenfassung
-# (~400 Zeichen → ~12k/Monat, knapp im Free-Tier).
+# Audio feature: nur Top-Story pro Run vertonen
+# Vorlesen ist standardmäßig AUS (Token-Schutz). Scharf entweder per env AUDIO_AUTOGEN=true
+# ODER per DB-Setting audio_autopilot='true' (Toggle im /admin/audio-Cockpit — kein
+# Workflow-Edit nötig). Dann 1 Story/Run, nur Zusammenfassung (~400 Zeichen).
 AUDIO_AUTOGEN = os.environ.get("AUDIO_AUTOGEN", "").lower() == "true"
 MAX_AUDIO_STORIES = 1
+
+# Emotion (relief/wonder/hope/pride/warmth) → Eröffnungs-Audio-Tag (nur eleven_v3).
+# Gleiches Mapping wie src/routes/api/admin/stories/[id]/generate-audio/+server.ts.
+AUDIO_EMOTION_TAGS: dict[str, str] = {
+    "relief": "[gently]",
+    "wonder": "[with quiet wonder]",
+    "hope": "[warmly]",
+    "pride": "[warmly]",
+    "warmth": "[warmly]",
+}
 
 # Source configuration: per-source limits & priority
 # Format: source_name -> {max_per_run, priority}
@@ -503,11 +515,45 @@ def supabase_upload_image(image_bytes: bytes, filename: str) -> str | None:
     return public_url
 
 
-def generate_audio_elevenlabs(text: str) -> bytes | None:
+def audio_autogen_enabled() -> bool:
+    """Auto-Vertonung scharf? env AUDIO_AUTOGEN=true ODER DB-Setting audio_autopilot='true'.
+
+    Das DB-Setting wird im /admin/audio-Cockpit umgeschaltet — so kann das Vorlesen
+    ohne Workflow-Änderung scharf gestellt / pausiert werden.
+    """
+    if AUDIO_AUTOGEN:
+        return True
+    try:
+        rows = supabase_get(
+            "nureine_app_settings",
+            params={"select": "value", "key": "eq.audio_autopilot", "limit": "1"},
+        )
+        return bool(rows) and rows[0].get("value") == "true"
+    except requests.RequestException as exc:
+        log.warning("  audio_autopilot-Setting nicht lesbar: %s", exc)
+        return False
+
+
+def with_audio_tags(text: str, emotion: str | None) -> str:
+    """Dezenter v3-Eröffnungs-Tag + eine Atempause nach dem ersten Satz (kein Tag-Spam)."""
+    opener = AUDIO_EMOTION_TAGS.get(emotion or "", "[warmly]")
+    match = re.search(r"[.!?]\s", text)
+    if match and 20 < match.start() < len(text) - 10:
+        head = text[: match.start() + 1]
+        tail = text[match.start() + 1 :].lstrip()
+        return f"{opener} {head} [thoughtful pause] {tail}"
+    return f"{opener} {text}"
+
+
+def generate_audio_elevenlabs(text: str, emotion: str | None = None) -> bytes | None:
     """Generate MP3 audio via ElevenLabs TTS API. Returns raw MP3 bytes or None."""
     if not ELEVENLABS_API_KEY:
         log.warning("  ELEVENLABS_API_KEY not set — skipping TTS generation.")
         return None
+
+    # Audio-Tags nach Story-Emotion — nur fürs ausdrucksstärkere v3-Modell.
+    if ELEVENLABS_MODEL == "eleven_v3":
+        text = with_audio_tags(text, emotion)
 
     # ElevenLabs free tier: max 5000 chars per request. Truncate to ~2000 chars
     # (~2 Min. Lesezeit) — das reicht für unsere kompakten Stories.
@@ -529,7 +575,8 @@ def generate_audio_elevenlabs(text: str) -> bytes | None:
             "stability": 0.5,
             "similarity_boost": 0.8,
             "style": 0.1,
-            "speaker_boost": True,
+            # false = getestete v3-Konfiguration (identisch zum Admin-Endpoint).
+            "speaker_boost": False,
         },
     }
 
@@ -1702,14 +1749,14 @@ def run() -> None:
 
             time.sleep(API_DELAY_SECONDS)
 
-    # ---- STAGE 8: Audio-TTS (ElevenLabs) — nur wenn AUDIO_AUTOGEN=true (Token-Schutz) ----
-    if stories_added > 0 and ELEVENLABS_API_KEY and AUDIO_AUTOGEN:
+    # ---- STAGE 8: Audio-TTS (ElevenLabs) — nur wenn scharf (env oder Admin-Toggle) ----
+    if stories_added > 0 and ELEVENLABS_API_KEY and audio_autogen_enabled():
         log.info("--- Audio-TTS: Vertonung der Top-%d Stories (nur Zusammenfassung) ---", MAX_AUDIO_STORIES)
         try:
             top_stories = supabase_get(
                 "nureine_stories",
                 params={
-                    "select": "id,title,body_markdown,summary,impact_score",
+                    "select": "id,title,body_markdown,summary,impact_score,emotion",
                     "audio_url": "is.null",
                     "order": "impact_score.desc",
                     "limit": str(MAX_AUDIO_STORIES),
@@ -1728,7 +1775,7 @@ def run() -> None:
 
                 log.info("  Generiere Audio für '%s' (impact=%s, %d Zeichen)...",
                          ts_title, ts.get("impact_score"), len(text_to_read))
-                mp3_bytes = generate_audio_elevenlabs(text_to_read)
+                mp3_bytes = generate_audio_elevenlabs(text_to_read, ts.get("emotion"))
                 public_url = None
 
                 if mp3_bytes:

@@ -43,6 +43,17 @@
 		return { ok: res.ok, data: await res.json().catch(() => ({})) };
 	}
 
+	let replies = $state(data.replies);
+
+	async function replyAction(id: number, action: 'reply-approve' | 'reply-reject') {
+		busy = id;
+		const { ok, data: r } = await api({ action, id });
+		if (ok) {
+			replies = replies.map((x) => (x.id === id ? { ...x, status: action === 'reply-approve' ? 'posted' : 'rejected' } : x));
+		} else alert('Fehlgeschlagen: ' + (r.error || 'unbekannt'));
+		busy = null;
+	}
+
 	async function setStatus(id: number, status: string) {
 		busy = id;
 		const { ok } = await api({ action: 'update', id, patch: { status } });
@@ -161,22 +172,35 @@
 	{/if}
 </div>
 
-<!-- KI-Kommentar-Antworten (live, NurEine-Ton) -->
+<!-- KI-Kommentar-Antworten — Freigabe-Queue (KI entwirft, Mensch gibt frei) -->
 <div class="mt-6 paper rounded-[10px] p-4" style="border: 1px solid var(--color-rule);">
-	<p class="text-xs uppercase tracking-wider mb-1" style="color: var(--color-amber); font-family: var(--font-mono);">KI-Kommentar-Antworten — live</p>
-	<p class="text-xs mb-3" style="color: var(--color-muted);">Antwortet automatisch auf positive/Frage-Kommentare. Troll/Spam/Hass werden still übersprungen.</p>
-	{#if data.replies.length}
+	<p class="text-xs uppercase tracking-wider mb-1" style="color: var(--color-amber); font-family: var(--font-mono);">KI-Kommentar-Antworten — Freigabe-Queue</p>
+	<p class="text-xs mb-3" style="color: var(--color-muted);">KI entwirft Antworten auf positive/Frage-Kommentare — gepostet wird erst nach deiner Freigabe. Troll/Spam/Hass werden still übersprungen.</p>
+	{#if replies.length}
 		<div class="flex flex-col gap-2">
-			{#each data.replies as rep}
+			{#each replies as rep (rep.id)}
 				<div class="text-sm p-3 rounded" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
 					<div style="color: var(--color-ink-soft);">💬 {rep.comment_text}</div>
-					{#if rep.reply_text}<div class="mt-1" style="color: var(--color-sage);">↳ {rep.reply_text}</div>
-					{:else}<div class="mt-1" style="color: var(--color-faint);">↳ übersprungen: {rep.skipped_reason}</div>{/if}
+					{#if rep.reply_text}
+						<div class="mt-1" style="color: var(--color-sage);">↳ {rep.reply_text}</div>
+						{#if rep.status === 'pending'}
+							<div class="mt-2 flex gap-2">
+								<button class="px-3 py-1 rounded text-xs" style="background: var(--color-ink); color: var(--color-canvas);"
+									disabled={busy === rep.id} onclick={() => replyAction(rep.id, 'reply-approve')}>Antworten</button>
+								<button class="px-3 py-1 rounded text-xs" style="border: 1px solid var(--color-rule); color: var(--color-muted);"
+									disabled={busy === rep.id} onclick={() => replyAction(rep.id, 'reply-reject')}>Verwerfen</button>
+							</div>
+						{:else}
+							<div class="mt-1 text-xs" style="color: var(--color-faint);">{rep.status === 'posted' ? '✓ gepostet' : rep.status === 'rejected' ? 'verworfen' : rep.status}</div>
+						{/if}
+					{:else}
+						<div class="mt-1" style="color: var(--color-faint);">↳ übersprungen: {rep.skipped_reason}</div>
+					{/if}
 				</div>
 			{/each}
 		</div>
 	{:else}
-		<p class="text-sm" style="color: var(--color-faint);">Noch keine Kommentare beantwortet.</p>
+		<p class="text-sm" style="color: var(--color-faint);">Noch keine Kommentare in der Queue.</p>
 	{/if}
 </div>
 

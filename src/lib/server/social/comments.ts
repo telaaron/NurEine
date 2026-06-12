@@ -98,23 +98,26 @@ async function postReply(commentId: string, message: string, token: string): Pro
 }
 
 /**
- * Hauptlauf: neue Kommentare finden, klassifizieren, ggf. antworten.
+ * Hauptlauf: neue Kommentare finden, klassifizieren, Antwort-ENTWURF in die
+ * Freigabe-Queue legen (status 'pending'). Gepostet wird erst nach Freigabe
+ * im Admin (approveReply) — ein Bot, der ungekennzeichnet als Mensch wirkt,
+ * ist auf einer Empathie-Marke ein Vertrauensrisiko.
  * Idempotent über nureine_social_replies (comment_id unique).
  */
-export async function replyToComments(): Promise<{ replied: number; skipped: number; reason: string }> {
-	if (!igConfigured()) return { replied: 0, skipped: 0, reason: 'IG/DeepSeek not configured' };
+export async function replyToComments(): Promise<{ queued: number; skipped: number; reason: string }> {
+	if (!igConfigured()) return { queued: 0, skipped: 0, reason: 'IG/DeepSeek not configured' };
 	const token = env.IG_ACCESS_TOKEN!;
 
 	const mediaIds = await recentMediaIds();
-	let replied = 0;
+	let queued = 0;
 	let skipped = 0;
 
 	for (const mediaId of mediaIds) {
-		if (replied >= MAX_REPLIES_PER_RUN) break;
+		if (queued >= MAX_REPLIES_PER_RUN) break;
 		const comments = await fetchComments(mediaId, token);
 
 		for (const c of comments) {
-			if (replied >= MAX_REPLIES_PER_RUN) break;
+			if (queued >= MAX_REPLIES_PER_RUN) break;
 			if (!c.text || c.text.trim().length < 2) continue;
 
 			// Schon bearbeitet? (Dedup)
@@ -130,21 +133,51 @@ export async function replyToComments(): Promise<{ replied: number; skipped: num
 			if (!reply) {
 				// Skip merken, damit wir denselben Kommentar nicht nochmal klassifizieren.
 				await supabaseAdmin.from('nureine_social_replies').insert({
-					comment_id: c.id, media_id: mediaId, comment_text: c.text.slice(0, 500), reply_text: null, skipped_reason: reason.slice(0, 200)
+					comment_id: c.id, media_id: mediaId, comment_text: c.text.slice(0, 500),
+					reply_text: null, skipped_reason: reason.slice(0, 200), status: 'skipped'
 				});
 				skipped += 1;
 				continue;
 			}
 
-			const ok = await postReply(c.id, reply, token);
 			await supabaseAdmin.from('nureine_social_replies').insert({
 				comment_id: c.id, media_id: mediaId, comment_text: c.text.slice(0, 500),
-				reply_text: ok ? reply : null, skipped_reason: ok ? null : 'post failed'
+				reply_text: reply, skipped_reason: null, status: 'pending'
 			});
-			if (ok) replied += 1;
-			else skipped += 1;
+			queued += 1;
 		}
 	}
 
-	return { replied, skipped, reason: '' };
+	return { queued, skipped, reason: '' };
+}
+
+/** Freigegebene Antwort wirklich auf Instagram posten. */
+export async function approveReply(id: number): Promise<{ ok: boolean; reason: string }> {
+	if (!igConfigured()) return { ok: false, reason: 'IG not configured' };
+	const { data } = await supabaseAdmin
+		.from('nureine_social_replies')
+		.select('id,comment_id,reply_text,status')
+		.eq('id', id)
+		.maybeSingle();
+	const row = data as { comment_id: string; reply_text: string | null; status: string } | null;
+	if (!row) return { ok: false, reason: 'reply not found' };
+	if (row.status !== 'pending') return { ok: false, reason: `status is ${row.status}` };
+	if (!row.reply_text) return { ok: false, reason: 'no reply text' };
+
+	const ok = await postReply(row.comment_id, row.reply_text, env.IG_ACCESS_TOKEN!);
+	await supabaseAdmin
+		.from('nureine_social_replies')
+		.update({ status: ok ? 'posted' : 'failed', skipped_reason: ok ? null : 'post failed' })
+		.eq('id', id);
+	return ok ? { ok: true, reason: '' } : { ok: false, reason: 'graph post failed' };
+}
+
+/** Antwort-Entwurf verwerfen (es wird nicht geantwortet). */
+export async function rejectReply(id: number): Promise<boolean> {
+	const { error } = await supabaseAdmin
+		.from('nureine_social_replies')
+		.update({ status: 'rejected' })
+		.eq('id', id)
+		.eq('status', 'pending');
+	return !error;
 }

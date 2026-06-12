@@ -37,26 +37,19 @@ Abschnitt „Der Token-Weg"; Scope war bei App-Config ungültig → ggf. App-Pro
 `GET /{media-id}?fields=like_count,comments_count` als Proxy-Metrik in
 nureine_social_posts speichern (neue Spalten via neue Migration, nie alte editieren).
 
-### 4. [AGENT] DeepSeek-Parser robust machen (13/19 fetch-Runs mit Teilverlust)
-`scripts/fetch_stories.py` loggt „DeepSeek returned unparseable response" in
-13 von 19 Runs der letzten 7 Tage (nureine_cron_runs, type=fetch_stories) —
-Run läuft weiter, aber Batch-Verlust. Fix: (1) `response_format={"type":
-"json_object"}` im DeepSeek-Call erzwingen, (2) bei Parse-Fehler 1× Retry mit
-explizitem „NUR valides JSON"-Reminder, (3) Roh-Antwort (erste 500 Zeichen) in
-cron_runs.error loggen statt generischer Message, (4) Salvage: mit Regex äußerstes
-JSON-Array extrahieren bevor aufgegeben wird. PEP8, Fehler in cron_runs loggen
-(CLAUDE.md-Regeln).
+### ~~4. [AGENT] DeepSeek-Parser robust machen~~ ✅ 2026-06-13
+response_format json_object + Retry mit JSON-Reminder + Salvage-Extraktion +
+Roh-Antwort-Snippet im Fehler. Beobachten: Fehlerquote in nureine_cron_runs
+sollte gegen 0 gehen.
 
 ### 5. [AARON] Google Publisher Center anmelden (~30 Min)
 publishercenter.google.com → nureine.de verifizieren (Search Console existiert
 vermutlich; sonst zuerst). Google News + Discover-Eligibility, kostenlos, passiv.
 `max-image-preview:large` ist seit 2026-06-12 gesetzt; Bilder ≥1200 px ✓ (FLUX).
 
-### 6. [AARON] Entscheidung: IG-Kommentar-KI
-Läuft live und antwortet ungekennzeichnet als Mensch — Vertrauensrisiko auf einer
-Empathie-Marke (STRATEGY.md §5). Optionen: (a) aus, (b) Signatur „– NurEine-Assistent",
-(c) Drafts in Admin-Queue statt Auto-Post. Empfehlung: c. Umsetzung danach: [AGENT]
-(`src/lib/server/social/comments.ts`, replyToComments).
+### ~~6. IG-Kommentar-KI~~ ✅ 2026-06-13 — Option c umgesetzt
+KI entwirft nur noch (status 'pending'), gepostet wird nach Freigabe in
+/admin/social („Antworten"/„Verwerfen"). Migration 00030.
 
 ---
 
@@ -74,18 +67,16 @@ Frequenz: 3/Woche aus Top-Stories (impact ≥75). Approval-Gate wie Feed-Posts.
 ACHTUNG: ElevenLabs-Kontingent 47,5 % verbraucht — Reels nutzen die ohnehin
 generierten Top-2-Audios, KEINE zusätzlichen TTS-Calls.
 
-### 8. [AGENT] Newsletter-Betreff aus share_hook
-`src/lib/server/newsletter.ts`: Betreff nutzt aktuell den Story-Titel. Umstellen
-auf `share_hook` (Neugier-Lücke, existiert pro Story; Fallback Titel wenn null,
-max ~60 Zeichen). Betreff-Variante in nureine_newsletter_sends mitloggen
-(neue Spalte via neue Migration), damit ab ~500 Subs echtes A/B möglich ist.
+### ~~8. [AGENT] Newsletter-Betreff aus share_hook~~ ✅ 2026-06-13
+dailySubject(): share_hook → Titel → Standard, max 70 Zeichen. Vorher war der
+Betreff JEDEN Tag identisch (Threading + null Neugier). Noch offen (ab ~500
+Subs): Betreff-Variante in newsletter_sends loggen für echtes A/B.
 
-### 9. [AGENT] KI-Transparenz-Badge sichtbar machen
-STRATEGY.md §4/§5: KI-Autorenschaft proaktiv kennzeichnen, bevor es jemand
-„aufdeckt". Story-Detailseite (`src/routes/geschichte/[slug]/`): dezente Zeile
-unter der Byline-Position „KI-recherchiert & -geschrieben · Quellen offen ·
-von Menschen verantwortet → /methodik". Gleiche Zeile in Newsletter-Footer
-(`buildB2CHtml`). Ton: Stärke, nicht Disclaimer.
+### ~~9. [AGENT] KI-Transparenz-Badge~~ ✅ 2026-06-13
+Story-Detailseite (Meta-Zeile „KI-recherchiert · von Menschen verantwortet"
+→ /methodik) + Newsletter-Footer-Zeile. Mainpage-Byline unter Kompass-Strip
+(„Autonome Redaktion, von einem Menschen verantwortet — so arbeiten wir"
+→ /redaktion) ebenfalls live.
 
 ### 10. [AARON] Gesicht auf /redaktion + Hero-Byline
 Foto + 2–3 Sätze („Wer dahintersteht und warum") auf /redaktion. Das fehlende
@@ -160,6 +151,14 @@ Schule/Pflege/HR? Screen-Feed existiert. Ziel: 1 Testimonial für die Verkaufsph
 
 ## Done
 
+- 2026-06-13: **IG-Feed-Posts-Bug gefixt** — Generator legte Drafts mit
+  scheduled_for=nächster Morgen 05:30 an, Publish-Cron (05:30) lief aber VOR dem
+  Generator (06:15) → jeder Draft wartete ~23h; manuell früh gepostete Drafts
+  hinterließen Tage ohne Auto-Post. Jetzt: Draft sofort fällig, Generate-Cron
+  postet im Autopilot direkt nach dem Anlegen (1/Tag-Guard bleibt) — [AGENT]
+- 2026-06-13: DeepSeek-Parser robust (#4), Kommentar-Freigabe-Queue (#6,
+  Migration 00030), Betreff aus share_hook (#8), KI-Transparenz-Badges +
+  Hero-Byline (#9/#10-Teil), PITCH-TRAINING.md + FAHRPLAN.md — [AGENT]
 - 2026-06-12: `max-image-preview:large` gesetzt (Discover-CTR) — [AGENT]
 - 2026-06-12: refreshInsights gibt Fehlerursache im `skipped`-Feld zurück statt still `updated:0` — [AGENT]
 - 2026-06-12: STRATEGY.md + BACKLOG.md angelegt — [AGENT]

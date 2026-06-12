@@ -37,6 +37,7 @@ export interface HeroStory {
   kid_explainer?: string | null;
   conversation_starter?: string | null;
   audio_url?: string | null;
+  share_hook?: string | null;
 }
 
 export interface Subscriber {
@@ -106,6 +107,20 @@ const COMPANY_ADDRESS = 'Teltow, Brandenburg';
 const COMPANY_EMAIL = 'newsletter@nureine.de';
 
 const SUBJECT_DAILY = 'NurEine – Gute Nachrichten. Jeden Tag exakt eine.';
+
+/**
+ * Betreff pro Story statt täglich identischem Text: identische Betreffs
+ * werden von Gmail/Apple gethreadet und erzeugen null Neugier. share_hook
+ * (der fertige Weitersag-Satz) ist die Neugier-Lücke; Fallback Titel,
+ * Fallback Standard-Betreff. Max ~70 Zeichen, sonst schneidet Mobile ab.
+ */
+function dailySubject(story: HeroStory): string {
+  const hook = (story.share_hook ?? '').trim();
+  const title = (story.title ?? '').trim();
+  const pick = hook || title;
+  if (!pick) return SUBJECT_DAILY;
+  return pick.length > 70 ? `${pick.slice(0, 67).trimEnd()}…` : pick;
+}
 
 const BASE_URL = PUBLIC_BASE_URL || 'https://nureine.de';
 
@@ -311,6 +326,7 @@ export function buildB2CHtml(
         <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;" /></td></tr>
 
         <tr><td style="padding:22px 40px 30px;">
+          <p class="nur-eine-text-faint" style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">KI-recherchiert &amp; -geschrieben, Quellen offen, von Menschen verantwortet &mdash; <a href="${BASE_URL}/methodik" target="_blank" class="nur-eine-link" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">so arbeiten wir</a>.</p>
           <p class="nur-eine-text-faint" style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">Du erh&auml;ltst diese E-Mail, weil du den NurEine-Newsletter abonniert hast.</p>
           <p class="nur-eine-text-faint" style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">
             <a href="${settingsUrl}" target="_blank" class="nur-eine-link" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">Themen anpassen</a>
@@ -537,7 +553,7 @@ async function sendBrevoEmail(toEmail: string, subject: string, html: string): P
  */
 async function selectNewsletterStory(): Promise<HeroStory | null> {
   const BASE_SELECT =
-    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter,audio_url';
+    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter,audio_url,share_hook';
   const now = new Date();
 
   // ── Tier 1: last 24 h ──────────────────────────────────────────────
@@ -626,7 +642,7 @@ async function markStorySent(storyId: string): Promise<void> {
  */
 async function selectRankedStories(limit = 12): Promise<HeroStory[]> {
   const BASE_SELECT =
-    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter,audio_url';
+    'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter,audio_url,share_hook';
   const now = Date.now();
 
   async function tier(sinceMs: number | null): Promise<HeroStory[]> {
@@ -851,7 +867,7 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
     }
     try {
       const html = buildB2CHtml(pick, sub.email, sub.confirmation_token || '', sub.has_kids === true);
-      await sendBrevoEmail(sub.email, SUBJECT_DAILY, html);
+      await sendBrevoEmail(sub.email, dailySubject(pick), html);
       await logSend(sub.id, pick.id);
       sentStoryIds.add(pick.id);
       b2cSent += 1;

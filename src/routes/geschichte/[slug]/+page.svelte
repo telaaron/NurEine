@@ -158,6 +158,10 @@
 			>
 				<span>{formatDate(story.publishedAt)}</span>
 				<span>{story.readingMinutes} Min. Lesezeit</span>
+				<!-- KI-Transparenz proaktiv: als Stärke gerahmt, nicht als Kleingedrucktes. -->
+				<a href="/methodik" class="hover:opacity-70 no-underline" style="color: var(--color-ink-soft);">
+					<span style="border-bottom: 1px solid var(--color-rule-strong);">KI-recherchiert · von Menschen verantwortet</span>
+				</a>
 				<a
 					href={story.sourceUrl}
 					rel="noopener noreferrer"

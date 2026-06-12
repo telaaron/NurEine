@@ -62,11 +62,12 @@ function slugify(text: string): string {
 }
 
 function nextPostSlot(): string {
-	const now = new Date();
-	const slot = new Date(now);
-	slot.setUTCHours(5, 30, 0, 0); // 07:30 CEST = 05:30 UTC
-	if (slot <= now) slot.setUTCDate(slot.getUTCDate() + 1);
-	return slot.toISOString();
+	// Sofort fällig. Früher: nächster Morgen 05:30 UTC — aber der Publish-Cron
+	// (05:30) läuft VOR dem Generator (06:15), d.h. jeder Draft wartete ~23h und
+	// die Story war beim Posten bis zu 2 Tage alt. Im Autopilot postet jetzt der
+	// Generate-Cron direkt nach dem Anlegen (garantierte Reihenfolge); der
+	// 05:30-Publish-Cron bleibt als Fallback für approved/Gate-Posts.
+	return new Date().toISOString();
 }
 
 /**

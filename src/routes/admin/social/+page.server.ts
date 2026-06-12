@@ -15,9 +15,9 @@ export async function load() {
 			.limit(40),
 		supabaseAdmin
 			.from('nureine_social_replies')
-			.select('comment_text,reply_text,skipped_reason,replied_at')
+			.select('id,comment_text,reply_text,skipped_reason,replied_at,status')
 			.order('replied_at', { ascending: false })
-			.limit(20)
+			.limit(30)
 	]);
 
 	// Feed-Posts (Carousel/Einzelbild) und IG-Stories sind verschiedene Dinge —
@@ -39,6 +39,6 @@ export async function load() {
 		autopilot: autopilotVal === 'true',
 		storyStats,
 		recentStories: stories.slice(0, 12),
-		replies: (replyRows.data as { comment_text: string; reply_text: string | null; skipped_reason: string | null; replied_at: string }[]) ?? []
+		replies: (replyRows.data as { id: number; comment_text: string; reply_text: string | null; skipped_reason: string | null; replied_at: string; status: string }[]) ?? []
 	};
 }

@@ -223,6 +223,11 @@
 					</div>
 				{/each}
 			</div>
+			<!-- Vertrauens-Byline: das menschliche Gesicht hinter der autonomen Redaktion. -->
+			<p class="py-3 text-xs text-center" style="color: var(--color-muted); border-top: 1px solid var(--color-rule);">
+				Autonome Redaktion, von einem Menschen verantwortet —
+				<a href="/redaktion" class="no-underline hover:opacity-70" style="color: var(--color-ink-soft); border-bottom: 1px solid var(--color-rule-strong);">so arbeiten wir</a>
+			</p>
 		</div>
 	</div>
 </section>

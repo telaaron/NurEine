@@ -655,6 +655,10 @@ def call_deepseek(prompt: str) -> str | None:
         "temperature": 0.2,
         "top_p": 0.95,
         "max_tokens": 4096,
+        # Erzwingt valides JSON (Prompt erwähnt "JSON" — Voraussetzung der API).
+        # Ohne das lieferte DeepSeek in ~⅔ der Runs Fließtext um das JSON herum
+        # → "unparseable response", Batch-Verlust.
+        "response_format": {"type": "json_object"},
     }
     headers = {
         "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
@@ -1139,10 +1143,22 @@ def parse_ai_response(text: str | None) -> dict[str, Any] | None:
 
     try:
         return json.loads(cleaned)
-    except json.JSONDecodeError as exc:
-        log.warning("Failed to parse AI JSON response: %s", exc)
-        log.debug("Raw response: %s", text)
-        return None
+    except json.JSONDecodeError:
+        pass
+
+    # Salvage: aeusserstes JSON-Objekt aus umgebendem Fliesstext extrahieren.
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start != -1 and end > start:
+        try:
+            return json.loads(cleaned[start : end + 1])
+        except json.JSONDecodeError as exc:
+            log.warning("Failed to parse AI JSON response (after salvage): %s", exc)
+            log.debug("Raw response: %s", text)
+            return None
+    log.warning("Failed to parse AI JSON response: no JSON object found")
+    log.debug("Raw response: %s", text)
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -1586,11 +1602,18 @@ def run() -> None:
 
             result = parse_ai_response(raw)
 
+            if result is None and raw is not None:
+                # Ein Retry mit explizitem JSON-Reminder rettet die meisten Faelle.
+                log.info("  Parse failed, retrying once with JSON reminder")
+                raw = call_deepseek(prompt + "\n\nWICHTIG: Antworte AUSSCHLIESSLICH mit dem validen JSON-Objekt. Kein Text davor oder danach.")
+                result = parse_ai_response(raw)
+
             if result is None:
                 log.warning("  DeepSeek returned no valid result for: %s", source_url)
                 errors += 1
                 if first_error is None:
-                    first_error = "DeepSeek returned unparseable response"
+                    snippet = (raw or "")[:200].replace("\n", " ")
+                    first_error = f"DeepSeek unparseable response: {snippet or '(empty)'}"
                 time.sleep(API_DELAY_SECONDS)
                 continue
 

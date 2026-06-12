@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { verifyAdminRequest } from '$lib/server/auth';
 import { updateSocialPost, generateTodayDraft, publishPostNow, getAppSetting, setAppSetting } from '$lib/server/social/queue';
+import { approveReply, rejectReply } from '$lib/server/social/comments';
 import { supabaseAdmin } from '$lib/server/supabase/client';
 
 // POST — admin actions on the social queue.
@@ -60,6 +61,19 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 	if (body.action === 'get-autopilot') {
 		return json({ ok: true, autopilot: (await getAppSetting('social_autopilot')) === 'true' });
+	}
+
+	// Kommentar-Antwort-Queue: Freigabe postet wirklich, Verwerfen beendet still.
+	if (body.action === 'reply-approve') {
+		if (!body.id) return json({ error: 'id required' }, { status: 400 });
+		const r = await approveReply(body.id);
+		return r.ok ? json({ ok: true }) : json({ error: r.reason }, { status: 500 });
+	}
+
+	if (body.action === 'reply-reject') {
+		if (!body.id) return json({ error: 'id required' }, { status: 400 });
+		const ok = await rejectReply(body.id);
+		return ok ? json({ ok: true }) : json({ error: 'reject failed' }, { status: 500 });
 	}
 
 	if (body.action === 'update') {

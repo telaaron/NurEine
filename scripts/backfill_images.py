@@ -312,7 +312,9 @@ def run() -> None:
             .replace(" ", "-")
             .replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
         )
-        safe_title = "".join(c for c in safe_title if c.isalnum() or c == "-")[:40]
+        # Nur ASCII: Unicode wie '₂' (CO₂) ist isalnum()==True, aber Supabase Storage
+        # lehnt solche Object-Keys mit 400 ab.
+        safe_title = "".join(c for c in safe_title if c.isascii() and (c.isalnum() or c == "-"))[:40]
         filename = f"story-images/{safe_title}-{short_id}.png"
 
         public_url = supabase_upload_image(image_bytes, filename)

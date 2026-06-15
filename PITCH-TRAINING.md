@@ -129,7 +129,7 @@ gleichzeitig crossposten am selben Tag · automatisieren.
 >
 > Falls das für [Medium] spannend ist, erzähle ich gern mehr — 15 Minuten reichen.
 >
-> Aaron Pfützner · nureine.de
+> Aaron Weege · nureine.de
 
 ### Warum dieser Pitch funktioniert
 Journalisten-Trigger in absteigender Stärke: (1) „20-Jähriger betreibt Redaktion

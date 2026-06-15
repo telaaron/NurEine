@@ -86,7 +86,7 @@
 		<div class="mt-6 flex flex-col sm:flex-row gap-8 items-start">
 			<img
 				src="{base}/images/aaron.jpg"
-				alt="Aaron Pfützner, Gründer von NurEine"
+				alt="Aaron Weege, Gründer von NurEine"
 				width="200"
 				height="267"
 				class="rounded-[12px] w-full sm:w-[200px] shrink-0"
@@ -95,15 +95,14 @@
 			/>
 			<div class="text-base leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
 				<p>
-					Ich bin <strong>Aaron</strong>, 20, Musiker aus Teltow — und ich habe schon früh aufgehört,
+					Ich bin <strong>Aaron</strong>, 20, Musiker aus Teltow und ich habe schon früh aufgehört,
 					Nachrichten zu schauen. Es blieb dieses Wichtig-Gefühl, aber ohne dass ich je etwas
 					verändern konnte: machtlos die negative Energie von Problemen aufsaugen, die nicht
 					meine waren. Das fand ich nie logisch.
 				</p>
 				<p class="mt-4">
-					Dann habe ich hautnah erlebt, wie ein Algorithmus die Stimmung eines ganzen Menschen
-					bestimmt — in einer Stadt, in der ich Leute kenne, gab es ein Attentat, und alles,
-					was durchkam, war das Schlechte. Da wurde mir klar: Die Nachrichtenlage ist nicht
+					Als ich hautnah erlebte, wie ein Algorithmus die Stimmung eines ganzen Menschen für einen kompletten Tag
+					verändert, da wurde mir klar: Die Nachrichtenlage ist nicht
 					die Welt. Sie ist eine Auswahl. Und diese Auswahl trifft jemand für dich.
 				</p>
 				<p class="mt-4">
@@ -111,7 +110,7 @@
 					wirklich vorangeht. Die Recherche und die Texte übernimmt eine KI-Redaktion,
 					transparent und nachprüfbar — verantwortet von einem Menschen. Von mir.
 				</p>
-				<p class="mt-4 text-sm" style="color: var(--color-muted);">— Aaron Pfützner, Gründer</p>
+				<p class="mt-4 text-sm" style="color: var(--color-muted);">— Aaron Weege, Gründer</p>
 			</div>
 		</div>
 	</div>

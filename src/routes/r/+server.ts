@@ -23,6 +23,12 @@ export const GET: RequestHandler = async ({ url }) => {
 	// Open-redirect guard: only allow same-site relative paths.
 	const safeTo = to.startsWith('/') && !to.startsWith('//') ? to : '/';
 
+	// Tag the landing URL so analytics attributes the visit to the newsletter
+	// (and not to "direct" or to the www duplicate). Added after the open-redirect
+	// guard so it can't be abused. Preserves any existing query on `safeTo`.
+	const sep = safeTo.includes('?') ? '&' : '?';
+	const dest = `${safeTo}${sep}utm_source=newsletter&utm_medium=email&utm_campaign=daily`;
+
 	// Fire-and-forget the signal; never block the redirect on it.
 	if (email && token && CATEGORY_SLUGS.includes(category)) {
 		try {
@@ -44,5 +50,5 @@ export const GET: RequestHandler = async ({ url }) => {
 		}
 	}
 
-	throw redirect(302, safeTo);
+	throw redirect(302, dest);
 };

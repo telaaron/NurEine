@@ -1,6 +1,7 @@
 <script lang="ts">
 	import StoryCard from '$lib/components/StoryCard.svelte';
 	import { page } from '$app/stores';
+	import { base } from '$app/paths';
 
 	let { data } = $props();
 	const stories = $derived(data.stories);
@@ -180,4 +181,34 @@
 			</button>
 		</div>
 	{/if}
+
+	<!--
+		Crawl-only Linkliste: nur 24 Karten werden visuell gerendert (DOM-Größe),
+		aber Googlebot soll JEDE Geschichte über das Archiv erreichen — sonst
+		hängen hunderte Stories hinter einem JS-„Mehr laden"-Klick. Reiner Text,
+		keine Bilder → vernachlässigbares DOM-Gewicht. Visuell versteckt, Links folgbar.
+	-->
+	<nav aria-label="Alle Geschichten im Archiv" class="archive-crawl-index">
+		<ul>
+			{#each filtered as story (story.slug)}
+				<li><a href={base + '/geschichte/' + story.slug}>{story.title}</a></li>
+			{/each}
+		</ul>
+	</nav>
 </section>
+
+<style>
+	/* Sichtbar für Crawler, unsichtbar für Menschen (kein display:none — sonst
+	   würden manche Bots die Links ignorieren). Klassisches sr-only-Muster. */
+	.archive-crawl-index {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+</style>

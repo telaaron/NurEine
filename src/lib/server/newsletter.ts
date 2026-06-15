@@ -140,9 +140,13 @@ function slugify(text: string): string {
     .slice(0, 80);
 }
 
+// UTM so newsletter clicks are attributed to the newsletter in analytics,
+// instead of polluting "direct" traffic or the www duplicate host.
+const NL_UTM = 'utm_source=newsletter&utm_medium=email&utm_campaign=daily';
+
 function storyUrl(story: HeroStory): string {
   const slug = `${slugify(story.title)}-${story.id.slice(0, 8)}`;
-  return `${BASE_URL}/geschichte/${slug}`;
+  return `${BASE_URL}/geschichte/${slug}?${NL_UTM}`;
 }
 
 /**
@@ -153,7 +157,9 @@ function storyUrl(story: HeroStory): string {
 function trackedStoryUrl(story: HeroStory, email: string, token: string): string {
   const slug = `${slugify(story.title)}-${story.id.slice(0, 8)}`;
   const to = `/geschichte/${slug}`;
-  if (!token) return `${BASE_URL}${to}`;
+  // No token → can't track via /r, so link straight to the story (with UTM).
+  // With token → /r adds the UTM itself after its open-redirect guard.
+  if (!token) return `${BASE_URL}${to}?${NL_UTM}`;
   const q = new URLSearchParams({
     e: email,
     t: token,

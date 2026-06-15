@@ -17,6 +17,11 @@ function escapeXml(str: string): string {
 export async function GET() {
 	const stories = await getAllStories();
 
+	// Hub/static pages get today's date as lastmod — they reflect the freshest
+	// story set (archive, homepage, map all re-render daily), so a current
+	// lastmod is honest and nudges Google to re-crawl the crawl entry points.
+	const today = new Date().toISOString().slice(0, 10);
+
 	const staticPages = [
 		{ loc: `${BASE_URL}/`, priority: '1.0', changefreq: 'daily' },
 		{ loc: `${BASE_URL}/warum`, priority: '0.9', changefreq: 'monthly' },
@@ -42,6 +47,7 @@ export async function GET() {
 	const urls = [
 		...staticPages.map((p) => `  <url>
     <loc>${escapeXml(p.loc)}</loc>
+    <lastmod>${today}</lastmod>
     <changefreq>${p.changefreq}</changefreq>
     <priority>${p.priority}</priority>
   </url>`),

@@ -2,5 +2,13 @@
   "framework": "sveltekit",
   "buildCommand": "pnpm build",
   "outputDirectory": "build",
-  "installCommand": "pnpm install"
+  "installCommand": "pnpm install",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "www.nureine.de" }],
+      "destination": "https://nureine.de/:path*",
+      "permanent": true
+    }
+  ]
 }

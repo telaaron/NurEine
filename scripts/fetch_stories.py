@@ -75,6 +75,11 @@ DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 
+# IndexNow ping after a run (fast Bing/Yandex discovery for a young domain).
+# Both optional — if either is missing the ping is skipped silently.
+CRON_SECRET = os.environ.get("CRON_SECRET")
+PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://nureine.de")
+
 DEEPSEEK_MODEL = "deepseek-chat"
 DEEPSEEK_ENDPOINT = "https://api.deepseek.com/chat/completions"
 
@@ -1419,6 +1424,31 @@ def log_cron_run(
         log.error("Failed to log cron run: %s", exc)
 
 
+def ping_indexnow(recent: int) -> None:
+    """Tell the site to submit the N newest stories to IndexNow.
+
+    Delegates URL construction to the SvelteKit endpoint (/api/cron/indexnow),
+    which already knows the correct slug format — no slug logic duplicated here.
+    Best-effort: any failure is logged, never fatal.
+    """
+    if not CRON_SECRET:
+        log.info("IndexNow ping skipped — CRON_SECRET not set.")
+        return
+    try:
+        resp = requests.post(
+            f"{PUBLIC_BASE_URL}/api/cron/indexnow",
+            headers={"Authorization": f"Bearer {CRON_SECRET}"},
+            json={"recent": recent},
+            timeout=20,
+        )
+        if resp.ok:
+            log.info("IndexNow ping ok (recent=%d): %s", recent, resp.text[:200])
+        else:
+            log.warning("IndexNow ping returned %d: %s", resp.status_code, resp.text[:200])
+    except requests.RequestException as exc:
+        log.warning("IndexNow ping failed: %s", exc)
+
+
 def log_fetch_decision(
     source_name: str,
     beat: str | None,
@@ -1853,6 +1883,11 @@ def run() -> None:
         errors=errors,
         error_message=first_error,
     )
+
+    # Announce new stories to IndexNow (+ hub pages) so Bing/Yandex crawl them
+    # within minutes. Only when something actually got inserted this run.
+    if stories_added > 0:
+        ping_indexnow(recent=min(stories_added + 5, 50))
 
 
 # ---------------------------------------------------------------------------

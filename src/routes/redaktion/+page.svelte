@@ -85,7 +85,7 @@
 		<p class="eyebrow" style="color: var(--color-amber);">Wer dahintersteht</p>
 		<div class="mt-6 flex flex-col sm:flex-row gap-8 items-start">
 			<img
-				src="{base}/images/aaron.jpg"
+				src="{base}/images/Aaron.webp"
 				alt="Aaron Weege, Gründer von NurEine"
 				width="200"
 				height="267"

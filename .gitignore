@@ -32,3 +32,6 @@ __pycache__/
 # local dev tooling + scratch
 .claude/launch.json
 media/*.png
+
+# Firecrawl search cache (skill scratch)
+.firecrawl/

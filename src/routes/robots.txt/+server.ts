@@ -50,6 +50,7 @@ User-agent: Applebot-Extended
 Allow: /
 
 Sitemap: ${BASE_URL}/sitemap.xml
+Sitemap: ${BASE_URL}/news-sitemap.xml
 `;
 
 	return new Response(body, {

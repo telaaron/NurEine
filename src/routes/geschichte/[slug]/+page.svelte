@@ -60,7 +60,9 @@
 			'@type': 'NewsArticle',
 			headline: story.title,
 			description: story.dek,
-			image: story.imageUrl ? [story.imageUrl] : undefined,
+			// Google News / Discover strongly prefer an image. Fall back through
+			// the OG image to the site default so an article is never image-less.
+			image: [story.imageUrl || story.ogImageUrl || `${baseUrl}/og-default.jpeg`],
 			datePublished: story.publishedAt,
 			dateModified: story.publishedAt,
 			author: { '@type': 'Organization', name: 'NurEine', url: baseUrl },
@@ -71,7 +73,13 @@
 			},
 			mainEntityOfPage: { '@type': 'WebPage', '@id': storyUrl },
 			articleSection: story.category,
-			isAccessibleForFree: true
+			inLanguage: 'de-DE',
+			isAccessibleForFree: true,
+			// Voice assistants (Google Assistant) may read the headline + summary.
+			speakable: {
+				'@type': 'SpeakableSpecification',
+				cssSelector: ['h1', '.story-dek']
+			}
 		})
 	);
 
@@ -126,7 +134,7 @@
 			</h1>
 
 			<p
-				class="mt-6 text-base sm:text-xl lg:text-2xl leading-snug max-w-[55ch] rise rise-d3"
+				class="story-dek mt-6 text-base sm:text-xl lg:text-2xl leading-snug max-w-[55ch] rise rise-d3"
 				style="color: var(--color-ink-soft); font-family: var(--font-serif); font-style: italic;"
 			>
 				{story.dek}

@@ -1,0 +1,33 @@
+name: IndexNow — Ping Stories
+
+# Submits stories + hub pages to IndexNow (Bing/Yandex) for fast indexing.
+# - workflow_dispatch: full ping (recent: 500 → effectively all stories + hubs).
+# - daily schedule: re-announce the freshest stories as a safety net, in case a
+#   fetch-stories run could not reach the endpoint.
+# No-op-safe: returns 500 only if INDEXNOW_KEY/CRON_SECRET are unset.
+on:
+  schedule:
+    - cron: '15 7 * * *'  # 07:15 UTC — after the night's stories exist
+  workflow_dispatch:
+    inputs:
+      recent:
+        description: 'How many newest stories to ping (500 ~= all)'
+        required: false
+        default: '500'
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger IndexNow
+        run: |
+          RECENT="${RECENT_INPUT:-50}"
+          curl -fsS -X POST "${BASE_URL}/api/cron/indexnow" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -H "Content-Type: application/json" \
+            -d "{\"recent\": ${RECENT}}" \
+            -w "\nHTTP %{http_code}\n"
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          RECENT_INPUT: ${{ github.event.inputs.recent }}

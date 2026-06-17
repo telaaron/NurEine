@@ -26,8 +26,11 @@
 
         const isStory = $derived(!!page?.data?.story);
         const isIndex = $derived(pagePath === '/');
-        // Admin has its own chrome — skip the public Header/Ticker/Footer there.
+        // Admin and the native app shell have their own chrome — skip the
+        // public Header/Ticker/Footer there.
         const isAdmin = $derived(pagePath.startsWith('/admin'));
+        const isApp = $derived(pagePath.startsWith('/app'));
+        const isBare = $derived(isAdmin || isApp);
 
         const pathTitles: Record<string, string> = {
                 '/lokal': 'Lokal',
@@ -145,7 +148,7 @@
         })}</scr` + `ipt>`}
 </svelte:head>
 
-{#if isAdmin}
+{#if isBare}
         {@render children?.()}
 {:else}
         <Ticker story={data?.ticker ?? null} />

@@ -1,0 +1,100 @@
+/* ──────────────────────────────────────────────────────────────────────────
+   App shell — native iOS chrome for the Capacitor build.
+   Adds a WARM dark-mode token layer (brown-black, not cool grey) on top of the
+   website's light tokens (src/app.css), plus safe-area-aware tab bar.
+   ────────────────────────────────────────────────────────────────────────── */
+
+:root {
+	--tabbar-h: 58px;
+	--safe-top: env(safe-area-inset-top, 0px);
+	--safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Warm dark palette — overrides the @theme light tokens when dark is active.
+   Browns and ambers, never cool grey — keeps the paper identity at night. */
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-canvas: #181512;
+		--color-canvas-soft: #201c18;
+		--color-paper: #221e1a;
+		--color-elevated: #2a251f;
+
+		--color-ink: #f0e9df;
+		--color-ink-soft: #c4baac;
+		--color-muted: #8a7f70;
+		--color-faint: #6b6359;
+
+		--color-rule: rgba(240, 233, 223, 0.12);
+		--color-rule-strong: rgba(240, 233, 223, 0.22);
+
+		--color-amber: #e9b58e;
+		--color-amber-deep: #c87340;
+		--color-amber-tint: rgba(233, 181, 142, 0.12);
+		--color-sage: #7a9a72;
+		--color-sky: #8aa6c2;
+		--color-rose: #c99595;
+	}
+}
+
+html,
+body {
+	background: var(--color-canvas);
+	overscroll-behavior-y: none; /* no rubber-band white edges in webview */
+}
+
+.app-root {
+	min-height: 100dvh;
+	display: flex;
+	flex-direction: column;
+	background: var(--color-canvas);
+}
+
+.app-main {
+	flex: 1;
+	padding-top: var(--safe-top);
+	padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom));
+	-webkit-overflow-scrolling: touch;
+}
+
+.app-tabbar {
+	position: fixed;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: calc(var(--tabbar-h) + var(--safe-bottom));
+	padding-bottom: var(--safe-bottom);
+	display: flex;
+	background: color-mix(in srgb, var(--color-canvas) 92%, transparent);
+	backdrop-filter: blur(14px);
+	-webkit-backdrop-filter: blur(14px);
+	border-top: 1px solid var(--color-rule);
+	z-index: 40;
+}
+
+.app-tab {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 3px;
+	color: var(--color-faint);
+	text-decoration: none;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.02em;
+	transition: color 0.15s ease;
+}
+
+.app-tab.active {
+	color: var(--color-amber-deep);
+}
+@media (prefers-color-scheme: dark) {
+	.app-tab.active {
+		color: var(--color-amber);
+	}
+}
+
+.app-tab:active {
+	transform: scale(0.94);
+}

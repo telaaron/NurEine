@@ -35,3 +35,8 @@ media/*.png
 
 # Firecrawl search cache (skill scratch)
 .firecrawl/
+
+# Capacitor / iOS app build (native project keeps its own ios/.gitignore for
+# build output, Pods and copied web assets — committed with the project)
+build-app/
+.DS_Store

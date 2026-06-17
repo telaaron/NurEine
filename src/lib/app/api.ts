@@ -10,6 +10,12 @@ import type { StoryResult } from '$lib/server/queries';
 
 export const API_BASE = import.meta.env.PROD ? 'https://nureine.de' : '';
 
+/** Canonical public web URL for a story — what we share so links open the real
+ *  site (with OG image), not the app deep link. */
+export function publicStoryUrl(slug: string): string {
+	return `https://nureine.de/geschichte/${slug}`;
+}
+
 async function getJson<T>(path: string): Promise<T> {
 	const res = await fetch(`${API_BASE}${path}`, {
 		headers: { Accept: 'application/json' }

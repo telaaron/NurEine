@@ -1,15 +1,25 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { fetchStories, fetchToday } from '$lib/app/api';
+	import { cacheGet, cacheSet, tapLight } from '$lib/app/native';
 	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import { categoryLabel } from '$lib/categories';
 	import { toneStyles } from '$lib/utils';
 	import type { StoryResult } from '$lib/server/queries';
 
+	const CACHE_KEY = 'today_v1';
+
 	let hero = $state<StoryResult | null>(null);
 	let week = $state<StoryResult[]>([]);
 	let loading = $state(true);
 	let errored = $state(false);
+	let fromCache = $state(false);
+
+	// Pull-to-refresh
+	let pullY = $state(0);
+	let refreshing = $state(false);
+	let startY = 0;
+	let pulling = false;
 
 	const today = new Date().toLocaleDateString('de-DE', {
 		weekday: 'long',
@@ -22,18 +32,55 @@
 		return getStoryHeroImageSrc(s.category, base);
 	}
 
-	async function load() {
-		loading = true;
+	async function load(opts: { silent?: boolean } = {}) {
+		if (!opts.silent) loading = true;
 		errored = false;
 		try {
-			const [top, all] = await Promise.all([fetchToday(), fetchStories({ limit: 7 })]);
+			const all = await fetchStories({ limit: 8 });
+			const top = [...all].sort((a, b) => b.impactScore - a.impactScore)[0] ?? null;
 			hero = top;
 			week = all.filter((s) => s.slug !== top?.slug).slice(0, 4);
+			fromCache = false;
+			cacheSet(CACHE_KEY, { hero, week });
 		} catch {
-			errored = true;
+			// Offline / API down: fall back to the last cached morning.
+			const cached = await cacheGet<{ hero: StoryResult | null; week: StoryResult[] }>(CACHE_KEY);
+			if (cached?.hero) {
+				hero = cached.hero;
+				week = cached.week ?? [];
+				fromCache = true;
+			} else {
+				errored = true;
+			}
 		} finally {
 			loading = false;
 		}
+	}
+
+	async function refresh() {
+		if (refreshing) return;
+		refreshing = true;
+		tapLight();
+		await load({ silent: true });
+		refreshing = false;
+		pullY = 0;
+	}
+
+	function onTouchStart(e: TouchEvent) {
+		if (window.scrollY <= 0) {
+			startY = e.touches[0].clientY;
+			pulling = true;
+		}
+	}
+	function onTouchMove(e: TouchEvent) {
+		if (!pulling || refreshing) return;
+		const dy = e.touches[0].clientY - startY;
+		if (dy > 0 && window.scrollY <= 0) pullY = Math.min(dy * 0.5, 80);
+	}
+	function onTouchEnd() {
+		pulling = false;
+		if (pullY > 56) refresh();
+		else pullY = 0;
 	}
 
 	$effect(() => {
@@ -41,7 +88,13 @@
 	});
 </script>
 
-<div class="today">
+<div class="ptr" style="height:{pullY}px;" aria-hidden={pullY === 0}>
+	<span class="ptr-spin" class:go={refreshing || pullY > 56}>
+		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.6-6.4" /><path d="M21 3v6h-6" /></svg>
+	</span>
+</div>
+
+<div class="today" ontouchstart={onTouchStart} ontouchmove={onTouchMove} ontouchend={onTouchEnd} style="transform:translateY({pullY}px);">
 	<header class="today-head">
 		<p class="today-date">{today}</p>
 		<h1 class="today-title display">Heute</h1>
@@ -49,6 +102,9 @@
 			<span class="rule"></span>
 			<span class="eyebrow">Ehrlicher Fortschritt · heute</span>
 		</div>
+		{#if fromCache}
+			<p class="offline-note">Offline — zuletzt geladene Geschichte.</p>
+		{/if}
 	</header>
 
 	{#if loading}
@@ -105,7 +161,14 @@
 </div>
 
 <style>
+	.ptr { display: flex; align-items: flex-end; justify-content: center; overflow: hidden; }
+	.ptr-spin { color: var(--color-faint); padding-bottom: 10px; transition: color 0.15s; }
+	.ptr-spin.go { color: var(--color-amber-deep); }
+	.ptr-spin.go svg { animation: spin 0.9s linear infinite; }
+	@keyframes spin { to { transform: rotate(360deg); } }
+
 	.today { padding: 14px 20px 0; }
+	.offline-note { margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--color-amber-deep); }
 	.today-date { font-family: var(--font-mono); font-size: 13px; color: var(--color-faint); letter-spacing: 0.04em; }
 	.today-title { font-size: 34px; font-weight: 600; color: var(--color-ink); margin-top: 2px; }
 	.today-eyebrow { display: flex; align-items: center; gap: 8px; margin-top: 12px; margin-bottom: 12px; }

@@ -40,3 +40,4 @@ media/*.png
 # build output, Pods and copied web assets — committed with the project)
 build-app/
 .DS_Store
+.server.ts.appbak

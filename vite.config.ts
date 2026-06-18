@@ -5,8 +5,9 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
 	define: {
-		// Exposes the build target to client code so the root route can redirect
-		// into the app shell (/app) when this is the Capacitor build.
+		// Exposes the build target to client code (currently informational; the
+		// "/" → "/app" redirect for the app build is injected by
+		// scripts/app-postbuild.mjs into the built index.html).
 		__APP_BUILD__: JSON.stringify(process.env.BUILD_TARGET === 'app')
 	}
 });

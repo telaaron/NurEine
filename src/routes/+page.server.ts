@@ -3,6 +3,7 @@ import { PUBLIC_BASE_URL } from '$env/static/public';
 
 export const prerender = false;
 
+// NOTE: excluded from the Capacitor app build (see scripts/app-prebuild.mjs).
 export async function load() {
   const [allStories, featured, stats] = await Promise.all([
     getAllStories(),

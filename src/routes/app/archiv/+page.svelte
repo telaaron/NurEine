@@ -1,38 +1,31 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { fetchStories } from '$lib/app/api';
+	import { ensureStories, storeState } from '$lib/app/store.svelte';
+	import { imageUrl } from '$lib/app/api';
 	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import { CATEGORIES, categoryLabel } from '$lib/categories';
 	import { toneStyles } from '$lib/utils';
 	import { tapLight } from '$lib/app/native';
 	import type { StoryResult } from '$lib/server/queries';
 
-	let all = $state<StoryResult[]>([]);
-	let loading = $state(true);
-	let errored = $state(false);
+	const store = storeState();
+	const all = $derived(store.stories);
+	const loading = $derived(store.loading && store.stories.length === 0);
+	const errored = $derived(store.errored);
 
 	let cat = $state<string>('alle');
 	let sort = $state<'datum' | 'wirkung'>('datum');
 
 	function heroImg(s: StoryResult): string {
-		if (s.imageUrl && s.imageUrl.startsWith('http')) return s.imageUrl;
-		return getStoryHeroImageSrc(s.category, base);
+		return imageUrl(s.imageUrl, 200) ?? getStoryHeroImageSrc(s.category, base);
 	}
 
-	async function load() {
-		loading = true;
-		errored = false;
-		try {
-			all = await fetchStories();
-		} catch {
-			errored = true;
-		} finally {
-			loading = false;
-		}
+	function load() {
+		ensureStories({ force: true });
 	}
 
 	$effect(() => {
-		load();
+		ensureStories();
 	});
 
 	const shown = $derived(

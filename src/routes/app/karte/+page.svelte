@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import 'leaflet/dist/leaflet.css';
-	import { fetchStories } from '$lib/app/api';
+	import { ensureStories, storeState } from '$lib/app/store.svelte';
+	import { imageUrl } from '$lib/app/api';
 	import { createStoryMarker } from '$lib/map/story-marker';
 	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import { categoryLabel } from '$lib/categories';
@@ -15,8 +16,7 @@
 	let count = $state(0);
 
 	function heroImg(s: StoryResult): string {
-		if (s.imageUrl && s.imageUrl.startsWith('http')) return s.imageUrl;
-		return getStoryHeroImageSrc(s.category, base);
+		return imageUrl(s.imageUrl, 200) ?? getStoryHeroImageSrc(s.category, base);
 	}
 
 	$effect(() => {
@@ -24,13 +24,10 @@
 		let cancelled = false;
 
 		(async () => {
-			let stories: StoryResult[] = [];
-			try {
-				const all = await fetchStories();
-				stories = all.filter((s) => s.coords && s.coords[0] != null && s.coords[1] != null);
-			} catch {
-				/* show empty map */
-			}
+			await ensureStories();
+			const stories = storeState().stories.filter(
+				(s) => s.coords && s.coords[0] != null && s.coords[1] != null
+			);
 			if (cancelled || !mapEl) return;
 			count = stories.length;
 

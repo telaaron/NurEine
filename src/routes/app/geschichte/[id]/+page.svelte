@@ -2,7 +2,7 @@
 	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
-	import { fetchStory, publicStoryUrl } from '$lib/app/api';
+	import { fetchStory, publicStoryUrl, imageUrl } from '$lib/app/api';
 	import { shareStory, tapLight } from '$lib/app/native';
 	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import { categoryLabel } from '$lib/categories';
@@ -22,8 +22,7 @@
 	const id = $derived(page.params.id);
 
 	function heroImg(s: StoryResult): string {
-		if (s.imageUrl && s.imageUrl.startsWith('http')) return s.imageUrl;
-		return getStoryHeroImageSrc(s.category, base);
+		return imageUrl(s.imageUrl, 900) ?? getStoryHeroImageSrc(s.category, base);
 	}
 
 	async function load() {

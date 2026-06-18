@@ -1,19 +1,24 @@
 <script lang="ts">
 	import { base } from '$app/paths';
-	import { fetchStories, fetchToday } from '$lib/app/api';
-	import { cacheGet, cacheSet, tapLight } from '$lib/app/native';
+	import { tapLight } from '$lib/app/native';
+	import { ensureStories, storeState } from '$lib/app/store.svelte';
+	import { imageUrl } from '$lib/app/api';
 	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import { categoryLabel } from '$lib/categories';
 	import { toneStyles } from '$lib/utils';
 	import type { StoryResult } from '$lib/server/queries';
 
-	const CACHE_KEY = 'today_v1';
+	const store = storeState();
 
-	let hero = $state<StoryResult | null>(null);
-	let week = $state<StoryResult[]>([]);
-	let loading = $state(true);
-	let errored = $state(false);
-	let fromCache = $state(false);
+	// Derived from the shared store — instant on tab switch, no refetch.
+	const hero = $derived(
+		store.stories.length ? [...store.stories].sort((a, b) => b.impactScore - a.impactScore)[0] : null
+	);
+	const week = $derived(
+		hero ? store.stories.filter((s) => s.slug !== hero.slug).slice(0, 4) : []
+	);
+	const loading = $derived(store.loading && store.stories.length === 0);
+	const errored = $derived(store.errored);
 
 	// Pull-to-refresh
 	let pullY = $state(0);
@@ -27,41 +32,15 @@
 		month: 'long'
 	});
 
-	function heroImg(s: StoryResult): string {
-		if (s.imageUrl && s.imageUrl.startsWith('http')) return s.imageUrl;
-		return getStoryHeroImageSrc(s.category, base);
-	}
-
-	async function load(opts: { silent?: boolean } = {}) {
-		if (!opts.silent) loading = true;
-		errored = false;
-		try {
-			const all = await fetchStories({ limit: 8 });
-			const top = [...all].sort((a, b) => b.impactScore - a.impactScore)[0] ?? null;
-			hero = top;
-			week = all.filter((s) => s.slug !== top?.slug).slice(0, 4);
-			fromCache = false;
-			cacheSet(CACHE_KEY, { hero, week });
-		} catch {
-			// Offline / API down: fall back to the last cached morning.
-			const cached = await cacheGet<{ hero: StoryResult | null; week: StoryResult[] }>(CACHE_KEY);
-			if (cached?.hero) {
-				hero = cached.hero;
-				week = cached.week ?? [];
-				fromCache = true;
-			} else {
-				errored = true;
-			}
-		} finally {
-			loading = false;
-		}
+	function heroImg(s: StoryResult, w = 900): string {
+		return imageUrl(s.imageUrl, w) ?? getStoryHeroImageSrc(s.category, base);
 	}
 
 	async function refresh() {
 		if (refreshing) return;
 		refreshing = true;
 		tapLight();
-		await load({ silent: true });
+		await ensureStories({ force: true });
 		refreshing = false;
 		pullY = 0;
 	}
@@ -89,7 +68,7 @@
 	}
 
 	$effect(() => {
-		load();
+		ensureStories();
 	});
 </script>
 
@@ -107,9 +86,6 @@
 			<span class="rule"></span>
 			<span class="eyebrow">Ehrlicher Fortschritt · heute</span>
 		</div>
-		{#if fromCache}
-			<p class="offline-note">Offline — zuletzt geladene Geschichte.</p>
-		{/if}
 	</header>
 
 	{#if loading}
@@ -153,7 +129,7 @@
 				{#each week as s (s.slug)}
 					{@const t = toneStyles[s.tone]}
 					<a class="week-row" href={base + '/app/geschichte/' + s.id}>
-						<div class="week-thumb"><img src={heroImg(s)} alt="" loading="lazy" /></div>
+						<div class="week-thumb"><img src={heroImg(s, 200)} alt="" loading="lazy" /></div>
 						<div class="week-text">
 							<span class="week-tag" style="color:{t.fg};">{categoryLabel(s.category)}</span>
 							<div class="week-title display">{s.title}</div>

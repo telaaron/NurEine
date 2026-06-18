@@ -16,6 +16,18 @@ export function publicStoryUrl(slug: string): string {
 	return `https://nureine.de/geschichte/${slug}`;
 }
 
+/**
+ * Route a Supabase story image through the production /img proxy: WebP +
+ * resized + cached one year (immutable), instead of the raw PNG which Supabase
+ * serves with `no-cache` (re-downloaded on every tab switch). Non-Supabase or
+ * already-proxied URLs pass through unchanged.
+ */
+export function imageUrl(src: string | null | undefined, width = 900): string | null {
+	if (!src || !src.startsWith('http')) return src ?? null;
+	if (src.includes('/img?') || !src.includes('supabase.co')) return src;
+	return `${API_BASE || 'https://nureine.de'}/img?url=${encodeURIComponent(src)}&w=${width}`;
+}
+
 async function getJson<T>(path: string): Promise<T> {
 	const res = await fetch(`${API_BASE}${path}`, {
 		headers: { Accept: 'application/json' }

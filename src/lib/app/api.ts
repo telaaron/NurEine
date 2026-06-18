@@ -44,3 +44,20 @@ export async function fetchToday(): Promise<StoryResult | null> {
 	if (!stories.length) return null;
 	return [...stories].sort((a, b) => b.impactScore - a.impactScore)[0];
 }
+
+export type SubscribeResult = { ok: boolean; message: string };
+
+/** Subscribe an email to the daily newsletter (double-opt-in handled server-side). */
+export async function subscribe(email: string, categories: string[], ref: string | null): Promise<SubscribeResult> {
+	try {
+		const res = await fetch(`${API_BASE}/api/subscribe`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ email, tier: 'free', categories, ref })
+		});
+		const data = await res.json();
+		return { ok: res.ok, message: data.message || data.error || '' };
+	} catch {
+		return { ok: false, message: 'Keine Verbindung. Bitte versuche es später erneut.' };
+	}
+}

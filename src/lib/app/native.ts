@@ -23,6 +23,15 @@ export async function shareStory(opts: { title: string; text?: string; url: stri
 	}
 }
 
+/** Open a URL outside the app (system browser). */
+export function openExternal(url: string): void {
+	try {
+		window.open(url, '_blank', 'noopener');
+	} catch {
+		/* ignore */
+	}
+}
+
 /** Light tap feedback for primary actions. No-op where haptics are unavailable. */
 export async function tapLight(): Promise<void> {
 	try {

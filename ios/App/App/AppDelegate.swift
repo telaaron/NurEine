@@ -46,4 +46,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+    // iOS 27 SDK requires the UIScene life cycle (TN3187). Hand scene creation
+    // to the SceneDelegate below.
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        let config = UISceneConfiguration(name: "Default Configuration", sessionRole: connectingSceneSession.role)
+        config.delegateClass = SceneDelegate.self
+        return config
+    }
+
 }

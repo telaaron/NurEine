@@ -29,10 +29,39 @@ const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
 	'/api/newsletter/test': { max: 3, windowMs: 60_000 },   // 3 req/min
 };
 
+// Origins allowed to call /api/* cross-origin: the native iOS/Android app
+// webviews. (The website itself is same-origin and needs no CORS.)
+const APP_ORIGINS = new Set(['capacitor://localhost', 'https://localhost', 'ionic://localhost']);
+
+function isAppOrigin(origin: string | null): boolean {
+	return !!origin && APP_ORIGINS.has(origin);
+}
+
+function corsHeaders(origin: string): Record<string, string> {
+	return {
+		'Access-Control-Allow-Origin': origin,
+		'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+		'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+		'Access-Control-Max-Age': '86400',
+		Vary: 'Origin'
+	};
+}
+
 // ─── Server Hook: Rate-Limiting + CSRF Origin Check ─────────────────────────
 export const handle: Handle = async ({ event, resolve }) => {
 	const { request, url } = event;
 	const pathname = url.pathname;
+	const origin = request.headers.get('origin');
+
+	// CORS for the native app: answer preflight + add headers to API responses.
+	if (pathname.startsWith('/api/') && isAppOrigin(origin)) {
+		if (request.method === 'OPTIONS') {
+			return new Response(null, { status: 204, headers: corsHeaders(origin!) });
+		}
+		const response = await resolve(event);
+		for (const [k, v] of Object.entries(corsHeaders(origin!))) response.headers.set(k, v);
+		return response;
+	}
 
 	// Rate-limit protected API routes
 	if (request.method === 'POST' || request.method === 'PUT' || request.method === 'DELETE') {

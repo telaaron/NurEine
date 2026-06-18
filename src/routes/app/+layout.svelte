@@ -3,8 +3,23 @@
 	import './app-shell.css';
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
+	import { goto } from '$app/navigation';
+	import { loadPrefs } from '$lib/app/prefs';
+	import { registerPushListeners } from '$lib/app/native';
 
 	let { children } = $props();
+
+	// First-launch gate + push wiring. Runs once on the client.
+	$effect(() => {
+		registerPushListeners((storyId) => goto(base + '/app/geschichte/' + storyId));
+		const path = page.url.pathname.replace(base, '');
+		if (path.startsWith('/app/onboarding')) return;
+		loadPrefs().then((p) => {
+			if (!p.onboarded) goto(base + '/app/onboarding', { replaceState: true });
+		});
+	});
+
+	const onOnboarding = $derived((page.url.pathname.replace(base, '') || '').startsWith('/app/onboarding'));
 
 	const tabs = [
 		{ href: '/app', label: 'Heute', icon: 'sun' },
@@ -21,10 +36,11 @@
 </script>
 
 <div class="app-root">
-	<main class="app-main">
+	<main class="app-main" class:no-tabbar={onOnboarding}>
 		{@render children?.()}
 	</main>
 
+	{#if !onOnboarding}
 	<nav class="app-tabbar" aria-label="Hauptnavigation">
 		{#each tabs as tab}
 			<a href={base + tab.href} class="app-tab" class:active={active(tab.href)} aria-current={active(tab.href) ? 'page' : undefined}>
@@ -43,4 +59,5 @@
 			</a>
 		{/each}
 	</nav>
+	{/if}
 </div>

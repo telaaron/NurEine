@@ -56,6 +56,11 @@ body {
 	-webkit-overflow-scrolling: touch;
 }
 
+.app-main.no-tabbar {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
 .app-tabbar {
 	position: fixed;
 	left: 0;

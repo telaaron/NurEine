@@ -6,7 +6,12 @@
 import { Share } from '@capacitor/share';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Preferences } from '@capacitor/preferences';
+import { PushNotifications } from '@capacitor/push-notifications';
+import { Capacitor } from '@capacitor/core';
 import { track } from '$lib/track';
+
+/** True only inside the packaged iOS/Android app (not the web build). */
+export const isNative = Capacitor.isNativePlatform();
 
 /** Open the native iOS share sheet (falls back to Web Share / nothing). */
 export async function shareStory(opts: { title: string; text?: string; url: string }): Promise<void> {
@@ -21,6 +26,53 @@ export async function shareStory(opts: { title: string; text?: string; url: stri
 	} catch {
 		// User cancelled, or sharing unavailable — no action needed.
 	}
+}
+
+/**
+ * Ask for push permission and register with APNs. Returns whether permission
+ * was granted. On the web this resolves false (no native push). The device
+ * token is sent to the backend by the registration listener (set up once in
+ * the app layout) — see registerPushListeners.
+ */
+export async function requestPush(): Promise<boolean> {
+	if (!isNative) return false;
+	try {
+		const perm = await PushNotifications.requestPermissions();
+		if (perm.receive !== 'granted') return false;
+		await PushNotifications.register();
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Wire the APNs token + incoming-notification listeners once at app start.
+ * The token is posted to /api/app/register-token (built in M2); the tap
+ * handler deep-links to the story. Safe no-op on web.
+ */
+export function registerPushListeners(onDeepLink: (storyId: string) => void): void {
+	if (!isNative) return;
+	PushNotifications.addListener('registration', async (token) => {
+		try {
+			await fetch(`${apiBase()}/api/app/register-token`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ token: token.value, platform: 'ios' })
+			});
+			await cacheSet('apns_token', token.value);
+		} catch {
+			/* backend not ready yet / offline — token cached for retry */
+		}
+	});
+	PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+		const id = action.notification.data?.storyId;
+		if (id) onDeepLink(String(id));
+	});
+}
+
+function apiBase(): string {
+	return import.meta.env.PROD ? 'https://nureine.de' : '';
 }
 
 /** Open a URL outside the app (system browser). */

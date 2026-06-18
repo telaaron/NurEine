@@ -5,12 +5,13 @@
 	import { base } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { loadPrefs } from '$lib/app/prefs';
-	import { registerPushListeners } from '$lib/app/native';
+	import { registerPushListeners, setupStatusBar } from '$lib/app/native';
 
 	let { children } = $props();
 
 	// First-launch gate + push wiring. Runs once on the client.
 	$effect(() => {
+		setupStatusBar();
 		registerPushListeners((storyId) => goto(base + '/app/geschichte/' + storyId));
 		const path = page.url.pathname.replace(base, '');
 		if (path.startsWith('/app/onboarding')) return;

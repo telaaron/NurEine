@@ -66,8 +66,13 @@
 		pullY = 0;
 	}
 
+	// Scroll lives on the .app-main container now (not window).
+	function scrollTop(el: EventTarget | null): number {
+		const main = (el as HTMLElement | null)?.closest('.app-main');
+		return main ? main.scrollTop : 0;
+	}
 	function onTouchStart(e: TouchEvent) {
-		if (window.scrollY <= 0) {
+		if (scrollTop(e.currentTarget) <= 0) {
 			startY = e.touches[0].clientY;
 			pulling = true;
 		}
@@ -75,7 +80,7 @@
 	function onTouchMove(e: TouchEvent) {
 		if (!pulling || refreshing) return;
 		const dy = e.touches[0].clientY - startY;
-		if (dy > 0 && window.scrollY <= 0) pullY = Math.min(dy * 0.5, 80);
+		if (dy > 0 && scrollTop(e.currentTarget) <= 0) pullY = Math.min(dy * 0.5, 80);
 	}
 	function onTouchEnd() {
 		pulling = false;

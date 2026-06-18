@@ -8,9 +8,11 @@ const config: CapacitorConfig = {
 	appName: 'NurEine',
 	webDir: 'build-app',
 	ios: {
-		// Warm paper canvas behind the webview during load — no white flash.
-		backgroundColor: '#f5f1ea',
-		contentInset: 'always'
+		// No fixed background — the webview is transparent and the page's own
+		// html/body background (light canvas or warm dark) fills every edge,
+		// including under the status bar and home indicator.
+		backgroundColor: '#00000000',
+		contentInset: 'never'
 	},
 	plugins: {
 		SplashScreen: {

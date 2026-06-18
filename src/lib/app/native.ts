@@ -7,11 +7,33 @@ import { Share } from '@capacitor/share';
 import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Preferences } from '@capacitor/preferences';
 import { PushNotifications } from '@capacitor/push-notifications';
+import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { track } from '$lib/track';
 
 /** True only inside the packaged iOS/Android app (not the web build). */
 export const isNative = Capacitor.isNativePlatform();
+
+/**
+ * Match the native status bar to the current color scheme and let the webview
+ * draw under it (so the warm canvas / dark canvas reaches the very top, no beige
+ * strip). Re-applies on scheme change. No-op on web.
+ */
+export function setupStatusBar(): void {
+	if (!isNative) return;
+	const apply = async () => {
+		const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+		try {
+			await StatusBar.setOverlaysWebView({ overlay: true });
+			// Style.Dark = light text (for dark bg); Style.Light = dark text.
+			await StatusBar.setStyle({ style: dark ? Style.Dark : Style.Light });
+		} catch {
+			/* ignore */
+		}
+	};
+	apply();
+	window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', apply);
+}
 
 /** Open the native iOS share sheet (falls back to Web Share / nothing). */
 export async function shareStory(opts: { title: string; text?: string; url: string }): Promise<void> {

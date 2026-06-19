@@ -28,14 +28,19 @@ struct ArchiveView: View {
             .background(Theme.canvas)
             .scrollContentBackground(.hidden)
             .refreshable { await store.ensure(force: true) }
-            .navigationTitle("Archiv")
             .navigationDestination(for: Story.self) { StoryDetailView(story: $0) }
             .safeAreaInset(edge: .top) { filterBar }
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 
     private var filterBar: some View {
-        VStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Archiv")
+                .font(.system(size: 34, weight: .semibold))
+                .foregroundStyle(Theme.ink)
+                .padding(.horizontal, 20)
+                .padding(.top, 6)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 7) {
                     chip("Alle", active: category == nil) { category = nil }
@@ -63,8 +68,8 @@ struct ArchiveView: View {
             }
             .padding(.horizontal, 20)
         }
-        .padding(.vertical, 8)
-        .background(.bar)
+        .padding(.bottom, 10)
+        .background(Theme.canvas.opacity(0.92))
     }
 
     private func chip(_ label: String, active: Bool, _ tap: @escaping () -> Void) -> some View {

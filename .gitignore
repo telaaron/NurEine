@@ -41,3 +41,8 @@ media/*.png
 build-app/
 .DS_Store
 .server.ts.appbak
+
+# Xcode native app user/build cruft
+ios-native/**/xcuserdata/
+ios-native/**/*.xcuserstate
+ios-native/**/DerivedData/

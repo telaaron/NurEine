@@ -8,29 +8,33 @@ struct HeroCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // Image band — fixed ratio, tag top-left, impact chip overlapping the
+            // lower-right seam (like the website hero). Text never sits on the image.
             ZStack(alignment: .topLeading) {
                 AsyncStoryImage(story: story, width: 900)
-                    .aspectRatio(16.0 / 10.0, contentMode: .fill)
+                    .frame(height: 200)
                     .frame(maxWidth: .infinity)
                     .clipped()
-
                 TagChip(text: Category.label(for: story.category), color: tone.color)
-                    .padding(11)
-
-                VStack { Spacer(); HStack { Spacer(); ImpactChip(score: story.impactScore) } }
-                    .padding(11)
+                    .padding(12)
             }
             .frame(maxWidth: .infinity)
+            .overlay(alignment: .bottomTrailing) {
+                ImpactChip(score: story.impactScore)
+                    .padding(.trailing, 12)
+                    .offset(y: 18)
+            }
 
-            VStack(alignment: .leading, spacing: 9) {
+            VStack(alignment: .leading, spacing: 10) {
                 Text(story.title)
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.system(size: 23, weight: .semibold))
                     .foregroundStyle(Theme.ink)
+                    .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(story.dek)
                     .font(.custom("Newsreader", size: 15))
                     .foregroundStyle(Theme.inkSoft)
-                    .lineSpacing(3)
+                    .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 6) {
                     Circle().fill(tone.color).frame(width: 6, height: 6)
@@ -38,14 +42,16 @@ struct HeroCard: View {
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundStyle(Theme.muted)
                 }
-                .padding(.top, 4)
+                .padding(.top, 2)
             }
-            .padding(16)
+            .padding(.horizontal, 18)
+            .padding(.top, 26)
+            .padding(.bottom, 18)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(Theme.paper)
-        .clipShape(.rect(cornerRadius: 18))
-        .overlay(RoundedRectangle(cornerRadius: 18).stroke(Theme.rule, lineWidth: 1))
+        .clipShape(.rect(cornerRadius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.rule, lineWidth: 1))
     }
 }
 

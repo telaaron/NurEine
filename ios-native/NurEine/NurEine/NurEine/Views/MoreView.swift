@@ -20,6 +20,11 @@ struct MoreView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 26) {
+                    Text("Mehr")
+                        .font(.system(size: 34, weight: .semibold))
+                        .foregroundStyle(Theme.ink)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 8)
                     pushCard
                     topics
                     newsletter
@@ -34,7 +39,7 @@ struct MoreView: View {
             }
             .background(Theme.canvas)
             .scrollContentBackground(.hidden)
-            .navigationTitle("Mehr")
+            .toolbar(.hidden, for: .navigationBar)
         }
     }
 

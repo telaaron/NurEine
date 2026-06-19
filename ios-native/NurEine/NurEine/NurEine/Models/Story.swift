@@ -18,6 +18,7 @@ struct Story: Identifiable, Decodable, Hashable {
     let imageUrl: String?
     let audioUrl: String?
     let publishedAt: String
+    let createdAt: String?
     let coordsX: Double?
     let coordsY: Double?
 
@@ -33,7 +34,7 @@ struct Story: Identifiable, Decodable, Hashable {
 
     enum CodingKeys: String, CodingKey {
         case id, slug, title, dek, body, category, country, source, tone
-        case readingMinutes, impactScore, imageUrl, audioUrl, publishedAt
+        case readingMinutes, impactScore, imageUrl, audioUrl, publishedAt, createdAt
         case coordsX, coordsY
         case impactReach, impactDurability, impactEvidence, impactExplainer
         case beat, sourceType

@@ -3,6 +3,7 @@ import AVKit
 
 struct StoryDetailView: View {
     let story: Story
+    @Environment(\.dismiss) private var dismiss
     @State private var player: AVPlayer?
     @State private var playing = false
     private var tone: Tone { .from(story.tone) }
@@ -15,14 +16,16 @@ struct StoryDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                // Edge-to-edge image reaching under the status bar (magazine cover).
                 AsyncStoryImage(story: story, width: 900)
-                    .aspectRatio(16.0 / 9.0, contentMode: .fill)
+                    .frame(height: 300)
                     .frame(maxWidth: .infinity)
                     .clipped()
 
+                // Paper content block pulled up over the image's lower edge.
                 VStack(alignment: .leading, spacing: 0) {
                     TagChip(text: "\(Category.label(for: story.category)) · \(story.country)", color: tone.color)
-                        .padding(.top, 16)
+                        .padding(.top, 22)
                     Text(story.title)
                         .font(.display(24))
                         .foregroundStyle(Theme.ink)
@@ -64,22 +67,42 @@ struct StoryDetailView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Theme.canvas)
+                .clipShape(.rect(topLeadingRadius: 22, topTrailingRadius: 22))
+                .offset(y: -22)
             }
         }
         .background(Theme.canvas)
         .scrollContentBackground(.hidden)
-        .toolbar {
-            // System provides the back button; we only add the audio control.
+        .ignoresSafeArea(edges: .top)
+        .scrollIndicators(.hidden)
+        // Floating glass controls over the cover image.
+        .overlay(alignment: .topLeading) {
+            Button { dismiss() } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Theme.ink)
+                    .frame(width: 38, height: 38)
+                    .glassEffect(.regular, in: .circle)
+            }
+            .padding(.leading, 16)
+            .padding(.top, 8)
+        }
+        .overlay(alignment: .topTrailing) {
             if story.audioUrl != nil {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: toggleAudio) {
-                        Image(systemName: playing ? "pause.circle.fill" : "play.circle.fill")
-                    }
+                Button(action: toggleAudio) {
+                    Image(systemName: playing ? "pause.fill" : "play.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Theme.ink)
+                        .frame(width: 38, height: 38)
+                        .glassEffect(.regular, in: .circle)
                 }
+                .padding(.trailing, 16)
+                .padding(.top, 8)
             }
         }
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .navigationBar)
         .onDisappear { player?.pause() }
     }
 

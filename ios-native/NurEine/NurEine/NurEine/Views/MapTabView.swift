@@ -30,17 +30,17 @@ struct MapTabView: View {
             }
             .mapStyle(.standard(pointsOfInterest: PointOfInterestCategories.excludingAll))
             .ignoresSafeArea(edges: .top)
-            .overlay(alignment: .top) {
+            .safeAreaInset(edge: .top, spacing: 0) {
                 HStack {
                     Text("Karte der Hoffnung")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.display(18))
                         .foregroundStyle(Theme.ink)
-                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .padding(.horizontal, 14).padding(.vertical, 8)
                         .glassEffect(.regular, in: .capsule)
                     Spacer()
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 8)
+                .padding(.bottom, 4)
             }
             .navigationDestination(for: Story.self) { StoryDetailView(story: $0) }
             .toolbar(.hidden, for: .navigationBar)

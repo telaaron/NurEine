@@ -52,6 +52,7 @@ struct HeroCard: View {
         .background(Theme.paper)
         .clipShape(.rect(cornerRadius: 20))
         .overlay(RoundedRectangle(cornerRadius: 20).stroke(Theme.rule, lineWidth: 1))
+        .shadow(color: .black.opacity(0.06), radius: 16, x: 0, y: 8)
     }
 }
 

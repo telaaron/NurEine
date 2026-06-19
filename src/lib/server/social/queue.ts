@@ -208,16 +208,71 @@ function igConfigured(): boolean {
 
 const IG_V = 'v21.0';
 
+/**
+ * Meta App-Level / User-Level Rate-Limit-Codes. Bei diesen ist der Post NICHT
+ * kaputt — nur das Kontingent erschöpft. Wir wollen ihn dann NICHT permanent auf
+ * 'failed' setzen (sonst klickt jemand „Jetzt posten" → noch mehr Calls → tiefer
+ * ins Limit), sondern als rate-limited erkennen und später erneut versuchen.
+ *   2207051 = Application request limit reached
+ *   4 / 17 / 32 / 613 = App/User/Page rate limits, calls-per-hour
+ */
+const RATE_LIMIT_CODES = ['2207051', '"code":4', '"code":17', '"code":32', '"code":613'];
+export class RateLimitedError extends Error {
+	constructor(msg: string) {
+		super(msg);
+		this.name = 'RateLimitedError';
+	}
+}
+function isRateLimit(body: string): boolean {
+	return RATE_LIMIT_CODES.some((c) => body.includes(c)) || /request limit reached/i.test(body);
+}
+
+/**
+ * Validiert eine Bild-URL BEVOR sie an IG geht. IG fetcht die URL selbst; liefert
+ * sie kein echtes Bild (z.B. weil die share-card/carousel-Funktion 500/HTML
+ * zurückgab oder noch nicht warm im CDN ist), antwortet Graph mit Code 9004
+ * „Only photo or video can be accepted as media type" — und verbrennt Quota.
+ * Darum hier vorab prüfen: HTTP 200 + Content-Type image/*. Mit kurzem Retry,
+ * da frische share-card-URLs ein paar Sekunden Render+CDN brauchen.
+ */
+async function assertImageUrl(url: string): Promise<void> {
+	let lastReason = 'unknown';
+	for (let attempt = 0; attempt < 3; attempt++) {
+		try {
+			const resp = await fetch(url, { signal: AbortSignal.timeout(20000) });
+			const ct = resp.headers.get('content-type') || '';
+			if (resp.ok && ct.startsWith('image/')) return;
+			lastReason = `HTTP ${resp.status}, content-type "${ct}"`;
+		} catch (e) {
+			lastReason = (e as Error).message;
+		}
+		if (attempt < 2) await new Promise((r) => setTimeout(r, 4000));
+	}
+	throw new Error(`image url not a valid image (${lastReason}): ${url.slice(0, 120)}`);
+}
+
 async function igCreateContainer(body: Record<string, unknown>): Promise<string> {
 	const userId = env.IG_USER_ID!;
 	const token = env.IG_ACCESS_TOKEN!;
-	const resp = await fetch(`https://graph.facebook.com/${IG_V}/${userId}/media`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ ...body, access_token: token })
-	});
-	if (!resp.ok) throw new Error(`IG container ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
-	return ((await resp.json()) as { id: string }).id;
+	// Bis zu 3 Versuche mit Backoff, falls Meta rate-limitet (vorübergehend).
+	for (let attempt = 0; attempt < 3; attempt++) {
+		const resp = await fetch(`https://graph.facebook.com/${IG_V}/${userId}/media`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ ...body, access_token: token })
+		});
+		if (resp.ok) return ((await resp.json()) as { id: string }).id;
+		const text = await resp.text();
+		if (isRateLimit(text)) {
+			if (attempt < 2) {
+				await new Promise((r) => setTimeout(r, 8000 * (attempt + 1)));
+				continue;
+			}
+			throw new RateLimitedError(`IG container rate-limited: ${text.slice(0, 200)}`);
+		}
+		throw new Error(`IG container ${resp.status}: ${text.slice(0, 300)}`);
+	}
+	throw new RateLimitedError('IG container rate-limited after retries');
 }
 
 /**
@@ -267,6 +322,13 @@ async function igPublish(creationId: string): Promise<string> {
 			await new Promise((r) => setTimeout(r, 5000));
 			continue;
 		}
+		if (isRateLimit(text)) {
+			if (attempt < 2) {
+				await new Promise((r) => setTimeout(r, 8000 * (attempt + 1)));
+				continue;
+			}
+			throw new RateLimitedError(`IG publish rate-limited: ${text.slice(0, 200)}`);
+		}
 		throw new Error(`IG publish ${resp.status}: ${text.slice(0, 300)}`);
 	}
 	throw new Error('IG publish failed after retries');
@@ -274,6 +336,7 @@ async function igPublish(creationId: string): Promise<string> {
 
 /** Single-image feed post. */
 async function igPost(imageUrl: string, caption: string): Promise<string> {
+	await assertImageUrl(imageUrl); // verhindert 9004 (IG fetcht kaputte URL)
 	const creationId = await igCreateContainer({ image_url: imageUrl, caption });
 	return igPublish(creationId);
 }
@@ -283,6 +346,8 @@ async function igPost(imageUrl: string, caption: string): Promise<string> {
  * parent carousel container with the children, then publish the parent.
  */
 async function igPostCarousel(imageUrls: string[], caption: string): Promise<string> {
+	// Alle Folien-URLs vorab prüfen — eine kaputte Folie = ganzer Carousel 9004.
+	for (const url of imageUrls) await assertImageUrl(url);
 	const children: string[] = [];
 	for (const url of imageUrls) {
 		children.push(await igCreateContainer({ image_url: url, is_carousel_item: true }));
@@ -372,6 +437,18 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 				.eq('id', p.id);
 			posted += 1;
 		} catch (err) {
+			if (err instanceof RateLimitedError) {
+				// Rate-Limit: Post NICHT auf 'failed' setzen (sonst nie wieder
+				// versucht). Status bleibt → nächster Cron probiert erneut. Nur
+				// Fehlertext zur Sichtbarkeit ablegen.
+				await supabaseAdmin
+					.from('nureine_social_posts')
+					.update({ error: `rate-limited, retry later: ${(err as Error).message.slice(0, 200)}`, updated_at: new Date().toISOString() })
+					.eq('id', p.id);
+				console.warn('[social] rate-limited, will retry:', p.id);
+				// Loop abbrechen — bei Rate-Limit bringen weitere Calls nichts.
+				return { posted, failed, skipped: 'rate-limited' };
+			}
 			await supabaseAdmin
 				.from('nureine_social_posts')
 				.update({ status: 'failed', error: (err as Error).message.slice(0, 500), updated_at: new Date().toISOString() })
@@ -414,6 +491,14 @@ export async function publishPostNow(id: number): Promise<{ ok: boolean; reason:
 			.eq('id', id);
 		return { ok: true, reason: 'posted', mediaId };
 	} catch (err) {
+		if (err instanceof RateLimitedError) {
+			// Status erhalten → bleibt postbar. Nur Hinweis ablegen.
+			await supabaseAdmin
+				.from('nureine_social_posts')
+				.update({ error: `rate-limited, retry later: ${(err as Error).message.slice(0, 200)}`, updated_at: new Date().toISOString() })
+				.eq('id', id);
+			return { ok: false, reason: 'Meta rate-limit erreicht — später erneut versuchen (Post bleibt postbar).' };
+		}
 		await supabaseAdmin
 			.from('nureine_social_posts')
 			.update({ status: 'failed', error: (err as Error).message.slice(0, 500), updated_at: new Date().toISOString() })
@@ -507,6 +592,7 @@ export async function refreshInsights(): Promise<{ updated: number; skipped: str
 
 /** Eine IG-Story posten (9:16 Bild). */
 async function igPostStory(imageUrl: string): Promise<string> {
+	await assertImageUrl(imageUrl); // verhindert 9004 bei kaputter share-card-URL
 	const creationId = await igCreateContainer({ image_url: imageUrl, media_type: 'STORIES' });
 	return igPublish(creationId);
 }

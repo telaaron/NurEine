@@ -2,11 +2,12 @@
 	import { CATEGORIES } from '$lib/categories';
 	import { loadPrefs, savePrefs, type AppPrefs } from '$lib/app/prefs';
 	import { subscribe, publicStoryUrl } from '$lib/app/api';
-	import { shareStory, openExternal, tapLight } from '$lib/app/native';
+	import { shareStory, openExternal, tapLight, sendTestNotification } from '$lib/app/native';
 	import { getRef } from '$lib/referral';
 
 	let prefs = $state<AppPrefs | null>(null);
 	let selected = $state<Set<string>>(new Set());
+	let testMsg = $state('');
 
 	// Subscribe form
 	let email = $state('');
@@ -36,6 +37,21 @@
 		tapLight();
 		// M2 wires real APNs registration; for now we record the intent.
 		prefs = await savePrefs({ pushWanted: !prefs.pushWanted });
+	}
+
+	async function testNotification() {
+		tapLight();
+		testMsg = '';
+		const res = await sendTestNotification({
+			title: 'Dein Lichtblick für heute',
+			body: 'Ein Dorf in Kenia hat gerade eine Million Bäume gepflanzt — und die Daten zeigen, es wirkt.'
+		});
+		testMsg =
+			res === 'sent'
+				? 'Sperr jetzt dein iPhone — die Benachrichtigung kommt in ein paar Sekunden.'
+				: res === 'denied'
+					? 'Benachrichtigungen sind in den iOS-Einstellungen deaktiviert.'
+					: 'Test nur in der App (nicht im Browser) verfügbar.';
 	}
 
 	async function toggleKids() {
@@ -95,8 +111,12 @@
 			</button>
 		</div>
 		{#if prefs?.pushWanted}
-			<p class="hint">Wird mit dem nächsten Update aktiv geschaltet.</p>
+			<p class="hint">Echter Morgen-Push kommt mit dem nächsten Update (Server).</p>
 		{/if}
+		<button class="test-btn" onclick={testNotification}>
+			<i class="bell" aria-hidden="true">🔔</i> Test-Benachrichtigung senden
+		</button>
+		{#if testMsg}<p class="test-msg serif">{testMsg}</p>{/if}
 	</section>
 
 	<!-- Themen -->
@@ -167,6 +187,10 @@
 	.row-title { font-size: 15px; font-weight: 500; color: var(--color-ink); }
 	.row-sub { font-size: 13px; color: var(--color-muted); line-height: 1.45; margin-top: 3px; }
 	.hint { font-family: var(--font-mono); font-size: 11px; color: var(--color-amber-deep); margin-top: 10px; }
+	.test-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 12px; padding: 11px; border: 1px solid var(--color-rule-strong); background: transparent; color: var(--color-ink-soft); border-radius: 999px; font-size: 13px; }
+	.test-btn:active { transform: scale(0.98); }
+	.test-btn .bell { font-style: normal; font-size: 14px; }
+	.test-msg { font-size: 12px; color: var(--color-muted); margin-top: 9px; line-height: 1.45; }
 
 	.switch { position: relative; width: 50px; height: 30px; border-radius: 999px; border: none; background: var(--color-rule-strong); flex: 0 0 auto; transition: background 0.18s; }
 	.switch.on { background: var(--color-sage); }

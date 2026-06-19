@@ -8,6 +8,7 @@ import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import { Preferences } from '@capacitor/preferences';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { track } from '$lib/track';
 
@@ -95,6 +96,39 @@ export function registerPushListeners(onDeepLink: (storyId: string) => void): vo
 
 function apiBase(): string {
 	return import.meta.env.PROD ? 'https://nureine.de' : '';
+}
+
+/**
+ * Fire a LOCAL test notification that looks like the morning push, so the
+ * lock-screen presentation can be checked without an Apple Developer account or
+ * APNs. Schedules ~4s out so the user can lock the phone first. Returns a status
+ * the UI can show. (Real server-driven push needs the dev account; see push.ts.)
+ */
+export async function sendTestNotification(opts: { title: string; body: string }): Promise<'sent' | 'denied' | 'unavailable'> {
+	if (!isNative) return 'unavailable';
+	try {
+		const perm = await LocalNotifications.checkPermissions();
+		let granted = perm.display === 'granted';
+		if (!granted) {
+			const req = await LocalNotifications.requestPermissions();
+			granted = req.display === 'granted';
+		}
+		if (!granted) return 'denied';
+
+		await LocalNotifications.schedule({
+			notifications: [
+				{
+					id: Date.now() % 2147483647,
+					title: opts.title,
+					body: opts.body,
+					schedule: { at: new Date(Date.now() + 4000) }
+				}
+			]
+		});
+		return 'sent';
+	} catch {
+		return 'unavailable';
+	}
 }
 
 /** Open a URL outside the app (system browser). */

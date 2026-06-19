@@ -2,6 +2,8 @@ import SwiftUI
 
 struct TodayView: View {
     @Environment(StoryStore.self) private var store
+    @Binding var deepLink: Story?
+    @State private var path: [Story] = []
 
     private var dateText: String {
         let f = DateFormatter()
@@ -11,7 +13,7 @@ struct TodayView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     header
@@ -38,6 +40,9 @@ struct TodayView: View {
             .refreshable { await store.ensure(force: true) }
             .navigationDestination(for: Story.self) { StoryDetailView(story: $0) }
             .toolbar(.hidden, for: .navigationBar)
+            .onChange(of: deepLink) { _, story in
+                if let story { path = [story]; deepLink = nil }
+            }
         }
     }
 

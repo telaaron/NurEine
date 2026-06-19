@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct NurEineApp: App {
+    @UIApplicationDelegateAdaptor(PushAppDelegate.self) private var pushDelegate
     @State private var store = StoryStore()
     @State private var prefs = Prefs()
 

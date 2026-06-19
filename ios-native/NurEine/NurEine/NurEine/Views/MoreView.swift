@@ -54,6 +54,9 @@ struct MoreView: View {
                 }
             }
             .tint(Theme.sage)
+            .onChange(of: p.pushWanted) { _, wanted in
+                if wanted { Task { p.pushWanted = await Push.requestAndRegister() } }
+            }
             Button(action: testNotification) {
                 Label("Test-Benachrichtigung senden", systemImage: "bell")
                     .font(.system(size: 13)).foregroundStyle(Theme.inkSoft)

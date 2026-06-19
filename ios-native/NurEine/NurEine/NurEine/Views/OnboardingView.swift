@@ -95,8 +95,7 @@ struct OnboardingView: View {
 
     private func requestPush() {
         Task {
-            let granted = (try? await UNUserNotificationCenter.current()
-                .requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+            let granted = await Push.requestAndRegister()
             prefs.pushWanted = granted
             finish()
         }

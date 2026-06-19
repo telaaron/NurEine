@@ -27,7 +27,7 @@ struct HeroCard: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text(story.title)
-                    .font(.system(size: 23, weight: .semibold))
+                    .font(.display(23))
                     .foregroundStyle(Theme.ink)
                     .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)

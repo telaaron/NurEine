@@ -40,7 +40,7 @@ struct OnboardingView: View {
                      body: "Kein Feed, kein Algorithmus, kein Sog. Eine belegte Geschichte über echten Fortschritt — in zwei Minuten.")
         case 1:
             VStack(spacing: 16) {
-                Text("Was bewegt dich?").font(.system(size: 30, weight: .semibold)).foregroundStyle(Theme.ink)
+                Text("Was bewegt dich?").font(.display(30)).foregroundStyle(Theme.ink)
                 Text("Wähle deine Themen — oder lass alle an.")
                     .font(.custom("Newsreader", size: 16)).foregroundStyle(Theme.inkSoft).multilineTextAlignment(.center)
                 FlowLayout(spacing: 9) {
@@ -70,7 +70,7 @@ struct OnboardingView: View {
                 Circle().fill(Theme.amber).frame(width: 88, height: 88)
                 Image(systemName: icon).font(.system(size: 40)).foregroundStyle(Theme.paper)
             }
-            Text(title).font(.system(size: 30, weight: .semibold)).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
+            Text(title).font(.display(30)).foregroundStyle(Theme.ink).multilineTextAlignment(.center)
             Text(body).font(.custom("Newsreader", size: 16)).foregroundStyle(Theme.inkSoft)
                 .multilineTextAlignment(.center).lineSpacing(4).padding(.horizontal, 36)
         }

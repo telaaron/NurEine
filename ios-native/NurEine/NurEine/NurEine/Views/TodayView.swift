@@ -47,7 +47,7 @@ struct TodayView: View {
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundStyle(Theme.faint)
             Text("Heute")
-                .font(.system(size: 34, weight: .semibold))
+                .font(.display(34))
                 .foregroundStyle(Theme.ink)
             Eyebrow(text: "Ehrlicher Fortschritt · heute")
                 .padding(.top, 12)

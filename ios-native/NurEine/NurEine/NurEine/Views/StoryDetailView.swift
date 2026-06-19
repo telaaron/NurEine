@@ -3,7 +3,6 @@ import AVKit
 
 struct StoryDetailView: View {
     let story: Story
-    @Environment(\.dismiss) private var dismiss
     @State private var player: AVPlayer?
     @State private var playing = false
     private var tone: Tone { .from(story.tone) }
@@ -25,7 +24,7 @@ struct StoryDetailView: View {
                     TagChip(text: "\(Category.label(for: story.category)) · \(story.country)", color: tone.color)
                         .padding(.top, 16)
                     Text(story.title)
-                        .font(.system(size: 24, weight: .semibold))
+                        .font(.display(24))
                         .foregroundStyle(Theme.ink)
                         .padding(.top, 10)
                     Text("\(story.readingMinutes) Min · Quelle: \(story.source)")
@@ -70,9 +69,7 @@ struct StoryDetailView: View {
         .background(Theme.canvas)
         .scrollContentBackground(.hidden)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button { dismiss() } label: { Image(systemName: "chevron.left") }
-            }
+            // System provides the back button; we only add the audio control.
             if story.audioUrl != nil {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: toggleAudio) {
@@ -82,6 +79,7 @@ struct StoryDetailView: View {
             }
         }
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
         .onDisappear { player?.pause() }
     }
 

@@ -21,7 +21,7 @@ struct MoreView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 26) {
                     Text("Mehr")
-                        .font(.system(size: 34, weight: .semibold))
+                        .font(.display(34))
                         .foregroundStyle(Theme.ink)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 8)

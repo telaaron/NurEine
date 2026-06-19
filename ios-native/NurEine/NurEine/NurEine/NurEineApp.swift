@@ -5,6 +5,8 @@ struct NurEineApp: App {
     @State private var store = StoryStore()
     @State private var prefs = Prefs()
 
+    init() { Fonts.register() }
+
     var body: some Scene {
         WindowGroup {
             RootTabView()

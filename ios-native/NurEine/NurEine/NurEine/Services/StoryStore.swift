@@ -6,25 +6,18 @@ import SwiftUI
 @Observable
 final class StoryStore {
     private(set) var stories: [Story] = []
+    private(set) var featured: Story?
     private(set) var loading = false
     private(set) var errored = false
 
     private var lastFetch: Date = .distantPast
     private let freshness: TimeInterval = 5 * 60
 
-    /// The "Heute" hero — mirrors the website's getLatestFeatured: the strongest
-    /// FRESH story (highest impact among those created in the last 48h), so the
-    /// header rotates daily instead of pinning the all-time top story. Falls back
-    /// to the overall highest-impact story if nothing is fresh.
+    /// The "Heute" hero = exactly the website's featured story (server-computed
+    /// getLatestFeatured), fetched from /api/stories?featured=true. Falls back to
+    /// the newest story only if the featured call returned nothing.
     var hero: Story? {
-        let iso = ISO8601DateFormatter()
-        let cutoff = Date().addingTimeInterval(-48 * 3600)
-        let fresh = stories.filter { s in
-            guard let c = s.createdAt, let d = iso.date(from: c) else { return false }
-            return d >= cutoff
-        }
-        if let top = fresh.max(by: { $0.impactScore < $1.impactScore }) { return top }
-        return stories.max(by: { $0.impactScore < $1.impactScore })
+        featured ?? stories.sorted { $0.publishedAt > $1.publishedAt }.first
     }
 
     /// Newest stories after the hero, for the "Diese Woche" list (by published date).
@@ -50,7 +43,10 @@ final class StoryStore {
         errored = false
         defer { loading = false }
         do {
-            stories = try await API.stories()
+            async let list = API.stories()
+            async let feat = try? API.featured()
+            stories = try await list
+            featured = await feat ?? nil
             lastFetch = Date()
         } catch {
             if stories.isEmpty { errored = true }

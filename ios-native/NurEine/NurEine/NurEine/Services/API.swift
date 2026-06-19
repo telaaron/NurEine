@@ -10,6 +10,12 @@ enum API {
         try await get("/api/stories", as: [Story].self)
     }
 
+    /// The website's featured "Heute" story (server-computed getLatestFeatured),
+    /// so the app shows the exact same hero. Nil if none.
+    static func featured() async throws -> Story? {
+        try await get("/api/stories?featured=true", as: Story?.self)
+    }
+
     /// One story by id.
     static func story(id: String) async throws -> Story {
         try await get("/api/stories/\(id)", as: Story.self)

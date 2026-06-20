@@ -15,10 +15,10 @@
 	<div class="mt-8 text-base leading-relaxed space-y-3" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
 		<h2 class="display text-lg mt-8" style="color: var(--color-ink); font-weight: 600;">1. Verantwortlicher</h2>
 		<p>
-			Aaron Technologies OÜ, vertreten durch Aaron Julius Weege.
-			<!-- TODO Aaron: estnische Adresse ergänzen, identisch zum Impressum -->
-			Anschrift siehe <a href="/impressum" style="color: var(--color-amber);">Impressum</a>.
+			Aaron Technologies OÜ, vertreten durch Aaron Julius Weege,
+			Sepapaja tn 6, 15551 Tallinn, Estland (Registrikood 17336129).
 			Kontakt: <a href="mailto:admin@must-seen.com" style="color: var(--color-amber);">admin@must-seen.com</a>.
+			Weitere Angaben im <a href="/impressum" style="color: var(--color-amber);">Impressum</a>.
 		</p>
 
 		<h2 class="display text-lg mt-8" style="color: var(--color-ink); font-weight: 600;">2. Grundsatz</h2>

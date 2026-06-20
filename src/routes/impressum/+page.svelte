@@ -16,11 +16,12 @@
 	<div class="mt-8 text-base leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
 		<h2 class="display text-lg mt-8" style="color: var(--color-ink); font-weight: 600;">Angaben gemäß § 5 DDG (Digitale-Dienste-Gesetz)</h2>
 		<p class="mt-3">
-			Aaron Technologies OÜ<br />
-			<!-- TODO Aaron: vollständige estnische Geschäftsadresse + Registrikood eintragen -->
-			[Straße &amp; Hausnummer]<br />
-			[PLZ] [Ort], Estland<br />
-			Registrikood (Handelsregister-Nr.): [Registrikood]
+			Aaron Technologies OÜ (Osaühing, estnische GmbH)<br />
+			Sepapaja tn 6<br />
+			15551 Tallinn, Harju maakond, Estland<br />
+			Registrikood (Handelsregister-Nr.): 17336129<br />
+			Eingetragen im estnischen Unternehmensregister am 26.09.2025<br />
+			Tätigkeit: Programmierung (EMTAK 62101)
 		</p>
 
 		<h2 class="display text-lg mt-8" style="color: var(--color-ink); font-weight: 600;">Vertreten durch</h2>
@@ -34,8 +35,7 @@
 
 		<h2 class="display text-lg mt-8" style="color: var(--color-ink); font-weight: 600;">Umsatzsteuer-ID</h2>
 		<p class="mt-3">
-			<!-- TODO Aaron: estnische USt-IdNr (KMKR number) eintragen, falls vorhanden, sonst diesen Absatz entfernen -->
-			USt-IdNr. gemäß § 27a UStG: [EE…]
+			USt-IdNr. gemäß § 27a UStG: EE102955587
 		</p>
 
 		<h2 class="display text-lg mt-8" style="color: var(--color-ink); font-weight: 600;">Redaktionell verantwortlich (§ 18 Abs. 2 MStV)</h2>

@@ -11,6 +11,18 @@
 			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..600&family=Inter:wght@300..800&family=JetBrains+Mono:wght@400;500&display=swap"
 			rel="stylesheet"
 		/>
+		<!-- Google Reader Revenue Manager (SwG) — Publisher-Center-Integration. -->
+		<script async type="application/javascript" src="https://news.google.com/swg/js/v1/swg-basic.js"></script>
+		<script>
+			(self.SWG_BASIC = self.SWG_BASIC || []).push((basicSubscriptions) => {
+				basicSubscriptions.init({
+					type: 'NewsArticle',
+					isPartOfType: ['Product'],
+					isPartOfProductId: 'CAow69zLDA:openaccess',
+					clientOptions: { theme: 'light', lang: 'de' }
+				});
+			});
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover" class="bg-[var(--color-canvas)]">

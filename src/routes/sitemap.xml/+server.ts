@@ -31,6 +31,8 @@ export async function GET() {
 			{ loc: `${BASE_URL}/teilen`, priority: '0.6', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/einreichen`, priority: '0.6', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/methodik`, priority: '0.7', changefreq: 'monthly' },
+		{ loc: `${BASE_URL}/datenschutz`, priority: '0.2', changefreq: 'yearly' },
+		{ loc: `${BASE_URL}/nutzungsbedingungen`, priority: '0.2', changefreq: 'yearly' },
 		{ loc: `${BASE_URL}/stand-der-welt`, priority: '0.8', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/archiv`, priority: '0.8', changefreq: 'daily' },
 		...['klima', 'gesundheit', 'wissenschaft', 'gemeinschaft', 'tiere', 'kultur', 'innovation'].map(

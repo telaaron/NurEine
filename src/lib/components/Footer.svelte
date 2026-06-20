@@ -69,6 +69,11 @@
 		>
 			<div class="flex items-center gap-4 flex-wrap">
 				<p>&copy; 2026 NurEine. Ver&ouml;ffentlicht in Teltow, Brandenburg.</p>
+				<span class="flex items-center gap-3">
+					<a class="hover:opacity-70" href={base + '/impressum'}>Impressum</a>
+					<a class="hover:opacity-70" href={base + '/datenschutz'}>Datenschutz</a>
+					<a class="hover:opacity-70" href={base + '/nutzungsbedingungen'}>Nutzungsbedingungen</a>
+				</span>
 				<a
 					href="https://instagram.com/nureine.de"
 					target="_blank"

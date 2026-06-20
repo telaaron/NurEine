@@ -22,6 +22,17 @@
 5. **Die Absage ist Datenpunkt, nicht Urteil.** Du brauchst 100 Versuche. Bei 50 %
    Conversion warm sind 50 „Nein/Ignoriert" eingeplant — sie gehören zum Plan.
 
+**Der Wert, der DICH selbst überzeugen muss (lies das, bis du es glaubst):**
+Niemand braucht eine weitere gute Nachricht. Aber sehr viele Menschen brauchen
+eine *Pause von der schlechten*. NurEine verkauft keine Information — es verkauft
+einen besseren Start in den Tag. Das Gefühl nach einer echten guten Nachricht
+(„KI erkennt Krebs Jahre früher") ist der ganze Wert. Wenn DU diesen Wert nicht
+fühlst, fühlt ihn niemand. Deshalb: Bevor du pitchst, lies SELBST die heutige
+Story und spür den Effekt. Du verkaufst nie das Produkt — du verkaufst das Gefühl,
+das du gerade hattest. (Der Freund-Einwand „würde ich das kaufen?" zielt auf das
+B2B-Modell, nicht hierauf — Geschäftsmodell klärt sich mit Reichweite, siehe
+STRATEGY.md Update 2026-06-13. Deine Aufgabe jetzt: Nutzer, nicht Umsatz.)
+
 **Der Kern-Pitch in 3 Längen (auswendig können):**
 
 - **1 Satz:** „NurEine zeigt jeden Tag genau eine belegte Geschichte, wo die Welt
@@ -63,6 +74,18 @@
 > 2-Minuten-Newsletter mit einer guten Nachricht — und für Eltern gibt's zu jeder
 > Geschichte einen Gesprächsstarter fürs Frühstück mit den Kids („ab 8 erklärbar").
 > Kostenlos. Magst du's mal eine Woche testen? [dein Ref-Link]
+
+### Variante D — App-Hook (ab App-Launch der Standard, vorher als Teaser)
+> Hey [Name]! Kennst du das — kurz Nachrichten checken und die Laune ist im Keller
+> wegen Sachen, auf die du eh keinen Einfluss hast? Ich hab das Gegenteil gebaut:
+> jeden Morgen ein kurzer Anstupser aufs Handy — „hey, was richtig Gutes ist
+> passiert", belegt, in 2 Minuten. [Vor Launch: „Trag dich ein, dann sag ich dir
+> Bescheid sobald die App da ist: [Link]" / Nach Launch: „Lad sie dir: [App-Link]"]
+
+**Warum App > Mail (dein eigener Grund, behalten):** Keiner will morgens im Bett
+sein Mail-Postfach öffnen. Eine Push-Notification, die sagt „etwas Schönes ist
+passiert", ist eingeladen statt aufgedrängt. Das ist der Hook — verkauf den
+*Moment der Notification*, nicht „eine App".
 
 ### Follow-up (nach 4–5 Tagen, KEIN Vorwurf)
 > Hey, ist untergegangen, oder? Kein Stress 🙂 Falls doch Interesse — hier nochmal:

@@ -3,18 +3,42 @@
 > Streng der Reihe nach. Ein Schritt pro Tag reicht — aber JEDEN Tag einer.
 > Erledigtes abhaken (`[x]`), nicht löschen. Stand: 2026-06-13.
 
+## DAS PRINZIP (über allem)
+
+**30 Tage, ein Ziel: von 13 → ~200 echte Nutzer. KEIN neues Feature.**
+Die App ist gebaut, das Web ist gebaut, das Produkt ist fertig. Was fehlt, ist
+der Beweis, dass es außer dir jemand will. Diesen Beweis kannst du nur erarbeiten —
+nicht erdenken, nicht erbauen. Jeder Tag, an dem du baust statt rausgehst, ist
+Flucht vor dem Unbequemen. Erreichst du die 200 → weiter, Modell klärt sich.
+Verfehlst du sie mit echtem Effort → ehrlich loslassen. So einfach.
+
+**App-Realität:** App wird dein Hauptkanal — aber erst in 3–6 Wochen (Dev-Account
+→ Apple-Verifizierung → Store-Review). Bis dahin: Web/Newsletter ist der einzige
+teilbare Kanal. Jeder jetzt gewonnene Web-Nutzer ist ein warmer App-Nutzer für
+später. Du baust die Startrampe, nicht Wegwerf-Arbeit.
+
+## Sofort (diese Woche, parallel zu allem)
+
+- [ ] **Apple Developer Account holen (99€).** Als Task, NICHT als Blocker —
+      während Apple verifiziert, machst du Web-Outreach weiter. Danach: Memory
+      „nureine-swiftui-native" TODO-Block (APNs-Key → Vercel → Migration 00032
+      → Push → TestFlight → Store).
+
 ## Woche 1 — Fundament + erste Pitches
 
 - [ ] **Tag 1 (heute): Training.** PITCH-TRAINING.md §0 lesen, Kern-Pitch (1-Satz
       + 30-Sek) 5× laut aufsagen. Dann ein KI-Rollenspiel Stufe 1 (§8). 20 Min.
 - [ ] **Tag 1: Erste 5 Warm-Nachrichten.** Die 5 wohlwollendsten Menschen
       (Familie, beste Freunde), Variante A. Ziel ist Momentum, nicht Perfektion.
-- [ ] **Tag 2: Foto + 3 Sätze für /redaktion.** Wer du bist, warum du das baust.
-      Foto kann Handy-Selfie mit Tageslicht sein — echt schlägt professionell.
-      Dann mir geben → ich baue es ein (Backlog #10).
+- [x] **Foto + 3 Sätze für /redaktion** — Text ist gebaut + live, Gründer-Sektion
+      mit deiner Geschichte (Algorithmus/Attentat → „Nachrichtenlage ist Auswahl").
+      OFFEN: Foto-Datei selbst ablegen: `static/images/aaron.jpg` (~600px, JPG),
+      dann `git add static/images/aaron.jpg && git commit -m "assets: Gründerfoto" && git push`.
 - [ ] **Tag 2: 8 Warm-Nachrichten** (ab jetzt täglich ~8, Drill aus §8).
-- [ ] **Tag 3: Google Publisher Center.** publishercenter.google.com →
-      nureine.de anmelden/verifizieren. 30 Min, einmalig, dann passiv.
+- [ ] **Tag 3: Google Publisher Center fertig machen.** publishercenter.google.com →
+      Publikation „NurEine" → nureine.de. Besitz via Search Console verifizieren
+      (DNS-TXT beim Registrar, falls noch nicht). Logo (static/NurEine.png),
+      Kategorie Nachrichten, einreichen. 30 Min, dann passiv (Google prüft Tage–Wochen).
 - [ ] **Tag 4: Reddit-Account vorbereiten.** Falls Account <2 Wochen alt oder
       <50 Karma: erst 3–4 Tage normal kommentieren (ehrlich, hilfreich), KEINE
       eigenen Posts. Parallel: 8 Warm-Nachrichten.

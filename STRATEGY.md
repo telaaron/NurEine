@@ -6,6 +6,44 @@
 
 ---
 
+## UPDATE 2026-06-13 — Richtungsentscheidungen (Aaron)
+
+Drei Entscheidungen nach dem „würdest du selbst zahlen"-Reality-Check eines Freundes:
+
+1. **App wird Hauptkanal (Push > Mail).** Begründung trägt: Apple MPP zerstört
+   Open-Rates, Push-Anstupser am Morgen schlägt Mail-im-Bett. ABER: Apple-Dev-Account
+   noch nicht da → App ist realistisch **3–6 Wochen** von ihrem ersten Fremd-Nutzer
+   entfernt (Account → Verifizierung → Store-Review). **Konsequenz: Bis die App live
+   ist, ist Web/Newsletter der EINZIGE teilbare Kanal.** Jetzt gewonnene Web-Nutzer =
+   warme Liste, die am App-Launch-Tag per „die App ist da" aktiviert wird. Nicht auf
+   die App warten — Startrampe bauen.
+
+2. **B2B-Modell grundsätzlich überdenken — aber NICHT jetzt.** Der Freund hat recht:
+   „Effizienz durch gute News" + nachbaubarer Screen = schwaches B2B. Stärkere Modelle
+   in Reihenfolge: (1) **Newsletter/App-Sponsoring** (Nice News >90 %, 1440 95 % so) —
+   skaliert mit Reichweite; (2) **B2C-Paid** (Gefühl, nicht Features); (3) B2B-Screen
+   (am schwächsten). ALLE drei haben dieselbe Voraussetzung: **Audience.** Deshalb ist
+   die Modellfrage heute die falsche Frage — sie beantwortet sich mit Reichweite.
+   Der Wert, der NICHT nachbaubar ist, ist die **Kuration** (KI filtert 70→1,
+   Wirkungsindex, Primärquellen), nicht das Screen-Produkt.
+
+3. **Ehrliche Tragfähigkeits-Einschätzung:** Als Geschäft heute nein, als Sache
+   weiterzubauen ja — unter EINER Bedingung: 30 Tage am Stück NUR Nutzergewinnung,
+   kein neues Feature. Das „ich steh nicht richtig dahinter" ist kein Marketing-
+   Problem, sondern fehlender Beweis, dass es außer Aaron jemand will. Beweis ist
+   weder erdenkbar noch erbaubar — nur erarbeitbar. **Kill-/Continue-Kriterium:
+   in 30 Tagen mit echtem Effort von 13 → ~200 echte Nutzer. Erreicht → weiter,
+   Modell klärt sich. Verfehlt → ehrlich loslassen.** Das Muster „erst bauen, dann
+   (nie) Outreach" ist jetzt 4× passiert (Web, B2B, App, evtl. 5. Pivot) — es muss
+   brechen, sonst stirbt das Projekt an Beschäftigung statt an Markt.
+
+**Der Wert in einem Satz (neu geschärft):** Niemand braucht eine weitere gute
+Nachricht — viele brauchen eine Pause von der schlechten. NurEine verkauft nicht
+Information, sondern einen besseren Start in den Tag. Das ist der Hook, der DICH
+überzeugen muss, bevor er andere überzeugt.
+
+---
+
 ## 0 · Zahlenbild (gemessen 2026-06-12, nicht geschätzt)
 
 | Metrik | Wert | Quelle |

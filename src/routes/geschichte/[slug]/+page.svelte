@@ -2,6 +2,7 @@
 	import { base } from '$app/paths';
 	import { formatDate, inline, sections, toneStyles } from '$lib/utils';
 	import { track } from '$lib/track';
+	import { recordRead, weekStats, type WeekStats } from '$lib/readingStreak';
 	import StoryCard from '$lib/components/StoryCard.svelte';
 	import ShareBar from '$lib/components/ShareBar.svelte';
 	import InlineNewsletter from '$lib/components/InlineNewsletter.svelte';
@@ -42,16 +43,47 @@
 	// "Weitersagen"-Satz: gecachter share_hook, sonst Subtitle als Fallback.
 	const shareLine = $derived(story.shareHook || story.dek || story.title);
 	let shareCopied = $state(false);
+
+	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
+	const storyUrl = $derived(`${baseUrl}/geschichte/${story.slug}`);
+
+	// Der entscheidende Loop-Fix: der kopierte Text nimmt den LINK mit (sonst
+	// landet kein Empfänger bei uns) — und, wenn der Leser einen eigenen
+	// Referral-Code hat (in localStorage gespeichert auf /einstellungen), wird
+	// dieser angehängt, damit die Weiterempfehlung ihm gutgeschrieben wird.
+	function ownRefCode(): string | null {
+		try {
+			return localStorage.getItem('nureine_my_ref');
+		} catch {
+			return null;
+		}
+	}
+	function shareTextWithLink(): string {
+		const code = ownRefCode();
+		const url = code ? `${storyUrl}?ref=${code}` : storyUrl;
+		return `${shareLine}\n\n${url}`;
+	}
 	function copyShareLine() {
-		navigator.clipboard?.writeText(shareLine).then(() => {
+		navigator.clipboard?.writeText(shareTextWithLink()).then(() => {
 			shareCopied = true;
 			setTimeout(() => (shareCopied = false), 1800);
 			track('story_shared', { slug: story.slug, via: 'share_hook' });
 		}).catch(() => {});
 	}
 
-	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
-	const storyUrl = $derived(`${baseUrl}/geschichte/${story.slug}`);
+	// Nativer Teilen-Dialog (Handy) — höchste Conversion, ein Tap.
+	function nativeShare() {
+		const text = shareTextWithLink();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const nav = navigator as any;
+		if (nav.share) {
+			nav.share({ title: 'NurEine', text: shareLine, url: text.split('\n\n')[1] })
+				.then(() => track('story_shared', { slug: story.slug, via: 'native_share' }))
+				.catch(() => {});
+		} else {
+			copyShareLine();
+		}
+	}
 
 	// Article structured data for Google rich results.
 	const jsonLd = $derived(
@@ -83,10 +115,31 @@
 		})
 	);
 
-	// Fire one story_read per slug view
+	// Fire one story_read per slug view + lokale Lese-Bilanz verbuchen.
 	$effect(() => {
-		if (story?.slug) track('story_read', { slug: story.slug, category: story.category });
+		if (story?.slug) {
+			track('story_read', { slug: story.slug, category: story.category });
+			recordRead();
+			week = weekStats();
+		}
 	});
+
+	let week = $state<WeekStats>({ count: 0, activeDays: 0 });
+	let weekShareCopied = $state(false);
+	function shareWeek() {
+		const txt = `Ich starte den Tag mit Fortschritt statt Doomscrolling: ${week.count} gute, belegte Nachrichten diese Woche. ${baseUrl}`;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const nav = navigator as any;
+		if (nav.share) {
+			nav.share({ text: txt }).then(() => track('story_shared', { via: 'week_recap' })).catch(() => {});
+		} else {
+			navigator.clipboard?.writeText(txt).then(() => {
+				weekShareCopied = true;
+				setTimeout(() => (weekShareCopied = false), 1800);
+				track('story_shared', { via: 'week_recap' });
+			}).catch(() => {});
+		}
+	}
 	</script>
 
 <svelte:head>
@@ -307,22 +360,47 @@
 			<p class="serif text-base sm:text-lg leading-relaxed" style="color: var(--color-ink);">
 				„{shareLine}"
 			</p>
-			<button type="button" onclick={copyShareLine}
-				class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.97]"
-				style="background: {shareCopied ? 'var(--color-sage)' : 'var(--color-ink)'}; color: var(--color-paper);">
-				{#if shareCopied}
-					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-					Kopiert!
-				{:else}
-					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-					Satz kopieren
-				{/if}
-			</button>
+			<div class="mt-4 flex flex-wrap gap-2">
+				<button type="button" onclick={nativeShare}
+					class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.97]"
+					style="background: var(--color-amber); color: var(--color-paper);">
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+					Weitergeben
+				</button>
+				<button type="button" onclick={copyShareLine}
+					class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.97]"
+					style="background: {shareCopied ? 'var(--color-sage)' : 'var(--color-ink)'}; color: var(--color-paper);">
+					{#if shareCopied}
+						<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+						Kopiert!
+					{:else}
+						<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+						Satz + Link kopieren
+					{/if}
+				</button>
+			</div>
 		</div>
 
 		<div class="mt-5 flex items-center justify-center">
 			<ShareBar url={storyUrl} title={story.title} text={story.dek} size={20} />
 		</div>
+
+		<!-- Wochenbilanz: ruhiger Identitäts-Hebel, erst ab 3 gelesenen Stories -->
+		{#if week.count >= 3}
+			<div class="mt-5 p-5 rounded-[10px] text-center" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
+				<p class="serif text-base sm:text-lg leading-relaxed" style="color: var(--color-ink);">
+					Diese Woche schon <strong style="color: {tone.fg};">{week.count}</strong> gute Nachrichten gelesen{week.activeDays >= 3 ? `, an ${week.activeDays} Tagen` : ''}.
+				</p>
+				<p class="mt-1 text-sm" style="color: var(--color-muted); font-family: var(--font-serif); font-style: italic;">
+					Du startest den Tag mit Fortschritt statt Doomscrolling.
+				</p>
+				<button type="button" onclick={shareWeek}
+					class="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.97]"
+					style="background: {weekShareCopied ? 'var(--color-sage)' : 'var(--color-ink)'}; color: var(--color-paper);">
+					{weekShareCopied ? 'Kopiert!' : 'Das teile ich'}
+				</button>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Inline newsletter capture at peak intent (just finished reading) -->

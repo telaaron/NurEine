@@ -1,8 +1,27 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { CATEGORIES } from '$lib/categories';
+	import { REFERRAL_TIERS, nextTier, currentTier, tierProgress } from '$lib/referralTiers';
+	import { onMount } from 'svelte';
 
 	let { data } = $props();
+
+	// Eigenen Referral-Code lokal merken, damit der Teilen-Reflex auf jeder
+	// Story-Seite den Link automatisch dem Leser zuschreibt (?ref=).
+	onMount(() => {
+		if (data.ok && data.referralCode) {
+			try {
+				localStorage.setItem('nureine_my_ref', data.referralCode);
+			} catch {
+				/* ignore */
+			}
+		}
+	});
+
+	const refCount = $derived(data.ok ? (data.referralCount ?? 0) : 0);
+	const refNext = $derived(nextTier(refCount));
+	const refCurrent = $derived(currentTier(refCount));
+	const refProgress = $derived(tierProgress(refCount));
 
 	let selected = $state<Set<string>>(new Set(data.ok ? data.categories : []));
 	let hasKids = $state<boolean | null>(data.ok ? (data.hasKids ?? null) : null);
@@ -150,9 +169,33 @@
 					Schenk jemandem den täglichen Lichtblick.
 				</h2>
 				<p class="mt-2 text-sm leading-relaxed max-w-[46ch]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
-					Teile deinen Link. {#if data.referralCount > 0}Schon <strong>{data.referralCount}</strong> {data.referralCount === 1 ? 'Person hat' : 'Menschen haben'} durch dich angefangen. Danke.{:else}Jede:r, der über dich startet, zählt.{/if}
+					Teile deinen Link. {#if refCount > 0}Schon <strong>{refCount}</strong> {refCount === 1 ? 'Person hat' : 'Menschen haben'} durch dich angefangen. Danke.{:else}Jede:r, der über dich startet, zählt.{/if}
 				</p>
-				<div class="mt-4 flex flex-col sm:flex-row gap-3 max-w-[460px]">
+
+				<!-- Stufen-Leiter: Belohnung ist Bedeutung, kein Gimmick (Carnegie). -->
+				<div class="mt-6 max-w-[460px]">
+					{#if refNext}
+						<div class="flex items-baseline justify-between text-xs mb-2" style="color: var(--color-muted); font-family: var(--font-mono);">
+							<span>{refCount} / {refNext.count}</span>
+							<span>nächste Stufe: {refNext.title}</span>
+						</div>
+						<div class="h-2 rounded-full overflow-hidden" style="background: var(--color-rule);">
+							<div class="h-full rounded-full" style="width: {Math.round(refProgress * 100)}%; background: var(--color-amber); transition: width 0.4s;"></div>
+						</div>
+						<p class="mt-2 text-xs leading-relaxed" style="color: var(--color-faint); font-family: var(--font-serif);">
+							Noch {refNext.count - refCount}, dann: {refNext.reward}
+						</p>
+					{:else}
+						<p class="text-xs leading-relaxed" style="color: var(--color-sage); font-family: var(--font-serif);">
+							Alle Stufen erreicht. Du trägst NurEine mit — danke, dass du das hier möglich machst.
+						</p>
+					{/if}
+					{#if refCurrent}
+						<p class="mt-2 text-xs" style="color: var(--color-sage); font-family: var(--font-mono);">✓ Freigeschaltet: {refCurrent.title}</p>
+					{/if}
+				</div>
+
+				<div class="mt-5 flex flex-col sm:flex-row gap-3 max-w-[460px]">
 					<input
 						type="text"
 						readonly

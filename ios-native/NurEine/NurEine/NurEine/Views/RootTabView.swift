@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreSpotlight
 
 /// The app's root. A native TabView (adopts Liquid Glass on iOS 26) over four
 /// sections. Onboarding is presented as a full-screen cover on first launch.
@@ -33,12 +34,23 @@ struct RootTabView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .openStory)) { note in
             guard let id = note.object as? String else { return }
-            Task {
-                await store.ensure()
-                if let s = store.stories.first(where: { $0.id == id }) {
-                    selection = 0
-                    deepLink = s
-                }
+            openStory(id: id)
+        }
+        // Spotlight result tap → open that story.
+        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+            if let full = activity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
+               full.hasPrefix("story:") {
+                openStory(id: String(full.dropFirst("story:".count)))
+            }
+        }
+    }
+
+    private func openStory(id: String) {
+        Task {
+            await store.ensure()
+            if let s = store.stories.first(where: { $0.id == id }) {
+                selection = 0
+                deepLink = s
             }
         }
     }

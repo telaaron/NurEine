@@ -50,6 +50,7 @@ final class StoryStore {
             stories = try await list
             featured = await feat ?? nil
             lastFetch = Date()
+            Spotlight.index(stories)   // make stories findable in system search
         } catch {
             if stories.isEmpty { errored = true }
         }

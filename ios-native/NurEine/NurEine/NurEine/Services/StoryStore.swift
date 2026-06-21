@@ -20,15 +20,17 @@ final class StoryStore {
         featured ?? stories.sorted { $0.publishedAt > $1.publishedAt }.first
     }
 
-    /// Newest stories after the hero, for the "Diese Woche" list (by published date).
-    var week: [Story] {
-        guard let hero else { return [] }
+    /// Newest stories after the hero (excludes the hero), for the "Diese Woche"
+    /// list and the iPad editorial columns. iPhone shows 4; iPad uses more.
+    var afterHero: [Story] {
+        guard let hero else { return stories.sorted { $0.publishedAt > $1.publishedAt } }
         return stories
             .filter { $0.id != hero.id }
             .sorted { $0.publishedAt > $1.publishedAt }
-            .prefix(4)
-            .map { $0 }
     }
+
+    /// The four-up "Diese Woche" on iPhone.
+    var week: [Story] { Array(afterHero.prefix(4)) }
 
     /// Geolocated stories for the map.
     var located: [Story] { stories.filter { $0.coordinate != nil } }

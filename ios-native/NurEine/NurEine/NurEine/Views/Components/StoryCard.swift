@@ -124,3 +124,62 @@ struct ConnectionLost: View {
         .padding(.vertical, 48)
     }
 }
+
+// MARK: - iPad editorial components
+
+/// Left-column side story (iPad): tag, title, serif dek, image below, divider —
+/// the "newspaper secondary story" look.
+struct SideStory: View {
+    let story: Story
+    private var tone: Tone { .from(story.tone) }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(Category.label(for: story.category).uppercased())
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
+                .tracking(1.4).foregroundStyle(tone.color)
+            Text(story.title)
+                .font(.display(19))
+                .foregroundStyle(Theme.ink)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+            AsyncStoryImage(story: story, width: 400)
+                .frame(height: 130)
+                .clipShape(.rect(cornerRadius: 12))
+            Text(story.dek)
+                .font(.custom("Newsreader", size: 14))
+                .foregroundStyle(Theme.inkSoft)
+                .lineLimit(3)
+                .lineSpacing(3)
+            HStack(spacing: 5) {
+                Circle().fill(tone.color).frame(width: 5, height: 5)
+                Text("\(story.readingMinutes) Min · \(story.country)")
+                    .font(.system(size: 10, design: .monospaced)).foregroundStyle(Theme.muted)
+            }
+            Rectangle().fill(Theme.rule).frame(height: 1).padding(.top, 4)
+        }
+    }
+}
+
+/// Right-rail compact headline (iPad): small thumb + title.
+struct RailHeadline: View {
+    let story: Story
+    private var tone: Tone { .from(story.tone) }
+    var body: some View {
+        HStack(alignment: .top, spacing: 11) {
+            AsyncStoryImage(story: story, width: 160)
+                .frame(width: 64, height: 64)
+                .clipShape(.rect(cornerRadius: 9))
+            VStack(alignment: .leading, spacing: 4) {
+                Text(Category.label(for: story.category).uppercased())
+                    .font(.system(size: 8, weight: .medium, design: .monospaced))
+                    .tracking(1.2).foregroundStyle(tone.color)
+                Text(story.title)
+                    .font(.display(15, weight: .medium))
+                    .foregroundStyle(Theme.ink)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+}

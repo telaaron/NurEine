@@ -53,7 +53,28 @@
 			Hol dir jeden Morgen eine — kuratiert, belegt, werbefrei. Kein Doomscrolling.
 		</p>
 		{#if done}
-			<p class="mt-5 text-sm" style="color: var(--color-amber-soft); font-family: var(--font-serif);">{msg}</p>
+			<div
+				class="mt-6 rounded-[14px] p-5 sm:p-6 flex items-start gap-4"
+				style="background: rgba(251,248,241,0.07); border: 1px solid rgba(200,115,64,0.45);"
+			>
+				<div
+					class="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center"
+					style="background: var(--color-amber);"
+					aria-hidden="true"
+				>
+					<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="var(--color-paper)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M20 6L9 17l-5-5" />
+					</svg>
+				</div>
+				<div>
+					<p class="text-base sm:text-lg font-semibold" style="color: var(--color-paper);">
+						Fast geschafft — jetzt nur noch bestätigen.
+					</p>
+					<p class="mt-1.5 text-sm leading-relaxed" style="color: rgba(251,248,241,0.78); font-family: var(--font-serif);">
+						Wir haben dir gerade eine E-Mail geschickt. <strong style="color: var(--color-amber-soft);">Öffne sie und klick auf den Bestätigungs-Link</strong> — danach bist du dabei. (Schau auch im Spam-Ordner nach, falls nichts ankommt.)
+					</p>
+				</div>
+			</div>
 		{:else}
 			<form class="mt-5 flex flex-col sm:flex-row gap-3 max-w-[440px]" onsubmit={submit}>
 				<label class="flex-1">

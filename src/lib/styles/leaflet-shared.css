@@ -1,6 +1,9 @@
-/* Shared Leaflet styles for karte and bei-dir pages */
+/* Shared Leaflet styles for karte and bei-dir pages.
+   NOTE: This is a plain .css file imported via JS — it is NOT Svelte-scoped,
+   so selectors must be bare. Do NOT wrap them in :global() (invalid in plain
+   CSS, the whole rule is silently dropped by the browser). */
 
-:global(.story-tooltip) {
+.story-tooltip {
 	background: var(--color-ink) !important;
 	color: var(--color-paper) !important;
 	border: none !important;
@@ -13,22 +16,44 @@
 	max-width: 260px !important;
 }
 
-:global(.story-tooltip::before) {
+.story-tooltip::before {
 	border-top-color: var(--color-ink) !important;
 }
 
-:global(.leaflet-container) {
+.leaflet-container {
 	background: var(--color-canvas) !important;
 	font-family: var(--font-sans), 'Inter', 'Helvetica Neue', Arial, sans-serif !important;
+	/* Keep Leaflet's internal stacking below the sticky site header (z-30).
+	   isolation creates a local stacking context so panes/controls (z up to 1000)
+	   can never paint over the header when the map scrolls underneath it. */
+	isolation: isolate;
+	z-index: 0;
 }
 
-:global(.leaflet-control-zoom a) {
+/* Clamp Leaflet panes + controls so they stay inside the map's stacking context */
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+	z-index: 1 !important;
+}
+.leaflet-control {
+	z-index: 2 !important;
+}
+
+/* The map container can scroll partly under the sticky header. Keep the zoom
+   control inset so both +/− buttons stay fully visible within the map frame. */
+.leaflet-top .leaflet-control-zoom {
+	margin-top: 12px;
+	margin-left: 12px;
+}
+
+.leaflet-control-zoom a {
 	color: var(--color-ink) !important;
 	background: var(--color-paper) !important;
 	border-color: var(--color-rule) !important;
 }
 
-:global(.leaflet-control-zoom a:hover) {
+.leaflet-control-zoom a:hover {
 	background: var(--color-canvas-soft) !important;
 }
 
@@ -43,6 +68,6 @@
 	}
 }
 
-:global(.animate-rise-up) {
+.animate-rise-up {
 	animation: rise-up 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }

@@ -40,7 +40,9 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 		setHeaders({
 			'Content-Type': 'image/webp',
 			'Cache-Control': 'public, max-age=31536000, immutable',
-			'CDN-Cache-Control': 'public, max-age=31536000'
+			// Edge serves the cached copy instantly and revalidates in the
+			// background, so a cold/expired entry never blocks the viewer.
+			'CDN-Cache-Control': 'public, max-age=31536000, stale-while-revalidate=86400'
 		});
 		return new Response(new Uint8Array(out), { headers: { 'Content-Type': 'image/webp' } });
 	} catch {

@@ -20,6 +20,24 @@
 	].filter((a) => typeof a.value === 'number'));
 	let methodOpen = $state(false);
 
+	// Audio-Player: native <audio> startet bei preload="none" erst nach dem Klick
+	// mit dem Laden — ohne Feedback wirkt das hängend. Wir spiegeln den Status
+	// (Laden / Spielen) sichtbar, damit der Klick sofort eine Reaktion zeigt.
+	let audioEl = $state<HTMLAudioElement | null>(null);
+	let audioState = $state<'idle' | 'loading' | 'playing' | 'paused'>('idle');
+
+	function toggleAudio() {
+		const el = audioEl;
+		if (!el) return;
+		if (el.paused) {
+			// optimistisches Feedback: bis canplay/playing zeigen wir "lädt"
+			audioState = el.readyState < 3 ? 'loading' : 'playing';
+			el.play().catch(() => (audioState = 'paused'));
+		} else {
+			el.pause();
+		}
+	}
+
 	// Reporter-Beat-Transparenz: welcher Beat hat sie gefunden, welcher Quellentyp.
 	const BEAT_LABELS: Record<string, string> = {
 		'klima-energie': 'Klima & Energie',
@@ -158,16 +176,16 @@
         opacity: 0.8;"
 		></div>
 
-		<div class="relative mx-auto max-w-[860px] px-4 sm:px-6 lg:px-10 pt-10 sm:pt-12 lg:pt-20 pb-8 sm:pb-10">
+		<div class="relative mx-auto max-w-[860px] px-4 sm:px-6 lg:px-10 pt-5 sm:pt-10 lg:pt-20 pb-8 sm:pb-10">
 			<a
 				href={base + '/'}
-				class="inline-flex items-center gap-2 text-xs uppercase tracking-[0.18em] hover:opacity-70 rise"
+				class="inline-flex items-center gap-1.5 -ml-1 px-2 py-1 rounded-full text-xs uppercase tracking-[0.18em] hover:opacity-70 transition-opacity rise"
 				style="color: var(--color-muted);"
 			>
-				<span aria-hidden="true">←</span> Zurück zur Übersicht
+				<span aria-hidden="true" class="text-sm leading-none">←</span> Zurück
 			</a>
 
-			<div class="mt-10 flex items-center gap-3 rise rise-d1">
+			<div class="mt-5 sm:mt-8 lg:mt-10 flex items-center gap-3 rise rise-d1">
 				<span
 					class="badge px-3 py-1 rounded-full"
 					style="background: {tone.bg}; color: {tone.fg}; border: 1px solid {tone.ring};"
@@ -180,14 +198,14 @@
 			</div>
 
 			<h1
-				class="display mt-6 leading-[1.02] text-[1.8rem] sm:text-[2.4rem] lg:text-[4rem] rise rise-d2"
+				class="display mt-4 sm:mt-6 leading-[1.05] sm:leading-[1.02] text-[1.7rem] sm:text-[2.4rem] lg:text-[4rem] rise rise-d2"
 				style="color: var(--color-ink); font-weight: 600;"
 			>
 				{story.title}
 			</h1>
 
 			<p
-				class="story-dek mt-6 text-base sm:text-xl lg:text-2xl leading-snug max-w-[55ch] rise rise-d3"
+				class="story-dek mt-4 sm:mt-6 text-base sm:text-xl lg:text-2xl leading-snug max-w-[55ch] rise rise-d3"
 				style="color: var(--color-ink-soft); font-family: var(--font-serif); font-style: italic;"
 			>
 				{story.dek}
@@ -238,23 +256,43 @@
 
 			{#if story.audioUrl}
 				<!-- Vorlesen: dezenter Player, nur für die wenigen vertonten Top-Stories. -->
-				<div class="mt-6 rise rise-d4 flex flex-col gap-2 p-4 rounded-[8px]" style="background: var(--color-canvas-soft); border: 1px solid var(--color-rule);">
-					<div class="flex items-center gap-2 text-xs" style="color: var(--color-muted);">
-						<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-							<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-							<path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-							<path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-						</svg>
-						<span style="font-family: var(--font-mono); letter-spacing: 0.04em;">Lieber hören? Diese Geschichte vorgelesen.</span>
+				<div class="mt-6 rise rise-d4 flex flex-col gap-3 p-4 rounded-[8px]" style="background: var(--color-canvas-soft); border: 1px solid var(--color-rule);">
+					<div class="flex items-center gap-3">
+						<button
+							type="button"
+							onclick={toggleAudio}
+							aria-label={audioState === 'playing' ? 'Pause' : 'Geschichte anhören'}
+							class="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-95"
+							style="background: var(--color-ink); color: var(--color-paper);"
+						>
+							{#if audioState === 'loading'}
+								<span class="inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true"></span>
+							{:else if audioState === 'playing'}
+								<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+							{:else}
+								<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="margin-left:2px;"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+							{/if}
+						</button>
+						<div class="flex flex-col">
+							<span class="text-xs" style="font-family: var(--font-mono); letter-spacing: 0.04em; color: var(--color-muted);">
+								{#if audioState === 'loading'}Lädt …{:else if audioState === 'playing'}Wird vorgelesen{:else}Lieber hören? Diese Geschichte vorgelesen.{/if}
+							</span>
+						</div>
 					</div>
 					<!-- svelte-ignore a11y_media_has_caption -->
 					<audio
+						bind:this={audioEl}
 						controls
 						preload="none"
 						src={story.audioUrl}
 						class="w-full"
 						style="height: 38px;"
-						onplay={() => track('audio_play', { slug: story.slug })}
+						onplay={() => { audioState = 'playing'; track('audio_play', { slug: story.slug }); }}
+						onwaiting={() => (audioState = 'loading')}
+						onplaying={() => (audioState = 'playing')}
+						oncanplay={() => { if (audioState === 'loading' && audioEl && !audioEl.paused) audioState = 'playing'; }}
+						onpause={() => (audioState = 'paused')}
+						onended={() => (audioState = 'idle')}
 					></audio>
 				</div>
 			{/if}

@@ -308,7 +308,15 @@ export function buildB2CHtml(
           <h2 class="nur-eine-text-primary" style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">${story.title}</h2>
           ${dek ? `<p class="nur-eine-text-dek" style="margin:0 0 22px;font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#4a3f35;line-height:1.5;letter-spacing:-0.005em;">${dek}</p>` : ''}
           <p class="nur-eine-text-body" style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">${summary}</p>
-          ${story.audio_url ? `<p style="margin:20px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;color:#6b6359;">&#x1F50A; <a href="${url}" target="_blank" class="nur-eine-link" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">Lieber hören? Geschichte anhören &rarr;</a></p>` : ''}
+          ${story.audio_url ? `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:22px 0 0;"><tr><td style="background-color:#f3ece1;background-image:url('${PNG_CARD}');border:1px solid rgba(200,115,64,0.30);border-radius:9px;padding:14px 18px;">
+            <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+              <td style="vertical-align:middle;padding-right:12px;font-size:20px;line-height:1;">&#x1F3A7;</td>
+              <td style="vertical-align:middle;">
+                <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:600;color:#1a1815;line-height:1.4;" class="nur-eine-text-primary">Diese Geschichte gibt&rsquo;s auch zum Anh&ouml;ren.</p>
+                <p style="margin:2px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.4;"><a href="${url}" target="_blank" class="nur-eine-link" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.35);">Jetzt vertont anh&ouml;ren &rarr;</a></p>
+              </td>
+            </tr></table>
+          </td></tr></table>` : ''}
         </td></tr>
 
         <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;" /></td></tr>
@@ -440,6 +448,15 @@ ${subtitleHtml}
 
 <tr><td style="padding:0 40px 24px;">
 ${bodyHtml}
+${story.audio_url ? `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:22px 0 0;"><tr><td style="background-color:#f3ece1;background-image:url('${PNG_CARD}');border:1px solid rgba(200,115,64,0.30);border-radius:9px;padding:14px 18px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="vertical-align:middle;padding-right:12px;font-size:20px;line-height:1;">&#x1F3A7;</td>
+<td style="vertical-align:middle;">
+<p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:600;color:#1a1815;line-height:1.4;" class="nur-eine-text-primary">Diese Geschichte gibt&rsquo;s auch zum Anh&ouml;ren.</p>
+<p style="margin:2px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.4;"><a href="${url}" target="_blank" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.35);">Jetzt vertont anh&ouml;ren &rarr;</a></p>
+</td>
+</tr></table>
+</td></tr></table>` : ''}
 </td></tr>
 
 ${brandingHtml}

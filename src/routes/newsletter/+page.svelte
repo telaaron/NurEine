@@ -1,9 +1,21 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { page } from '$app/state';
 
 	let emailInput = $state('');
 	let status = $state('');
 	let loading = $state(false);
+
+	// After the double-opt-in link, /api/confirm redirects here with a query flag.
+	// Surface an unmissable banner so the user knows it actually worked.
+	const confirmed = $derived(page.url.searchParams.get('confirmed') === 'true');
+	const errorCode = $derived(page.url.searchParams.get('error'));
+	const errorMessages: Record<string, string> = {
+		missing_token: 'Der Bestätigungslink war unvollständig. Bitte melde dich erneut an.',
+		invalid_token: 'Dieser Bestätigungslink ist ungültig oder wurde bereits verwendet.',
+		server_error: 'Da ist etwas schiefgelaufen. Bitte versuche es in ein paar Minuten erneut.'
+	};
+	const errorMessage = $derived(errorCode ? (errorMessages[errorCode] ?? errorMessages.server_error) : '');
 
 	async function handleSubmit(tier: string) {
 		const email = emailInput.trim();
@@ -81,6 +93,52 @@
 		return highlight ? 'rgba(250, 246, 238, 0.4)' : 'var(--color-muted)';
 	}
 </script>
+
+{#if confirmed}
+	<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-14">
+		<div
+			class="rounded-[14px] p-6 sm:p-8 flex items-start gap-4"
+			style="background: var(--color-ink); box-shadow: var(--shadow-md);"
+		>
+			<div
+				class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
+				style="background: var(--color-amber);"
+				aria-hidden="true"
+			>
+				<svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="var(--color-paper)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<path d="M20 6L9 17l-5-5" />
+				</svg>
+			</div>
+			<div>
+				<h2 class="display text-xl sm:text-2xl leading-tight" style="color: var(--color-paper); font-weight: 600;">
+					Geschafft — du bist dabei! 🎉
+				</h2>
+				<p class="mt-2 text-sm sm:text-base leading-relaxed max-w-[52ch]" style="color: rgba(251,248,241,0.78); font-family: var(--font-serif);">
+					Deine Anmeldung ist bestätigt. Ab morgen früh um 06:30 Uhr bekommst du jeden Tag eine gute Nachricht in dein Postfach. Eine Willkommens-Mail ist schon unterwegs.
+				</p>
+				<a
+					href={base + '/'}
+					class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all hover:gap-3"
+					style="background: var(--color-amber); color: var(--color-paper);"
+				>
+					Heutige Geschichte lesen
+					<svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3l5 5-5 5" /></svg>
+				</a>
+			</div>
+		</div>
+	</section>
+{:else if errorMessage}
+	<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-14">
+		<div
+			class="rounded-[14px] p-5 sm:p-6"
+			style="background: var(--color-paper); border: 1px solid color-mix(in srgb, var(--color-amber) 45%, transparent);"
+		>
+			<p class="text-sm sm:text-base leading-relaxed" style="color: var(--color-ink);">
+				{errorMessage}
+			</p>
+		</div>
+	</section>
+{/if}
 
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-10 sm:pb-12">
 	<p class="eyebrow" style="color: var(--color-amber);">

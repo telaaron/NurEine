@@ -17,16 +17,16 @@ struct TodayView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollView {
+            Group {
                 if isPad {
-                    iPadEditorial
+                    iPadEditorial   // owns its own ScrollView (inside GeometryReader)
                 } else {
-                    iPhoneStack
+                    ScrollView { iPhoneStack }
+                        .refreshable { await store.ensure(force: true) }
                 }
             }
             .background(Theme.canvas)
             .scrollContentBackground(.hidden)
-            .refreshable { await store.ensure(force: true) }
             .navigationDestination(for: Story.self) { StoryDetailView(story: $0) }
             .toolbar(.hidden, for: .navigationBar)
             .onChange(of: deepLink) { _, story in
@@ -63,26 +63,41 @@ struct TodayView: View {
     // MARK: iPad (regular) — three-column editorial "newspaper" front page.
 
     private var iPadEditorial: some View {
-        VStack(spacing: 0) {
-            masthead
-
-            if let hero = store.hero {
-                HStack(alignment: .top, spacing: 28) {
-                    sideColumn        // left: secondary stories
-                        .frame(width: 280)
-                    centerColumn(hero)  // middle: big featured
-                        .frame(maxWidth: .infinity)
-                    railColumn        // right: rail (ticker, newsletter, discover)
-                        .frame(width: 300)
+        GeometryReader { geo in
+            // Landscape / very wide → 3 columns. Portrait (narrower) → 2 columns
+            // (side + center); the rail moves below so nothing gets clipped.
+            let wide = geo.size.width >= 1000
+            ScrollView {
+                VStack(spacing: 0) {
+                    masthead
+                    if let hero = store.hero {
+                        if wide {
+                            HStack(alignment: .top, spacing: 28) {
+                                sideColumn.frame(width: 260)
+                                centerColumn(hero).frame(maxWidth: .infinity)
+                                railColumn.frame(width: 300)
+                            }
+                            .padding(.horizontal, 40)
+                            .padding(.top, 24).padding(.bottom, 40)
+                        } else {
+                            HStack(alignment: .top, spacing: 24) {
+                                sideColumn.frame(width: 240)
+                                centerColumn(hero).frame(maxWidth: .infinity)
+                            }
+                            .padding(.horizontal, 28)
+                            .padding(.top, 22)
+                            railColumn
+                                .padding(.horizontal, 28)
+                                .padding(.top, 28).padding(.bottom, 40)
+                        }
+                    } else if store.loading {
+                        HeroSkeleton().frame(maxWidth: 700).padding(40)
+                    } else if store.errored {
+                        ConnectionLost { Task { await store.ensure(force: true) } }
+                    }
                 }
-                .padding(.horizontal, 40)
-                .padding(.top, 24)
-                .padding(.bottom, 40)
-            } else if store.loading {
-                HeroSkeleton().frame(maxWidth: 700).padding(40)
-            } else if store.errored {
-                ConnectionLost { Task { await store.ensure(force: true) } }
             }
+            .refreshable { await store.ensure(force: true) }
         }
     }
 

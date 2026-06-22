@@ -34,17 +34,20 @@ struct Eyebrow: View {
 struct ImpactChip: View {
     let score: Int
     var body: some View {
-        VStack(spacing: 2) {
+        // Solid dark chip (not glass) so the score stays legible over any image,
+        // bright or dark. Amber number for the brand pop.
+        VStack(spacing: 1) {
             Text("\(score)")
-                .font(.system(size: 22, weight: .semibold))
-                .foregroundStyle(Theme.ink)
+                .font(.display(24))
+                .foregroundStyle(Theme.amber)
             Text("WIRKUNG")
-                .font(.system(size: 7, weight: .medium, design: .monospaced))
+                .font(.system(size: 7, weight: .semibold, design: .monospaced))
                 .tracking(2)
-                .foregroundStyle(Theme.faint)
+                .foregroundStyle(.white.opacity(0.6))
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .glassEffect(.regular, in: .rect(cornerRadius: 12))
+        .padding(.horizontal, 13)
+        .padding(.vertical, 9)
+        .background(.black.opacity(0.78), in: .rect(cornerRadius: 13))
+        .overlay(RoundedRectangle(cornerRadius: 13).stroke(.white.opacity(0.12), lineWidth: 1))
     }
 }

@@ -4,15 +4,24 @@ import SwiftUI
 /// dek, meta — the editorial card from the approved design.
 struct HeroCard: View {
     let story: Story
+    var large = false   // iPad center column: taller image + lead paragraph to fill the space
     private var tone: Tone { .from(story.tone) }
+
+    private var lead: String? {
+        guard large else { return nil }
+        return story.body
+            .components(separatedBy: "\n\n")
+            .first { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Image band — fixed ratio, tag top-left, impact chip overlapping the
-            // lower-right seam (like the website hero). Text never sits on the image.
+            // Image band — tag top-left, impact chip overlapping the lower-right
+            // seam (like the website hero). Text never sits on the image.
             ZStack(alignment: .topLeading) {
-                AsyncStoryImage(story: story, width: 900)
-                    .frame(height: 200)
+                AsyncStoryImage(story: story, width: large ? 1200 : 900)
+                    .frame(height: large ? 380 : 200)
                     .frame(maxWidth: .infinity)
                     .clipped()
                 TagChip(text: Category.label(for: story.category), color: tone.color)
@@ -27,26 +36,38 @@ struct HeroCard: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text(story.title)
-                    .font(.display(23))
+                    .font(.display(large ? 30 : 23))
                     .foregroundStyle(Theme.ink)
                     .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(story.dek)
-                    .font(.custom("Newsreader", size: 15))
+                    .font(.custom("Newsreader", size: large ? 18 : 15))
                     .foregroundStyle(Theme.inkSoft)
                     .lineSpacing(4)
                     .fixedSize(horizontal: false, vertical: true)
+                if let lead {
+                    Text(lead)
+                        .font(.custom("Newsreader", size: 16))
+                        .foregroundStyle(Theme.inkSoft)
+                        .lineSpacing(6)
+                        .lineLimit(6)
+                        .padding(.top, 4)
+                }
                 HStack(spacing: 6) {
                     Circle().fill(tone.color).frame(width: 6, height: 6)
                     Text("\(story.readingMinutes) Min · \(story.country)")
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundStyle(Theme.muted)
+                    if large {
+                        Spacer()
+                        Text("Weiterlesen →").font(.system(size: 12, weight: .medium)).foregroundStyle(tone.color)
+                    }
                 }
                 .padding(.top, 2)
             }
-            .padding(.horizontal, 18)
+            .padding(.horizontal, large ? 24 : 18)
             .padding(.top, 26)
-            .padding(.bottom, 18)
+            .padding(.bottom, large ? 24 : 18)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(Theme.paper)

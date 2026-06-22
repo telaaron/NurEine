@@ -23,11 +23,13 @@ struct StoryDetailView: View {
                     .clipped()
 
                 // Paper content block pulled up over the image's lower edge.
+                // Text is held to a comfortable reading column, centered — never
+                // the full iPad width (which is unreadable at ~120 chars/line).
                 VStack(alignment: .leading, spacing: 0) {
                     TagChip(text: "\(Category.label(for: story.category)) · \(story.country)", color: tone.color)
-                        .padding(.top, 22)
+                        .padding(.top, 26)
                     Text(story.title)
-                        .font(.display(24))
+                        .font(.display(26))
                         .foregroundStyle(Theme.ink)
                         .padding(.top, 10)
                     Text("\(story.readingMinutes) Min · Quelle: \(story.source)")
@@ -36,20 +38,20 @@ struct StoryDetailView: View {
                         .padding(.top, 8)
 
                     Text(story.dek)
-                        .font(.custom("Newsreader", size: 16)).italic()
+                        .font(.custom("Newsreader", size: 17)).italic()
                         .foregroundStyle(Theme.inkSoft)
                         .lineSpacing(4)
-                        .padding(.top, 14)
+                        .padding(.top, 16)
 
                     ForEach(paragraphs, id: \.self) { p in
                         Text(p)
-                            .font(.custom("Newsreader", size: 15))
+                            .font(.custom("Newsreader", size: 16))
                             .foregroundStyle(Theme.inkSoft)
-                            .lineSpacing(5)
-                            .padding(.top, 14)
+                            .lineSpacing(6)
+                            .padding(.top, 16)
                     }
 
-                    if !story.impactAxes.isEmpty { impactCard.padding(.top, 20) }
+                    if !story.impactAxes.isEmpty { impactCard.padding(.top, 22) }
                     if let trust = trustLine { trust.padding(.top, 16) }
 
                     ShareLink(item: shareURL) {
@@ -63,11 +65,12 @@ struct StoryDetailView: View {
                         .padding(13)
                         .background(Theme.ink, in: .capsule)
                     }
-                    .padding(.top, 22)
+                    .padding(.top, 26)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 24)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 22)
+                .padding(.bottom, 28)
+                .contentWidth(680)
+                .frame(maxWidth: .infinity)
                 .background(Theme.canvas)
                 .clipShape(.rect(topLeadingRadius: 22, topTrailingRadius: 22))
                 .offset(y: -22)
@@ -103,6 +106,7 @@ struct StoryDetailView: View {
             }
         }
         .toolbar(.hidden, for: .navigationBar)
+        .toolbar(.hidden, for: .tabBar)   // immersive detail; no floating tab bar over the cover
         .onDisappear { player?.pause() }
     }
 

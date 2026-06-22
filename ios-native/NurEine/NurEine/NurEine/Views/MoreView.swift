@@ -36,6 +36,7 @@ struct MoreView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .padding(20)
+                .contentWidth(640)   // centered column on iPad, full width on iPhone
             }
             .background(Theme.canvas)
             .scrollContentBackground(.hidden)

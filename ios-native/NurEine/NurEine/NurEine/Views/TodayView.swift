@@ -86,25 +86,28 @@ struct TodayView: View {
         }
     }
 
-    // Newspaper masthead: centered title + date, hairline rules.
+    // Newspaper masthead: title truly centered over the full width (ZStack), with
+    // eyebrow flush-left and the count flush-right as overlays — so the title
+    // never drifts off-center the way two unequal HStack sides push it.
     private var masthead: some View {
-        VStack(spacing: 8) {
-            Rectangle().fill(Theme.rule).frame(height: 1).padding(.horizontal, 40)
-            HStack {
-                Eyebrow(text: "Ehrlicher Fortschritt")
-                Spacer()
+        VStack(spacing: 10) {
+            Rectangle().fill(Theme.rule).frame(height: 1)
+            ZStack {
                 VStack(spacing: 3) {
-                    Text("NurEine").font(.display(30)).foregroundStyle(Theme.ink)
+                    Text("NurEine").font(.display(32)).foregroundStyle(Theme.ink)
                     Text(dateText).font(.system(size: 12, design: .monospaced)).foregroundStyle(Theme.faint)
                 }
-                Spacer()
-                Text("\(store.stories.count) Geschichten")
-                    .font(.system(size: 11, design: .monospaced)).foregroundStyle(Theme.faint)
+                HStack {
+                    Eyebrow(text: "Ehrlicher Fortschritt")
+                    Spacer()
+                    Text("\(store.stories.count) Geschichten")
+                        .font(.system(size: 11, design: .monospaced)).foregroundStyle(Theme.faint)
+                }
             }
-            .padding(.horizontal, 40)
             .padding(.vertical, 6)
-            Rectangle().fill(Theme.rule).frame(height: 1).padding(.horizontal, 40)
+            Rectangle().fill(Theme.rule).frame(height: 1)
         }
+        .padding(.horizontal, 40)
         .padding(.top, 12)
     }
 
@@ -121,7 +124,7 @@ struct TodayView: View {
     }
 
     private func centerColumn(_ hero: Story) -> some View {
-        NavigationLink(value: hero) { HeroCard(story: hero) }
+        NavigationLink(value: hero) { HeroCard(story: hero, large: true) }
             .buttonStyle(.plain)
     }
 

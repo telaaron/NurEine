@@ -9,12 +9,20 @@ struct ArchiveView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                LazyVStack(spacing: 11) {
-                    ForEach(shown) { s in
-                        NavigationLink(value: s) { StoryRow(story: s, thumbWidth: 200) }
-                            .buttonStyle(.plain)
+            GeometryReader { geo in
+                let cols = Grid.columns(for: geo.size.width)
+                ScrollView {
+                    LazyVGrid(
+                        columns: Array(repeating: GridItem(.flexible(), spacing: 14), count: cols),
+                        spacing: 14
+                    ) {
+                        ForEach(shown) { s in
+                            NavigationLink(value: s) { StoryRow(story: s, thumbWidth: 200) }
+                                .buttonStyle(.plain)
+                        }
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 24)
                     if shown.isEmpty && !store.loading {
                         Text("Keine Geschichte in diesem Thema.")
                             .font(.custom("Newsreader", size: 15))
@@ -22,14 +30,12 @@ struct ArchiveView: View {
                             .padding(.vertical, 48)
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 24)
+                .background(Theme.canvas)
+                .scrollContentBackground(.hidden)
+                .refreshable { await store.ensure(force: true) }
+                .safeAreaInset(edge: .top) { filterBar }
             }
-            .background(Theme.canvas)
-            .scrollContentBackground(.hidden)
-            .refreshable { await store.ensure(force: true) }
             .navigationDestination(for: Story.self) { StoryDetailView(story: $0) }
-            .safeAreaInset(edge: .top) { filterBar }
             .toolbar(.hidden, for: .navigationBar)
         }
     }

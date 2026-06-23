@@ -44,7 +44,11 @@ export async function GET() {
 		{ loc: `${BASE_URL}/manifest`, priority: '0.5', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/newsletter`, priority: '0.8', changefreq: 'weekly' },
 		{ loc: `${BASE_URL}/preise`, priority: '0.7', changefreq: 'weekly' },
-		{ loc: `${BASE_URL}/lokal`, priority: '0.6', changefreq: 'daily' }
+		{ loc: `${BASE_URL}/lokal`, priority: '0.6', changefreq: 'daily' },
+		{ loc: `${BASE_URL}/gute-nachrichten-app`, priority: '0.9', changefreq: 'weekly' },
+		...['klima', 'gesundheit', 'wissenschaft', 'gemeinschaft', 'tiere', 'kultur', 'innovation'].map(
+			(c) => ({ loc: `${BASE_URL}/gute-nachrichten/${c}`, priority: '0.8', changefreq: 'daily' })
+		)
 	];
 
 	const urls = [

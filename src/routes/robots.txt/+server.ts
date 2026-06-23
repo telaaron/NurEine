@@ -49,6 +49,9 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
+# Kurzprofil für KI-Assistenten:
+# ${BASE_URL}/llms.txt
+
 Sitemap: ${BASE_URL}/sitemap.xml
 Sitemap: ${BASE_URL}/news-sitemap.xml
 `;

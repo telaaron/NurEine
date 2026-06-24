@@ -19,7 +19,7 @@
     <linearGradient id="hill2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e88f3f"/><stop offset="1" stop-color="#d97a30"/></linearGradient>
     <linearGradient id="hill3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cf6b2a"/><stop offset="1" stop-color="#b85620"/></linearGradient>
   </defs>
-  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="#15110a"/>
 
   <!-- SUN: rays (layer 1, behind disc) -->
   <g transform="translate(512,440)" filter="url(#soft)">

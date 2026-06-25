@@ -135,9 +135,21 @@ Der Loop ist **selbsttragend** (live ohne manuelles Merge) UND **selbstheilend**
    - Rot → **NICHT pushen.** Änderung lokal verwerfen (`git restore .`),
      ins Log schreiben "Top-Änderung scheiterte am Gate: <fehler>", Hypothese
      gar nicht erst anlegen. Lieber kein Push als ein kaputtes Deployment.
-3. Hypothese in `state.json` schreiben mit `status: "applied"` (sie ist ja live)
-   + `commit_sha` (für späteren Revert) + `predicts` (Ziel-Signal §4).
-4. `state.json` + `log/DATE.md` im selben Commit pushen.
+3. **Einfacher Commit-Flow (kein --amend, kein SHA-Jonglieren):**
+   a. Code-Änderung + `log/DATE.md` committen (Message wie oben). **NICHT** schon
+      die SHA in state.json — die kennst du noch nicht.
+   b. SHA auslesen: `git rev-parse HEAD`.
+   c. state.json schreiben (Hypothese `status:"applied"` + `commit_sha` = die SHA
+      aus b + `predicts`), als **zweiten** Commit `impact(state): h-DATE-NN`.
+   d. `git push origin HEAD:main`.
+4. **PUSH-FALLBACK (wenn Push scheitert — 403/Netz/Policy):** Die Arbeit darf NIE
+   verloren gehen. Wenn `git push` fehlschlägt:
+   - **403/Policy einmalig**, nicht wiederholen (per Proxy-README).
+   - Erzeuge einen Patch: `git format-patch origin/main..HEAD --stdout > impact-DATE.patch`.
+   - Sende Patch + `log/DATE.md` an Aaron (SendUserFile) + PushNotification mit der
+     Kern-Erkenntnis. So kann Aaron mit `git am < impact-DATE.patch` 1:1 anwenden.
+   - Lösche den Patch danach aus dem Tree (gehört nicht in die History).
+   - Im Log vermerken: "Push blockiert (403) — als Patch geliefert."
 
 ### Verifizieren + Auto-Rollback (Schritt 1 des nächsten Laufs)
 Für jede Hypothese mit `status: "applied"`, deren Signal reif ist (§4):

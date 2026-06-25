@@ -46,20 +46,22 @@ Nur Zahlen. Berechne Gesamt-Impact (§2-Gewichtung).
 Finde den EINEN tiefsten Reibungspunkt über alle Kanäle. Benenne die
 **Ursache, nicht das Symptom** (§5). Formuliere die EINE strukturelle Top-Änderung.
 
-### 5 — APPLY + PERSIST (Push auf main mit Grün-Gate)
+### 5 — APPLY + PERSIST (Push auf main, mit Grün-Gate; §6 ist maßgeblich)
 - Setze die Top-Änderung um: Text/Framing direkt, Code als Diff (§6-Regeln,
   niemals Versand/Auth/Secrets/Schema/Löschen → die nur als Log-Empfehlung).
-- **GRÜN-GATE (Pflicht):** `pnpm install` dann `pnpm run check` (svelte-check).
-  - `pnpm run build` NUR wenn SUPABASE_URL + SUPABASE_SERVICE_KEY als Env gesetzt
-    sind (sonst bricht `$env/static/private` — kein echter Fehler). Sonst überspringen.
-  - check rot → `git restore .`, Hypothese NICHT anlegen, ins Log "am Gate gescheitert".
-  - check grün → commit + **push auf `main`**. Message:
-    `impact(auto): <kanal> — <ursache> [h-DATE-NN]`.
-- Schreibe nach `state.json`: neuer `history`-Eintrag (heutige Scores) +
-  neue Hypothese (`status: applied`, mit `commit_sha`, `predicts`, `root_cause`, `file`).
-  Behalte nur die letzten 30 `history`-Einträge.
-- Schreibe `nureine-impact/log/YYYY-MM-DD.md` (knapp, Template unten).
-- Committe state.json + log in denselben Push.
+- **GRÜN-GATE:** `pnpm install`, dann `pnpm run check`. Vergleiche die Fehlerzahl
+  mit dem Baseline (`git stash && pnpm run check` vorher) — deine Änderung darf
+  **0 neue** Fehler bringen. Vorbestehende `$env/static`-Fehler ohne Secrets sind OK.
+  Rot (neue Fehler) → `git restore .`, Hypothese NICHT anlegen, ins Log.
+- **Commit-Flow (einfach, §6.3):** (a) Code+Log committen → (b) `git rev-parse HEAD`
+  → (c) state.json mit dieser SHA als zweiten Commit → (d) `git push origin HEAD:main`.
+  KEIN `--amend`, kein SHA-Backfill-Gejongliere.
+- **Push scheitert (403/Policy)?** → §6.4 PUSH-FALLBACK: Patch via `git format-patch`
+  erzeugen, an Aaron senden (SendUserFile + PushNotification), Patch aus Tree löschen.
+  Arbeit nie still verlieren.
+- state.json: neuer `history`-Eintrag (heutige Scores, max 30) + Hypothese
+  (`status:applied`, `commit_sha`, `predicts`, `root_cause`, `file`).
+- `nureine-impact/log/YYYY-MM-DD.md` (knapp, Template unten).
 
 ---
 

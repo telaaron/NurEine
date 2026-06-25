@@ -63,10 +63,17 @@ Tabellen-Prefix: `nureine_`. Lesen via Service-Key (read-only genügt).
 | **Instagram/Threads** | `nureine_social_posts` WHERE `created_at::date = today` | `caption`, `hashtags`, `hook_type`, `card_url`, `og_url`, `status` |
 | **E-Mail (Highlight)** | `src/lib/server/newsletter.ts` → `sendHighlightEmailIfWorthy()`; Endpoint `/api/cron/highlight` | Betreff, Hook, Body der Highlight-Mail (nur wenn Top-Story ≥ 85) |
 | **E-Mail (Newsletter)** | `/api/cron/newsletter` + `newsletter_sends` | Versendeter Newsletter-Body, Betreff |
-| **Design (visuell)** | gerenderte Routen `/heute`, `/share/[slug]`, OG-Card `/api/og/[slug]` | Screenshot → Layout, Hierarchie, Vertrauen, Lesbarkeit |
+| **Design (über Code)** | Komponenten von `/heute`, `/share/[slug]`, OG-Card-Generator `src/lib/server/og/` | Markup + CSS → Hierarchie, Vertrauen, Lesbarkeit (KEIN Screenshot — Cloud hat keinen Browser) |
 | **Versand-Wahrheit** | `cron_runs`, `nureine_social_posts.posted_at`, `newsletter_sends.sent_at`, `nureine_delivery_log` | Was *tatsächlich* rausging (nicht nur Entwurf) |
 
-**Pull-Reihenfolge:** Stories → Social-Posts → Highlight/Newsletter-Body → 1 Screenshot von `/heute` (+ `/share/<hero-slug>` falls Hero existiert).
+**Ausführungsumgebung:** Die Routine läuft in der **Cloud** (geklontes Repo +
+angehängte Connectoren). Sie hat **keinen** Zugriff auf Aarons lokalen Mac,
+keinen Dev-Server, keinen Browser. Inhalt + Metriken kommen über den
+**Supabase-Connector** (MCP-Query auf die `nureine_*`-Tabellen). Design wird
+aus dem Code/Markup bewertet, nicht aus einem Screenshot.
+
+**Pull-Reihenfolge:** Stories → Social-Posts → Highlight/Newsletter-Body →
+Design aus den Komponenten ableiten.
 
 ---
 
@@ -107,8 +114,11 @@ Der Loop ist **selbsttragend** (live ohne manuelles Merge) UND **selbstheilend**
 1. Die EINE Top-Änderung umsetzen: **Text/Framing direkt**, **Code als Diff**.
    Text-Änderungen betreffen Generatoren (`src/lib/server/social/caption.ts`,
    `src/lib/server/newsletter.ts`), NICHT einzelne DB-Zeilen — Ursache, nicht Symptom.
-2. **GRÜN-GATE (Pflicht, vor jedem Push):** `pnpm run check` (svelte-check) UND
-   `pnpm run build` müssen fehlerfrei durchlaufen.
+2. **GRÜN-GATE (Pflicht, vor jedem Push):** `pnpm install`, dann
+   `pnpm run check` (svelte-check) muss fehlerfrei durchlaufen.
+   `pnpm run build` nur, wenn `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` als Env
+   gesetzt sind (sonst bricht `$env/static/private` beim Build — kein echter
+   Code-Fehler, daher überspringen statt fälschlich als "rot" werten).
    - Grün → committen auf `main`, pushen. Commit-Message:
      `impact(auto): <kanal> — <kurz-ursache> [h-DATE-NN]`
    - Rot → **NICHT pushen.** Änderung lokal verwerfen (`git restore .`),

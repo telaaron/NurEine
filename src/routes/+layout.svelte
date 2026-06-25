@@ -92,8 +92,9 @@
 
         <link rel="canonical" href={canonicalUrl} />
 
-        <link rel="icon" type="image/svg+xml" href="{base}/NurEine.svg" />
-        <link rel="apple-touch-icon" href="{base}/NurEine.svg" />
+        <link rel="icon" type="image/png" sizes="32x32" href="{base}/icon-32.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="{base}/icon-512.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="{base}/icon-180.png" />
 
         <meta name="theme-color" content="#f5f1ea" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

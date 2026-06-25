@@ -1,19 +1,59 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="2048px" height="2048px" viewBox="0 0 2048 2048" preserveAspectRatio="xMidYMid meet">
- <g transform="translate(1024,1024) scale(1.4) translate(-1024,-1074)">
- <g fill="#272626">
-  <path d="M995 1714 c-89.80 -7.60 -173.60 -47.40 -242 -115 -58.40 -57.60 -98.80 -124.40 -126 -208.20 -12.60 -39 -23 -99.60 -23 -135 l0 -17.80 213 0 213 0 0 239 0 239 -8.40 -0.20 c-4.80 -0.20 -16.60 -1 -26.60 -1.80z"/>
-  <path d="M606.20 1181.60 c1.40 -2.60 20.20 -37 41.80 -76.60 21.80 -39.60 58.60 -107 82 -150 23.40 -42.80 47.60 -87.40 54 -99 6.40 -11.60 17 -30.80 23.40 -43 6.60 -12 33.40 -61.20 59.60 -109 26.20 -47.80 70.80 -130.20 99.20 -183 28.40 -52.80 52.60 -97.20 53.80 -98.60 1.40 -1.40 3.80 -2.40 5.60 -2 3.20 0.60 3.40 18.80 4.40 233.60 0.80 170.60 0.40 233.40 -1.20 234.40 -1.20 0.80 -3.40 4.40 -5 8 -1.40 3.60 -20.60 40.80 -42.60 82.60 -21.80 41.80 -51.40 98 -65.60 125 -14.20 27 -29.60 56.40 -34.20 65.60 l-8.20 16.40 -134.80 0 -134.60 0 2.40 -4.40z"/>
- </g>
- <g fill="#171616">
-  <path d="M1021.60 1713.40 c1.80 -2.20 2.40 -55.40 2 -239.20 l-0.60 -236.20 210.80 0 210.80 0 -1.20 28.60 c-5.20 124.80 -62.80 252.20 -152.60 337.20 -72.20 68.40 -154.20 104.60 -251.80 111.20 -17.40 1.20 -19.60 1 -17.40 -1.60z"/>
-  <path d="M1166 1168.40 c-9 -18 -40.40 -77.80 -94.40 -180.40 -47.20 -89.40 -53.20 -102 -49.60 -104.40 2.60 -1.80 3 -29.40 2.40 -231.80 -0.40 -172.20 -1 -229.60 -2.80 -228.60 -1.40 0.80 -1.60 0.60 -0.80 -0.80 3.40 -5.60 7.60 -0.80 20.40 23.20 25.80 49 147.40 272 361.80 664.40 19 34.60 36 66 37.80 69.60 l3.40 6.40 -134.60 0 -134.60 0 -9 -17.60z"/>
- </g>
- <g fill="#e7632c">
-  <path d="M864 1185.40 c0 -0.40 5.80 -11.40 12.60 -24.60 7 -13 24 -45.40 37.80 -71.80 13.80 -26.40 42.20 -80.40 63 -120 20.80 -39.60 39 -75 40.40 -78.40 2.80 -7 8.80 -8.80 11 -3.40 0.60 1.80 1.20 69.60 1.20 151 l0 147.80 -83 0 c-45.60 0 -83 -0.20 -83 -0.60z"/>
- </g>
- <g fill="#af3e1d">
-  <path d="M1024 1038 c0 -81.40 -0.80 -148 -1.60 -148 -0.80 0 -2.80 1.20 -4.20 2.60 -1.60 1.40 -1.40 0 0.60 -4.20 1.80 -3.40 4.20 -6.40 5.20 -6.40 1 0 7.40 10.60 13.80 23.60 6.60 13 24.60 48 40.20 77.60 52.40 99 67.40 127.60 85 161.80 9.60 18.80 18.40 34.80 19.20 36 1 1 1.80 2.60 1.80 3.40 0 0.80 -36 1.60 -80 1.60 l-80 0 0 -148z"/>
- </g>
- </g>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- warm paper ground -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
+      <stop offset="0" stop-color="#f7f1e6"/><stop offset="1" stop-color="#efe6d6"/>
+    </linearGradient>
+    <!-- sun disc: layered amber -->
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#f0a13e"/>
+    </linearGradient>
+    <radialGradient id="sunGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe9b8"/><stop offset="1" stop-color="#ffd27a"/>
+    </radialGradient>
+    <!-- paper-cut layer shadows (the 3D tell) -->
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#7a4a1e" flood-opacity="0.18"/>
+    </filter>
+    <linearGradient id="hill1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3b765"/><stop offset="1" stop-color="#e89a44"/></linearGradient>
+    <linearGradient id="hill2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e88f3f"/><stop offset="1" stop-color="#d97a30"/></linearGradient>
+    <linearGradient id="hill3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cf6b2a"/><stop offset="1" stop-color="#b85620"/></linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- SUN: rays (layer 1, behind disc) -->
+  <g transform="translate(512,440)" filter="url(#soft)">
+    <g fill="url(#sun)">
+      <!-- 12 paper rays as rounded petals -->
+      <g id="rays"></g>
+    </g>
+  </g>
+
+  <!-- rays drawn explicitly (rounded triangles around the disc) -->
+  <g transform="translate(512,440)" filter="url(#soft)">
+    <path d="M 198,-28 Q 304,0 290,0 Q 304,0 198,28 A 200,200 0 0 1 198,-28 Z" fill="url(#sun)"/>
+    <path d="M 185,75 Q 264,152 251,145 Q 264,152 158,123 A 200,200 0 0 1 185,75 Z" fill="url(#sun)"/>
+    <path d="M 123,158 Q 152,264 145,251 Q 152,264 75,185 A 200,200 0 0 1 123,158 Z" fill="url(#sun)"/>
+    <path d="M 28,198 Q 0,304 0,290 Q 0,304 -28,198 A 200,200 0 0 1 28,198 Z" fill="url(#sun)"/>
+    <path d="M -75,185 Q -152,264 -145,251 Q -152,264 -123,158 A 200,200 0 0 1 -75,185 Z" fill="url(#sun)"/>
+    <path d="M -158,123 Q -264,152 -251,145 Q -264,152 -185,75 A 200,200 0 0 1 -158,123 Z" fill="url(#sun)"/>
+    <path d="M -198,28 Q -304,0 -290,0 Q -304,0 -198,-28 A 200,200 0 0 1 -198,28 Z" fill="url(#sun)"/>
+    <path d="M -185,-75 Q -264,-152 -251,-145 Q -264,-152 -158,-123 A 200,200 0 0 1 -185,-75 Z" fill="url(#sun)"/>
+    <path d="M -123,-158 Q -152,-264 -145,-251 Q -152,-264 -75,-185 A 200,200 0 0 1 -123,-158 Z" fill="url(#sun)"/>
+    <path d="M -28,-198 Q -0,-304 -0,-290 Q -0,-304 28,-198 A 200,200 0 0 1 -28,-198 Z" fill="url(#sun)"/>
+    <path d="M 75,-185 Q 152,-264 145,-251 Q 152,-264 123,-158 A 200,200 0 0 1 75,-185 Z" fill="url(#sun)"/>
+    <path d="M 158,-123 Q 264,-152 251,-145 Q 264,-152 185,-75 A 200,200 0 0 1 158,-123 Z" fill="url(#sun)"/>
+  </g>
+
+  <!-- SUN disc (layer 2) -->
+  <circle cx="512" cy="440" r="205" fill="url(#sunGlow)" filter="url(#soft)"/>
+  <!-- inner ring shadow for paper depth -->
+  <circle cx="512" cy="440" r="205" fill="none" stroke="#e89a44" stroke-width="3" opacity="0.5"/>
+  <!-- top sheen on disc -->
+  <ellipse cx="470" cy="380" rx="120" ry="80" fill="#ffffff" opacity="0.22"/>
+
+  <!-- layered hills (foreground paper-cut, overlapping the sun's lower edge) -->
+  <path d="M -20,720 C 250,640 400,710 560,690 C 720,670 900,720 1044,680 L 1044,1044 L -20,1044 Z" fill="url(#hill1)" filter="url(#soft)"/>
+  <path d="M -20,820 C 200,760 420,820 600,800 C 780,780 920,830 1044,800 L 1044,1044 L -20,1044 Z" fill="url(#hill2)" filter="url(#soft)"/>
+  <path d="M -20,920 C 240,880 460,930 640,915 C 820,900 960,940 1044,920 L 1044,1044 L -20,1044 Z" fill="url(#hill3)" filter="url(#soft)"/>
 </svg>

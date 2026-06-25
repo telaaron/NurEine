@@ -49,9 +49,11 @@ Finde den EINEN tiefsten Reibungspunkt über alle Kanäle. Benenne die
 ### 5 — APPLY + PERSIST (Push auf main mit Grün-Gate)
 - Setze die Top-Änderung um: Text/Framing direkt, Code als Diff (§6-Regeln,
   niemals Versand/Auth/Secrets/Schema/Löschen → die nur als Log-Empfehlung).
-- **GRÜN-GATE (Pflicht):** `pnpm run check` + `pnpm run build`.
-  - Rot → `git restore .`, Hypothese NICHT anlegen, ins Log "am Gate gescheitert".
-  - Grün → commit + **push auf `main`**. Message:
+- **GRÜN-GATE (Pflicht):** `pnpm install` dann `pnpm run check` (svelte-check).
+  - `pnpm run build` NUR wenn SUPABASE_URL + SUPABASE_SERVICE_KEY als Env gesetzt
+    sind (sonst bricht `$env/static/private` — kein echter Fehler). Sonst überspringen.
+  - check rot → `git restore .`, Hypothese NICHT anlegen, ins Log "am Gate gescheitert".
+  - check grün → commit + **push auf `main`**. Message:
     `impact(auto): <kanal> — <ursache> [h-DATE-NN]`.
 - Schreibe nach `state.json`: neuer `history`-Eintrag (heutige Scores) +
   neue Hypothese (`status: applied`, mit `commit_sha`, `predicts`, `root_cause`, `file`).

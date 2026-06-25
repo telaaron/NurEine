@@ -9,20 +9,21 @@
 	import MobileStorySheet from '$lib/components/MobileStorySheet.svelte';
 	import { createStoryMarker, highlightMarker } from '$lib/map/story-marker';
 
-	interface StoryResult {
-		id: string; slug: string; title: string; dek: string; body: string;
-		category: string; region: string; country: string;
+	// Light marker shape — exactly the fields the map dots + sidebar card read.
+	// The server now ships MapMarker (getMapMarkers), not full stories.
+	interface StoryMarker {
+		slug: string; title: string; dek: string;
+		category: string; country: string;
 		coords: [number, number]; coordsX: number; coordsY: number;
-		source: string; source_url: string; publishedAt: string;
-		readingMinutes: number; impactScore: number; impactNote: string;
+		publishedAt: string; readingMinutes: number;
+		impactScore: number; impactNote: string;
 		tone: 'amber' | 'sage' | 'rose' | 'sky'; hero: string;
-		pinned: number; local: number;
-		featuredDate: string | null; createdAt: string; updatedAt: string;
+		sensitive: boolean; createdAt: string;
 	}
 
 	let { data } = $props();
 
-	const stories = $derived((data.stories ?? []) as StoryResult[]);
+	const stories = $derived((data.stories ?? []) as StoryMarker[]);
 	const storyCount = $derived(stories.length);
 
 	let activeSlug = $state<string | null>(null);

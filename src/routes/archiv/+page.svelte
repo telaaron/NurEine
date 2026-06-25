@@ -14,10 +14,11 @@
 	// Suchbegriff aus ?q= übernehmen (Sitelinks-Searchbox / Deep-Links).
 	let query = $state($page.url.searchParams.get('q') ?? '');
 
-	// Volltext-Suche: findet über Titel, Untertitel, Fließtext, Kategorie UND Region —
-	// nicht nur Titel. Mehrere Wörter = UND-Verknüpfung (jedes Wort muss vorkommen).
+	// Suche: über Titel, Untertitel, Zusammenfassung, Kategorie UND Region. Wir nutzen
+	// die KI-Zusammenfassung (summary) statt des vollen Fließtexts — die Listen-Query
+	// lädt body_markdown bewusst nicht (700+ Stories × 2 kB). Mehrere Wörter = UND.
 	function matches(s: (typeof stories)[number], terms: string[]): boolean {
-		const hay = `${s.title} ${s.dek} ${s.body} ${s.category} ${s.country}`.toLowerCase();
+		const hay = `${s.title} ${s.dek} ${s.summary} ${s.category} ${s.country}`.toLowerCase();
 		return terms.every((t) => hay.includes(t));
 	}
 

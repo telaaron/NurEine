@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { getAllStories } from '$lib/server/queries';
+import { getStoryList } from '$lib/server/queries';
 
 export const prerender = false;
 
@@ -29,7 +29,7 @@ export async function load({ params }) {
 	const cat = params.kategorie.toLowerCase();
 	if (!VALID.includes(cat)) throw error(404, 'Kategorie nicht gefunden');
 
-	const all = await getAllStories();
+	const all = await getStoryList();
 	const stories = all
 		.filter((s) => s.category.toLowerCase() === cat)
 		.map((s) => ({ ...s, coords: [s.coordsX, s.coordsY] as [number, number] }));

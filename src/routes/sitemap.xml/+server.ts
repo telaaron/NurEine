@@ -1,4 +1,4 @@
-import { getAllStories } from '$lib/server/queries';
+import { getStoryList } from '$lib/server/queries';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 
 export const prerender = false;
@@ -15,7 +15,7 @@ function escapeXml(str: string): string {
 }
 
 export async function GET() {
-	const stories = await getAllStories();
+	const stories = await getStoryList();
 
 	// Hub/static pages get today's date as lastmod — they reflect the freshest
 	// story set (archive, homepage, map all re-render daily), so a current

@@ -1,11 +1,11 @@
-import { getAllStories, getLatestFeatured, getStats } from '$lib/server/queries';
+import { getStoryList, getLatestFeatured, getStats } from '$lib/server/queries';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 
 export const prerender = false;
 
 export async function load() {
 	const [allStories, featured, stats] = await Promise.all([
-		getAllStories(),
+		getStoryList(),
 		getLatestFeatured(),
 		getStats()
 	]);

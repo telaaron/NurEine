@@ -1,4 +1,4 @@
-import { getLatestFeatured, getAllStories } from '$lib/server/queries';
+import { getLatestFeatured, getStoryList } from '$lib/server/queries';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 
 export const prerender = false;
@@ -8,7 +8,7 @@ export const prerender = false;
 // Link 1:1, wenn jemand echtes Interesse zeigt.
 export async function load() {
 	const featured = await getLatestFeatured();
-	const story = featured || (await getAllStories())[0] || null;
+	const story = featured || (await getStoryList())[0] || null;
 	const baseUrl = PUBLIC_BASE_URL || 'https://nureine.de';
 
 	return {
@@ -18,7 +18,7 @@ export async function load() {
 					title: story.title,
 					dek: story.dek,
 					shareHook: story.shareHook,
-					summary: story.body ? story.body.slice(0, 280) : '',
+					summary: story.summary || (story.body ? story.body.slice(0, 280) : ''),
 					category: story.category,
 					country: story.country,
 					impactScore: story.impactScore,

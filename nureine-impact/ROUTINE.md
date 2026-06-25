@@ -29,9 +29,14 @@ Für jede `open_hypotheses` mit `status: applied`: hole das vorhergesagte Signal
 Schreibe `verdict_note` (Beleg).
 
 ### 2 — PULL (heute)
-Hole die heutigen Inhalte exakt aus den Quellen in §3 (Stories, Social-Posts,
-Highlight/Newsletter-Body). Mache **einen** Screenshot von `/heute` (+ Hero-`/share/<slug>`).
-Nicht den Code durchsuchen — die Pfade stehen in §3.
+Hole die heutigen Inhalte exakt aus den Quellen in §3:
+- **Inhalt + Metriken:** über den **Supabase-Connector** (MCP-Query auf
+  `nureine_stories`, `nureine_social_posts`, `newsletter_sends`, `nureine_events`).
+  KEIN lokaler Mac, KEIN Dev-Server, KEIN Browser-Screenshot verfügbar.
+- **Design:** bewerte über das **gerenderte Markup + CSS im Repo** (Komponenten
+  von `/heute`, `/share/[slug]`, OG-Card-Generator in `src/lib/server/og/`) —
+  Hierarchie, Vertrauen, Lesbarkeit aus dem Code/Template ableiten, nicht aus
+  einem Bild. Die Pfade stehen in §3.
 
 ### 3 — SCORE
 Bewerte jeden Kanal (feed / instagram / email / design) auf Z/S/E/D (0–10).

@@ -1,4 +1,4 @@
-import { getAllStories } from '$lib/server/queries';
+import { getStoryList } from '$lib/server/queries';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 
 export const prerender = false;
@@ -22,7 +22,7 @@ function escapeXml(str: string): string {
 }
 
 export async function GET() {
-	const stories = await getAllStories(); // newest first
+	const stories = await getStoryList(); // newest first
 	const cutoff = Date.now() - NEWS_WINDOW_MS;
 
 	const recent = stories.filter((s) => {

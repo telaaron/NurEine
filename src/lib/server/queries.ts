@@ -60,6 +60,7 @@ export type StoryResult = {
   title: string;
   dek: string;
   body: string;
+  summary: string;
   category: string;
   region: string;
   country: string;
@@ -136,6 +137,7 @@ function mapStory(row: SupabaseStory): StoryResult {
     title: row.title,
     dek: row.subtitle || '',
     body: row.body_markdown,
+    summary: row.summary || '',
     category: row.category,
     region: row.region_code || '',
     country: row.region || '',
@@ -179,6 +181,51 @@ function mapStory(row: SupabaseStory): StoryResult {
   };
 }
 
+// Columns needed for LIST/card views (homepage grid, archive, map, /api/stories).
+// Deliberately omits the heavy fields that only the single-story detail view uses:
+//   body_markdown (~2 kB/row), slides (JSON), ig_caption, wa_opener, ig_hook,
+//   impact_explainer, share_hook, gut_filter_reason, audio_url.
+// On 700+ stories this roughly halves the bytes pulled from Postgres per page load.
+// NB: these must be REAL columns. The SupabaseStory type carries a phantom `emoji`
+// field that the table never had — select('*') tolerated it, an explicit list does
+// not. mapStory reads row.emoji as undefined and falls back to '✨' regardless.
+//
+// og_image_srcset is deliberately excluded: it's a per-row JSON blob consumed ONLY
+// by /og-preview (which uses the full select). No card/map/list view reads it, so
+// shipping it to every list page would be dead weight (and grows once OG srcset
+// generation backfills it). og_image_url stays for the meta-tag fallback.
+const LIST_COLUMNS =
+  'id,title,subtitle,summary,source_url,source_name,category,region,region_code,' +
+  'lat,lng,impact_score,impact_durability,impact_evidence,impact_reach_score,' +
+  'reading_time_min,image_url,og_image_url,is_hero,' +
+  'published_at,created_at,emotion,ig_ok,wa_ok,audio_url,sensitive,beat,source_type';
+
+// Even narrower: just the columns needed to derive a MapMarker (see getMapMarkers).
+// mapStory derives hero from image_url, tone from category, impactNote from
+// impact_score+durability — so those source columns must be present.
+const MARKER_COLUMNS =
+  'id,title,subtitle,category,region,region_code,lat,lng,' +
+  'impact_score,impact_durability,reading_time_min,image_url,sensitive,' +
+  'published_at,created_at';
+
+// mapStory works off SupabaseStory; list rows are missing the heavy columns, so we
+// fill them with null. The card views never read these, but keeping the shape stable
+// means StoryResult stays a single type for both list and detail consumers.
+function mapListRow(row: Partial<SupabaseStory>): StoryResult {
+  return mapStory({
+    body_markdown: '',
+    slides: null,
+    ig_caption: null,
+    wa_opener: null,
+    ig_hook: null,
+    impact_reach: null,
+    impact_explainer: null,
+    share_hook: null,
+    gut_filter_reason: null,
+    ...row
+  } as SupabaseStory);
+}
+
 function beschreibeWirkung(score: number, durability: number | null): string {
   if (durability === null) {
     if (score >= 80) return 'Strukturelle Veränderung';
@@ -209,13 +256,110 @@ export async function getAllStories(): Promise<StoryResult[]> {
   return (data as SupabaseStory[]).map(mapStory);
 }
 
+/**
+ * Lightweight list/card fetch — same ordering as getAllStories() but only the
+ * columns the grid/archive/map actually render (see LIST_COLUMNS). Use this for
+ * any page that shows a list of stories; reserve getAllStories() for the rare
+ * case that genuinely needs full bodies (cron/export).
+ */
+export async function getStoryList(): Promise<StoryResult[]> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select(LIST_COLUMNS)
+    .order('published_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('getStoryList error:', error);
+    return [];
+  }
+
+  return (data as Partial<SupabaseStory>[]).map(mapListRow);
+}
+
+/**
+ * Newest N stories for a card grid (homepage, related rails). Only list columns.
+ * Far cheaper than getStoryList() when the page renders a handful of cards.
+ */
+export async function getRecentStories(limit = 12): Promise<StoryResult[]> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select(LIST_COLUMNS)
+    .order('published_at', { ascending: false })
+    .limit(limit);
+
+  if (error || !data) {
+    console.error('getRecentStories error:', error);
+    return [];
+  }
+  return (data as Partial<SupabaseStory>[]).map(mapListRow);
+}
+
+/**
+ * Site-wide aggregates (count, avg impact, avg reading time) for the homepage hero
+ * stats. PostgREST aggregate functions are disabled on this project, so instead of
+ * pulling full rows we fetch ONLY the two numeric columns (~16 bytes/row vs ~3.5 kB)
+ * and average them in JS. The exact-count comes free from the same query's header.
+ */
+export async function getStoryAggregates(): Promise<{
+  count: number;
+  avgImpact: number;
+  avgReadingMin: number;
+}> {
+  const { data, count, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('impact_score, reading_time_min', { count: 'exact' });
+
+  if (error || !data || data.length === 0) {
+    if (error) console.error('getStoryAggregates error:', error);
+    return { count: count ?? 0, avgImpact: 0, avgReadingMin: 0 };
+  }
+
+  const rows = data as { impact_score: number | null; reading_time_min: number | null }[];
+  let impactSum = 0;
+  let readSum = 0;
+  for (const r of rows) {
+    impactSum += r.impact_score ?? 0;
+    readSum += r.reading_time_min ?? 0;
+  }
+  return {
+    count: count ?? rows.length,
+    avgImpact: Math.round(impactSum / rows.length),
+    avgReadingMin: Math.round((readSum / rows.length) * 10) / 10
+  };
+}
+
 export async function getStoryBySlug(slug: string): Promise<StoryResult | undefined> {
-  // Slug format: slugify(title)-8charUUIDprefix
-  // We fetch all stories and filter by slug in memory.
-  // Note: ILIKE on UUID columns doesn't work in PostgreSQL/PostgREST,
-  // and adding a slug column requires a DB migration. For the current
-  // story volume (< 1000), an in-memory filter is perfectly fine.
-  const stories = await getAllStories();
+  // Slug format: slugify(title)-<8-char UUID prefix>. The UUID prefix is the last
+  // hyphen-separated segment. Instead of pulling the whole table and filtering in
+  // memory, we turn the 8-hex prefix into a UUID range [lo, hi) and hit the primary
+  // key index directly (Index Scan, ~3 buffers) — vs. fetching all 700+ rows before.
+  const lastDash = slug.lastIndexOf('-');
+  const idPrefix = lastDash >= 0 ? slug.slice(lastDash + 1).toLowerCase() : '';
+
+  if (/^[0-9a-f]{8}$/.test(idPrefix)) {
+    const lo = `${idPrefix}-0000-0000-0000-000000000000`;
+    // Increment the 8-hex prefix by one for the exclusive upper bound. For the
+    // all-Fs prefix there is no higher UUID, so fall back to the max bound.
+    const next = parseInt(idPrefix, 16) + 1;
+    const hi =
+      next > 0xffffffff
+        ? 'ffffffff-ffff-ffff-ffff-ffffffffffff'
+        : `${next.toString(16).padStart(8, '0')}-0000-0000-0000-000000000000`;
+
+    const query = supabaseAdmin.from('nureine_stories').select('*').gte('id', lo).limit(2);
+    const { data, error } =
+      next > 0xffffffff ? await query.lte('id', hi) : await query.lt('id', hi);
+
+    if (!error && data && data.length > 0) {
+      // The 8-char prefix is unique in practice; if a collision ever occurs, pick
+      // the row whose full slug matches exactly.
+      const matches = (data as SupabaseStory[]).map(mapStory);
+      return matches.find((s) => s.slug === slug) ?? matches[0];
+    }
+  }
+
+  // Fallback for legacy/edge slugs that don't carry a parseable prefix.
+  const stories = await getStoryList();
   return stories.find((s) => s.slug === slug);
 }
 
@@ -368,38 +512,196 @@ export async function selectWhatsappStory(): Promise<StoryResult | undefined> {
   return fb ? mapStory(fb as SupabaseStory) : undefined;
 }
 
-export async function getLocalStories(): Promise<StoryResult[]> {
-  // Stories with lat/lng data, sorted by recent
+/**
+ * Narrow projection for map markers and StoryCard. The map/lokal pages render
+ * hundreds of stories but each card/marker reads only these ~13 fields. Returning
+ * the full StoryResult (~40 fields incl. unused nullables) serializes ~3× more JSON
+ * into the page than needed. MapMarker is exactly what StoryCard.svelte + the karte
+ * sidebar + createStoryMarker consume — keep this in sync with those components.
+ */
+export type MapMarker = Pick<
+  StoryResult,
+  | 'slug'
+  | 'title'
+  | 'dek'
+  | 'category'
+  | 'country'
+  | 'tone'
+  | 'hero'
+  | 'impactScore'
+  | 'impactNote'
+  | 'readingMinutes'
+  | 'sensitive'
+  | 'publishedAt'
+  | 'createdAt'
+  | 'coordsX'
+  | 'coordsY'
+>;
+
+function toMarker(s: StoryResult): MapMarker {
+  return {
+    slug: s.slug,
+    title: s.title,
+    dek: s.dek,
+    category: s.category,
+    country: s.country,
+    tone: s.tone,
+    hero: s.hero,
+    impactScore: s.impactScore,
+    impactNote: s.impactNote,
+    readingMinutes: s.readingMinutes,
+    sensitive: s.sensitive,
+    publishedAt: s.publishedAt,
+    createdAt: s.createdAt,
+    coordsX: s.coordsX,
+    coordsY: s.coordsY
+  };
+}
+
+/** All stories as light map markers (newest first). For /karte. */
+export async function getMapMarkers(): Promise<MapMarker[]> {
   const { data, error } = await supabaseAdmin
     .from('nureine_stories')
-    .select('*')
+    .select(MARKER_COLUMNS)
+    .order('published_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('getMapMarkers error:', error);
+    return [];
+  }
+  return (data as Partial<SupabaseStory>[]).map((r) => toMarker(mapListRow(r)));
+}
+
+/** Geo-tagged stories as light markers (newest first). For /lokal. */
+export async function getLocalMarkers(): Promise<MapMarker[]> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select(MARKER_COLUMNS)
+    .not('lat', 'is', null)
+    .not('lng', 'is', null)
+    .order('published_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('getLocalMarkers error:', error);
+    return [];
+  }
+  return (data as Partial<SupabaseStory>[]).map((r) => toMarker(mapListRow(r)));
+}
+
+export async function getLocalStories(): Promise<StoryResult[]> {
+  // Map markers only — list columns are plenty (no body/slides needed).
+  const { data, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select(LIST_COLUMNS)
     .not('lat', 'is', null)
     .not('lng', 'is', null)
     .order('published_at', { ascending: false });
 
   if (error || !data) return [];
-  return (data as SupabaseStory[]).map(mapStory);
+  return (data as Partial<SupabaseStory>[]).map(mapListRow);
 }
 
 export async function getRelatedStories(slug: string, limit = 3): Promise<StoryResult[]> {
   const story = await getStoryBySlug(slug);
   if (!story) return [];
 
+  // category isn't indexed-unique, so fetch limit+1 then drop the current story.
   const { data, error } = await supabaseAdmin
     .from('nureine_stories')
-    .select('*')
+    .select(LIST_COLUMNS)
     .eq('category', story.category)
     .order('impact_score', { ascending: false })
-    .limit(limit);
+    .limit(limit + 1);
 
   if (error || !data) return [];
-  const results = (data as SupabaseStory[]).map(mapStory);
+  const results = (data as Partial<SupabaseStory>[]).map(mapListRow);
   return results.filter((s) => s.slug !== slug).slice(0, limit);
 }
 
+/**
+ * Prev/next neighbours of a story in the published_at-DESC ordering, used by the
+ * story-detail pager. Two indexed single-row lookups instead of loading every row
+ * and scanning for the index. "next" = older story (further down the feed), "prev"
+ * = newer story, matching the previous in-memory findIndex semantics. Wraps around.
+ */
+export async function getStoryNeighbors(
+  publishedAt: string,
+  id: string
+): Promise<{ prev?: StoryResult; next?: StoryResult }> {
+  const olderP = supabaseAdmin
+    .from('nureine_stories')
+    .select(LIST_COLUMNS)
+    .or(`published_at.lt.${publishedAt},and(published_at.eq.${publishedAt},id.lt.${id})`)
+    .order('published_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const newerP = supabaseAdmin
+    .from('nureine_stories')
+    .select(LIST_COLUMNS)
+    .or(`published_at.gt.${publishedAt},and(published_at.eq.${publishedAt},id.gt.${id})`)
+    .order('published_at', { ascending: true })
+    .order('id', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  // Wrap-around ends (newest/oldest) so the pager is circular like before.
+  const firstP = supabaseAdmin
+    .from('nureine_stories')
+    .select(LIST_COLUMNS)
+    .order('published_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const lastP = supabaseAdmin
+    .from('nureine_stories')
+    .select(LIST_COLUMNS)
+    .order('published_at', { ascending: true })
+    .order('id', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  const [older, newer, first, last] = await Promise.all([olderP, newerP, firstP, lastP]);
+
+  const map = (d: unknown) => (d ? mapListRow(d as Partial<SupabaseStory>) : undefined);
+  return {
+    next: map(older.data) ?? map(first.data), // older neighbour, wrapping to newest
+    prev: map(newer.data) ?? map(last.data) // newer neighbour, wrapping to oldest
+  };
+}
+
+/**
+ * "Top X%" by impact: the share of stories scoring strictly higher than this one.
+ * Two head-count queries (indexed on impact_score) instead of loading every row.
+ */
+export async function getImpactPercentile(impactScore: number): Promise<number | null> {
+  const [{ count: total }, { count: better }] = await Promise.all([
+    supabaseAdmin.from('nureine_stories').select('*', { count: 'exact', head: true }),
+    supabaseAdmin
+      .from('nureine_stories')
+      .select('*', { count: 'exact', head: true })
+      .gt('impact_score', impactScore)
+  ]);
+  if (!total || total <= 1) return null;
+  return Math.max(1, Math.round(((better ?? 0) / total) * 100));
+}
+
 export async function getAllSlugs(): Promise<{ slug: string }[]> {
-  const stories = await getAllStories();
-  return stories.map((s) => ({ slug: s.slug }));
+  // Only id + title are needed to derive the slug — don't pull full rows.
+  const { data, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('id,title')
+    .order('published_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('getAllSlugs error:', error);
+    return [];
+  }
+  return (data as { id: string; title: string }[]).map((s) => ({
+    slug: slugify(s.title) + '-' + s.id.slice(0, 8)
+  }));
 }
 
 export async function getSetting(key: string): Promise<string | undefined> {

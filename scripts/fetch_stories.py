@@ -276,6 +276,19 @@ def _safe_emotion(value: Any) -> str | None:
     return e if e in _ALLOWED_EMOTIONS else None
 
 
+# Die sechs IG-Hook-Typen (empirisch aus dem Audit der letzten 200 Stories abgeleitet).
+# Ein gültiger Typ ist zugleich der server-seitige Beleg, dass ig_ok berechtigt ist.
+_ALLOWED_IG_HOOK_TYPES = {"zahl", "sieg", "kontrast", "wow", "mensch", "charme"}
+
+
+def _safe_ig_hook_type(value: Any) -> str | None:
+    """Accept one of the six IG hook types, else None (which gates ig_ok off)."""
+    if not isinstance(value, str):
+        return None
+    t = value.strip().lower()
+    return t if t in _ALLOWED_IG_HOOK_TYPES else None
+
+
 def _safe_bool(value: Any) -> bool:
     """Coerce a model truthy into a strict bool (DB columns are NOT NULL DEFAULT false)."""
     if isinstance(value, bool):
@@ -844,8 +857,19 @@ image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: "Warm editorial p
     - SCHLECHT: "KI hilft Mathematikern" → Roboterhände. Stattdessen: ein elegantes geometrisches Beweis-Muster.
     - GUT: "Solarstrom überholt Kohle" → Sonne über stilisierter Landschaft, ein Kohlestück verblassend.
     - GUT: "Nashörner kehren zurück" → ein Nashorn-Umriss aus Papier in sanfter Savannen-Landschaft.
+  ⚠️ ZWEITER HÄUFIGER FEHLER — ZU VAGE/GENERISCH: Wenn die Story ein konkretes Tier, einen Ort, eine
+  Pflanze oder ein greifbares Objekt nennt, ZEIGE es als Papier-Motiv — keine inhaltsleeren abstrakten
+  Bögen/Kreise/Wellen, die zu jeder x-beliebigen Story passen würden. Der Betrachter muss am Motiv
+  ALLEIN erkennen können, worum es geht.
+    - SCHLECHT (zu vage): "5.000 Flamingo-Küken gerettet" → abstrakte geschwungene Bögen. Wertlos, passt zu allem.
+      Stattdessen: erkennbare Flamingo-Silhouetten aus rosa Papier an einem stilisierten See.
+    - SCHLECHT (zu vage): "Faire Bezahlung für Journalisten" → schwebende Rechtecke und Münzen. Kalt, generisch.
+      Stattdessen: eine Schreibfeder/ein Stift über einem aufgeschlagenen Papier-Notizbuch im warmen Licht.
+  Faustregel: nenne die Story etwas Konkretes (Tier/Ort/Pflanze/Objekt) → MUSS im Motiv erkennbar sein.
+  Nur bei rein abstrakten Themen (Physik, Wirtschaft, Recht) ist ein symbolisches Muster erlaubt.
   Wähle ein Motiv, das (a) eindeutig zum eigentlichen Thema passt, (b) positiv/hoffnungsvoll wirkt,
-  (c) ohne Bildunterschrift verständlich ist. KEINE Menschen-Gesichter, KEINE Markenlogos, KEIN Text im Bild.
+  (c) ohne Bildunterschrift verständlich ist, (d) NICHT zu einer beliebigen anderen Story passen würde.
+  KEINE Menschen-Gesichter, KEINE Markenlogos, KEIN Text im Bild.
   Format: "Warm paper collage editorial illustration of [PASSENDES KERN-SYMBOL], made of layered matte paper cutouts on warm off-white #f5f1ea canvas. Accented in [GEWÄHLTE FARBE]. Visible paper grain texture, soft cast shadows between paper layers. Flat semi-abstract premium magazine style. No text. No 3D, no photorealism, no glossy materials." Beispiel: "Warm paper collage editorial illustration of mangrove branches growing from layered leaves, made of layered matte paper cutouts on warm off-white #f5f1ea canvas. Accented in sage green. Visible paper grain texture, soft cast shadows between paper layers. Flat semi-abstract premium magazine style. No text. No 3D, no photorealism, no glossy materials."
 
 impact_reach: Geschätzte Anzahl direkt positiv betroffener Menschen (integer)
@@ -915,12 +939,48 @@ emotion: Die EINE primäre Emotion, die die Story auslöst. Genau einer von:
   - "warmth"  — Wärme: menschliche Verbindung, Solidarität im großen Maßstab
   Wähle die DOMINANTE Emotion, nicht mehrere. Im Zweifel die, die ein Mensch beim Lesen ZUERST spürt.
 
-ig_ok: true/false — Taugt die Story für Instagram? NUR true wenn ALLE vier zutreffen:
-  (1) Es gibt ein visuelles Moment (ein konkretes Bild, das man sich vorstellen kann).
-  (2) Der Kern ist in EINEM Satz erklärbar.
-  (3) Die Emotion ist "relief", "wonder" oder "pride" (nicht "hope"/"warmth" allein).
-  (4) impact_score >= 70.
-  Policy-Themen, abstrakte Statistiken, "zu weit weg"-Themen → ig_ok=false. Sei streng.
+ig_ok: true/false — Taugt die Story für Instagram? Maßstab ist NICHT der Wirkungsindex und NICHT
+  die Emotion — sondern STOPP-KRAFT: Hält ein durchscrollender Mensch in 1 Sekunde an?
+  Das tut er nur, wenn die Story EINEN dieser sechs Hooks STARK trägt (ig_hook_type):
+    - "zahl"     — eine schockierende Zahl/ein krasses Ergebnis (z.B. "262.000 Leben gerettet")
+    - "sieg"     — ein klarer, konkreter, am besten binärer Sieg (z.B. "keine neuen Kohleminen mehr")
+    - "kontrast" — ein scharfer Vorher→Nachher-Sprung (z.B. "1.253 → 20 gewilderte Tiere")
+    - "wow"      — eine echte Überraschung, "Moment, was?" (z.B. "Wale werden Rechtspersonen")
+    - "mensch"   — ein Herz-/Menschmoment, der berührt (z.B. "12-Jährige rettet Freundin vorm Ertrinken")
+    - "charme"   — charmant + bildstark, sofort teilbar (z.B. "Krähe bringt ihrer Retterin Geschenke")
+  ig_ok=true NUR wenn ALLE drei Bedingungen erfüllt sind:
+    (A) MINDESTENS EINER der sechs Hooks trägt WIRKLICH STARK (nicht lauwarm).
+    (B) WIRKUNGS-SCHWELLE: impact_score >= 65 — AUSSER der Hook-Typ ist "mensch" oder "charme"
+        (die brauchen keine Weltwirkung; ihre Stopp-Kraft ist Herz/Entzücken, nicht Größe).
+        D.h. zahl/sieg/kontrast/wow brauchen impact>=65; mensch/charme sind von der Schwelle befreit.
+    (C) Die Story ist für DACH-Leser zugänglich (siehe dach_relevanz) — universelle Themen (Natur,
+        Tiere, Gesundheit, Klima, menschliche Geschichten) zählen immer als zugänglich; reine
+        Lokalmeldungen aus fernen Ländern ohne universellen Haken sind es nicht.
+  WICHTIG — häufige Fehler, die du NICHT mehr machen sollst:
+    • "hope" oder "warmth" als Emotion ist KEIN Ausschlussgrund. Die stärksten Stories sind oft "hope"
+      (Land schützt 1,4 Mio km² Meer; +10 Lebensjahre; 2,6 Mio Kinder zurück in der Schule). → ig_ok=true.
+    • Bei "mensch"/"charme" ist ein niedriger impact_score KEIN Ausschlussgrund (Flamingo-Küken,
+      Wikingerschwert-Fund eines Kindes, Krähe mit Geschenken — impact < 50, aber TOP für IG).
+  ig_ok=false wenn KEIN Hook stark trägt — typisch: abstrakte Wissenschaft ("Forscher weisen
+  Quantenverschränkung nach"), reine Policy-Prozesse ("UNESCO startet Konsultation", "Leitlinien
+  veröffentlicht"), neue-Art/Fossil-Funde ohne Wow, Förder-/Investitions-Meldungen ("Uni investiert
+  7 Mio in Forschung"), "zu weit weg / muss man erklären"-Themen.
+  Faustregel: STOPP-KRAFT vor Wichtigkeit, aber QUALITÄT vor MENGE — lieber weniger, dafür nur Stories
+  mit echtem Hook. Eine wichtige Studie ohne Hook ist NICHT IG-tauglich; eine Krähe mit Geschenken ist es.
+
+ig_hook_type: Nur wenn ig_ok=true. Genau EINER der sechs Werte oben
+  ["zahl","sieg","kontrast","wow","mensch","charme"] — der STÄRKSTE Hook DIESER Story. Wähle ehrlich
+  den dominanten Typ (nicht immer "zahl"): Abwechslung der Hook-Typen hält den Feed wach. Sonst null.
+
+dach_relevanz: Integer 0-100 — Wie persönlich relevant/nah ist die Story für Leser in Deutschland,
+  Österreich, Schweiz? NICHT "passiert es in DACH", sondern "berührt es DACH-Leser":
+    - 90-100: direkt vor der Tür / betrifft alle Menschen (Naturwunder, Tiere, Gesundheits-Durchbruch,
+      Gaza/Krieg, Klima global, eine universelle menschliche Geschichte).
+    - 60-89: nah/anschlussfähig (Europa, Großbritannien ohne Kohle, EU-Regeln, ein Tier das man kennt).
+    - 30-59: interessant aber distanziert (Wirtschaftsreform Usbekistan, US-Lokalpolitik).
+    - 0-29: weit weg, erklärungsbedürftig, "geht mich nichts an".
+  Fließt in die ig_ok-Entscheidung ein (weicher Faktor, kein hartes Cutoff): bei distanzierten Themen
+  (unter ~40) braucht es einen besonders starken universellen Hook, sonst ig_ok=false.
 
 wa_ok: true/false — Würde man das einer Freundin schicken? NUR true wenn ALLE drei zutreffen:
   (1) Fühlt sich an wie etwas, das man spontan teilt.
@@ -928,6 +988,13 @@ wa_ok: true/false — Würde man das einer Freundin schicken? NUR true wenn ALLE
   (3) Emotional sofort zugänglich.
 
 ig_hook: Nur wenn ig_ok=true. Der INSTAGRAM-HOOK für Folie 1 — die ersten 1,5 Zeilen, die zum WISCHEN zwingen.
+  Bau den Hook passend zum gewählten ig_hook_type:
+    - zahl     → führe mit der krassen Zahl, aber lass die Auflösung offen ("262.000 Menschen leben noch, weil…")
+    - sieg     → benenne erst, was alle für unmöglich hielten, dann den Sieg auf Folie 2
+    - kontrast → zeig das düstere Vorher, halte das Nachher zurück ("2021 fast ausgetrocknet. Dann…")
+    - wow      → die Überraschung als offene Schleife ("Ein Land hat gerade Tieren Rechte gegeben, die…")
+    - mensch   → setze die Person/Szene, halte den Ausgang zurück ("Sie zog ihre Freundin aus dem Wasser. Was sie nicht wusste:")
+    - charme   → das entzückende Bild zuerst, der Grund kommt beim Wischen
   ⚠️ NIEMALS die Schlagzeile/der Titel. Eine Schlagzeile ("EU beschließt Tierschutzgesetz") gibt KEINEN Grund
   zu wischen — die ganze Info steht schon da. Stattdessen: SPANNUNG aufbauen, eine offene Schleife, ein Problem
   oder ein überraschender Einstieg, dessen Auflösung erst auf Folie 2 kommt. Idealerweise endet der Hook mit
@@ -1747,12 +1814,29 @@ def run() -> None:
             }
 
             # ---- Editorial pipeline: emotion + channel fit + social texts ----
-            # ig_ok requires impact_score >= 70 — enforce server-side too, so a
-            # generous model can't push a weak story onto Instagram.
+            # IG-Eignung = STOPP-KRAFT (ein starker Hook-Typ), NICHT Wirkungsindex.
+            # Audit der letzten 200 Stories (2026-06-21): altes impact>=70-Gate + hope-Ausschluss
+            # warfen ~30 gute IG-Stories weg (Recall kaputt, 7% statt ~22%).
+            # Neue Gates (server-seitig gespiegelt, damit ein großzügiges Modell nicht durchrutscht):
+            #   (A) gültiger Hook-Typ vorhanden (Beleg, dass ein konkreter Hook trägt),
+            #   (B) Wirkungs-Schwelle impact>=65 — AUSSER Hook ist "mensch"/"charme" (Herz/Charme
+            #       braucht keine Weltwirkung; das rettet Krähe, Flamingo-Küken etc.),
+            #   (C) DACH-Relevanz nicht zu fern (weicher Faktor; harter Floor nur bei sehr fern <25).
+            _ig_hook_type = _safe_ig_hook_type(result.get("ig_hook_type"))
             _impact = story_record.get("impact_score") or 0
-            _ig_ok = _safe_bool(result.get("ig_ok")) and _impact >= 70
+            _dach = _safe_int(result.get("dach_relevanz"), lo=0, hi=100)
+            _impact_ok = _impact >= 65 or _ig_hook_type in ("mensch", "charme")
+            _dach_ok = (_dach or 0) >= 25  # nur die ganz fernen "geht mich nichts an"-Themen raus
+            _ig_ok = (
+                _safe_bool(result.get("ig_ok"))
+                and _ig_hook_type is not None
+                and _impact_ok
+                and _dach_ok
+            )
             story_record["emotion"] = _safe_emotion(result.get("emotion"))
+            story_record["dach_relevanz"] = _dach
             story_record["ig_ok"] = _ig_ok
+            story_record["ig_hook_type"] = _ig_hook_type if _ig_ok else None
             story_record["wa_ok"] = _safe_bool(result.get("wa_ok"))
             story_record["ig_hook"] = _safe_text(result.get("ig_hook"), 120) if _ig_ok else None
             story_record["wa_opener"] = (

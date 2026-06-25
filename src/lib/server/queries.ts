@@ -36,6 +36,8 @@ export type SupabaseStory = {
   // Editorial pipeline (migration 00023)
   emotion: string | null;
   ig_ok: boolean | null;
+  ig_hook_type: string | null;
+  dach_relevanz: number | null;
   wa_ok: boolean | null;
   ig_hook: string | null;
   wa_opener: string | null;
@@ -88,6 +90,8 @@ export type StoryResult = {
   // Editorial pipeline
   emotion: string | null;
   igOk: boolean;
+  igHookType: string | null;
+  dachRelevanz: number | null;
   waOk: boolean;
   igHook: string | null;
   waOpener: string | null;
@@ -164,6 +168,8 @@ function mapStory(row: SupabaseStory): StoryResult {
     updatedAt: row.published_at,
     emotion: row.emotion ?? null,
     igOk: row.ig_ok ?? false,
+    igHookType: row.ig_hook_type ?? null,
+    dachRelevanz: row.dach_relevanz ?? null,
     waOk: row.wa_ok ?? false,
     igHook: row.ig_hook ?? null,
     waOpener: row.wa_opener ?? null,
@@ -443,29 +449,86 @@ function sinceFresh(): string {
 }
 
 /**
- * Today's Instagram pick: a fresh, ig_ok story with the strongest visual moment
- * (proxied by impact_score). Returns undefined if none qualifies → no post today.
- * Fallback (no ig_ok stories scored yet): fresh story with impact ≥ 75.
+ * Today's Instagram pick.
+ *
+ * IG-Erfolg ≠ Wirkungsindex (Audit der letzten 200, 2026-06-21). Wir wählen NICHT
+ * die Story mit dem höchsten impact_score — das ließ Charme-/Mensch-Stories (Krähe,
+ * Flamingo-Küken) verhungern, obwohl sie ig_ok=true sind. Stattdessen:
+ *   1) alle frischen ig_ok-Stories holen, die noch NICHT auf IG gepostet wurden,
+ *   2) nach STOPP-KRAFT ranken (Hook-Typ-Gewicht, nicht impact), und
+ *   3) den Hook-Typ gegen die letzten Posts ROTIEREN → der Feed wird nie monoton
+ *      (nicht 5× Zahl hintereinander). Genau das "Abwechslung ist Teil des Hooks".
+ * Gibt undefined zurück, wenn nichts qualifiziert → kein Post heute ("lieber leer").
  */
+
+// Basis-Stopp-Kraft pro Hook-Typ. Charme/Mensch sind bewusst HOCH (ihre Stärke ist
+// Herz/Entzücken, nicht Größe) — so gewinnen sie gegen mittelmäßige Zahlen-Stories.
+const HOOK_STOP_POWER: Record<string, number> = {
+  kontrast: 100, // Vorher→Nachher ist der stärkste Daumen-Stopp
+  charme: 95,
+  mensch: 92,
+  wow: 88,
+  zahl: 82,
+  sieg: 78
+};
+
 export async function selectInstagramStory(): Promise<StoryResult | undefined> {
   const since = sinceFresh();
-  const { data } = await supabaseAdmin
+
+  // (1) Frische ig_ok-Kandidaten.
+  const { data: candRows } = await supabaseAdmin
     .from('nureine_stories')
     .select('*')
     .eq('ig_ok', true)
     .gte('created_at', since)
-    .order('impact_score', { ascending: false })
     .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (data) return mapStory(data as SupabaseStory);
+    .limit(50);
+  let candidates = (candRows ?? []) as SupabaseStory[];
 
-  // Fallback only while no ig_ok-tagged stories exist at all (pre-pipeline).
+  if (candidates.length > 0) {
+    // Schon gepostete Stories ausschließen (sonst Wiederholung im Feed).
+    const { data: posted } = await supabaseAdmin
+      .from('nureine_social_posts')
+      .select('story_id')
+      .eq('platform', 'instagram');
+    const postedIds = new Set((posted ?? []).map((p) => (p as { story_id: string }).story_id));
+    candidates = candidates.filter((c) => !postedIds.has(c.id));
+  }
+
+  if (candidates.length > 0) {
+    // Hook-Typen der letzten IG-Posts → zuletzt genutzte abwerten (Rotation).
+    const { data: recent } = await supabaseAdmin
+      .from('nureine_social_posts')
+      .select('hook_type, created_at')
+      .eq('platform', 'instagram')
+      .order('created_at', { ascending: false })
+      .limit(4);
+    const recentTypes = (recent ?? []).map((r) => (r as { hook_type: string | null }).hook_type);
+
+    const score = (s: SupabaseStory): number => {
+      const t = s.ig_hook_type ?? 'zahl';
+      let v = HOOK_STOP_POWER[t] ?? 70;
+      // Rotation: zuletzt gepostet → −30, vorletzter → −15. Bricht Monotonie.
+      const idx = recentTypes.indexOf(t);
+      if (idx === 0) v -= 30;
+      else if (idx === 1) v -= 15;
+      // impact nur als feiner Tie-Breaker (max +6), NICHT als Haupt-Achse.
+      v += Math.min(6, ((s.impact_score ?? 0) / 100) * 6);
+      // DACH-Nähe leicht bevorzugen (max +4).
+      v += Math.min(4, ((s.dach_relevanz ?? 50) / 100) * 4);
+      return v;
+    };
+
+    candidates.sort((a, b) => score(b) - score(a));
+    return mapStory(candidates[0]);
+  }
+
+  // Fallback nur, solange GAR keine ig_ok-Stories existieren (pre-pipeline).
   const { count } = await supabaseAdmin
     .from('nureine_stories')
     .select('*', { count: 'exact', head: true })
     .eq('ig_ok', true);
-  if ((count ?? 0) > 0) return undefined; // pipeline active but nothing today → no post
+  if ((count ?? 0) > 0) return undefined; // Pipeline aktiv, heute nichts → kein Post
 
   const { data: fb } = await supabaseAdmin
     .from('nureine_stories')

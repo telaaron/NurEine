@@ -193,10 +193,25 @@ function hookInline(hook: Hook | null, accent: string): string {
 }
 
 // Untertitel — WEISS, regular, GROSS (systemweit, nie kursiv/grau).
-function dekText(dek: string, color = '#ffffff', size = 48): string {
+// Im Story-Format zählt schneller Konsum: max. 12 Wörter, am Satzende geschnitten
+// (nicht mitten im Wort). Alles Weitere gehört in die volle Geschichte.
+const DEK_MAX_WORDS = 12;
+function clampDek(dek: string): string {
 	const s = (dek || '').trim();
 	if (!s) return '';
-	const short = s.length > 150 ? s.slice(0, 149) + '…' : s;
+	const words = s.split(/\s+/);
+	if (words.length <= DEK_MAX_WORDS) return s;
+	let cut = words.slice(0, DEK_MAX_WORDS).join(' ');
+	// Falls knapp dahinter ein Satzende kommt, lieber dort sauber schneiden.
+	const tail = words.slice(DEK_MAX_WORDS, DEK_MAX_WORDS + 4).join(' ');
+	const stop = tail.search(/[.!?]/);
+	if (stop !== -1 && stop <= 24) cut += ' ' + tail.slice(0, stop + 1);
+	else cut = cut.replace(/[,;:–-]+$/, '') + ' …';
+	return cut;
+}
+function dekText(dek: string, color = '#ffffff', size = 48): string {
+	const short = clampDek(dek);
+	if (!short) return '';
 	return `<div style="display:flex;font-family:'Inter';font-size:${size}px;font-weight:400;color:${color};line-height:1.3;margin-top:26px;width:968px;">${esc(short)}</div>`;
 }
 

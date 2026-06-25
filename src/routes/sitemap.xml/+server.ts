@@ -48,6 +48,9 @@ export async function GET() {
 		{ loc: `${BASE_URL}/gute-nachrichten-app`, priority: '0.9', changefreq: 'weekly' },
 		...['klima', 'gesundheit', 'wissenschaft', 'gemeinschaft', 'tiere', 'kultur', 'innovation'].map(
 			(c) => ({ loc: `${BASE_URL}/gute-nachrichten/${c}`, priority: '0.8', changefreq: 'daily' })
+		),
+		...['deutschland', 'usa', 'grossbritannien', 'australien', 'china', 'frankreich', 'indonesien', 'kongo', 'brasilien', 'kanada', 'japan', 'kenia', 'indien', 'mexiko'].map(
+			(l) => ({ loc: `${BASE_URL}/gute-nachrichten/land/${l}`, priority: '0.7', changefreq: 'weekly' })
 		)
 	];
 

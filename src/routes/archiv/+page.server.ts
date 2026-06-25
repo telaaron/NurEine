@@ -1,13 +1,10 @@
-import { getStoryList } from '$lib/server/queries';
+import { getStoryCards } from '$lib/server/queries';
 
 export const prerender = false;
 
 export async function load() {
-  const allStories = await getStoryList();
-  const stories = allStories.map((s) => ({
-    ...s,
-    coords: [s.coordsX, s.coordsY] as [number, number]
-  }));
-
+  // Archive search/filter/sort runs client-side (instant, no round-trip), so all
+  // stories must ship — but only the card + search fields, not full StoryResult.
+  const stories = await getStoryCards();
   return { stories };
 }

@@ -558,6 +558,52 @@ function toMarker(s: StoryResult): MapMarker {
   };
 }
 
+/**
+ * Like MapMarker but also carries `summary` — needed by the /archiv full-text
+ * search, which filters client-side over title+dek+summary. Everything else the
+ * archive card renders is already in MapMarker. ~13 fields instead of ~40.
+ */
+export type StoryCard = MapMarker & { summary: string };
+
+// Marker fields + summary. summary (~459 B/row) only ships to pages that search.
+const CARD_COLUMNS = MARKER_COLUMNS + ',summary';
+
+/** All stories as light search-cards (newest first). For /archiv. */
+export async function getStoryCards(): Promise<StoryCard[]> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select(CARD_COLUMNS)
+    .order('published_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('getStoryCards error:', error);
+    return [];
+  }
+  return (data as Partial<SupabaseStory>[]).map((r) => {
+    const m = mapListRow(r);
+    return { ...toMarker(m), summary: m.summary };
+  });
+}
+
+/**
+ * Cards for ONE category (uses the category index), newest first. For
+ * /archiv/[kategorie] — filtering server-side means it fetches ~100 rows for that
+ * category instead of all 700 and filtering in JS. summary isn't needed (no search).
+ */
+export async function getMarkersByCategory(category: string): Promise<MapMarker[]> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select(MARKER_COLUMNS)
+    .eq('category', category)
+    .order('published_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('getMarkersByCategory error:', error);
+    return [];
+  }
+  return (data as Partial<SupabaseStory>[]).map((r) => toMarker(mapListRow(r)));
+}
+
 /** All stories as light map markers (newest first). For /karte. */
 export async function getMapMarkers(): Promise<MapMarker[]> {
   const { data, error } = await supabaseAdmin

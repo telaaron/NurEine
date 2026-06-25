@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { getStoryList } from '$lib/server/queries';
+import { getMarkersByCategory } from '$lib/server/queries';
 
 export const prerender = false;
 
@@ -29,10 +29,9 @@ export async function load({ params }) {
 	const cat = params.kategorie.toLowerCase();
 	if (!VALID.includes(cat)) throw error(404, 'Kategorie nicht gefunden');
 
-	const all = await getStoryList();
-	const stories = all
-		.filter((s) => s.category.toLowerCase() === cat)
-		.map((s) => ({ ...s, coords: [s.coordsX, s.coordsY] as [number, number] }));
+	// Category is stored lowercase in the DB and matches the slug 1:1, so we filter
+	// server-side on the indexed column — ~100 rows instead of all 700 + a JS filter.
+	const stories = await getMarkersByCategory(cat);
 
 	return {
 		kategorie: cat,

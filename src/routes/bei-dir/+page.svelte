@@ -11,15 +11,16 @@
 
 	// ---- Types ----
 
+	// Light marker shape — exactly the fields the nearby-list reads. The server now
+	// ships MapMarker (getMapMarkers), not full stories.
 	interface StoryResult {
-		id: string; slug: string; title: string; dek: string; body: string;
-		category: string; region: string; country: string;
-		coords: [number, number]; coordsX: number; coordsY: number;
-		source: string; source_url: string; publishedAt: string;
-		readingMinutes: number; impactScore: number; impactNote: string;
+		slug: string; title: string; dek: string;
+		category: string; country: string;
+		coordsX: number; coordsY: number;
+		publishedAt: string; readingMinutes: number;
+		impactScore: number; impactNote: string;
 		tone: 'amber' | 'sage' | 'rose' | 'sky'; hero: string;
-		pinned: number; local: number;
-		featuredDate: string | null; createdAt: string; updatedAt: string;
+		sensitive: boolean; createdAt: string;
 	}
 
 	interface GeoState {

@@ -18,15 +18,15 @@ Nutzersicht, inklusive Design. Keine Betriebsblindheit.
 Dann führe **5 Schritte** aus. Halte dich strikt an die Output-Disziplin (§5):
 Scores = Zahlen, Prosa nur für den tiefsten Reibungspunkt, Root-Cause Pflicht.
 
-### 1 — VERIFY (Vortag) + AUTO-ROLLBACK
-Für jede `open_hypotheses` mit `status: applied`: hole das vorhergesagte Signal
-(§4 — Saves/Reach/Open/Events). Wirkte es?
-- **besser** → `confirmed`, Code bleibt. `verdict_source: metric`.
-- **schlechter/neutral** → `rejected` + **Auto-Revert (§6):**
-  `git revert <commit_sha> --no-edit`, GRÜN-GATE, Push auf `main`. Heute eine
-  ANDERE Ursache angehen. `verdict_source: metric`.
-- **Daten noch unreif** → bleibt `applied`, `verdict_source: self`, morgen erneut.
-Schreibe `verdict_note` (Beleg).
+### 1 — VERIFY (Vortag) — State liegt in der DB
+Lies den letzten Lauf: `SELECT * FROM nureine_impact_runs ORDER BY run_date DESC LIMIT 2;`
+Hatte er einen Vorschlag (PR)? Prüfe PR-Status + vorhergesagtes Signal (§4):
+- **gemerged + Signal besser** → heutiger Eintrag: `verdict:confirmed`,
+  `verify_of_date=<damals>`, `verdict_source:metric`.
+- **gemerged + schlechter/neutral** → `verdict:rejected`; **Revert-PR vorschlagen**
+  (Branch `impact/revert-DATE`, `git revert <sha>`, PR öffnen). Heute andere Ursache.
+- **PR noch offen** → `verdict:pending`, `verdict_source:self`. Kein Doppel-Vorschlag.
+- **Signal unreif** → `verdict:pending`, morgen erneut.
 
 ### 2 — PULL (heute)
 Hole die heutigen Inhalte exakt aus den Quellen in §3:
@@ -46,22 +46,19 @@ Nur Zahlen. Berechne Gesamt-Impact (§2-Gewichtung).
 Finde den EINEN tiefsten Reibungspunkt über alle Kanäle. Benenne die
 **Ursache, nicht das Symptom** (§5). Formuliere die EINE strukturelle Top-Änderung.
 
-### 5 — APPLY + PERSIST (Push auf main, mit Grün-Gate; §6 ist maßgeblich)
-- Setze die Top-Änderung um: Text/Framing direkt, Code als Diff (§6-Regeln,
-  niemals Versand/Auth/Secrets/Schema/Löschen → die nur als Log-Empfehlung).
-- **GRÜN-GATE:** `pnpm install`, dann `pnpm run check`. Vergleiche die Fehlerzahl
-  mit dem Baseline (`git stash && pnpm run check` vorher) — deine Änderung darf
-  **0 neue** Fehler bringen. Vorbestehende `$env/static`-Fehler ohne Secrets sind OK.
-  Rot (neue Fehler) → `git restore .`, Hypothese NICHT anlegen, ins Log.
-- **Commit-Flow (einfach, §6.3):** (a) Code+Log committen → (b) `git rev-parse HEAD`
-  → (c) state.json mit dieser SHA als zweiten Commit → (d) `git push origin HEAD:main`.
-  KEIN `--amend`, kein SHA-Backfill-Gejongliere.
-- **Push scheitert (403/Policy)?** → §6.4 PUSH-FALLBACK: Patch via `git format-patch`
-  erzeugen, an Aaron senden (SendUserFile + PushNotification), Patch aus Tree löschen.
-  Arbeit nie still verlieren.
-- state.json: neuer `history`-Eintrag (heutige Scores, max 30) + Hypothese
-  (`status:applied`, `commit_sha`, `predicts`, `root_cause`, `file`).
-- `nureine-impact/log/YYYY-MM-DD.md` (knapp, Template unten).
+### 5 — APPLY (PR) + PERSIST (DB) — §6 ist maßgeblich
+- Top-Änderung umsetzen: Text/Code als Diff (nie Versand/Auth/Secrets/Schema/Löschen
+  → die nur als Finding in die DB, kein PR-Code).
+- **GRÜN-GATE:** `pnpm install`, dann `pnpm run check`. Baseline-Vergleich → **0 neue**
+  Fehler (vorbestehende `$env/static`-Fehler ohne Secrets sind OK).
+  - Rot → `git restore .`, KEIN PR, aber DB-Eintrag mit `status:"gate_failed"` + Finding.
+- **PR (§6.4):** Branch `impact/auto-DATE`, commit, Branch pushen, PR öffnen
+  (GitHub-MCP `create_pull_request` oder `gh pr create`). PR-Body = Finding + Vorhersage.
+  - Scheitert (403)? → §6b PUSH-FALLBACK (Patch an Aaron senden), DB-Eintrag trotzdem.
+- **DB-INSERT (immer, Supabase-MCP, upsert on run_date):** `nureine_impact_runs` mit
+  `scores` (alle Kanäle + gesamt), `channel`, `root_cause`, `change_summary`,
+  `change_file`, `predicts`, `pr_url`, `pr_number`, `pr_state:'open'`, `metrics`
+  (Tages-Snapshot), `log_markdown`. DAS speist das Dashboard.
 
 ---
 

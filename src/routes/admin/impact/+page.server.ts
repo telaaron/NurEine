@@ -1,66 +1,39 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { supabaseAdmin } from '$lib/server/supabase/client';
 
-// Liest das von der Impact-Routine committete state.json (Single Source of Truth
-// fürs Dashboard). Bewusst KEIN DB-Call — die Routine hat die Bewertung schon
-// gemacht; wir rendern nur. Fällt leer-aber-valide aus, falls noch kein Lauf war.
+// Liest die Impact-Routine-Läufe LIVE aus Supabase (nureine_impact_runs).
+// Die Analyse erscheint dadurch schon VOR dem PR-Merge — die Routine schreibt
+// beim Lauf direkt in die DB. Kein state.json-Datei-Umweg mehr.
 
-export interface ImpactScores {
-	Z: number;
-	S: number;
-	E: number;
-	D: number;
-	gesamt: number;
-}
-export interface ImpactHistory {
-	date: string;
-	scores: ImpactScores;
-	channels?: Record<string, Omit<ImpactScores, 'gesamt'>>;
-}
-export interface ImpactHypothesis {
-	id: string;
-	created: string;
-	channel: string;
-	root_cause: string;
-	change: string;
-	file?: string;
-	commit_sha?: string;
-	predicts?: string;
-	status: 'applied' | 'confirmed' | 'rejected';
-	verdict_source?: 'metric' | 'self' | 'mixed';
-	verdict_note?: string;
-}
-interface ImpactState {
-	history: ImpactHistory[];
-	open_hypotheses: ImpactHypothesis[];
-	last_run: string | null;
-	last_run_status?: 'ok' | 'blocked';
-	blocked_reason?: string;
+export interface ImpactRun {
+	run_date: string;
+	status: 'ok' | 'blocked' | 'gate_failed';
+	blocked_reason: string | null;
+	scores: { gesamt?: number; [channel: string]: { Z: number; S: number; E: number; D: number } | number | undefined };
+	channel: string | null;
+	root_cause: string | null;
+	change_summary: string | null;
+	change_file: string | null;
+	predicts: string | null;
+	pr_url: string | null;
+	pr_number: number | null;
+	pr_state: 'open' | 'merged' | 'closed' | null;
+	verify_of_date: string | null;
+	verdict: 'confirmed' | 'rejected' | 'pending' | null;
+	verdict_source: 'metric' | 'self' | 'mixed' | null;
+	verdict_note: string | null;
+	metrics: Record<string, number>;
+	log_markdown: string | null;
 }
 
 export async function load() {
-	const path = join(process.cwd(), 'nureine-impact', 'state.json');
-	try {
-		const raw = await readFile(path, 'utf-8');
-		const state = JSON.parse(raw) as Partial<ImpactState>;
-		const history = (state.history ?? []).filter((h) => h?.scores);
-		return {
-			ok: true as const,
-			history,
-			openHypotheses: state.open_hypotheses ?? [],
-			lastRun: state.last_run ?? null,
-			lastRunStatus: state.last_run_status ?? 'ok',
-			blockedReason: state.blocked_reason ?? null
-		};
-	} catch {
-		// Datei fehlt oder kaputt → Dashboard zeigt Leerzustand statt 500.
-		return {
-			ok: false as const,
-			history: [],
-			openHypotheses: [],
-			lastRun: null,
-			lastRunStatus: 'ok' as const,
-			blockedReason: null
-		};
+	const { data, error } = await supabaseAdmin
+		.from('nureine_impact_runs')
+		.select('*')
+		.order('run_date', { ascending: false })
+		.limit(60);
+
+	if (error || !data) {
+		return { ok: false as const, runs: [] as ImpactRun[] };
 	}
+	return { ok: true as const, runs: data as ImpactRun[] };
 }

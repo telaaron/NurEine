@@ -115,80 +115,83 @@ Self-Score allein darf eine Hypothese NICHT als ✅ bestätigen — nur als "noc
 
 ---
 
-## 6. Auto-Apply-Regeln (Cloud-Schedule → Push auf main, mit Gate + Auto-Rollback)
+## 6. Apply-Modell: PR + DB-Insert (NICHT Push auf main)
 
-Der Loop ist **selbsttragend** (live ohne manuelles Merge) UND **selbstheilend**
-(was nicht wirkt, fliegt automatisch raus). Damit kann das Vortags-Signal
-überhaupt entstehen — ein offener PR wäre nicht live und der Loop stünde still.
+Zwei getrennte Pfade — so siehst du die Analyse SOFORT (DB), entscheidest aber
+selbst, ob der Code live geht (PR-Merge):
+
+- **Findings → Supabase** (`nureine_impact_runs`). Sofort, immer, auch wenn Code
+  scheitert. Speist das Dashboard live.
+- **Code-Änderung → PR** auf einen Branch `impact/auto-YYYY-MM-DD`. Du mergst auf
+  GitHub (oder per Dashboard-Link). Erst der Merge macht es live.
 
 ### Anwenden (Schritt 5 der Routine)
-1. Die EINE Top-Änderung umsetzen: **Text/Framing direkt**, **Code als Diff**.
-   Text-Änderungen betreffen Generatoren (`src/lib/server/social/caption.ts`,
-   `src/lib/server/newsletter.ts`), NICHT einzelne DB-Zeilen — Ursache, nicht Symptom.
-2. **GRÜN-GATE (Pflicht, vor jedem Push):** `pnpm install`, dann
-   `pnpm run check` (svelte-check) muss fehlerfrei durchlaufen.
-   `pnpm run build` nur, wenn `SUPABASE_URL` + `SUPABASE_SERVICE_KEY` als Env
-   gesetzt sind (sonst bricht `$env/static/private` beim Build — kein echter
-   Code-Fehler, daher überspringen statt fälschlich als "rot" werten).
-   - Grün → committen auf `main`, pushen. Commit-Message:
-     `impact(auto): <kanal> — <kurz-ursache> [h-DATE-NN]`
-   - Rot → **NICHT pushen.** Änderung lokal verwerfen (`git restore .`),
-     ins Log schreiben "Top-Änderung scheiterte am Gate: <fehler>", Hypothese
-     gar nicht erst anlegen. Lieber kein Push als ein kaputtes Deployment.
-3. **Einfacher Commit-Flow (kein --amend, kein SHA-Jonglieren):**
-   a. Code-Änderung + `log/DATE.md` committen (Message wie oben). **NICHT** schon
-      die SHA in state.json — die kennst du noch nicht.
-   b. SHA auslesen: `git rev-parse HEAD`.
-   c. state.json schreiben (Hypothese `status:"applied"` + `commit_sha` = die SHA
-      aus b + `predicts`), als **zweiten** Commit `impact(state): h-DATE-NN`.
-   d. `git push origin HEAD:main`.
-4. **PUSH-FALLBACK (wenn Push scheitert — 403/Netz/Policy):** Die Arbeit darf NIE
-   verloren gehen. Wenn `git push` fehlschlägt:
-   - **403/Policy einmalig**, nicht wiederholen (per Proxy-README).
-   - Erzeuge einen Patch: `git format-patch origin/main..HEAD --stdout > impact-DATE.patch`.
-   - Sende Patch + `log/DATE.md` an Aaron (SendUserFile) + PushNotification mit der
-     Kern-Erkenntnis. So kann Aaron mit `git am < impact-DATE.patch` 1:1 anwenden.
-   - Lösche den Patch danach aus dem Tree (gehört nicht in die History).
-   - Im Log vermerken: "Push blockiert (403) — als Patch geliefert."
+1. **State = DB.** Es gibt KEINE state.json mehr. Lies den letzten Lauf via
+   `SELECT * FROM nureine_impact_runs ORDER BY run_date DESC LIMIT 2;`
+2. Die EINE Top-Änderung umsetzen: **Text/Framing/Code als Diff**.
+   Generatoren (`src/lib/server/social/caption.ts`, `src/lib/server/newsletter.ts`),
+   NICHT einzelne DB-Zeilen — Ursache, nicht Symptom.
+3. **GRÜN-GATE:** `pnpm install`, dann `pnpm run check`. Vergleiche mit Baseline
+   (vorbestehende `$env/static`-Fehler ohne Secrets sind OK) → **0 neue** Fehler.
+   - Rot → Code verwerfen (`git restore .`), KEINEN PR, aber **trotzdem** den
+     DB-Eintrag mit `status:"gate_failed"` + Finding schreiben (Analyse ist wertvoll).
+4. **PR erstellen:** Branch `impact/auto-DATE`, commit, push des Branches, PR öffnen
+   (GitHub-MCP `create_pull_request` oder `gh pr create`). Titel:
+   `impact(auto): <kanal> — <kurz-ursache>`. PR-Body = das Finding + Vorhersage.
+   - Push/PR scheitert (403/Policy)? → **PUSH-FALLBACK** (§6b). Niemals still verlieren.
+5. **DB-Insert** (immer, via Supabase-MCP `execute_sql`, upsert on `run_date`):
+   ```sql
+   INSERT INTO nureine_impact_runs (run_date,status,scores,channel,root_cause,
+     change_summary,change_file,predicts,pr_url,pr_number,pr_state,metrics,log_markdown)
+   VALUES (current_date,'ok', '{…}'::jsonb, …, '<pr_url>', <nr>, 'open', '{…}'::jsonb, '<log>')
+   ON CONFLICT (run_date) DO UPDATE SET …;
+   ```
 
-### Verifizieren + Auto-Rollback (Schritt 1 des nächsten Laufs)
-Für jede Hypothese mit `status: "applied"`, deren Signal reif ist (§4):
-- **Signal verbessert** → `status: "confirmed"`, Code bleibt. Weiter.
-- **Signal verschlechtert/neutral** → `status: "rejected"`:
-  1. `git revert <commit_sha> --no-edit` → Push auf `main` (macht die Änderung
-     rückgängig, behält die History sauber statt force-push).
-  2. Erneut GRÜN-GATE vor dem Revert-Push (ein Revert kann auch brechen).
-  3. Ins Log: warum verworfen + welches Signal. `verdict_source: "metric"`.
-  4. Diesen Tag eine **andere Ursache** angehen (nicht dieselbe nochmal).
-- **Signal noch unreif** (Daten-Lag) → bleibt `applied`, `verdict_source: "self"`,
-  morgen erneut prüfen. Self-Score bestätigt/verwirft NIE allein (§4).
+### 6b. PUSH-FALLBACK (PR scheitert)
+Die Code-Arbeit darf nie verloren gehen. Bei 403/Policy (einmalig, nicht wiederholen):
+- Patch: `git format-patch origin/main..HEAD --stdout > impact-DATE.patch`.
+- Patch an Aaron senden (SendUserFile) + PushNotification mit Kern-Erkenntnis.
+- DB-Eintrag trotzdem schreiben (`pr_url` NULL, im `log_markdown`: "PR blockiert,
+  als Patch geliefert"). Patch aus dem Tree löschen.
 
-### Was NIE auto-geändert wird (nur Empfehlung ins Log, kein Commit)
+### Verifizieren (Schritt 1 des nächsten Laufs) — über echtes Signal
+Lies den letzten Lauf aus der DB. Wenn er einen offenen Vorschlag hatte:
+- **PR gemerged + Signal besser** (§4) → schreibe heutigen Eintrag mit
+  `verify_of_date=<damals>`, `verdict:"confirmed"`, `verdict_source:"metric"`.
+- **PR gemerged + Signal schlechter/neutral** → `verdict:"rejected"`. Schlage einen
+  **Revert-PR** vor (Branch `impact/revert-DATE`, `git revert <sha>`), öffne ihn,
+  Aaron merged. Heute eine ANDERE Ursache angehen.
+- **PR noch offen** (nicht gemerged) → kein Signal möglich. `verdict:"pending"`,
+  `verdict_source:"self"`. Nicht erneut denselben Vorschlag machen.
+- **Signal unreif** (Daten-Lag) → `verdict:"pending"`, morgen erneut.
+Self-Score bestätigt/verwirft NIE allein (§4).
+
+### Was NIE auto-geändert wird (nur Finding in DB, kein PR-Code)
 Versand-Trigger/Crons, Auth, Secrets, Schema-Migrationen (`supabase/migrations`),
-Lösch-Operationen, `package.json`-Deps. Diese Hebel sind zu riskant für autonome
-Pushes — sie landen als markierte Empfehlung im Tages-Log für Aarons Hand.
+Lösch-Operationen, `package.json`-Deps. Zu riskant — landen als Empfehlung im
+`log_markdown`/`root_cause` für Aarons Hand.
 
 ---
 
 ## 7. Dashboard
 
-`/admin/impact` (SvelteKit-Route, hinter bestehendem Admin-Auth):
-- **Score-Trend** (Z/S/E/D + Gesamt über Zeit) — Liniendiagramm
-- **Vortags-Hypothese:** Text + Status (open/applied/✅bestätigt/❌verworfen) + Signal-Beleg
-- **Heutige Top-Änderung:** Was + Ursache + Link zum Commit
-- Quelle: liest `nureine-impact/state.json` (vom Routine-Lauf geschrieben/committet)
+`/admin/impact` (SvelteKit, hinter Admin-Auth) liest **live aus `nureine_impact_runs`**
+(via `supabaseAdmin`) — die Analyse erscheint also VOR dem PR-Merge:
+- **Score-Trend** (Gesamt über Zeit) + Achsen-Kacheln (Z/S/E/D, Schnitt der Kanäle)
+- **Heutiges Finding:** Ursache + Änderung + Datei + Vorhersage + **PR-Link-Button**
+  (PR-Status: offen / gemerged / geschlossen)
+- **Vortags-Hypothese:** verdict (bestätigt/verworfen/pending) + Signal-Beleg
+- **Tages-Report** (ausklappbar, `log_markdown`)
 
 ---
 
 ## 8. Blocked-Run (DB nicht erreichbar / Content fehlt)
 
 Wenn PULL (§3) fehlschlägt — DB nicht erreichbar, Connector falsch, Keys fehlen:
-- **Niemals Scores erfinden.** Kein Self-Score auf Phantomdaten. (Erster Lauf hat
-  das korrekt gemacht.)
-- Setze `state.json` → `last_run` = heute, `last_run_status: "blocked"`,
-  `blocked_reason: "<kurz>"`. KEINEN `history`-Eintrag (keine Fake-Scores).
-- **Anti-Spam:** Wenn der letzte Lauf schon `blocked` mit derselben Ursache war,
-  NICHT erneut ein Log committen — nur `last_run` aktualisieren (1 Zeile) und still
-  beenden. Ein Blocker-Log pro Ursache genügt, bis er behoben ist.
-- Push (state.json) auf `main`, Grün-Gate gilt auch hier.
-- Das Dashboard zeigt dann "letzter Lauf: blockiert — <Grund>" statt Leerzustand.
+- **Niemals Scores erfinden.** Kein Self-Score auf Phantomdaten.
+- Schreibe (wenn die DB wenigstens fürs Schreiben erreichbar ist) einen Eintrag
+  `status:"blocked"`, `blocked_reason:"<kurz>"`, KEINE `scores`. Sonst:
+  PushNotification an Aaron mit dem Grund.
+- **Anti-Spam:** War der letzte Lauf schon `blocked` mit derselben Ursache →
+  nur `run_date` aktualisieren (upsert), still beenden. Ein Blocker pro Ursache.
+- Dashboard zeigt dann das Blocked-Banner statt Leerzustand.

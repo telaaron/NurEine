@@ -9,6 +9,7 @@
 			title: 'Überblick',
 			items: [
 				{ href: '/admin', label: 'Dashboard', icon: 'grid', badge: 0 },
+				{ href: '/admin/impact', label: 'Impact', icon: 'heart', badge: 0 },
 				{ href: '/admin/kosten', label: 'Kosten', icon: 'coins', badge: 0 }
 			]
 		},
@@ -51,6 +52,7 @@
 		{:else if name === 'send'}<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
 		{:else if name === 'volume'}<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
 		{:else if name === 'coins'}<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>
+			{:else if name === 'heart'}<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>
 		{/if}
 	</svg>
 {/snippet}

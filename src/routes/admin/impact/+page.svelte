@@ -1,10 +1,26 @@
 <script lang="ts">
+	import { base } from '$app/paths';
+	import { invalidateAll } from '$app/navigation';
 	import type { ImpactRun } from './+page.server';
 	let { data } = $props();
 
 	const runs = $derived(data.runs as ImpactRun[]); // neueste zuerst
-	const latest = $derived(runs[0] ?? null);
-	const prev = $derived(runs[1] ?? null);
+	// Aktiver Lauf (PR offen / blockiert) steht prominent oben; abgehakte in History.
+	const latest = $derived((data.active as ImpactRun | null) ?? null);
+	const prev = $derived(runs.find((r) => r !== latest) ?? null);
+
+	let marking = $state(false);
+	async function markMerged() {
+		if (!latest) return;
+		marking = true;
+		await fetch(base + '/api/admin/impact', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ action: 'mark-merged', id: latest.id })
+		});
+		marking = false;
+		await invalidateAll();
+	}
 
 	// Trend: chronologisch (älteste zuerst), nur Läufe mit Gesamt-Score.
 	const series = $derived(
@@ -63,10 +79,18 @@
 </script>
 
 <div class="mb-8">
-	<h1 class="display text-2xl mb-1" style="color: var(--color-ink); font-weight: 600;">Impact</h1>
+	<div class="flex items-center justify-between gap-4 flex-wrap mb-1">
+		<h1 class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">Impact</h1>
+		{#if data.doneCount > 0}
+			<a href={base + '/admin/impact/history'} class="text-sm inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors" style="color: var(--color-ink-soft); border: 1px solid var(--color-rule);">
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+				History ({data.doneCount})
+			</a>
+		{/if}
+	</div>
 	<p class="text-sm" style="color: var(--color-ink-soft);">
 		Tägliche Hoffnungs-Wirkung über alle Kanäle — bewertet von der Impact-Routine.
-		{#if latest}<span style="color: var(--color-faint);">Letzter Lauf: {latest.run_date}</span>{/if}
+		{#if latest}<span style="color: var(--color-faint);">Aktueller Lauf: {latest.run_date}</span>{/if}
 	</p>
 </div>
 
@@ -80,11 +104,17 @@
 	</div>
 {/if}
 
-{#if !data.ok || runs.length === 0}
+{#if !data.ok || !latest}
 	<div class="rounded-xl p-8 text-center" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
 		<p style="color: var(--color-ink-soft);">
-			Noch kein Impact-Lauf. Sobald die Morgen-Routine läuft und in
-			<code>nureine_impact_runs</code> schreibt, erscheinen hier Trend, Finding und der PR-Link.
+			{#if runs.length > 0}
+				Alles abgehakt — kein offener Vorschlag. Vergangene Läufe findest du in der
+				<a href={base + '/admin/impact/history'} style="color: var(--color-amber);">History</a>.
+				Der nächste Morgen-Lauf legt hier ein neues Finding ab.
+			{:else}
+				Noch kein Impact-Lauf. Sobald die Morgen-Routine läuft und in
+				<code>nureine_impact_runs</code> schreibt, erscheinen hier Trend, Finding und der PR-Link.
+			{/if}
 		</p>
 	</div>
 {:else}
@@ -151,7 +181,17 @@
 						<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
 						PR auf GitHub ansehen &amp; mergen{#if latest.pr_number} #{latest.pr_number}{/if}
 					</a>
-					<span class="text-[0.6rem] font-bold uppercase tracking-wide rounded-full px-2 py-1" style="background: {ps.bg}; color: {ps.fg};">{ps.label}</span>
+					{#if latest.pr_state === 'open' || !latest.pr_state}
+						<button type="button" onclick={markMerged} disabled={marking}
+							class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+							style="background: #1f9d63; color: #fff; opacity: {marking ? '0.6' : '1'};">
+							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+							{marking ? 'Speichere…' : 'Als gemerged abhaken'}
+						</button>
+						<span class="text-xs" style="color: var(--color-faint);">→ wandert in die History</span>
+					{:else}
+						<span class="text-[0.6rem] font-bold uppercase tracking-wide rounded-full px-2 py-1" style="background: {ps.bg}; color: {ps.fg};">{ps.label}</span>
+					{/if}
 				</div>
 			{/if}
 		</div>

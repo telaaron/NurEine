@@ -5,6 +5,7 @@ import { supabaseAdmin } from '$lib/server/supabase/client';
 // beim Lauf direkt in die DB. Kein state.json-Datei-Umweg mehr.
 
 export interface ImpactRun {
+	id: number;
 	run_date: string;
 	status: 'ok' | 'blocked' | 'gate_failed';
 	blocked_reason: string | null;
@@ -33,7 +34,16 @@ export async function load() {
 		.limit(60);
 
 	if (error || !data) {
-		return { ok: false as const, runs: [] as ImpactRun[] };
+		return { ok: false as const, runs: [] as ImpactRun[], active: null, doneCount: 0 };
 	}
-	return { ok: true as const, runs: data as ImpactRun[] };
+	const runs = data as ImpactRun[];
+
+	// "Aktiv" = neuester Lauf, dessen PR noch offen ist (oder der blockiert/gate_failed
+	// war und damit deine Aufmerksamkeit braucht). Abgehakte Läufe (merged/closed)
+	// wandern in den History-Tab. Trend wird aus ALLEN Läufen gerechnet.
+	const isDone = (r: ImpactRun) => r.pr_state === 'merged' || r.pr_state === 'closed';
+	const active = runs.find((r) => !isDone(r)) ?? null;
+	const doneCount = runs.filter(isDone).length;
+
+	return { ok: true as const, runs, active, doneCount };
 }

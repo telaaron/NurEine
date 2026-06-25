@@ -68,9 +68,20 @@ Tabellen-Prefix: `nureine_`. Lesen via Service-Key (read-only genügt).
 
 **Ausführungsumgebung:** Die Routine läuft in der **Cloud** (geklontes Repo +
 angehängte Connectoren). Sie hat **keinen** Zugriff auf Aarons lokalen Mac,
-keinen Dev-Server, keinen Browser. Inhalt + Metriken kommen über den
-**Supabase-Connector** (MCP-Query auf die `nureine_*`-Tabellen). Design wird
-aus dem Code/Markup bewertet, nicht aus einem Screenshot.
+keinen Dev-Server, keinen Browser. Design wird aus dem Code/Markup bewertet,
+nicht aus einem Screenshot.
+
+**DB-Zugriff — WICHTIG (sonst läuft die Routine blind):**
+- Nutze den **hosted Supabase-MCP** (`@supabase/mcp-server-supabase`, Management-API,
+  Tool `execute_sql` / `list_tables`). Er fragt die ECHTE gehostete DB ab.
+- **NIEMALS** den `supabase-data`-Connector aus der Repo-`.mcp.json` benutzen —
+  der zeigt hardcoded auf `http://127.0.0.1:54321` (lokale Dev-Instanz) und ist
+  in der Cloud nicht erreichbar (connection refused). Das ist KEIN "Projekt nicht
+  live", sondern der falsche Connector.
+- Voraussetzung: `SUPABASE_PROJECT_REF` + `SUPABASE_ACCESS_TOKEN` sind im
+  Schedule-Setup gesetzt. Fehlen sie → DB nicht erreichbar → blocked-Run (siehe §8).
+- Beispiel-Query: `SELECT id,title,subtitle,summary,emoji,impact_score,is_hero
+  FROM nureine_stories WHERE published_at::date = current_date;`
 
 **Pull-Reihenfolge:** Stories → Social-Posts → Highlight/Newsletter-Body →
 Design aus den Komponenten ableiten.
@@ -152,5 +163,20 @@ Pushes — sie landen als markierte Empfehlung im Tages-Log für Aarons Hand.
 `/admin/impact` (SvelteKit-Route, hinter bestehendem Admin-Auth):
 - **Score-Trend** (Z/S/E/D + Gesamt über Zeit) — Liniendiagramm
 - **Vortags-Hypothese:** Text + Status (open/applied/✅bestätigt/❌verworfen) + Signal-Beleg
-- **Heutige Top-Änderung:** Was + Ursache + Link zum PR
+- **Heutige Top-Änderung:** Was + Ursache + Link zum Commit
 - Quelle: liest `nureine-impact/state.json` (vom Routine-Lauf geschrieben/committet)
+
+---
+
+## 8. Blocked-Run (DB nicht erreichbar / Content fehlt)
+
+Wenn PULL (§3) fehlschlägt — DB nicht erreichbar, Connector falsch, Keys fehlen:
+- **Niemals Scores erfinden.** Kein Self-Score auf Phantomdaten. (Erster Lauf hat
+  das korrekt gemacht.)
+- Setze `state.json` → `last_run` = heute, `last_run_status: "blocked"`,
+  `blocked_reason: "<kurz>"`. KEINEN `history`-Eintrag (keine Fake-Scores).
+- **Anti-Spam:** Wenn der letzte Lauf schon `blocked` mit derselben Ursache war,
+  NICHT erneut ein Log committen — nur `last_run` aktualisieren (1 Zeile) und still
+  beenden. Ein Blocker-Log pro Ursache genügt, bis er behoben ist.
+- Push (state.json) auf `main`, Grün-Gate gilt auch hier.
+- Das Dashboard zeigt dann "letzter Lauf: blockiert — <Grund>" statt Leerzustand.

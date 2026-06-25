@@ -4,6 +4,8 @@
   "history": [],
   "open_hypotheses": [],
   "last_run": null,
+  "last_run_status": "ok",
+  "blocked_reason": null,
   "_history_item_shape": {
     "date": "YYYY-MM-DD",
     "scores": { "Z": 0, "S": 0, "E": 0, "D": 0, "gesamt": 0 },

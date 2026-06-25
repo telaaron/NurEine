@@ -54,6 +54,18 @@
 	</p>
 </div>
 
+{#if data.lastRunStatus === 'blocked'}
+	<div class="rounded-xl p-4 mb-6 flex items-start gap-3" style="background: var(--color-rose-tint); border: 1px solid var(--color-rose);">
+		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-rose)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+		<div>
+			<div class="text-sm font-semibold" style="color: var(--color-rose);">Letzter Lauf blockiert{#if data.lastRun} — {data.lastRun}{/if}</div>
+			{#if data.blockedReason}
+				<div class="text-sm mt-0.5" style="color: var(--color-ink-soft);">{data.blockedReason}</div>
+			{/if}
+		</div>
+	</div>
+{/if}
+
 {#if !data.ok || series.length === 0}
 	<div class="rounded-xl p-8 text-center" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
 		<p style="color: var(--color-ink-soft);">

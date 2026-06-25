@@ -34,6 +34,8 @@ interface ImpactState {
 	history: ImpactHistory[];
 	open_hypotheses: ImpactHypothesis[];
 	last_run: string | null;
+	last_run_status?: 'ok' | 'blocked';
+	blocked_reason?: string;
 }
 
 export async function load() {
@@ -46,10 +48,19 @@ export async function load() {
 			ok: true as const,
 			history,
 			openHypotheses: state.open_hypotheses ?? [],
-			lastRun: state.last_run ?? null
+			lastRun: state.last_run ?? null,
+			lastRunStatus: state.last_run_status ?? 'ok',
+			blockedReason: state.blocked_reason ?? null
 		};
 	} catch {
 		// Datei fehlt oder kaputt → Dashboard zeigt Leerzustand statt 500.
-		return { ok: false as const, history: [], openHypotheses: [], lastRun: null };
+		return {
+			ok: false as const,
+			history: [],
+			openHypotheses: [],
+			lastRun: null,
+			lastRunStatus: 'ok' as const,
+			blockedReason: null
+		};
 	}
 }

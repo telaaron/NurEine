@@ -12,6 +12,12 @@
 	const tone = $derived(featured ? toneStyles[featured.tone] : toneStyles['amber']);
 	const rest = $derived(data.rest);
 
+	// Standfirst unter der Headline: der menschliche Funke (share_hook) führt, nicht
+	// der Institutions-Dek. Genau diese erste Zeile entscheidet beim Erstbesucher in
+	// zwei Sekunden, ob Hoffnung ankommt — der dröge Titel allein tut das nicht.
+	// Fallback auf den faktischen Dek, falls kein Hook generiert wurde.
+	const heroLead = $derived(featured?.shareHook?.trim() || featured?.dek || '');
+
 	// Hero illustration: prefer the story's real image (via WebP-Proxy), else category.
 	const featuredImg = $derived(
 		featured
@@ -131,7 +137,7 @@
 							class="mt-5 sm:mt-6 text-base sm:text-xl lg:text-2xl leading-[1.5] sm:leading-[1.45] max-w-[46ch]"
 							style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 						>
-							{featured.dek}
+							{heroLead}
 						</p>
 					</a>
 

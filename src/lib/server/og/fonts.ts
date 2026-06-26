@@ -6,7 +6,7 @@ import NewsreaderMedium from '$lib/server/fonts/Newsreader-Medium.ttf?url';
 import InterRegular from '$lib/server/fonts/Inter-Regular.ttf?url';
 import InterSemiBold from '$lib/server/fonts/Inter-SemiBold.ttf?url';
 import InterBold from '$lib/server/fonts/Inter-Bold.ttf?url';
-import LogoSvg from '$lib/server/og/NurEine.svg?url';
+import LogoPng from '$lib/server/og/NurEine-mark.png?url';
 
 /**
  * Load TTF fonts for Satori OG image rendering.
@@ -32,11 +32,11 @@ export interface SatoriFont {
 let _fonts: SatoriFont[] | null = null;
 let _logo: string | null = null;
 
-/** NurEine lighthouse logo as a base64 SVG data-URI (cached). */
+/** NurEine lighthouse logo as a base64 PNG data-URI (cached). */
 export async function loadLogoDataUri(): Promise<string> {
 	if (_logo) return _logo;
-	const svg = await read(LogoSvg).text();
-	_logo = `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`;
+	const buf = Buffer.from(await read(LogoPng).arrayBuffer());
+	_logo = `data:image/png;base64,${buf.toString('base64')}`;
 	return _logo;
 }
 

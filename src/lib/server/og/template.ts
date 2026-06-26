@@ -119,7 +119,7 @@ export function buildOgTemplate(input: OgTemplateInput): string {
     <div style="display:flex;align-items:center;">
       ${
 		logoDataUri
-			? `<img src="${logoDataUri}" width="38" height="38" style="width:38px;height:38px;" />`
+			? `<img src="${logoDataUri}" width="31" height="44" style="width:31px;height:44px;" />`
 			: `<div style="display:flex;width:30px;height:36px;background:${INK};border-radius:4px 4px 16px 16px;"></div>`
 	}
       <div style="font-family:'Space Grotesk';font-size:27px;font-weight:700;color:${INK};margin-left:12px;letter-spacing:-0.02em;">NurEine</div>

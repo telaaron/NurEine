@@ -52,8 +52,15 @@ Nur Zahlen + 1 ehrlicher Satz je Story. Keine Essays.
 
 ### A4 — DIE EINE WÄHLEN (Schwelle, RESONANCE.md)
 - Höchste Resonanz ≥ 7.0 → das ist die **Hero-Story für morgen**.
-- Nichts ≥ 7.0 → **Archiv-Perle** holen (`resonance_score ≥ 7.5`, lange nicht
-  Hero gewesen) und `below_bar=true` setzen. NIE Tagesfüllstoff als Hero.
+- Nichts ≥ 7.0 → **Archiv-Perle** aus dem Pool (Backfill, siehe BACKFILL.md):
+  ```sql
+  SELECT id,title,summary,resonance_score FROM nureine_stories
+  WHERE resonance_score >= 7.5 AND is_hero = false
+    AND id NOT IN (SELECT story_id FROM nureine_curation_queue WHERE story_id IS NOT NULL)
+  ORDER BY resonance_score DESC, created_at ASC LIMIT 5;
+  ```
+  Wähle eine starke, lange nicht gelaufene → `is_pearl=true`, `below_bar=true`.
+  NIE Tagesfüllstoff als Hero.
 - Begründe in EINEM Satz, warum genau diese (rationale).
 
 ### A5 — KURATIONS-QUEUE FÜLLEN (upsert on for_date+channel)

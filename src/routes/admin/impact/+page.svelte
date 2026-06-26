@@ -9,6 +9,27 @@
 	const latest = $derived((data.active as ImpactRun | null) ?? null);
 	const prev = $derived(runs.find((r) => r !== latest) ?? null);
 
+	// Kurations-Queue (Freigabe für morgen) — nach Datum gruppiert, neueste Vorschläge zuerst.
+	const curation = $derived((data.curation ?? []) as Array<import('./+page.server').CurationItem>);
+	const curationDates = $derived([...new Set(curation.map((c) => c.for_date))].sort());
+	const channelLabel: Record<string, string> = { hero: 'Hero (Feed + Mail)', instagram: 'Instagram', email: 'E-Mail' };
+	const channelOrder: Record<string, number> = { hero: 0, instagram: 1, email: 2 };
+	function itemsForDate(d: string) {
+		return curation.filter((c) => c.for_date === d).sort((a, b) => channelOrder[a.channel] - channelOrder[b.channel]);
+	}
+
+	let deciding = $state(0);
+	async function decideCuration(id: number, approve: boolean) {
+		deciding = id;
+		await fetch(base + '/api/admin/impact', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ action: approve ? 'curation-approve' : 'curation-reject', id })
+		});
+		deciding = 0;
+		await invalidateAll();
+	}
+
 	let marking = $state(false);
 	async function markMerged() {
 		if (!latest) return;
@@ -93,6 +114,54 @@
 		{#if latest}<span style="color: var(--color-faint);">Aktueller Lauf: {latest.run_date}</span>{/if}
 	</p>
 </div>
+
+<!-- KURATION: Freigabe für morgen (dein täglicher Touchpoint) -->
+{#if curationDates.length > 0}
+	{#each curationDates as d}
+		{@const items = itemsForDate(d)}
+		{@const hero = items.find((i) => i.channel === 'hero')}
+		<div class="rounded-xl p-5 mb-6" style="background: var(--color-paper); border: 2px solid var(--color-amber);">
+			<div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+				<div class="text-sm font-semibold" style="color: var(--color-ink);">
+					Vorschlag für {d}
+					{#if hero?.below_bar}<span class="text-[0.65rem] ml-2 rounded-full px-2 py-0.5" style="background: var(--color-rose); color:#fff;">unter Schwelle — Archiv-Perle</span>
+					{:else if hero?.is_pearl}<span class="text-[0.65rem] ml-2 rounded-full px-2 py-0.5" style="background: var(--color-canvas-soft); color: var(--color-ink-soft);">Archiv-Perle</span>{/if}
+				</div>
+				{#if hero?.resonance_score != null}
+					<span class="text-sm" style="color: var(--color-ink-soft);">Resonanz <strong style="color: var(--color-ink);">{hero.resonance_score}/10</strong></span>
+				{/if}
+			</div>
+
+			{#if hero?.story_title}
+				<div class="mb-1 text-base" style="color: var(--color-ink); font-weight: 600;">{hero.story_title}</div>
+				{#if hero.story_summary}<div class="text-sm mb-2" style="color: var(--color-ink-soft);">{hero.story_summary}</div>{/if}
+			{/if}
+			{#if hero?.rationale}<div class="text-sm mb-3 italic" style="color: var(--color-ink-soft);">„{hero.rationale}"</div>{/if}
+
+			<!-- pro Kanal: Status + Freigabe -->
+			<div class="flex flex-col gap-2">
+				{#each items as it}
+					<div class="flex items-center gap-3 px-3 py-2 rounded-lg flex-wrap" style="background: var(--color-canvas-soft);">
+						<span class="text-sm font-medium" style="color: var(--color-ink); min-width: 130px;">{channelLabel[it.channel]}</span>
+						{#if it.draft && (it.draft.caption || it.draft.subject)}
+							<span class="text-xs flex-1 truncate" style="color: var(--color-ink-soft);">{it.draft.subject ?? it.draft.caption}</span>
+						{:else}
+							<span class="text-xs flex-1" style="color: var(--color-faint);">dieselbe Hero-Story</span>
+						{/if}
+						{#if it.status === 'approved'}
+							<span class="text-[0.6rem] font-bold uppercase rounded-full px-2 py-0.5" style="background:#1f9d63;color:#fff;">freigegeben ✓</span>
+						{:else}
+							<button type="button" onclick={() => decideCuration(it.id, true)} disabled={deciding === it.id}
+								class="text-xs font-medium px-3 py-1.5 rounded-lg" style="background:#1f9d63;color:#fff;opacity:{deciding === it.id ? '0.6' : '1'};">Freigeben</button>
+							<button type="button" onclick={() => decideCuration(it.id, false)} disabled={deciding === it.id}
+								class="text-xs font-medium px-3 py-1.5 rounded-lg" style="background:transparent;color:var(--color-rose);border:1px solid var(--color-rose);">Ablehnen</button>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/each}
+{/if}
 
 {#if latest?.status === 'blocked'}
 	<div class="rounded-xl p-4 mb-6 flex items-start gap-3" style="background: var(--color-rose-tint); border: 1px solid var(--color-rose);">

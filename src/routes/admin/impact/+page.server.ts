@@ -26,15 +26,56 @@ export interface ImpactRun {
 	log_markdown: string | null;
 }
 
-export async function load() {
-	const { data, error } = await supabaseAdmin
-		.from('nureine_impact_runs')
-		.select('*')
-		.order('run_date', { ascending: false })
-		.limit(60);
+export interface CurationItem {
+	id: number;
+	for_date: string;
+	channel: 'hero' | 'instagram' | 'email';
+	story_id: string | null;
+	resonance_score: number | null;
+	rationale: string | null;
+	is_pearl: boolean;
+	below_bar: boolean;
+	status: 'proposed' | 'approved' | 'rejected' | 'published';
+	draft: Record<string, unknown>;
+	// joined Story-Felder
+	story_title?: string | null;
+	story_summary?: string | null;
+	story_category?: string | null;
+}
 
+export async function load() {
+	const [runsRes, curationRes] = await Promise.all([
+		supabaseAdmin.from('nureine_impact_runs').select('*').order('run_date', { ascending: false }).limit(60),
+		// Kurations-Queue: offene Vorschläge (proposed/approved) für heute+morgen.
+		supabaseAdmin
+			.from('nureine_curation_queue')
+			.select('*, story:story_id(title,summary,category)')
+			.in('status', ['proposed', 'approved'])
+			.order('for_date', { ascending: true })
+	]);
+
+	const curation: CurationItem[] = (curationRes.data ?? []).map((r) => {
+		const story = (r as { story?: { title?: string; summary?: string; category?: string } }).story;
+		return {
+			id: r.id,
+			for_date: r.for_date,
+			channel: r.channel,
+			story_id: r.story_id,
+			resonance_score: r.resonance_score,
+			rationale: r.rationale,
+			is_pearl: r.is_pearl,
+			below_bar: r.below_bar,
+			status: r.status,
+			draft: r.draft ?? {},
+			story_title: story?.title ?? null,
+			story_summary: story?.summary ?? null,
+			story_category: story?.category ?? null
+		};
+	});
+
+	const { data, error } = runsRes;
 	if (error || !data) {
-		return { ok: false as const, runs: [] as ImpactRun[], active: null, doneCount: 0 };
+		return { ok: false as const, runs: [] as ImpactRun[], active: null, doneCount: 0, curation };
 	}
 	const runs = data as ImpactRun[];
 
@@ -45,5 +86,5 @@ export async function load() {
 	const active = runs.find((r) => !isDone(r)) ?? null;
 	const doneCount = runs.filter(isDone).length;
 
-	return { ok: true as const, runs, active, doneCount };
+	return { ok: true as const, runs, active, doneCount, curation };
 }

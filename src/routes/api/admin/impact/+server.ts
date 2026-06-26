@@ -26,5 +26,16 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		return json({ ok: true, pr_state });
 	}
 
+	// Kurations-Queue: Vorschlag für morgen freigeben/ablehnen.
+	if ((body.action === 'curation-approve' || body.action === 'curation-reject') && body.id) {
+		const status = body.action === 'curation-approve' ? 'approved' : 'rejected';
+		const { error } = await supabaseAdmin
+			.from('nureine_curation_queue')
+			.update({ status, decided_at: new Date().toISOString() })
+			.eq('id', body.id);
+		if (error) return json({ error: error.message }, { status: 500 });
+		return json({ ok: true, status });
+	}
+
 	return json({ error: 'Unknown action' }, { status: 400 });
 };

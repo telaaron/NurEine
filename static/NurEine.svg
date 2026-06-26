@@ -1,58 +1,41 @@
-<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<svg width="640" height="740" viewBox="280 250 480 690" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0.25" y2="1">
-      <stop offset="0" stop-color="#f6f1e7"/><stop offset="1" stop-color="#efe7d8"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.46" r="0.42">
-      <stop offset="0" stop-color="#fff3da" stop-opacity="0.95"/>
-      <stop offset="0.55" stop-color="#ffe6b8" stop-opacity="0.5"/>
-      <stop offset="1" stop-color="#ffe6b8" stop-opacity="0"/>
-    </radialGradient>
     <linearGradient id="lantern" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fde8c4"/><stop offset="1" stop-color="#f7d49a"/>
+      <stop offset="0" stop-color="#fbe2b4"/><stop offset="1" stop-color="#f3c987"/>
     </linearGradient>
   </defs>
 
-  <!-- ground -->
-  <rect width="1024" height="1024" fill="url(#bg)"/>
-
-  <!-- soft light halo radiating from the lantern -->
-  <rect width="1024" height="1024" fill="url(#glow)"/>
-
-  <!-- ============ TOWER (two-tone paper-cut) ============ -->
-  <!-- lit (left) half of the tapered tower -->
-  <path d="M512 720 L512 1024 L335 1024 L398 720 Z" fill="#7a563c"/>
-  <!-- shadow (right) half -->
-  <path d="M512 720 L626 720 L689 1024 L512 1024 Z" fill="#6a4a32"/>
+  <!-- TOWER (two-tone, tapered) -->
+  <path d="M512 720 L512 928 L392 928 L400 720 Z" fill="#7a563c"/>
+  <path d="M512 720 L624 720 L632 928 L512 928 Z" fill="#6a4a32"/>
   <!-- door -->
-  <path d="M512 838 q34 0 34 34 l0 96 -68 0 0 -96 q0 -34 34 -34 Z" fill="#41281280" opacity="0.9"/>
-  <path d="M512 838 q30 0 30 30 l0 100 -60 0 0 -100 q0 -30 30 -30 Z" fill="#3c2410"/>
+  <path d="M512 832 q30 0 30 30 l0 66 -60 0 0 -66 q0 -30 30 -30 Z" fill="#3c2410"/>
 
-  <!-- ============ GALLERY / BALCONY base ============ -->
-  <path d="M330 712 q-6 -18 14 -18 L680 694 q20 0 14 18 l-14 116 q-4 14 -20 14 L350 842 q-16 0 -20 -14 Z" fill="#4a3220"/>
-  <!-- rail cut-outs (the cream shows through) -->
-  <g fill="#f3ecdf">
-    <rect x="360" y="726" width="46" height="58" rx="6"/>
-    <rect x="430" y="726" width="46" height="58" rx="6"/>
-    <rect x="548" y="726" width="46" height="58" rx="6"/>
-    <rect x="618" y="726" width="46" height="58" rx="6"/>
-  </g>
-
-  <!-- ============ LANTERN ROOM ============ -->
-  <!-- glowing glass behind the mullions -->
-  <rect x="386" y="486" width="252" height="216" rx="14" fill="url(#lantern)"/>
-  <!-- dark mullion frame: posts + cross -->
+  <!-- LANTERN glass -->
+  <rect x="396" y="486" width="232" height="208" rx="12" fill="url(#lantern)"/>
   <g fill="#3a2614">
-    <rect x="386" y="486" width="34" height="216" rx="8"/>
-    <rect x="604" y="486" width="34" height="216" rx="8"/>
-    <rect x="468" y="486" width="30" height="216"/>
-    <rect x="526" y="486" width="30" height="216"/>
+    <rect x="396" y="486" width="32" height="208" rx="7"/>
+    <rect x="596" y="486" width="32" height="208" rx="7"/>
+    <rect x="474" y="486" width="28" height="208"/>
+    <rect x="522" y="486" width="28" height="208"/>
   </g>
 
-  <!-- ============ ROOF (dark hip roof, flared eaves) ============ -->
+  <!-- BALCONY: solid top deck + bottom rim + 5 rail posts (gaps are transparent) -->
+  <g fill="#4a3220">
+    <!-- top deck under the lantern -->
+    <path d="M344 686 q-12 0 -12 12 l0 26 360 0 0 -26 q0 -12 -12 -12 Z"/>
+    <!-- bottom rim of the gallery -->
+    <rect x="338" y="800" width="348" height="26" rx="8"/>
+    <!-- left & right end posts + 4 inner posts -->
+    <rect x="338" y="724" width="30" height="78"/>
+    <rect x="430" y="724" width="26" height="78"/>
+    <rect x="498" y="724" width="28" height="78"/>
+    <rect x="568" y="724" width="26" height="78"/>
+    <rect x="656" y="724" width="30" height="78"/>
+  </g>
+
+  <!-- ROOF (flared hip) -->
   <path d="M512 322 L700 498 q10 12 -8 12 L332 510 q-18 0 -8 -12 Z" fill="#4a3220"/>
-  <!-- roof shadow (right slope) -->
   <path d="M512 322 L700 498 q10 12 -8 12 L512 510 Z" fill="#3a2716"/>
-  <!-- finial -->
   <rect x="499" y="268" width="26" height="62" rx="12" fill="#4a3220"/>
 </svg>

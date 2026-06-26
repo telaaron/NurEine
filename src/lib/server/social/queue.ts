@@ -630,6 +630,12 @@ export async function publishStoryDue(): Promise<{ posted: boolean; reason: stri
 	const { data: cand } = await supabaseAdmin
 		.from('nureine_stories')
 		.select('id,title,subtitle,category,image_url,impact_score')
+		// Gleiche redaktionelle Schwelle wie der Feed-Post: nur ig_ok=true und kein
+		// sensibler Stoff. Vorher reichte impact>=50 — das liess nicht-freigegebene,
+		// teils duester gerahmte Stories (ig_ok=false) oeffentlich als IG-Story raus
+		// und brach das Markenversprechen. ig_ok IST die Ton-Entscheidung der Pipeline.
+		.eq('ig_ok', true)
+		.not('sensitive', 'is', true)
 		.gte('impact_score', 50)
 		.gte('created_at', since72h)
 		.order('created_at', { ascending: false }) // neueste zuerst → aktuell

@@ -29,19 +29,27 @@ DB: hosted Supabase-MCP (Projekt MustSeen, `gbfbhspqwaqvnoxitohd`), NIE localhos
 Hatte der letzte Lauf einen offenen Pipeline-Vorschlag (PR)? Prüfe Status +
 Signal (§4). Setze `verdict` confirmed/rejected/pending (siehe CONSTITUTION §6).
 
-### A2 — KANDIDATEN HOLEN
-Alle heute gefetchten Stories (für morgen):
+### A2 — KANDIDATEN HOLEN (DeepSeek hat schon grob vorgesiebt)
+Alle heute gefetchten Stories. Die Pipeline liefert bereits Grob-Resonanz-Signale
+(`emotion`, `ig_ok`, `ig_hook_type`) — nutze sie als Sieb, NICHT die feinen Achsen.
 ```sql
 SELECT id,title,subtitle,summary,category,source_name,impact_score,
-       impact_reach,impact_evidence,res_perspektive,resonance_score
+       impact_reach,impact_evidence,emotion,ig_ok,ig_hook_type,
+       res_perspektive,resonance_score
 FROM nureine_stories
 WHERE created_at::date = current_date
-ORDER BY impact_score DESC;
+ORDER BY (ig_ok IS TRUE) DESC, impact_score DESC;
 ```
-Lies bei den Top-Kandidaten `body_markdown` (Substanz prüfen, nicht nur Titel).
 
-### A3 — RESONANZ BEWERTEN (4 Achsen, RESONANCE.md)
-Bewerte JEDEN Kandidaten auf `res_perspektive`, `res_koerper`, `res_handlung`,
+### A3 — RESONANZ BEWERTEN (4 Achsen, RESONANCE.md) — token-bewusst
+**Grob-Sieb (DeepSeek-Signale):** Voll auf die 4 Achsen bewertest du die
+**aussichtsreichen** — `ig_ok=true` ODER `emotion IN ('wonder','warmth','pride')`
+ODER `impact_score≥70`. Lies bei diesen `body_markdown` (Substanz, nicht nur Titel).
+Den offensichtlichen Rest (kein Hook, flache Emotion, niedriger Impact) musst du
+NICHT volltext bewerten — vergib zügig eine niedrige Resonanz + 1 Satz "warum Lärm".
+So bleibt das Budget bei den Kandidaten, die wirklich Hero werden könnten.
+
+Bewerte (priorisiert) auf `res_perspektive`, `res_koerper`, `res_handlung`,
 `res_erinnerung` (0–10) + berechne `resonance_score`. Schreibe zurück:
 ```sql
 UPDATE nureine_stories SET res_perspektive=…, res_koerper=…, res_handlung=…,

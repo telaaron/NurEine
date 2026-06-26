@@ -61,7 +61,7 @@
 	<!-- Brand -->
 	<div class="px-5 py-5 border-b" style="border-color: var(--color-rule);">
 		<a href={base + '/admin'} class="flex items-center gap-2.5 group" aria-label="NurEine Admin">
-			<img src="{base}/NurEine.svg" alt="" class="h-7 w-auto" aria-hidden="true" />
+			<img src="{base}/NurEine-mark.svg" alt="" class="h-7 w-auto" aria-hidden="true" />
 			<div class="leading-none">
 				<div class="display text-lg" style="color: var(--color-ink); font-weight: 600;">NurEine</div>
 				<div class="text-[0.6rem] uppercase tracking-[0.18em] mt-0.5" style="color: var(--color-amber); font-family: var(--font-mono);">Cockpit</div>

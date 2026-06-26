@@ -113,7 +113,7 @@
                                 url: 'https://nureine.de',
                                 logo: {
                                         '@type': 'ImageObject',
-                                        url: 'https://nureine.de/NurEine.svg',
+                                        url: 'https://nureine.de/icon-512.png',
                                         caption: 'NurEine'
                                 },
                                 image: 'https://nureine.de/og-default.jpeg',

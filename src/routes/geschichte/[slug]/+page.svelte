@@ -119,7 +119,7 @@
 			publisher: {
 				'@type': 'Organization',
 				name: 'NurEine',
-				logo: { '@type': 'ImageObject', url: `${baseUrl}/NurEine.svg` }
+				logo: { '@type': 'ImageObject', url: `${baseUrl}/icon-512.png` }
 			},
 			mainEntityOfPage: { '@type': 'WebPage', '@id': storyUrl },
 			articleSection: story.category,

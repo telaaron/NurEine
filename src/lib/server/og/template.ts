@@ -115,7 +115,7 @@ export function buildOgTemplate(input: OgTemplateInput): string {
   <!-- Left column -->
   <div style="position:absolute;display:flex;flex-direction:column;left:${PAD}px;top:${PAD}px;width:${COL_W}px;height:${CANVAS_H - PAD * 2}px;">
 
-    <!-- Logo mark (water-drop) + wordmark -->
+    <!-- Logo mark (lighthouse) + wordmark -->
     <div style="display:flex;align-items:center;">
       ${
 		logoDataUri

@@ -32,7 +32,7 @@ export interface SatoriFont {
 let _fonts: SatoriFont[] | null = null;
 let _logo: string | null = null;
 
-/** NurEine water-drop logo as a base64 SVG data-URI (cached). */
+/** NurEine lighthouse logo as a base64 SVG data-URI (cached). */
 export async function loadLogoDataUri(): Promise<string> {
 	if (_logo) return _logo;
 	const svg = await read(LogoSvg).text();

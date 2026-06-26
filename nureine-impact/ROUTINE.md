@@ -33,13 +33,18 @@ Signal (§4). Setze `verdict` confirmed/rejected/pending (siehe CONSTITUTION §6
 Alle heute gefetchten Stories. Die Pipeline liefert bereits Grob-Resonanz-Signale
 (`emotion`, `ig_ok`, `ig_hook_type`) — nutze sie als Sieb, NICHT die feinen Achsen.
 ```sql
-SELECT id,title,subtitle,summary,category,source_name,impact_score,
-       impact_reach,impact_evidence,emotion,ig_ok,ig_hook_type,
-       res_perspektive,resonance_score
-FROM nureine_stories
-WHERE created_at::date = current_date
-ORDER BY (ig_ok IS TRUE) DESC, impact_score DESC;
+SELECT s.id,s.title,s.subtitle,s.summary,s.category,s.source_name,s.impact_score,
+       s.impact_reach,s.impact_evidence,s.emotion,s.ig_ok,s.ig_hook_type,
+       s.res_perspektive,s.resonance_score
+FROM nureine_stories s
+WHERE s.created_at::date = current_date
+ORDER BY (s.ig_ok IS TRUE) DESC, s.impact_score DESC;
 ```
+**Hero-Eignung beachten:** Quellen mit `hero_eligible=false` (WHO/UN/Stats —
+Größe ohne Resonanz, empirisch belegt) dürfen NICHT Hero/IG/Mail werden. Prüfe:
+`SELECT name FROM nureine_rss_sources WHERE hero_eligible=false;` — Stories dieser
+`source_name` bewertest du nur fürs Archiv, NIE als Tages-Hero.
+Quellen-Qualität laufend: `SELECT * FROM nureine_source_quality ORDER BY avg_resonanz DESC;`
 
 ### A3 — RESONANZ BEWERTEN (4 Achsen, RESONANCE.md) — token-bewusst
 **Grob-Sieb (DeepSeek-Signale):** Voll auf die 4 Achsen bewertest du die

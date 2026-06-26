@@ -83,7 +83,17 @@ zweimal im Jahr als täglich Mittelmaß. NIE Lärm publizieren.
 ## Was das für die Quellen bedeutet (Outreach-Signal)
 
 Wenn über mehrere Tage **alle** Kandidaten unter 5.0 resonieren, ist nicht der
-Tag schlecht — die **Quellen** sind es. Dann: Finding ins Dashboard "Quellen
-liefern Größe ohne Resonanz — Outreach-Pipeline überarbeiten" + konkrete
-Analyse aus `nureine_fetch_log` (welche `source_name`/`beat` liefert nur
-niedrige Resonanz). Das ist der tiefste Hebel: bessere Quellen > besseres Framing.
+Tag schlecht — die **Quellen** sind es. Diagnose-View: `nureine_source_quality`
+(Volumen vs. Resonanz pro Quelle). Das ist der tiefste Hebel: bessere Quellen >
+besseres Framing.
+
+### Empirischer Befund (2026-06-27, 462 bewertete Stories)
+- Nur **1,3 %** rissen die Perlen-Schwelle (≥7.5). Der Bestand liefert reichlich
+  Größe, aber Resonanz ist selten — das bestätigt die Prämisse.
+- **Resonanz-Lieferanten:** Reasons to be Cheerful (26 % stark), Positive.News,
+  The Optimist Daily, Good News Network (die meisten Perlen). → mehr davon.
+- **Größe ohne Resonanz (jetzt `hero_eligible=false`):** WHO, UN, Weltbank,
+  Our World in Data — hoher impact_score, aber Resonanz 3.3–4.1, **0** starke.
+  Bleiben als Beleg aktiv, sind aber KEINE Hero-Kandidaten mehr.
+- **Mongabay:** größte Quelle (113 Stories ≈ ¼ des Bestands), aber nur 1,8 %
+  stark — Fachjournalismus-Stil. Übergewicht beobachten.

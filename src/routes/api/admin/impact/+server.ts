@@ -29,11 +29,35 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 	// Kurations-Queue: Vorschlag für morgen freigeben/ablehnen.
 	if ((body.action === 'curation-approve' || body.action === 'curation-reject') && body.id) {
 		const status = body.action === 'curation-approve' ? 'approved' : 'rejected';
+
+		// Die freizugebende Zeile holen (Kanal + Story).
+		const { data: item, error: fetchErr } = await supabaseAdmin
+			.from('nureine_curation_queue')
+			.select('id, channel, story_id')
+			.eq('id', body.id)
+			.maybeSingle();
+		if (fetchErr || !item) return json({ error: fetchErr?.message ?? 'not found' }, { status: 404 });
+
 		const { error } = await supabaseAdmin
 			.from('nureine_curation_queue')
 			.update({ status, decided_at: new Date().toISOString() })
 			.eq('id', body.id);
 		if (error) return json({ error: error.message }, { status: 500 });
+
+		// DER DRAHT: Freigabe des HERO-Kanals macht die Story exklusiv zum Hero.
+		// is_hero wird sonst nirgends automatisch gesetzt (nur manuell im Admin) —
+		// daher kein Konflikt mit der DeepSeek-Pipeline. Feed + Newsletter lesen is_hero.
+		if (body.action === 'curation-approve' && item.channel === 'hero' && item.story_id) {
+			// erst alle entflaggen, dann die kuratierte setzen (exklusiv, genau eine Hero).
+			await supabaseAdmin.from('nureine_stories').update({ is_hero: false }).eq('is_hero', true);
+			const { error: heroErr } = await supabaseAdmin
+				.from('nureine_stories')
+				.update({ is_hero: true })
+				.eq('id', item.story_id);
+			if (heroErr) return json({ error: heroErr.message }, { status: 500 });
+			return json({ ok: true, status, hero_set: item.story_id });
+		}
+
 		return json({ ok: true, status });
 	}
 

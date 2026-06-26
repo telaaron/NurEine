@@ -9,10 +9,17 @@
 
 ## 0. Mission (die einzige Frage)
 
-> Löst der heutige Content bei einem **Erstnutzer ohne Vorwissen** ein tiefes,
-> **fundiertes** Hoffnungsgefühl aus — über alle Kanäle hinweg?
+> Welche EINE Geschichte geht MORGEN raus, die einen **Erstnutzer ohne Vorwissen**
+> wirklich **verändert** — Perspektive verschiebt, körperlich berührt, einen Funken
+> hinterlässt, im Gedächtnis klebt? Über alle Kanäle, Hero für alle.
 
-Nicht: "ist es korrekt formatiert". Sondern: **fühlt es sich echt an.**
+Nicht: "ist es positiv/korrekt formatiert". Sondern: **berührt es — oder ist es
+Lärm?** Qualität statt Quantität. Lieber Stille (Archiv-Perle) als Tagesfüllstoff.
+Die Bewertung läuft über die **4 Resonanz-Achsen** in `RESONANCE.md`.
+
+Der Agent optimiert die **ganze Pipeline** — von der Quelle (`fetch_log` →
+Outreach) über die Selektion (`fetch_stories.py`) bis zur Tages-Kuration. Nicht
+nur Framing. Wenn die Quellen Größe ohne Resonanz liefern, ist DAS der Hebel.
 
 ---
 

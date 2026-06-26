@@ -579,6 +579,31 @@ async function selectNewsletterStory(): Promise<HeroStory | null> {
     'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter,audio_url,share_hook';
   const now = new Date();
 
+  // ── Tier 0: freigegebene Kuration (Hero-für-alle) ──────────────────
+  // Gibt es eine von Aaron freigegebene Mail-Kuration für heute, hat sie
+  // Vorrang vor der Freshness-Logik. So folgt die Mail derselben Story wie
+  // Feed + IG. Ohne Freigabe → unten weiter mit Tier 1/2/3 (abwärtskompatibel).
+  const today = now.toISOString().slice(0, 10);
+  const { data: curated } = await supabaseAdmin
+    .from('nureine_curation_queue')
+    .select('story_id')
+    .eq('for_date', today)
+    .eq('channel', 'email')
+    .eq('status', 'approved')
+    .maybeSingle();
+  const curatedId = (curated as { story_id: string | null } | null)?.story_id;
+  if (curatedId) {
+    const { data: t0 } = await supabaseAdmin
+      .from('nureine_stories')
+      .select(BASE_SELECT)
+      .eq('id', curatedId)
+      .maybeSingle();
+    if (t0) {
+      console.log('[newsletter] story selected from tier 0 (kuratiert + freigegeben)');
+      return t0 as HeroStory;
+    }
+  }
+
   // ── Tier 1: last 24 h ──────────────────────────────────────────────
   const since24h = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const { data: t1 } = await supabaseAdmin

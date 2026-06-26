@@ -472,7 +472,34 @@ const HOOK_STOP_POWER: Record<string, number> = {
   sieg: 78
 };
 
+/**
+ * Liefert die story_id der freigegebenen Kuration (nureine_curation_queue) für
+ * heute auf dem gegebenen Kanal — oder null. So folgen IG/Mail/Hero derselben
+ * Abend-Kuration, sobald Aaron sie freigegeben hat. Ohne Freigabe: null →
+ * der Aufrufer fällt auf seine bisherige Auswahllogik zurück (abwärtskompatibel).
+ */
+export async function getApprovedCurationStoryId(
+  channel: 'hero' | 'instagram' | 'email'
+): Promise<string | null> {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data } = await supabaseAdmin
+    .from('nureine_curation_queue')
+    .select('story_id')
+    .eq('for_date', today)
+    .eq('channel', channel)
+    .eq('status', 'approved')
+    .maybeSingle();
+  return (data as { story_id: string | null } | null)?.story_id ?? null;
+}
+
 export async function selectInstagramStory(): Promise<StoryResult | undefined> {
+  // (0) Folgt der freigegebenen Kuration, falls vorhanden.
+  const curatedId = await getApprovedCurationStoryId('instagram');
+  if (curatedId) {
+    const curated = await getStoryById(curatedId);
+    if (curated) return curated;
+  }
+
   const since = sinceFresh();
 
   // (1) Frische ig_ok-Kandidaten.

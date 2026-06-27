@@ -1120,6 +1120,75 @@ def _extract_trafilatura(url: str, timeout: int = 15) -> str | None:
     return text
 
 
+# Quellen ohne RSS — gescrapt statt geparst (source_type='scraper'). Pro Quelle ein
+# URL-Pfad-Muster, das echte Story-Links von Navigation/Footer trennt. Bewusst eng
+# gehalten: lieber wenige saubere Treffer als Müll, der DeepSeek-Budget verbrennt.
+SCRAPER_CONFIG: dict[str, dict[str, str]] = {
+    # Undue Medical Debt: HTTP 200 mit Browser-Headern, benannte Empfänger-Stories
+    # ("Bryan Mayorga", "Laura & Ben") — exakt NurEines Perlen-Archetyp.
+    "Undue Medical Debt": {
+        "listing": "https://unduemedicaldebt.org/stories/",
+        "path_regex": r"/(?:story|stories)/[a-z0-9][a-z0-9\-]+",
+    },
+    # Heifer (heifer.org/blog) gibt 406 ohne Spezial-Header → bewusst NICHT als
+    # scraper konfiguriert (kein Browser-Dienst dafür betreiben). Bei Bedarf später.
+}
+
+
+def scrape_source_entries(source_name: str, limit: int = 15) -> list[dict[str, str]]:
+    """Hole Story-Links von einer RSS-losen Quelle und gib feedparser-kompatible
+    Pseudo-Entries ({title, link, summary}) zurück. Der Volltext wird später wie bei
+    RSS via extract_article_text/_extract_trafilatura nachgeladen — hier nur die Liste.
+
+    Reines requests + Regex (keine Browser-Engine, kein externer Dienst). Realistische
+    Browser-Header umgehen einfache Bot-Filter; harte Cloudflare-Walls bleiben außen vor
+    (solche Quellen gar nicht erst als scraper konfigurieren).
+    """
+    import html as _html  # lokal: HTML-Entities in Titeln dekodieren (&#038; → &)
+
+    cfg = SCRAPER_CONFIG.get(source_name)
+    if not cfg:
+        log.warning("  scraper: keine SCRAPER_CONFIG für '%s' — übersprungen.", source_name)
+        return []
+
+    try:
+        resp = requests.get(cfg["listing"], headers=_WEB_HEADERS, timeout=30)
+        resp.raise_for_status()
+    except requests.RequestException as exc:
+        log.error("  scraper: Listing-Fetch für '%s' fehlgeschlagen: %s", source_name, exc)
+        return []
+
+    html = resp.text
+    base = re.match(r"https?://[^/]+", cfg["listing"])
+    origin = base.group(0) if base else ""
+
+    # <a href="…">Titel</a> einsammeln; nur Hrefs, die dem Story-Pfad-Muster entsprechen.
+    anchor_re = re.compile(r'<a\b[^>]*\bhref=["\']([^"\']+)["\'][^>]*>(.*?)</a>', re.IGNORECASE | re.DOTALL)
+    path_re = re.compile(cfg["path_regex"], re.IGNORECASE)
+    tag_strip = re.compile(r"<[^>]+>")
+
+    seen: set[str] = set()
+    entries: list[dict[str, str]] = []
+    for href, inner in anchor_re.findall(html):
+        if not path_re.search(href):
+            continue
+        link = href if href.startswith("http") else origin + href
+        link = link.split("#")[0].split("?")[0]
+        if link in seen:
+            continue
+        title = _html.unescape(tag_strip.sub(" ", inner))
+        title = re.sub(r"\s+", " ", title).strip()
+        if len(title) < 12:  # leere/Icon-Links überspringen
+            continue
+        seen.add(link)
+        entries.append({"title": title, "link": link, "summary": ""})
+        if len(entries) >= limit:
+            break
+
+    log.info("  scraper: %d Story-Links von '%s' gefunden.", len(entries), source_name)
+    return entries
+
+
 def extract_article_text(
     entry: feedparser.FeedParserDict,
     source_name: str,
@@ -1627,26 +1696,40 @@ def run() -> None:
 
         log.info("Fetching feed: %s (%s) [limit=%d]", source_name, feed_url, source_limit)
 
-        try:
-            feed = feedparser.parse(feed_url)
-        except Exception as exc:
-            log.error("Failed to parse feed '%s': %s", feed_url, exc)
-            errors += 1
-            if first_error is None:
-                first_error = str(exc)
-            continue
+        # Scraper-Quellen (kein RSS): Story-Liste per HTML-Scrape statt feedparser.
+        if source_kind == "scraper":
+            try:
+                entries = scrape_source_entries(source_name, limit=source_limit)
+            except Exception as exc:
+                log.error("Scrape für '%s' fehlgeschlagen: %s", source_name, exc)
+                errors += 1
+                if first_error is None:
+                    first_error = str(exc)
+                continue
+            if not entries:
+                log.info("  Keine Story-Links gescrapt — Quelle evtl. blockiert/umgebaut.")
+                continue
+        else:
+            try:
+                feed = feedparser.parse(feed_url)
+            except Exception as exc:
+                log.error("Failed to parse feed '%s': %s", feed_url, exc)
+                errors += 1
+                if first_error is None:
+                    first_error = str(exc)
+                continue
 
-        entries = feed.get("entries", [])
-        if not entries:
-            # Log empty feeds (Nature, WHO are expected to be broken)
-            bozo = feed.get("bozo", 0)
-            bozo_exc = feed.get("bozo_exception", "")
-            log.info(
-                "  No entries (bozo=%s, exc=%s) — feed may be broken.",
-                bozo,
-                str(bozo_exc)[:80] if bozo_exc else "none",
-            )
-            continue
+            entries = feed.get("entries", [])
+            if not entries:
+                # Log empty feeds (Nature, WHO are expected to be broken)
+                bozo = feed.get("bozo", 0)
+                bozo_exc = feed.get("bozo_exception", "")
+                log.info(
+                    "  No entries (bozo=%s, exc=%s) — feed may be broken.",
+                    bozo,
+                    str(bozo_exc)[:80] if bozo_exc else "none",
+                )
+                continue
 
         log.info("  Found %d entries.", len(entries))
 

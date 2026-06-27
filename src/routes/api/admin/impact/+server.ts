@@ -9,7 +9,7 @@ import { supabaseAdmin } from '$lib/server/supabase/client';
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	if (!verifyAdminRequest(cookies)) return json({ error: 'Unauthorized' }, { status: 401 });
 
-	let body: { action?: string; id?: number };
+	let body: { action?: string; id?: number; storyId?: string };
 	try {
 		body = await request.json();
 	} catch {
@@ -26,39 +26,72 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		return json({ ok: true, pr_state });
 	}
 
-	// Kurations-Queue: Vorschlag für morgen freigeben/ablehnen.
+	// Kurations-Queue: eine der Top-3-Optionen freigeben (oder ganz ablehnen).
+	// storyId = die vom Admin gewählte Option (eine der draft.options). Diese eine
+	// Auswahl verdrahtet ALLES: Hero (Feed+Mail) + IG-Post (autonom). Kein Kanal-Tor.
 	if ((body.action === 'curation-approve' || body.action === 'curation-reject') && body.id) {
 		const status = body.action === 'curation-approve' ? 'approved' : 'rejected';
 
-		// Die freizugebende Zeile holen (Kanal + Story).
 		const { data: item, error: fetchErr } = await supabaseAdmin
 			.from('nureine_curation_queue')
-			.select('id, channel, story_id')
+			.select('id, channel, story_id, draft')
 			.eq('id', body.id)
 			.maybeSingle();
 		if (fetchErr || !item) return json({ error: fetchErr?.message ?? 'not found' }, { status: 404 });
 
-		const { error } = await supabaseAdmin
-			.from('nureine_curation_queue')
-			.update({ status, decided_at: new Date().toISOString() })
-			.eq('id', body.id);
-		if (error) return json({ error: error.message }, { status: 500 });
-
-		// DER DRAHT: Freigabe des HERO-Kanals macht die Story exklusiv zum Hero.
-		// is_hero wird sonst nirgends automatisch gesetzt (nur manuell im Admin) —
-		// daher kein Konflikt mit der DeepSeek-Pipeline. Feed + Newsletter lesen is_hero.
-		if (body.action === 'curation-approve' && item.channel === 'hero' && item.story_id) {
-			// erst alle entflaggen, dann die kuratierte setzen (exklusiv, genau eine Hero).
-			await supabaseAdmin.from('nureine_stories').update({ is_hero: false }).eq('is_hero', true);
-			const { error: heroErr } = await supabaseAdmin
-				.from('nureine_stories')
-				.update({ is_hero: true })
-				.eq('id', item.story_id);
-			if (heroErr) return json({ error: heroErr.message }, { status: 500 });
-			return json({ ok: true, status, hero_set: item.story_id });
+		if (body.action === 'curation-reject') {
+			const { error } = await supabaseAdmin
+				.from('nureine_curation_queue')
+				.update({ status, decided_at: new Date().toISOString() })
+				.eq('id', body.id);
+			if (error) return json({ error: error.message }, { status: 500 });
+			return json({ ok: true, status });
 		}
 
-		return json({ ok: true, status });
+		// --- Freigabe: gewählte Option bestimmen ---
+		type Opt = { story_id: string; ig_caption?: string; mail_subject?: string; resonance_score?: number; rationale?: string };
+		const options: Opt[] = ((item.draft as { options?: Opt[] } | null)?.options) ?? [];
+		const chosenId = body.storyId || item.story_id;
+		if (!chosenId) return json({ error: 'keine Story gewählt' }, { status: 400 });
+		const chosen = options.find((o) => o.story_id === chosenId);
+
+		// Queue-Zeile auf die gewählte Option festschreiben (für Dashboard-Anzeige).
+		const newDraft = {
+			...(item.draft as object),
+			chosen_story_id: chosenId,
+			ig_caption: chosen?.ig_caption ?? null,
+			mail_subject: chosen?.mail_subject ?? null
+		};
+		const { error: updErr } = await supabaseAdmin
+			.from('nureine_curation_queue')
+			.update({ status, story_id: chosenId, decided_at: new Date().toISOString(), draft: newDraft })
+			.eq('id', body.id);
+		if (updErr) return json({ error: updErr.message }, { status: 500 });
+
+		// DER DRAHT: exklusiv Hero setzen (Feed + Mail lesen is_hero).
+		await supabaseAdmin.from('nureine_stories').update({ is_hero: false }).eq('is_hero', true);
+		const { error: heroErr } = await supabaseAdmin
+			.from('nureine_stories')
+			.update({ is_hero: true })
+			.eq('id', chosenId);
+		if (heroErr) return json({ error: heroErr.message }, { status: 500 });
+
+		// IG-POST AUTONOM: einen approved IG-Post-Draft für die gewählte Story anlegen,
+		// damit der Publish-Cron (social-publish) ihn postet — ohne weiteres Tor.
+		// Idempotent über den (story_id, platform)-Unique-Index der Post-Queue.
+		await supabaseAdmin
+			.from('nureine_social_posts')
+			.upsert(
+				{
+					story_id: chosenId,
+					platform: 'instagram',
+					caption: chosen?.ig_caption ?? '',
+					status: 'approved'
+				},
+				{ onConflict: 'story_id,platform' }
+			);
+
+		return json({ ok: true, status, hero_set: chosenId, ig_queued: true });
 	}
 
 	return json({ error: 'Unknown action' }, { status: 400 });

@@ -26,6 +26,18 @@ export interface ImpactRun {
 	log_markdown: string | null;
 }
 
+export interface CurationOption {
+	story_id: string;
+	title?: string;
+	summary?: string;
+	resonance_score?: number;
+	rationale?: string;
+	ig_caption?: string;
+	mail_subject?: string;
+	is_pearl?: boolean;
+	below_bar?: boolean;
+}
+
 export interface CurationItem {
 	id: number;
 	for_date: string;
@@ -37,6 +49,7 @@ export interface CurationItem {
 	below_bar: boolean;
 	status: 'proposed' | 'approved' | 'rejected' | 'published';
 	draft: Record<string, unknown>;
+	options: CurationOption[];
 	// joined Story-Felder
 	story_title?: string | null;
 	story_summary?: string | null;
@@ -88,6 +101,7 @@ export async function load() {
 			below_bar: r.below_bar,
 			status: r.status,
 			draft: r.draft ?? {},
+			options: ((r.draft as { options?: CurationOption[] } | null)?.options) ?? [],
 			story_title: story?.title ?? null,
 			story_summary: story?.summary ?? null,
 			story_category: story?.category ?? null

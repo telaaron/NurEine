@@ -43,16 +43,37 @@ export interface CurationItem {
 	story_category?: string | null;
 }
 
+export interface SourceQuality {
+	source_name: string;
+	stories: number;
+	bewertet: number;
+	avg_resonanz: number | null;
+	avg_impact: number | null;
+	stark_7plus: number;
+	perlen_75plus: number;
+	pct_stark: number | null;
+	letzte_story: string | null;
+	hero_eligible: boolean;
+}
+
 export async function load() {
-	const [runsRes, curationRes] = await Promise.all([
+	const [runsRes, curationRes, sourcesRes] = await Promise.all([
 		supabaseAdmin.from('nureine_impact_runs').select('*').order('run_date', { ascending: false }).limit(60),
 		// Kurations-Queue: offene Vorschläge (proposed/approved) für heute+morgen.
 		supabaseAdmin
 			.from('nureine_curation_queue')
 			.select('*, story:story_id(title,summary,category)')
 			.in('status', ['proposed', 'approved'])
-			.order('for_date', { ascending: true })
+			.order('for_date', { ascending: true }),
+		// Quellen-Performance: welche Quelle bringt was (aus dem View).
+		supabaseAdmin
+			.from('nureine_source_quality')
+			.select('*')
+			.gte('bewertet', 3)
+			.order('avg_resonanz', { ascending: false, nullsFirst: false })
 	]);
+
+	const sources: SourceQuality[] = (sourcesRes.data ?? []) as SourceQuality[];
 
 	const curation: CurationItem[] = (curationRes.data ?? []).map((r) => {
 		const story = (r as { story?: { title?: string; summary?: string; category?: string } }).story;
@@ -75,7 +96,7 @@ export async function load() {
 
 	const { data, error } = runsRes;
 	if (error || !data) {
-		return { ok: false as const, runs: [] as ImpactRun[], active: null, doneCount: 0, curation };
+		return { ok: false as const, runs: [] as ImpactRun[], active: null, doneCount: 0, curation, sources };
 	}
 	const runs = data as ImpactRun[];
 
@@ -86,5 +107,5 @@ export async function load() {
 	const active = runs.find((r) => !isDone(r)) ?? null;
 	const doneCount = runs.filter(isDone).length;
 
-	return { ok: true as const, runs, active, doneCount, curation };
+	return { ok: true as const, runs, active, doneCount, curation, sources };
 }

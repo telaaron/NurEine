@@ -30,6 +30,15 @@
 		await invalidateAll();
 	}
 
+	// Quellen-Performance (welche Quelle bringt was).
+	const sources = $derived((data.sources ?? []) as Array<import('./+page.server').SourceQuality>);
+	function resColor(v: number | null): string {
+		if (v == null) return 'var(--color-faint)';
+		if (v >= 5.7) return '#1f9d63'; // starke Resonanz-Lieferanten
+		if (v >= 5.0) return 'var(--color-amber)';
+		return 'var(--color-rose)'; // Größe ohne Resonanz
+	}
+
 	let marking = $state(false);
 	async function markMerged() {
 		if (!latest) return;
@@ -287,4 +296,42 @@
 			<pre class="text-xs mt-3 whitespace-pre-wrap" style="color: var(--color-ink-soft); font-family: var(--font-mono);">{latest.log_markdown}</pre>
 		</details>
 	{/if}
+{/if}
+
+<!-- QUELLEN-PERFORMANCE: welche Quelle bringt was -->
+{#if sources.length > 0}
+	<div class="rounded-xl p-5 mt-6" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
+		<div class="text-sm font-medium mb-1" style="color: var(--color-ink);">Quellen — was bringt was</div>
+		<div class="text-xs mb-3" style="color: var(--color-faint);">
+			Ø Resonanz pro Quelle. <span style="color:#1f9d63;">Grün</span> = Resonanz-Lieferant ·
+			<span style="color:var(--color-amber);">Gelb</span> = mittel ·
+			<span style="color:var(--color-rose);">Rot</span> = Größe ohne Resonanz. „kein Hero" = nur Beleg, nicht bühnenfähig.
+		</div>
+		<div class="overflow-x-auto">
+			<table class="w-full text-sm" style="border-collapse: collapse;">
+				<thead>
+					<tr style="color: var(--color-faint); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">
+						<th class="text-left py-1.5 pr-3 font-medium">Quelle</th>
+						<th class="text-right py-1.5 px-2 font-medium">Ø Reson.</th>
+						<th class="text-right py-1.5 px-2 font-medium">% stark</th>
+						<th class="text-right py-1.5 px-2 font-medium">Perlen</th>
+						<th class="text-right py-1.5 px-2 font-medium">Stories</th>
+						<th class="text-left py-1.5 pl-2 font-medium"></th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each sources as s}
+						<tr style="border-top: 1px solid var(--color-rule);">
+							<td class="py-1.5 pr-3" style="color: var(--color-ink);">{s.source_name}</td>
+							<td class="text-right py-1.5 px-2 font-semibold" style="color: {resColor(s.avg_resonanz)}; font-family: var(--font-mono);">{s.avg_resonanz ?? '–'}</td>
+							<td class="text-right py-1.5 px-2" style="color: var(--color-ink-soft); font-family: var(--font-mono);">{s.pct_stark ?? '–'}%</td>
+							<td class="text-right py-1.5 px-2" style="color: {s.perlen_75plus > 0 ? '#1f9d63' : 'var(--color-faint)'}; font-family: var(--font-mono);">{s.perlen_75plus}</td>
+							<td class="text-right py-1.5 px-2" style="color: var(--color-faint); font-family: var(--font-mono);">{s.stories}</td>
+							<td class="py-1.5 pl-2">{#if !s.hero_eligible}<span class="text-[0.6rem] rounded px-1.5 py-0.5" style="background: var(--color-canvas-soft); color: var(--color-rose);">kein Hero</span>{/if}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</div>
 {/if}

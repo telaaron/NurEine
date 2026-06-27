@@ -603,7 +603,9 @@ async function igPostStory(imageUrl: string): Promise<string> {
  * nur EINE, sodass eine natürliche Story-Kette über den Tag entsteht statt Spam-Block.
  * No-op ohne IG-Token. Nutzt die 9:16 share-card (mit Wirkung-Badge).
  */
-const DAILY_STORY_LIMIT = 15;
+// Qualität statt Frequenz: max 10 IG-Stories/Tag, und zwar die RESONANZ-stärksten
+// (nicht einfach die neuesten). "Wenige, aber sehr gute."
+const DAILY_STORY_LIMIT = 10;
 
 export async function publishStoryDue(): Promise<{ posted: boolean; reason: string; slug?: string }> {
 	if (!igConfigured()) return { posted: false, reason: 'IG not configured' };
@@ -629,19 +631,19 @@ export async function publishStoryDue(): Promise<{ posted: boolean; reason: stri
 
 	const { data: cand } = await supabaseAdmin
 		.from('nureine_stories')
-		.select('id,title,subtitle,category,image_url,impact_score')
+		.select('id,title,subtitle,category,image_url,impact_score,resonance_score')
 		// Gleiche redaktionelle Schwelle wie der Feed-Post: nur ig_ok=true und kein
-		// sensibler Stoff. Vorher reichte impact>=50 — das liess nicht-freigegebene,
-		// teils duester gerahmte Stories (ig_ok=false) oeffentlich als IG-Story raus
-		// und brach das Markenversprechen. ig_ok IST die Ton-Entscheidung der Pipeline.
+		// sensibler Stoff. ig_ok IST die Ton-Entscheidung der Pipeline.
 		.eq('ig_ok', true)
 		.not('sensitive', 'is', true)
 		.gte('impact_score', 50)
 		.gte('created_at', since72h)
-		.order('created_at', { ascending: false }) // neueste zuerst → aktuell
+		// RELEVANTESTE zuerst: hohe Resonanz schlägt Neuheit (NULLS LAST, dann impact).
+		.order('resonance_score', { ascending: false, nullsFirst: false })
+		.order('impact_score', { ascending: false })
 		.limit(40);
 
-	const story = (cand as { id: string; title: string; subtitle: string | null; category: string; image_url: string | null; impact_score: number }[] ?? [])
+	const story = (cand as { id: string; title: string; subtitle: string | null; category: string; image_url: string | null; impact_score: number; resonance_score: number | null }[] ?? [])
 		.find((s) => !usedIds.has(s.id));
 	if (!story) return { posted: false, reason: 'no fresh story to post' };
 

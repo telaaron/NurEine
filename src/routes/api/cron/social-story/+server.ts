@@ -1,6 +1,6 @@
 /**
  * POST /api/cron/social-story
- * Postet eine IG-Story (9:16) der nächsten story-würdigen News. Max 4/Tag.
+ * Postet eine IG-Story (9:16) der RESONANZ-stärksten story-würdigen News. Max 10/Tag.
  * No-op ohne IG-Token. Auth: Bearer CRON_SECRET.
  */
 import { json } from '@sveltejs/kit';

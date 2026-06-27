@@ -1322,6 +1322,71 @@ export async function sendHighlightEmailIfWorthy(): Promise<{
   }
 }
 
+/**
+ * Kurations-Reminder an Aaron, falls er die morgige Story noch NICHT freigegeben
+ * hat. Läuft am Vorabend (vor dem 04:20-Versand). Findet eine approved-Kuration
+ * für morgen → no-op (er war fleißig). Sonst → eine Stups-Mail mit dem aktuellen
+ * Vorschlag + Link zum Dashboard. Der Auto-Fallback (≥7.0) greift so oder so —
+ * dies ist nur die Erinnerung, falls er aktiv übersteuern will.
+ * "morgen" = der Tag des nächsten Versands (UTC+1 reicht als Näherung).
+ */
+export async function sendCurationReminderIfPending(): Promise<{ sent: boolean; reason: string }> {
+  if (!BREVO_API_KEY || !BREVO_FROM_EMAIL) {
+    throw new Error('BREVO_API_KEY / BREVO_FROM_EMAIL not configured');
+  }
+  const recipient = env.HIGHLIGHT_EMAIL || BREVO_REPLY_TO_EMAIL || BREVO_FROM_EMAIL;
+  if (!recipient) return { sent: false, reason: 'no recipient configured' };
+
+  // Morgen (der Versandtag): heute + 1 Tag.
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  // Schon freigegeben? → kein Reminder nötig.
+  const { data: approved } = await supabaseAdmin
+    .from('nureine_curation_queue')
+    .select('id')
+    .eq('for_date', tomorrow)
+    .eq('status', 'approved')
+    .limit(1)
+    .maybeSingle();
+  if (approved) return { sent: false, reason: 'bereits freigegeben — kein Reminder' };
+
+  // Was steht als Vorschlag bereit? (für die Mail + um zu wissen, ob es überhaupt was gibt)
+  const { data: proposal } = await supabaseAdmin
+    .from('nureine_curation_queue')
+    .select('story_id, resonance_score, rationale, story:story_id(title)')
+    .eq('for_date', tomorrow)
+    .eq('channel', 'hero')
+    .maybeSingle();
+
+  const story = (proposal as { story?: { title?: string } } | null)?.story;
+  const title = story?.title ?? '(noch kein Vorschlag — Kuration lief evtl. noch nicht)';
+  const score = (proposal as { resonance_score?: number } | null)?.resonance_score ?? null;
+  const rationale = (proposal as { rationale?: string } | null)?.rationale ?? '';
+
+  const dashboardUrl = `${BASE_URL}/admin/impact`;
+  const subject = `⏰ Heute noch nicht freigegeben: morgen geht „${title.slice(0, 50)}" raus`;
+  const html = `<!DOCTYPE html><html><body style="font-family:Georgia,serif;max-width:520px;margin:0 auto;padding:24px;color:#1a1a1a;">
+  <p style="font-size:15px;line-height:1.6;">Du hast die Story für <strong>morgen</strong> noch nicht freigegeben.</p>
+  <div style="background:#f5f1ea;border-radius:10px;padding:16px;margin:16px 0;">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#8a7;margin-bottom:6px;">Aktueller Vorschlag${score != null ? ` · Resonanz ${score}/10` : ''}</div>
+    <div style="font-size:18px;font-weight:600;">${title}</div>
+    ${rationale ? `<div style="font-size:13px;color:#555;margin-top:8px;font-style:italic;">„${rationale}"</div>` : ''}
+  </div>
+  <p style="font-size:14px;line-height:1.6;color:#555;">Wenn du nichts tust, geht morgen früh automatisch die beste kuratierte Story (Resonanz ≥ 7.0) raus — nie Lärm. Willst du aktiv entscheiden oder übersteuern:</p>
+  <p style="margin:20px 0;"><a href="${dashboardUrl}" style="background:#1a1a1a;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:14px;">Im Dashboard freigeben →</a></p>
+  <p style="font-size:12px;color:#999;">Diese Erinnerung kommt nur, wenn du bis zur Reminder-Zeit nichts freigegeben hast.</p>
+  </body></html>`;
+
+  try {
+    await sendBrevoEmail(recipient, subject, html);
+    console.info('[curation-reminder] sent →', recipient, 'für', tomorrow);
+    return { sent: true, reason: `Reminder gesendet für ${tomorrow}` };
+  } catch (err) {
+    console.error('[curation-reminder] send failed', err);
+    return { sent: false, reason: `send failed: ${(err as Error).message}` };
+  }
+}
+
 function renderHighlightHtml(
   story: { title: string; subtitle: string | null; impact_score: number; image_url: string | null },
   shareUrl: string,

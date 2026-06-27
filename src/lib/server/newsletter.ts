@@ -557,6 +557,52 @@ async function sendBrevoEmail(toEmail: string, subject: string, html: string): P
 // ---------------------------------------------------------------------------
 
 /**
+ * Kurations-TOR für den Versand. Entscheidet, welche Hero-Story heute rausgeht:
+ *   1. Von Aaron FREIGEGEBENE Kuration (status='approved') → die.
+ *   2. Sonst die beste kuratierte Story des Tages MIT resonance_score >= 7.0
+ *      (Fallback, falls Aaron die abendliche Freigabe vergessen hat) → die.
+ *   3. Sonst null → der Aufrufer fällt auf die Freshness-Tiers zurück, ODER
+ *      (Hero-für-alle, kein Lärm) sendet gar nichts, wenn nichts die Schwelle reißt.
+ *
+ * Damit geht NIE eine Story unter der Resonanz-Schwelle als Hero raus — egal ob
+ * Aaron freigegeben hat oder nicht. "Lieber gute Story automatisch als Lärm."
+ */
+export async function selectApprovedOrBestHero(): Promise<string | null> {
+  const today = new Date().toISOString().slice(0, 10);
+
+  // 1) Freigegeben (jeder Kanal zählt — hero/email/instagram führen auf dieselbe Story).
+  const { data: approved } = await supabaseAdmin
+    .from('nureine_curation_queue')
+    .select('story_id')
+    .eq('for_date', today)
+    .eq('status', 'approved')
+    .not('story_id', 'is', null)
+    .limit(1)
+    .maybeSingle();
+  const approvedId = (approved as { story_id: string | null } | null)?.story_id;
+  if (approvedId) return approvedId;
+
+  // 2) Fallback: beste kuratierte des Tages, aber NUR wenn sie die Schwelle reißt.
+  const { data: best } = await supabaseAdmin
+    .from('nureine_curation_queue')
+    .select('story_id, resonance_score')
+    .eq('for_date', today)
+    .not('story_id', 'is', null)
+    .gte('resonance_score', 7.0)
+    .order('resonance_score', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const bestId = (best as { story_id: string | null } | null)?.story_id;
+  if (bestId) {
+    console.log('[newsletter] Hero-Fallback: beste kuratierte ≥7.0 (keine Freigabe vorhanden)');
+    return bestId;
+  }
+
+  // 3) Nichts Kuratiertes über der Schwelle.
+  return null;
+}
+
+/**
  * Atomic send-time story selection — the core of the robust newsletter.
  *
  * Instead of relying on a separate 02:00 cron to set is_hero (which created a
@@ -579,27 +625,19 @@ async function selectNewsletterStory(): Promise<HeroStory | null> {
     'id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter,audio_url,share_hook';
   const now = new Date();
 
-  // ── Tier 0: freigegebene Kuration (Hero-für-alle) ──────────────────
-  // Gibt es eine von Aaron freigegebene Mail-Kuration für heute, hat sie
-  // Vorrang vor der Freshness-Logik. So folgt die Mail derselben Story wie
-  // Feed + IG. Ohne Freigabe → unten weiter mit Tier 1/2/3 (abwärtskompatibel).
-  const today = now.toISOString().slice(0, 10);
-  const { data: curated } = await supabaseAdmin
-    .from('nureine_curation_queue')
-    .select('story_id')
-    .eq('for_date', today)
-    .eq('channel', 'email')
-    .eq('status', 'approved')
-    .maybeSingle();
-  const curatedId = (curated as { story_id: string | null } | null)?.story_id;
-  if (curatedId) {
+  // ── Tier 0: Kuration (Tor + Fallback, siehe selectApprovedOrBestHero) ──
+  // 1. Von Aaron freigegebene Story → die. 2. Sonst beste kuratierte ≥7.0
+  //    (Fallback, falls Freigabe vergessen) → die. 3. Sonst KEIN Tier-0 →
+  //    unten Tier 1/2/3 (alter Mechanismus greift nur, wenn gar keine Kuration da ist).
+  const heroGate = await selectApprovedOrBestHero();
+  if (heroGate) {
     const { data: t0 } = await supabaseAdmin
       .from('nureine_stories')
       .select(BASE_SELECT)
-      .eq('id', curatedId)
+      .eq('id', heroGate)
       .maybeSingle();
     if (t0) {
-      console.log('[newsletter] story selected from tier 0 (kuratiert + freigegeben)');
+      console.log('[newsletter] story selected from tier 0 (kuratiert)');
       return t0 as HeroStory;
     }
   }
@@ -871,11 +909,26 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
     throw new Error('BREVO_API_KEY / BREVO_FROM_EMAIL not configured');
   }
 
+  // HERO-FÜR-ALLE: Gibt es eine kuratierte Hero (freigegeben ODER beste ≥7.0),
+  // bekommen ALLE Subscriber diese eine Story — keine Personalisierung, kein
+  // Resonanz-Lärm. Nur wenn gar keine Kuration über der Schwelle existiert,
+  // fällt der Versand auf die alte personalisierte Freshness-Logik zurück.
+  const heroId = await selectApprovedOrBestHero();
+  let heroForAll: HeroStory | null = null;
+  if (heroId) {
+    const { data: h } = await supabaseAdmin
+      .from('nureine_stories')
+      .select('id,title,subtitle,body_markdown,summary,category,image_url,impact_score,reading_time_min,kid_min_age,kid_explainer,conversation_starter,audio_url,share_hook')
+      .eq('id', heroId)
+      .maybeSingle();
+    heroForAll = (h as HeroStory) ?? null;
+  }
+
   // Rank today's unsent candidates once. The #1 is the global hero (used for
   // B2B + the return value); each B2C subscriber gets the best story in THEIR
   // categories, matched in-memory (cost-/exponential-safe).
   const ranked = await selectRankedStories(12);
-  const story = ranked[0] ?? null;
+  const story = heroForAll ?? ranked[0] ?? null;
   if (!story) {
     // No unsent story left — the only legitimate "send nothing" case.
     console.warn('[newsletter] no unsent story available, nothing to send');
@@ -908,7 +961,8 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
       b2cFailed += 1;
       continue;
     }
-    const pick = pickForSubscriber(ranked, sub.categories, sub.category_scores, sentByStory.get(sub.id) ?? new Set());
+    // Hero-für-alle: kuratierte Hero → jeder kriegt sie. Sonst personalisiert (alt).
+    const pick = heroForAll ?? pickForSubscriber(ranked, sub.categories, sub.category_scores, sentByStory.get(sub.id) ?? new Set());
     if (!pick) {
       // Everything in the candidate set already sent to this subscriber — skip.
       continue;

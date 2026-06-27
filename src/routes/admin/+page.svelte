@@ -231,56 +231,38 @@
 	</div>
 {/if}
 
-<!-- ===== Nächste Hero-Story Preview ===== -->
+<!-- ===== Hero & Kuration → Entscheidung läuft im Impact-Dashboard ===== -->
 <div class="mt-10">
-	<div class="paper p-6 rounded-[10px]" style="border: 1px solid var(--color-rule);">
+	<a href={base + '/admin/impact'} class="block paper p-6 rounded-[10px] transition-colors hover:opacity-90" style="border: 1px solid {data.pendingCuration > 0 ? 'var(--color-amber)' : 'var(--color-rule)'};">
 		<div class="flex items-start justify-between gap-4 flex-wrap">
 			<div class="flex-1 min-w-0">
-				<h2 class="display text-lg" style="color: var(--color-ink);">Nächste Hero-Story</h2>
+				<h2 class="display text-lg" style="color: var(--color-ink);">Heutige Hero-Story</h2>
 				{#if heroStory}
 					<div class="mt-3 flex items-start gap-4">
 						{#if heroStory.imageUrl}
-							<img
-								src={heroStory.imageUrl}
-								alt=""
-								class="w-16 h-16 rounded-[10px] object-cover shrink-0"
-								style="border: 1px solid var(--color-rule);"
-							/>
+							<img src={heroStory.imageUrl} alt="" class="w-16 h-16 rounded-[10px] object-cover shrink-0" style="border: 1px solid var(--color-rule);" />
 						{/if}
 						<div class="min-w-0">
 							<p class="display text-base" style="color: var(--color-ink);">{heroStory.title}</p>
-							<p class="text-xs mt-1" style="color: var(--color-muted);">
-								{heroStory.category} · Impact {heroStory.impactScore}/100
-							</p>
-							<a href={base + '/geschichte/' + heroStory.slug} target="_blank" class="text-xs hover:opacity-70" style="color: var(--color-ink-soft);">
-								Vorschau →
-							</a>
+							<p class="text-xs mt-1" style="color: var(--color-muted);">{heroStory.category} · Impact {heroStory.impactScore}/100 · live über alle Kanäle</p>
 						</div>
 					</div>
 				{:else}
 					<p class="mt-2 text-sm" style="color: var(--color-muted);">Keine Hero-Story gesetzt.</p>
 				{/if}
 			</div>
-			{#if heroStory}
-				<div class="flex gap-2 shrink-0">
-					<button
-						type="button"
-						class="px-4 py-2 rounded-full text-xs font-medium"
-						style="background: var(--color-sage); color: var(--color-paper);"
-					>
-						Approve
-					</button>
-					<button
-						type="button"
-						class="px-4 py-2 rounded-full text-xs font-medium"
-						style="background: var(--color-rose); color: var(--color-paper);"
-					>
-						Reject
-					</button>
-				</div>
-			{/if}
+			<div class="shrink-0 text-right">
+				{#if data.pendingCuration > 0}
+					<span class="inline-block px-4 py-2 rounded-full text-xs font-semibold" style="background: var(--color-amber); color: #fff;">
+						{data.pendingCuration} Vorschlag{data.pendingCuration > 1 ? 'e' : ''} wählen →
+					</span>
+					<p class="text-[0.65rem] mt-1.5" style="color: var(--color-muted);">Morgen-Story im Impact-Dashboard auswählen</p>
+				{:else}
+					<span class="text-xs" style="color: var(--color-ink-soft);">Zum Impact-Dashboard →</span>
+				{/if}
+			</div>
 		</div>
-	</div>
+	</a>
 </div>
 
 <!-- ===== MODUL 2 + 4: B2B Pipeline & Delivery Log Mini ===== -->

@@ -1,13 +1,20 @@
 import { getAllStories, getSubscriberStats, getLatestFeatured, getB2BDashboardStats, getDeliveryLog, getFunnelStats } from '$lib/server/queries';
+import { supabaseAdmin } from '$lib/server/supabase/client';
 
 export async function load() {
-  const [stories, subscribers, heroStory, b2bStats, deliveryLog, funnel] = await Promise.all([
+  const [stories, subscribers, heroStory, b2bStats, deliveryLog, funnel, openCuration] = await Promise.all([
     getAllStories(),
     getSubscriberStats(),
     getLatestFeatured(),
     getB2BDashboardStats(),
     getDeliveryLog(5), // last 5 entries for HUD preview
-    getFunnelStats()
+    getFunnelStats(),
+    // Offene Hero-Vorschläge (noch nicht entschieden) für den Impact-Teaser.
+    supabaseAdmin
+      .from('nureine_curation_queue')
+      .select('for_date', { count: 'exact' })
+      .eq('channel', 'hero')
+      .eq('status', 'proposed')
   ]);
 
   const categoryCount: Record<string, number> = {};
@@ -30,6 +37,7 @@ export async function load() {
       category: heroStory.category,
       imageUrl: heroStory.imageUrl,
       dek: heroStory.dek
-    } : null
+    } : null,
+    pendingCuration: openCuration.count ?? 0
   };
 }

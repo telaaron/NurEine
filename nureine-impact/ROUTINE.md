@@ -25,7 +25,25 @@ DB: hosted Supabase-MCP (Projekt MustSeen, `gbfbhspqwaqvnoxitohd`), NIE localhos
 
 ## PHASE A — KURATION (jeden Abend, das Herzstück)
 
-### A1 — VERIFY (gestern)
+### A0 — MESSEN + KALIBRIEREN (jeden Abend, NICHT nur bei PRs)
+Das echte Nutzerverhalten ist der Prüfstein (§4). Hole das Signal der zuletzt
+veröffentlichten Hero-Stories (Lese-Lag 1 Tag einkalkulieren):
+Am einfachsten den fertigen View nutzen (Join schon korrekt über den Slug —
+Events tragen NUR `props->>'slug'`/`path`, KEINE story_id):
+```sql
+SELECT * FROM nureine_resonance_vs_reality ORDER BY published_at DESC LIMIT 10;
+```
+Liefert pro Hero-Story: `resonance_score` neben echten `reads`/`shares`/`cta`.
+(Opens/Saves sind aktuell n/a — NICHT verwenden, §4.)
+
+**Kalibrierung:** Korreliert hohe Resonanz mit hohen reads/shares?
+- Hoch-Resonanz-Story floppt (wenig reads) → wir haben **überschätzt**. Notiere die
+  Achse, die wir zu hoch gaben (z.B. „res_koerper überschätzt bei Statistik-Stories").
+- Niedrig-bewertete Story läuft heiß → **unterschätzt**. Was haben wir übersehen?
+- Schreibe die Erkenntnis in `nureine_impact_runs.log_markdown` + `metrics`
+  (reads/shares-Snapshot). Das ist die tägliche Eichung der Bewertung.
+
+### A1 — VERIFY (gestrige Optimierung, falls es eine gab)
 Hatte der letzte Lauf einen offenen Pipeline-Vorschlag (PR)? Prüfe Status +
 Signal (§4). Setze `verdict` confirmed/rejected/pending (siehe CONSTITUTION §6).
 
@@ -101,19 +119,29 @@ Wie bisher: `scores` (heute = Resonanz-Verteilung der Kandidaten + gewählte),
 
 ---
 
-## PHASE B — PIPELINE-HEBEL (wenn die Daten es zeigen, nicht täglich)
+## PHASE B — AUTO-OPTIMIEREN (aus dem Verhalten, der selbst-iterierende Loop)
 
-Kuration heilt nur den Tag. Der tiefere Hebel ist die Pipeline. Prüfe Muster:
+Der Kern der ursprünglichen Idee: aus dem gemessenen Verhalten (A0) **täglich**
+den EINEN stärksten Hebel ableiten und als PR umsetzen — sofern die Daten klar
+genug einen zeigen. Kein Hebel erkennbar / Signal zu dünn → ehrlich nichts tun
+(kein erfundener PR). Eine Optimierung pro Tag, am tiefsten Reibungspunkt.
 
-- **Quellen-Schwäche:** Wenn ≥2 Tage in Folge KEIN Kandidat 7.0 reißt →
-  analysiere `nureine_fetch_log` (welche `source_name`/`beat` liefert nur niedrige
-  Resonanz/Impact). Finding: "Quelle X = Größe ohne Resonanz." Schlage als **PR**
-  vor: neue RSS-Quelle in `scripts/fetch_stories.py` / `rss_sources`, oder
-  Resonanz-Vorfilter in der Selektion (gestaffelt: die Achsen-Logik aus RESONANCE.md
-  wandert als zweiter Scoring-Pass in `fetch_stories.py`).
-- **Selektions-Schwäche:** Wenn gute Stories da waren, aber die Auto-Pipeline die
-  schwächere als Hero flaggte → PR an der Hero-Auswahllogik (`getLatestFeatured`).
-- **Framing-Schwäche:** Wie bisher — Generatoren (`caption.ts`, `newsletter.ts`).
+Welcher Hebel? Lass die A0-Kalibrierung + Quellen-Daten entscheiden:
+- **Bewertungs-Drift:** Wenn die Kalibrierung zeigt, dass eine Resonanz-Achse
+  systematisch falsch liegt (z.B. wir geben Statistik-Stories zu hohes `res_koerper`,
+  aber sie floppen) → PR an `RESONANCE.md` (Achsen-Definition schärfen). Das eicht
+  die Bewertung selbst — der mächtigste Hebel, weil er alle künftigen Tage verbessert.
+- **Framing-Schwäche:** Hero-Stories werden geöffnet aber nicht geteilt → Hook/Caption
+  zündet nicht → PR an `caption.ts` / `newsletter.ts`.
+- **Quellen-Schwäche:** ≥2 Tage kein Kandidat ≥7.0 → `nureine_fetch_log` +
+  `nureine_source_quality` analysieren → neue Quelle / `hero_eligible=false` setzen /
+  Resonanz-Vorfilter in `fetch_stories.py` (gestaffelt aus RESONANCE.md).
+- **Selektions-Schwäche:** gute Story war da, Auto-Pipeline flaggte die schwächere →
+  PR an Hero-Auswahllogik (`getLatestFeatured`).
+
+Jede Optimierung wird als **Hypothese** in `nureine_impact_runs` geschrieben
+(`root_cause`, `change_summary`, `predicts` = welches Signal soll steigen) → A1 des
+nächsten Laufs misst sie am Verhalten → confirmed/rejected (selbst-iterierend).
 
 PR-Regeln, Grün-Gate, Push-Fallback: **CONSTITUTION §6** ist maßgeblich.
 NIE auto-ändern: Versand-Trigger, Auth, Secrets, Schema, Löschen.

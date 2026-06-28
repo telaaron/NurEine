@@ -95,19 +95,31 @@ Design aus den Komponenten ableiten.
 
 ---
 
-## 4. Erfolgs-Signal (Hybrid — die "Wahrheit" über Wirkung)
+## 4. Erfolgs-Signal — die "Wahrheit" über Wirkung (täglich gemessen)
 
-Vortags-Hypothese wird an **echten Zahlen** geprüft, wo vorhanden; sonst Selbst-Score (klar markiert).
+Das **echte Nutzerverhalten** ist der Prüfstein für unsere Resonanz-Bewertung UND
+für jede Optimierung. Es wird **jeden Abend** ausgewertet — nicht nur wenn es einen
+PR gab (das war der alte Fehler). Verfügbarkeit Stand 2026-06:
 
-| Signal | Quelle | Aussage |
-|---|---|---|
-| **Saves / Reach** | `nureine_social_posts.saves`, `.reach` | IG-Wirkung (Lag 1–2 Tage) |
-| **Open / Click** | `newsletter_sends.opened` | Mail-Wirkung |
-| **Funnel-Events** | `nureine_events.name` ∈ {`story_read`, `cta_click`, `share`, `newsletter_signup`} | echtes Verhalten — das stärkste Signal |
-| **Selbst-Score** | Routine re-bewertet eigene Vortags-Änderung | Füllung bis Daten reif (markiere `quelle: "self"`) |
+| Signal | Quelle | Status | Aussage |
+|---|---|---|---|
+| **Funnel-Events** | `nureine_events.name` ∈ {`story_read`,`cta_click`,`share`,`newsletter_signup`} | ✅ AKTIV (~70 Events/Tag, reads messbar) | echtes Verhalten — **das stärkste verfügbare Signal** |
+| **Open / Click Mail** | `nureine_newsletter_sends.opened` | ⚠️ NICHT getrackt (0) — Open-Pixel nicht verkabelt | erst nutzbar wenn aktiviert; bis dahin NICHT verwenden |
+| **Saves / Reach IG** | `nureine_social_posts.saves`, `.reach` | ⚠️ 0 (IG im Trockenlauf, kein Token) | erst nach Meta-Setup |
 
-**Regel:** Jede Hypothesen-Bewertung trägt `quelle: "metric" | "self" | "mixed"`.
-Self-Score allein darf eine Hypothese NICHT als ✅ bestätigen — nur als "noch offen, subjektiv positiv".
+**Die zwei Wahrheiten, die das Verhalten liefert:**
+1. **Kalibrierung:** Stimmt unsere Resonanz-Bewertung mit dem echten Lese-/Teil-Verhalten
+   überein? Floppt eine 7.75-Story (kaum reads/shares) → wir haben überschätzt.
+   Läuft eine 6.x-Story heiß → wir haben unterschätzt. → Lernen für künftige Bewertung.
+2. **Optimierung:** Welche Muster im Verhalten zeigen einen konkreten Hebel
+   (Framing, Hook, Quelle)? → Phase B / Auto-Optimier-PR.
+
+**Ehrlichkeits-Regeln:**
+- Niemals Opens/Saves „schätzen" solange sie 0/untracked sind — als `n/a` ausweisen.
+- Reads/Shares pro Story sind klein → Trends über **mehrere** Stories lesen, nicht
+  eine einzelne überinterpretieren (1 Tag Lese-Lag einkalkulieren).
+- Jede Bewertung trägt `verdict_source: "metric" | "self" | "mixed"`. Self-Score
+  allein bestätigt NIE — nur „offen, subjektiv".
 
 ---
 

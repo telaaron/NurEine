@@ -69,8 +69,21 @@ export interface SourceQuality {
 	hero_eligible: boolean;
 }
 
+export interface CalibrationRow {
+	id: string;
+	title: string;
+	category: string | null;
+	resonance_score: number | null;
+	impact_score: number | null;
+	is_hero: boolean;
+	published_at: string | null;
+	reads: number;
+	shares: number;
+	cta: number;
+}
+
 export async function load() {
-	const [runsRes, curationRes, sourcesRes] = await Promise.all([
+	const [runsRes, curationRes, sourcesRes, calibrationRes] = await Promise.all([
 		supabaseAdmin.from('nureine_impact_runs').select('*').order('run_date', { ascending: false }).limit(60),
 		// Kurations-Queue: offene Vorschläge (proposed/approved) für heute+morgen.
 		supabaseAdmin
@@ -83,10 +96,17 @@ export async function load() {
 			.from('nureine_source_quality')
 			.select('*')
 			.gte('bewertet', 3)
-			.order('avg_resonanz', { ascending: false, nullsFirst: false })
+			.order('avg_resonanz', { ascending: false, nullsFirst: false }),
+		// Resonanz-vs-Realität: Bewertung neben echtem Verhalten (Kalibrierung).
+		supabaseAdmin
+			.from('nureine_resonance_vs_reality')
+			.select('*')
+			.order('published_at', { ascending: false })
+			.limit(12)
 	]);
 
 	const sources: SourceQuality[] = (sourcesRes.data ?? []) as SourceQuality[];
+	const calibration: CalibrationRow[] = (calibrationRes.data ?? []) as CalibrationRow[];
 
 	const curation: CurationItem[] = (curationRes.data ?? []).map((r) => {
 		const story = (r as { story?: { title?: string; summary?: string; category?: string } }).story;
@@ -110,7 +130,7 @@ export async function load() {
 
 	const { data, error } = runsRes;
 	if (error || !data) {
-		return { ok: false as const, runs: [] as ImpactRun[], active: null, doneCount: 0, curation, sources };
+		return { ok: false as const, runs: [] as ImpactRun[], active: null, doneCount: 0, curation, sources, calibration };
 	}
 	const runs = data as ImpactRun[];
 
@@ -121,5 +141,5 @@ export async function load() {
 	const active = runs.find((r) => !isDone(r)) ?? null;
 	const doneCount = runs.filter(isDone).length;
 
-	return { ok: true as const, runs, active, doneCount, curation, sources };
+	return { ok: true as const, runs, active, doneCount, curation, sources, calibration };
 }

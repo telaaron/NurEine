@@ -37,6 +37,10 @@
 		await invalidateAll();
 	}
 
+	// Resonanz-vs-Realität (Kalibrierung: Bewertung neben echtem Verhalten).
+	const calibration = $derived((data.calibration ?? []) as Array<import('./+page.server').CalibrationRow>);
+	const maxReads = $derived(Math.max(1, ...calibration.map((c) => c.reads)));
+
 	// Quellen-Performance (welche Quelle bringt was).
 	const sources = $derived((data.sources ?? []) as Array<import('./+page.server').SourceQuality>);
 	function resColor(v: number | null): string {
@@ -297,6 +301,54 @@
 			<pre class="text-xs mt-3 whitespace-pre-wrap" style="color: var(--color-ink-soft); font-family: var(--font-mono);">{latest.log_markdown}</pre>
 		</details>
 	{/if}
+{/if}
+
+<!-- KALIBRIERUNG: Resonanz-Bewertung vs. echtes Verhalten -->
+{#if calibration.length > 0}
+	<div class="rounded-xl p-5 mt-6" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
+		<div class="text-sm font-medium mb-1" style="color: var(--color-ink);">Bewertung vs. Realität</div>
+		<div class="text-xs mb-3" style="color: var(--color-faint);">
+			Stimmt unsere Resonanz-Vorhersage mit dem echten Leseverhalten überein? Balken = Reads.
+			Hohe Resonanz + wenig Reads = überschätzt · niedrige Resonanz + viele Reads = unterschätzt.
+			<span style="color: var(--color-faint);">(Mail-Opens/IG-Saves noch nicht getrackt.)</span>
+		</div>
+		<div class="overflow-x-auto">
+			<table class="w-full text-sm" style="border-collapse: collapse;">
+				<thead>
+					<tr style="color: var(--color-faint); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;">
+						<th class="text-left py-1.5 pr-3 font-medium">Story</th>
+						<th class="text-right py-1.5 px-2 font-medium">Reson.</th>
+						<th class="text-left py-1.5 px-2 font-medium" style="min-width:120px;">Reads</th>
+						<th class="text-right py-1.5 px-2 font-medium">Shares</th>
+						<th class="text-right py-1.5 pl-2 font-medium">CTA</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each calibration as c}
+						{@const overrated = (c.resonance_score ?? 0) >= 7 && c.reads <= maxReads * 0.25}
+						{@const underrated = (c.resonance_score ?? 0) < 6 && c.reads >= maxReads * 0.6}
+						<tr style="border-top: 1px solid var(--color-rule);">
+							<td class="py-1.5 pr-3" style="color: var(--color-ink);">
+								{c.title}
+								{#if c.is_hero}<span class="text-[0.55rem] ml-1 rounded px-1 py-0.5" style="background: var(--color-ink); color: var(--color-paper);">HERO</span>{/if}
+								{#if overrated}<span class="text-[0.55rem] ml-1 rounded px-1 py-0.5" style="background: var(--color-rose); color:#fff;">überschätzt?</span>{/if}
+								{#if underrated}<span class="text-[0.55rem] ml-1 rounded px-1 py-0.5" style="background: var(--color-amber); color:#fff;">unterschätzt?</span>{/if}
+							</td>
+							<td class="text-right py-1.5 px-2 font-semibold" style="color: {(c.resonance_score ?? 0) >= 7 ? '#1f9d63' : 'var(--color-ink-soft)'}; font-family: var(--font-mono);">{c.resonance_score ?? '–'}</td>
+							<td class="py-1.5 px-2">
+								<div class="flex items-center gap-1.5">
+									<div style="height:8px; width:{Math.round((c.reads / maxReads) * 100)}px; min-width:2px; background: var(--color-amber); border-radius:2px;"></div>
+									<span class="text-xs" style="color: var(--color-faint); font-family: var(--font-mono);">{c.reads}</span>
+								</div>
+							</td>
+							<td class="text-right py-1.5 px-2" style="color: {c.shares > 0 ? '#1f9d63' : 'var(--color-faint)'}; font-family: var(--font-mono);">{c.shares}</td>
+							<td class="text-right py-1.5 pl-2" style="color: var(--color-faint); font-family: var(--font-mono);">{c.cta}</td>
+						</tr>
+					{/each}
+				</tbody>
+			</table>
+		</div>
+	</div>
 {/if}
 
 <!-- QUELLEN-PERFORMANCE: welche Quelle bringt was -->

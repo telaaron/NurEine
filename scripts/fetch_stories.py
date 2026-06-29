@@ -920,6 +920,13 @@ share_hook: EIN fertiger Chat-Satz zum WEITERGEBEN (WhatsApp-ready), den man ein
   menschlich, überraschend — KEINE Schlagzeile, KEINE Werbung, kein Hashtag, kein Link. Max 160 Zeichen.
   So formuliert, dass der Empfänger sofort mehr wissen will. GUT: „Stell dir vor: Eine Spritze, zweimal im Jahr,
   und HIV hat kaum noch eine Chance. Genau das wurde gerade zugelassen."
+  ⚠️ FAKTEN-TREUE (Pflicht): Erfinde NIEMALS Zahlen, Vergleiche oder Steigerungen, die nicht
+  wörtlich im Artikel stehen. Vor allem KEINE vagen Vergleiche ohne Bezugsgröße:
+  „doppelt so schnell", „so viel wie nie", „schneller als je" sind VERBOTEN, außer der
+  Artikel nennt den konkreten Vergleichswert (doppelt so schnell WIE WAS, gemessen WORAN).
+  Im Zweifel die nackte belegte Tatsache schreiben, nicht aufpeppen. Lieber schlicht & wahr
+  als beeindruckend & erfunden. SCHLECHT: „50 Mio. haben Strom — doppelt so schnell wie vorher"
+  (kein Bezug, erfunden). GUT: „50 Millionen Menschen in Afrika haben zum ersten Mal Strom."
 
 kid_min_age: Wenn die Geschichte sich gut mit Kindern besprechen lässt: Mindestalter zum Erklären (integer, z.B. 6, 8, 10, 12). Wenn ungeeignet für Kinder (zu abstrakt, zu düster, kein kindgerechter Aufhänger): null.
 kid_explainer: Nur wenn kid_min_age gesetzt: EIN kurzer, kindgerechter Satz, der den schwierigsten Begriff der Geschichte erklärt (kein Belehrungston). Sonst null. Beispiel: "Extreme Armut bedeutet: von weniger als 2 Euro pro Tag leben müssen."
@@ -1004,6 +1011,9 @@ ig_hook: Nur wenn ig_ok=true. Der INSTAGRAM-HOOK für Folie 1 — die ersten 1,5
   GUT (Spannung): "Drei Hirsche standen am ersten Tag vor der neuen Brücke. Was dann passierte, ändert alles."
   GUT (Frage): "Was wäre, wenn die schlimmste Blindheits-Ursache eines Landes einfach verschwindet?"
   Der Leser muss das GEFÜHL haben: "ich MUSS wissen wie's weitergeht". Sonst null.
+  ⚠️ FAKTEN-TREUE: auch hier KEINE erfundenen Zahlen/Vergleiche. Spannung kommt aus
+  einer offenen Schleife, NICHT aus aufgepeppten Steigerungen ("doppelt so schnell",
+  "so viel wie nie") ohne belegte Bezugsgröße im Artikel.
 
 wa_opener: Nur wenn wa_ok=true. Ein PERSÖNLICHER WhatsApp-Einstieg in DEINER Stimme — wie ein Mensch,
   den etwas berührt hat, NICHT wie eine Institution. Max 80 Zeichen. Soll zur Emotion passen.

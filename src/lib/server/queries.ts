@@ -569,6 +569,49 @@ export async function selectInstagramStory(): Promise<StoryResult | undefined> {
 }
 
 /**
+ * Wochen-Digest (Idee #10) — die Top-Stories der letzten 7 Tage für den
+ * Sonntags-Carousel "X belegte gute Nachrichten dieser Woche".
+ *
+ * Das ist der RITUAL-/Bindungs-Hebel: ein wiederkehrendes Format, auf das aktive
+ * Follower zurückkommen (höchste Save-Rate). Auswahl: höchster Wirkungsindex der
+ * Woche, aber MIT Hook-Typ-Vielfalt (nicht 5× dieselbe Sorte) — so fühlt sich der
+ * Digest abwechslungsreich an, genau wie der tägliche Feed.
+ */
+export async function selectWeeklyDigestStories(limit = 5): Promise<StoryResult[]> {
+  const since7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data } = await supabaseAdmin
+    .from('nureine_stories')
+    .select('*')
+    .gte('created_at', since7d)
+    .not('impact_score', 'is', null)
+    .eq('sensitive', false)
+    .order('impact_score', { ascending: false })
+    .limit(40);
+
+  const rows = (data ?? []) as SupabaseStory[];
+  if (rows.length === 0) return [];
+
+  // Hook-Typ-Vielfalt: greedy nach impact, aber bevorzugt einen noch nicht
+  // vertretenen Hook-Typ, solange welche übrig sind. Verhindert 5× "zahl".
+  const picked: SupabaseStory[] = [];
+  const usedTypes = new Set<string>();
+  for (const row of rows) {
+    if (picked.length >= limit) break;
+    const t = row.ig_hook_type ?? 'sonst';
+    if (!usedTypes.has(t)) {
+      picked.push(row);
+      usedTypes.add(t);
+    }
+  }
+  // Auffüllen, falls Vielfalt nicht reichte (zu wenig verschiedene Typen).
+  for (const row of rows) {
+    if (picked.length >= limit) break;
+    if (!picked.includes(row)) picked.push(row);
+  }
+  return picked.map(mapStory);
+}
+
+/**
  * Today's WhatsApp pick: a fresh, wa_ok story. Returns undefined if none.
  * Fallback (pre-pipeline): fresh story with impact ≥ 85 (the old highlight bar).
  */

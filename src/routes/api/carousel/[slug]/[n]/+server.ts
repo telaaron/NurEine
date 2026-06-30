@@ -1,10 +1,14 @@
 import type { RequestHandler } from './$types';
 import { getStoryBySlug } from '$lib/server/queries';
 import { loadFonts, loadLogoDataUri } from '$lib/server/og/fonts';
-import { buildCarouselSlide, type CarouselInput } from '$lib/server/og/carousel';
+import { buildCarouselSlide, buildCarouselSlideByKind, type CarouselInput } from '$lib/server/og/carousel';
 
 // 4:5 Instagram-Carousel-Folie (1080×1350). CDN-cached. Folie n = 1..3.
+// Erweiterte Stile über ?kind=beleg|methodik|endcard (Ideen #1/#6 + schickbare Endcard).
 export const config = { maxDuration: 60 };
+
+type SlideKind = 'hook' | 'aufloesung' | 'stille' | 'beleg' | 'methodik' | 'endcard';
+const VALID_KINDS: SlideKind[] = ['hook', 'aufloesung', 'stille', 'beleg', 'methodik', 'endcard'];
 
 async function imageToBase64(url: string): Promise<string | null> {
 	try {
@@ -43,6 +47,11 @@ export const GET: RequestHandler = async ({ params, setHeaders, url }) => {
 
 	const n = Math.min(3, Math.max(1, parseInt(params.n, 10) || 1));
 
+	// ?kind= überschreibt n: erlaubt die erweiterten Stile (beleg/methodik/endcard).
+	const kindParam = url.searchParams.get('kind');
+	const kind: SlideKind | null =
+		kindParam && (VALID_KINDS as string[]).includes(kindParam) ? (kindParam as SlideKind) : null;
+
 	// Slides come from the editorial pipeline. Fallback if not yet scored.
 	const slides = story.slides;
 	const hook = slides?.hook || story.igHook || story.title;
@@ -54,10 +63,13 @@ export const GET: RequestHandler = async ({ params, setHeaders, url }) => {
 	// Held-Zahl für number-Variante: ?n= überschreibt, sonst aus Titel/dek extrahiert.
 	const heroNumber = url.searchParams.get('hero') || extractHeroNumber(`${hook} ${story.dek}`);
 
-	// Folie 1 (image-Stil) + Folie 3 brauchen das Bild. Folie 2 nicht.
+	// Bild brauchen: Folie 3 (stille), Folie 1 (image-Stil). beleg/methodik/endcard NICHT.
 	const imageUrl = story.image_url || story.imageUrl || '';
-	const needsImage = n === 3 || (n === 1 && hookStyle !== 'number' && hookStyle !== 'minimal');
-	const imageBase64 = needsImage && imageUrl ? await imageToBase64(imageUrl) : null;
+	const wantsImageSlide =
+		kind === 'stille' ||
+		kind === 'hook' ||
+		(!kind && (n === 3 || (n === 1 && hookStyle !== 'number' && hookStyle !== 'minimal')));
+	const imageBase64 = wantsImageSlide && imageUrl ? await imageToBase64(imageUrl) : null;
 
 	const [fonts, logoDataUri] = await Promise.all([loadFonts(), loadLogoDataUri()]);
 
@@ -70,12 +82,19 @@ export const GET: RequestHandler = async ({ params, setHeaders, url }) => {
 		imageBase64,
 		logoDataUri,
 		heroNumber,
-		hookStyle
+		hookStyle,
+		impactEvidence: story.impactEvidence ?? null,
+		impactReachScore: story.impactReach ?? null,
+		impactDurability: story.impactDurability ?? null,
+		impactExplainer: story.impactExplainer ?? null,
+		shareHook: story.shareHook ?? null,
+		sourceName: story.source ?? null
 	};
 
 	const satori = (await import('satori')).default;
 	const { html: satoriHtml } = await import('satori-html');
-	const svg = await satori(satoriHtml(buildCarouselSlide(input, n)), {
+	const slideHtml = kind ? buildCarouselSlideByKind(input, kind) : buildCarouselSlide(input, n);
+	const svg = await satori(satoriHtml(slideHtml), {
 		width: 1080,
 		height: 1350,
 		fonts,

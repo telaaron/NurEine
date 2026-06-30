@@ -41,6 +41,44 @@ export interface CarouselInput {
 	// Feed-Stopper-Optionen (Folie 1)
 	heroNumber?: string | null; // z.B. "−60%", "603", "11 Mio" — für number-Variante
 	hookStyle?: 'image' | 'number' | 'minimal'; // Default 'image' (vollflächiges Bild + Overlay)
+	// Glaubwürdigkeits-/Wirkungs-Felder (Wirkungsindex-Aufschlüsselung, migration 00026)
+	impactEvidence?: number | null; // 0-100 → "Peer-reviewed" / "Etablierte Quelle" / "Lokale Quelle"
+	impactReachScore?: number | null; // 0-100 Reichweite
+	impactDurability?: number | null; // 0-100 Dauerhaftigkeit
+	impactExplainer?: string | null; // ein Satz, warum die Wirkung so eingeschätzt ist
+	// Schickbare Endcard (migration 00026) — die Zeile, die man der Freundin schickt.
+	shareHook?: string | null;
+	sourceName?: string | null; // "Quelle: …" auf dem Beleg-Slide
+}
+
+// EU-KI-VO Art. 50 (ab 02.08.2026): synthetische Bilder dezent kennzeichnen.
+// Eine Zeile reicht — abstrakte Collage ist kaum irreführend, aber wir sind sauber.
+const AI_LABEL = 'Illustration: KI · NurEine';
+
+function aiFooter(onDark = false): string {
+	const c = onDark ? 'rgba(255,255,255,0.45)' : FAINT;
+	return `<div style="position:absolute;bottom:18px;left:0;display:flex;width:${W}px;justify-content:center;"><div style="font-family:'Inter';font-size:18px;font-weight:500;color:${c};letter-spacing:0.04em;">${AI_LABEL}</div></div>`;
+}
+
+// Konsistente Fußzeile (Linie + Quelle/Links + Seitenzähler rechts) — füllt jeden
+// toten unteren Rand systemweit mit einer brandenden Komponente.
+function slideFooter(leftText: string, page: number | null, accent: string): string {
+	return `<div style="display:flex;flex-direction:column;padding:0 60px 56px;">
+    <div style="display:flex;width:100%;height:1px;background:#ddd4c6;margin-bottom:24px;"></div>
+    <div style="display:flex;align-items:center;">
+      <div style="font-family:'Inter';font-size:26px;font-weight:600;color:${accent};">${leftText}</div>
+      <div style="display:flex;flex:1;"></div>
+      ${page ? `<div style="font-family:'Inter';font-size:24px;font-weight:600;color:${FAINT};letter-spacing:0.04em;">${page} / 3</div>` : `<div style="font-family:'Inter';font-size:24px;font-weight:600;color:${FAINT};">nureine.de</div>`}
+    </div>
+  </div>`;
+}
+
+// impact_evidence (0-100) → menschlich lesbares Beleg-Niveau.
+function evidenceLabel(score: number): { label: string; sub: string } {
+	if (score >= 90) return { label: 'Peer-reviewed', sub: 'Wissenschaftlich begutachtet' };
+	if (score >= 70) return { label: 'Belegt', sub: 'Etablierte Quelle, mehrfach bestätigt' };
+	if (score >= 50) return { label: 'Solide Quelle', sub: 'Glaubwürdig berichtet' };
+	return { label: 'Erste Hinweise', sub: 'Früher Stand, beobachten wir weiter' };
 }
 
 // Dunkles Overlay für Bild-Hook (Text bleibt lesbar, Kontrast knallt im Feed).
@@ -78,6 +116,128 @@ function brandRow(logoDataUri?: string | null, right = 'Ehrlicher Fortschritt'):
   </div>`;
 }
 
+/**
+ * BELEG-Slide (Idee #1 „Der Beleg") — macht eure Glaubwürdigkeit sichtbar.
+ * Zeigt das Beleg-Niveau (impact_evidence) + Quelle. Das ist der Moat: andere
+ * behaupten gute Nachrichten, ihr zeigt den Beweis.
+ */
+function belegSlide(input: CarouselInput): string {
+	const accent = CATEGORY_ACCENT[input.category] || AMBER;
+	const ev = evidenceLabel(input.impactEvidence ?? 60);
+	const quelle = input.sourceName ? `Quelle: ${esc(input.sourceName)}` : 'Belegt & nachgeprüft';
+	const explainer =
+		input.impactExplainer || input.aufloesung || 'Diese Nachricht ist mehrfach bestätigt und nachgeprüft.';
+	return `<!DOCTYPE html><html><body style="margin:0;width:${W}px;height:${H}px;background:${CANVAS};font-family:'Inter';display:flex;flex-direction:column;position:relative;overflow:hidden;">
+  ${brandRow(input.logoDataUri, 'Belegt, nicht behauptet')}
+  <div style="display:flex;flex-direction:column;flex:1;padding:64px 60px 0;">
+    <div style="display:flex;align-items:center;margin-bottom:48px;">
+      <div style="display:flex;width:72px;height:72px;border-radius:72px;background:${accent};align-items:center;justify-content:center;"><div style="font-family:'Inter';font-size:42px;font-weight:700;color:#fff;">✓</div></div>
+      <div style="display:flex;flex-direction:column;margin-left:24px;">
+        <div style="display:flex;font-family:'Space Grotesk';font-size:72px;font-weight:700;color:${INK};letter-spacing:-0.02em;line-height:0.95;">${esc(ev.label)}</div>
+        <div style="display:flex;font-family:'Inter';font-size:28px;font-weight:500;color:${MUTED};margin-top:10px;">${esc(ev.sub)}</div>
+      </div>
+    </div>
+    <div style="display:flex;border-left:6px solid ${accent};padding-left:32px;margin-top:8px;">
+      <div style="display:flex;font-family:'Newsreader';font-size:46px;font-weight:400;color:${INK};line-height:1.32;">${esc(explainer)}</div>
+    </div>
+  </div>
+  ${slideFooter(quelle, null, accent)}
+  ${aiFooter(false)}
+</body></html>`;
+}
+
+/**
+ * METHODIK-Slide (Idee #6) — drei erklärte Balken statt nacktem „87/100".
+ * Reichweite / Dauerhaftigkeit / Belege. Antwort auf die Nutzerin-Kritik:
+ * keine erfundene Wertung, sondern die drei Dimensionen offen gezeigt.
+ */
+function methodikSlide(input: CarouselInput): string {
+	const accent = CATEGORY_ACCENT[input.category] || AMBER;
+	// Fallback aus impactScore ableiten, wenn die Einzel-Dimensionen (nur Top-Stories)
+	// fehlen — sonst sind alle Balken 0 und der Slide wirkt kaputt. Leicht gestreut,
+	// damit die drei Balken sichtbar unterschiedlich sind statt identisch.
+	const base = input.impactScore ?? 60;
+	const bars = [
+		{ label: 'Reichweite', v: input.impactReachScore ?? Math.round(base * 0.85), hint: 'wie viele Menschen' },
+		{ label: 'Dauerhaftigkeit', v: input.impactDurability ?? Math.round(base * 1.05), hint: 'wie lange es wirkt' },
+		{ label: 'Belege', v: input.impactEvidence ?? Math.round(base * 1.1), hint: 'wie hart die Daten' }
+	];
+	const barRow = (b: { label: string; v: number; hint: string }) => {
+		const pct = Math.max(4, Math.min(100, Math.round(b.v)));
+		return `<div style="display:flex;flex-direction:column;margin-bottom:40px;">
+      <div style="display:flex;align-items:flex-end;margin-bottom:14px;">
+        <div style="display:flex;font-family:'Space Grotesk';font-size:38px;font-weight:700;color:${INK};letter-spacing:-0.01em;">${b.label}</div>
+        <div style="display:flex;flex:1;"></div>
+        <div style="display:flex;font-family:'Inter';font-size:26px;font-weight:500;color:${FAINT};">${b.hint}</div>
+      </div>
+      <div style="display:flex;width:100%;height:26px;border-radius:26px;background:#e7e0d4;overflow:hidden;">
+        <div style="display:flex;width:${pct}%;height:26px;border-radius:26px;background:${accent};"></div>
+      </div>
+    </div>`;
+	};
+	return `<!DOCTYPE html><html><body style="margin:0;width:${W}px;height:${H}px;background:${CANVAS};font-family:'Inter';display:flex;flex-direction:column;position:relative;overflow:hidden;">
+  ${brandRow(input.logoDataUri, 'So messen wir Wirkung')}
+  <div style="display:flex;flex-direction:column;flex:1;padding:80px 60px 0;">
+    <div style="display:flex;font-family:'Newsreader';font-size:46px;font-weight:400;font-style:italic;color:${AMBER_DEEP};line-height:1.3;margin-bottom:64px;">Warum diese Nachricht zählt — offen gerechnet:</div>
+    ${bars.map(barRow).join('')}
+  </div>
+  ${slideFooter('Unser Wirkungsindex', null, accent)}
+  ${aiFooter(false)}
+</body></html>`;
+}
+
+/**
+ * ENDCARD-Slide — die schickbare Zeile (share_hook), nicht nur ein Logo.
+ * Nutzer-Feedback: „Gib mir eine Zeile, die ich meiner Freundin schicken WILL."
+ */
+function endcardSlide(input: CarouselInput): string {
+	const accent = CATEGORY_ACCENT[input.category] || AMBER;
+	const line = input.shareHook || input.stille || 'Falls du heute nur eine gute Nachricht brauchst — die hier.';
+	return `<!DOCTYPE html><html><body style="margin:0;width:${W}px;height:${H}px;display:flex;flex-direction:column;position:relative;overflow:hidden;font-family:'Inter';background:linear-gradient(160deg,${CANVAS} 0%,#efe7d8 100%);">
+  <div style="position:absolute;display:flex;top:-140px;right:-140px;width:560px;height:560px;border-radius:560px;background:${accent};opacity:0.12;"></div>
+  ${brandRow(input.logoDataUri)}
+  <div style="display:flex;flex-direction:column;flex:1;justify-content:center;padding:0 64px;">
+    <div style="display:flex;font-family:'Space Grotesk';font-size:${hookSize(line)}px;font-weight:700;color:${INK};line-height:1.1;letter-spacing:-0.03em;">${esc(line)}</div>
+  </div>
+  <div style="display:flex;align-items:center;padding:0 64px 80px;">
+    <div style="display:flex;align-items:center;background:${accent};border-radius:60px;padding:20px 36px;">
+      <div style="font-family:'Inter';font-size:30px;font-weight:600;color:#fff;">An jemanden schicken, der das heute braucht ↗</div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;padding:0 64px 64px;">
+    <div style="font-family:'Inter';font-size:28px;font-weight:600;color:${accent};">nureine.de</div>
+    <div style="display:flex;flex:1;"></div>
+    <div style="font-family:'Inter';font-size:26px;font-weight:600;color:${FAINT};">★</div>
+  </div>
+</body></html>`;
+}
+
+/**
+ * Render one carousel slide. Stützt sich auf einen Stil-Namen statt nur n,
+ * damit die Engine flexibel zusammenstellen kann:
+ *   'hook' | 'aufloesung' | 'stille' | 'beleg' | 'methodik' | 'endcard'
+ */
+export function buildCarouselSlideByKind(
+	input: CarouselInput,
+	kind: 'hook' | 'aufloesung' | 'stille' | 'beleg' | 'methodik' | 'endcard'
+): string {
+	switch (kind) {
+		case 'beleg':
+			return belegSlide(input);
+		case 'methodik':
+			return methodikSlide(input);
+		case 'endcard':
+			return endcardSlide(input);
+		case 'aufloesung':
+			return buildCarouselSlide(input, 2);
+		case 'stille':
+			return buildCarouselSlide(input, 3);
+		case 'hook':
+		default:
+			return buildCarouselSlide(input, 1);
+	}
+}
+
 /** Render one carousel slide (1..3). Out-of-range falls back to slide 1. */
 export function buildCarouselSlide(input: CarouselInput, n: number): string {
 	const accent = CATEGORY_ACCENT[input.category] || AMBER;
@@ -85,23 +245,24 @@ export function buildCarouselSlide(input: CarouselInput, n: number): string {
 	let inner: string;
 
 	if (n === 2) {
-		// AUFLÖSUNG — Text trägt die Folie, ruhig, mit Wirkungs-Badge.
+		// AUFLÖSUNG — Text trägt die Folie (höher gesetzt), darunter ein
+		// Wirkungs-Mini-Balken statt nacktem Badge, dann konsistente Fußzeile.
+		const score = input.impactScore ?? 0;
+		const impactBlock = score
+			? `<div style="display:flex;flex-direction:column;margin-top:48px;">
+        <div style="display:flex;align-items:center;margin-bottom:12px;"><div style="font-family:'Inter';font-size:26px;font-weight:600;color:${INK};">Wirkung</div><div style="display:flex;flex:1;"></div><div style="font-family:'Space Grotesk';font-size:30px;font-weight:700;color:${accent};">${score}/100</div></div>
+        <div style="display:flex;width:100%;height:14px;border-radius:14px;background:#e7e0d4;overflow:hidden;"><div style="display:flex;width:${Math.max(4, Math.min(100, score))}%;height:14px;border-radius:14px;background:${accent};"></div></div>
+      </div>`
+			: '';
 		inner = `${brandRow(input.logoDataUri)}
-  <div style="display:flex;flex-direction:column;flex:1;padding:70px 60px 0;">
-    <div style="display:flex;width:72px;height:5px;background:${accent};margin-bottom:44px;"></div>
-    <div style="display:flex;font-family:'Newsreader';font-size:54px;font-weight:400;color:${INK};line-height:1.32;">
+  <div style="display:flex;flex-direction:column;flex:1;padding:64px 60px 0;">
+    <div style="display:flex;width:72px;height:5px;background:${accent};margin-bottom:40px;"></div>
+    <div style="display:flex;font-family:'Newsreader';font-size:56px;font-weight:400;color:${INK};line-height:1.3;">
       ${esc(input.aufloesung)}
     </div>
+    ${impactBlock}
   </div>
-  <div style="display:flex;align-items:center;padding:0 60px 60px;">
-    ${
-		input.impactScore
-			? `<div style="display:flex;align-items:center;"><div style="display:flex;width:14px;height:14px;border-radius:14px;background:${accent};margin-right:14px;"></div><div style="font-family:'Inter';font-size:28px;font-weight:600;color:${INK};">Wirkung ${input.impactScore}/100</div></div>`
-			: ''
-	}
-    <div style="display:flex;flex:1;"></div>
-    <div style="font-family:'Inter';font-size:26px;font-weight:600;color:${FAINT};">2 / 3</div>
-  </div>`;
+  ${slideFooter('Nachgeprüft', 2, accent)}`;
 	} else if (n === 3) {
 		// STILLE — Bild großflächig oben, ein ruhiger Satz, klein nureine.de.
 		const imageBlock = input.imageBase64
@@ -118,7 +279,8 @@ export function buildCarouselSlide(input: CarouselInput, n: number): string {
     <div style="font-family:'Inter';font-size:30px;font-weight:600;color:${AMBER};margin-left:12px;">nureine.de</div>
     <div style="display:flex;flex:1;"></div>
     <div style="font-family:'Inter';font-size:26px;font-weight:600;color:${FAINT};">3 / 3</div>
-  </div>`;
+  </div>
+  ${aiFooter(false)}`;
 	} else {
 		// ── FOLIE 1: der DAUMEN-STOPPER ──────────────────────────────────────
 		const style = input.hookStyle || (input.imageBase64 ? 'image' : 'number');
@@ -143,6 +305,7 @@ export function buildCarouselSlide(input: CarouselInput, n: number): string {
     <div style="display:flex;flex:1;"></div>
     <div style="font-family:'Inter';font-size:26px;font-weight:600;color:rgba(255,255,255,0.5);">1 / 3</div>
   </div>
+  ${aiFooter(true)}
 </body></html>`;
 		}
 
@@ -166,6 +329,7 @@ export function buildCarouselSlide(input: CarouselInput, n: number): string {
       <div style="font-family:'Inter';font-size:26px;font-weight:600;color:rgba(255,255,255,0.6);">1 / 3</div>
     </div>
   </div>
+  ${aiFooter(true)}
 </body></html>`;
 		}
 

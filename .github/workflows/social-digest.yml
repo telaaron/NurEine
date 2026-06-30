@@ -1,0 +1,23 @@
+name: Social — Wochen-Digest (Sonntag)
+
+# Legt sonntags den Wochen-Digest-Carousel an (Idee #10) und postet ihn im
+# Autopilot. Reiner Server-Cron (kein ffmpeg) → nur curl auf den Endpoint.
+# Sonntag 15:30 UTC (~17:30 CEST, Feierabend-Prime). Ersetzt an dem Tag den
+# täglichen Story-Post (Guard in generateTodayDraft).
+on:
+  schedule:
+    - cron: '30 15 * * 0'  # Sonntag 15:30 UTC
+  workflow_dispatch:
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Wochen-Digest
+        run: |
+          curl -fsS -X POST "${BASE_URL}/api/cron/social-digest" \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            -w "\nHTTP %{http_code}\n"
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}

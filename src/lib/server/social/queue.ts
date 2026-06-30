@@ -12,8 +12,9 @@
 import { supabaseAdmin } from '$lib/server/supabase/client';
 import { env } from '$env/dynamic/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
-import { selectInstagramStory } from '$lib/server/queries';
+import { selectInstagramStory, selectWeeklyDigestStories } from '$lib/server/queries';
 import { buildCaption, buildCaptionFromHook, hashtagsFor, pickHookType } from './caption';
+import { slidePlanForWeekday, slideUrlsFromPlan } from './schedule';
 
 const BASE_URL = PUBLIC_BASE_URL || 'https://nureine.de';
 
@@ -38,6 +39,9 @@ export interface SocialPostRow {
 	reach: number | null;
 	created_at: string;
 	updated_at: string;
+	// Wochen-Digest + Reel-Erweiterung (migration 00041/00042).
+	post_kind?: 'story' | 'digest' | 'reel';
+	slide_urls?: string[] | null;
 }
 
 /** Nächster 07:30 lokaler Zeit (Europe/Berlin ≈ UTC+2 im Sommer) als ISO. */
@@ -79,6 +83,21 @@ export async function generateTodayDraft(): Promise<{
 	reason: string;
 	storyId?: string;
 }> {
+	// Sonntag = Digest-Tag (Wochenplan): wenn heute schon ein Digest-Draft existiert,
+	// macht der tägliche Story-Post Platz — nur EIN Feed-Post/Tag, der Digest gewinnt
+	// sonntags. (Greift nur, wenn der Digest-Cron zuerst lief.)
+	const dayStart0 = new Date();
+	dayStart0.setUTCHours(0, 0, 0, 0);
+	const { count: digestToday } = await supabaseAdmin
+		.from('nureine_social_posts')
+		.select('*', { count: 'exact', head: true })
+		.eq('platform', 'instagram')
+		.eq('post_kind', 'digest')
+		.gte('created_at', dayStart0.toISOString());
+	if ((digestToday ?? 0) >= 1) {
+		return { created: false, reason: 'Digest-Tag — täglicher Story-Post macht Platz' };
+	}
+
 	// "Lieber leer als falsch": nur eine Instagram-taugliche Story wird zum Draft.
 	// Hat heute keine Story ig_ok → kein Post. Qualität vor Rhythmus.
 	const story = await selectInstagramStory();
@@ -103,17 +122,27 @@ export async function generateTodayDraft(): Promise<{
 			: buildCaption(story, { hookType, withCta: false });
 	const hashtags = hashtagsFor(story.category, postCount ?? 0);
 
+	// Format-Scheduler: Wochentag bestimmt die Carousel-FORM (Beleg/Methodik/ruhig)
+	// → der Feed wird über die Woche abwechslungsreich. Nur wenn die Pipeline Folien
+	// geliefert hat (sonst Einzelbild wie bisher).
+	const weekday = new Date().getUTCDay();
+	const plan = slidePlanForWeekday(weekday, story.igHookType);
+	// hookStyle ist aktuell immer 'image' (konsistenter Grid-Look, siehe oben).
+	const slideUrls = story.slides ? slideUrlsFromPlan(BASE_URL, story.slug, plan, hookStyle) : null;
+
 	const { error } = await supabaseAdmin.from('nureine_social_posts').insert({
 		story_id: story.id,
 		platform: 'instagram',
+		post_kind: 'story',
 		caption,
 		hashtags,
 		card_url: `${BASE_URL}/api/share-card/${story.slug}`,
 		og_url: `${BASE_URL}/api/og/${story.slug}`,
+		slide_urls: slideUrls,
 		hook_type: hookType,
 		hook_style: hookStyle,
 		category: story.category,
-		// Carousel nur wenn die Pipeline 3 Folien geliefert hat, sonst Einzelbild.
+		// Carousel nur wenn die Pipeline Folien geliefert hat, sonst Einzelbild.
 		is_carousel: !!story.slides,
 		status: 'draft',
 		scheduled_for: nextPostSlot()
@@ -127,6 +156,72 @@ export async function generateTodayDraft(): Promise<{
 	}
 	console.info('[social] draft created for story', story.id, 'hook', hookType);
 	return { created: true, reason: 'draft created', storyId: story.id };
+}
+
+/**
+ * Wochen-Digest-Draft (Idee #10) — der Sonntags-Carousel mit den Top-Stories
+ * der Woche. Eigene Post-Art ('digest'), eigene Folien-URLs (/api/digest/<n>).
+ * Idempotent: max ein Digest pro Tag (Teil-Index in migration 00041).
+ */
+export async function generateDigestDraft(): Promise<{ created: boolean; reason: string }> {
+	// Idempotenz: höchstens ein Digest pro Tag (Code-Guard, da Teil-Index auf
+	// scheduled_for::date nicht IMMUTABLE wäre). Re-Run am selben Tag = no-op.
+	const dayStart = new Date();
+	dayStart.setUTCHours(0, 0, 0, 0);
+	const { count: digestToday } = await supabaseAdmin
+		.from('nureine_social_posts')
+		.select('*', { count: 'exact', head: true })
+		.eq('platform', 'instagram')
+		.eq('post_kind', 'digest')
+		.gte('created_at', dayStart.toISOString());
+	if ((digestToday ?? 0) >= 1) return { created: false, reason: 'Digest heute schon angelegt' };
+
+	const stories = await selectWeeklyDigestStories(5);
+	if (stories.length < 3) {
+		// Unter 3 Stories lohnt kein Digest — lieber kein Post ("lieber leer als dünn").
+		return { created: false, reason: `nur ${stories.length} Stories diese Woche (kein Digest)` };
+	}
+
+	const slideCount = stories.length + 2; // Cover + Stories + Endcard
+	const slideUrls = Array.from({ length: slideCount }, (_, i) => `${BASE_URL}/api/digest/${i + 1}`);
+
+	const n = stories.length;
+	const caption = [
+		`${n} belegte gute Nachrichten dieser Woche. 📌 Zum Speichern.`,
+		'',
+		'Jede mit Quelle — kein Bauchgefühl, sondern nachgeprüft.',
+		'Welche hat dir am meisten Hoffnung gemacht? 👇',
+		'',
+		'Mehr ehrlicher Fortschritt → nureine.de'
+	].join('\n');
+
+	const hashtags = ['#gutenachrichten', '#positivenews', '#ehrlicherfortschritt', '#hoffnung', '#wochenrückblick'];
+
+	// story_id zeigt auf die Top-Story der Woche (FK-Pflicht), post_kind='digest'.
+	const { error } = await supabaseAdmin.from('nureine_social_posts').insert({
+		story_id: stories[0].id,
+		platform: 'instagram',
+		post_kind: 'digest',
+		caption,
+		hashtags,
+		card_url: slideUrls[0],
+		og_url: slideUrls[0],
+		slide_urls: slideUrls,
+		hook_type: 'zahl', // CHECK erlaubt nur zahl|frage|kontrast; Digest führt mit Zahl.
+		hook_style: 'image',
+		category: stories[0].category,
+		is_carousel: true,
+		status: 'draft',
+		scheduled_for: nextPostSlot()
+	});
+
+	if (error) {
+		if (error.code === '23505') return { created: false, reason: 'Digest heute schon angelegt' };
+		console.error('[social] generateDigestDraft error:', error);
+		return { created: false, reason: `db error: ${error.message}` };
+	}
+	console.info('[social] digest draft created with', n, 'stories');
+	return { created: true, reason: `digest draft created (${n} stories)` };
 }
 
 /** Queue für das Admin-Cockpit (neueste zuerst). */
@@ -360,9 +455,26 @@ async function igPostCarousel(imageUrls: string[], caption: string): Promise<str
 	return igPublish(parent);
 }
 
+/**
+ * Reel-Post (media_type=REELS). Erwartet eine öffentliche MP4-URL (vom Renderer
+ * nach Supabase Storage hochgeladen). Video-Container brauchen länger als Bilder
+ * bis FINISHED → igPublish/waitForContainer pollt ohnehin auf den Status.
+ */
+async function igPostReel(videoUrl: string, caption: string): Promise<string> {
+	const creationId = await igCreateContainer({
+		media_type: 'REELS',
+		video_url: videoUrl,
+		caption,
+		share_to_feed: true
+	});
+	return igPublish(creationId);
+}
+
 /** Build the 3 carousel slide URLs from a post's og_url (same slug + base).
  *  Folie 1 trägt den A/B-Stil (?style=image|number) für den Feed-Stopper. */
 function carouselUrlsFor(p: SocialPostRow): string[] | null {
+	// Digest (oder jeder Post mit expliziten Folien-URLs): direkt verwenden.
+	if (p.slide_urls && p.slide_urls.length > 0) return p.slide_urls;
 	// og_url looks like {BASE}/api/og/{slug}; derive {BASE}/api/carousel/{slug}/{1..3}.
 	const m = p.og_url?.match(/^(.*)\/api\/og\/(.+)$/);
 	if (!m) return null;
@@ -418,7 +530,12 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 		const fullCaption = [p.caption, '', p.hashtags.join(' ')].join('\n').trim();
 		try {
 			let mediaId: string;
-			if (p.is_carousel) {
+			if (p.post_kind === 'reel') {
+				// Reel (9:16 MP4). Fertige Video-URL liegt in slide_urls[0].
+				const videoUrl = p.slide_urls?.[0];
+				if (!videoUrl) throw new Error('reel without video url (slide_urls[0])');
+				mediaId = await igPostReel(videoUrl, fullCaption);
+			} else if (p.is_carousel) {
 				// 3-Folien-Carousel (4:5). URLs aus og_url-Slug abgeleitet.
 				const urls = carouselUrlsFor(p);
 				if (!urls) throw new Error('cannot derive carousel urls from og_url');

@@ -90,6 +90,20 @@ FAL_NUM_IMAGES = 1
 FAL_POLL_INTERVAL = 3  # seconds between status polls (pro is slower)
 FAL_POLL_TIMEOUT = 180  # max seconds to wait for generation
 
+# BILD-GATE (Kostenkontrolle): Ein Bild kostet ~$0.04 (FLUX pro). Nur ~1 Story/Tag
+# wird Hero, aber früher bekam JEDE ein Bild (~26/Tag = 96% Verschwendung). Bild nur
+# noch für ECHTE Hero-/Post-Kandidaten. Der Rest nutzt im Feed das Emoji-Fallback
+# (queries.ts: image_url || emoji || '✨') — sieht sauber aus, kostet nichts.
+IMAGE_GATE_MIN_IMPACT = 70   # Bild ab hier ...
+# ... ODER wenn ig_ok=true (IG-tauglich, braucht ein Bild fürs Posten), auch bei
+# niedrigerem Impact (mensch/charme-Hooks). Beides zusammen = "hat echte Bühnen-Chance".
+
+# Qualitäts-Schwellen für die (jetzt wenigen) generierten Bilder. Weil der Gate nur
+# noch Hero-Kandidaten durchlässt, können wir bei diesen HÖHERE Qualität verlangen:
+# "wenige, aber gute" statt "viele mittelmäßige".
+IMAGE_QUALITY_ACCEPT = 6.5   # gut genug → Retries stoppen (früher 5.0 = mittelmäßig)
+IMAGE_QUALITY_FLOOR = 5.0    # nach allen Retries drunter → lieber KEIN Bild (Emoji-Fallback)
+
 # ElevenLabs TTS (Vorlesen-Feature)
 # Free-Tier: ~10k chars/month. Danach: gpt-4o-mini-tts.
 ELEVENLABS_VOICE_ID = os.environ.get("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb")  # George — ruhig, männlich, deutsch
@@ -1459,8 +1473,8 @@ def generate_and_upload_image(image_prompt: str, story_title: str, category: str
                 best_qscore = qscore
                 best_image_bytes = image_bytes
 
-            # Accept if quality is good enough
-            if qscore >= 5.0:
+            # Accept if quality is good enough (höhere Latte, s. Konstante).
+            if qscore >= IMAGE_QUALITY_ACCEPT:
                 break
 
             log.warning("  Quality %.1f still below threshold — will try fresh prompt", qscore)
@@ -1471,6 +1485,14 @@ def generate_and_upload_image(image_prompt: str, story_title: str, category: str
         # For-loop exhausted — use best result if we have one
         if best_image_bytes is None:
             log.error("  All fresh-prompt regenerate attempts failed for '%.60s'", story_title)
+            return None
+        # QUALITÄTS-FLOOR: lieber KEIN Bild als ein hässliches. Bleibt das Beste unter
+        # dem Floor, kein Bild speichern → Feed nutzt Emoji-Fallback. "Nur Gutes raus."
+        if best_qscore < IMAGE_QUALITY_FLOOR:
+            log.warning(
+                "  Bestes Bild nur %.1f/10 (< Floor %.1f) — KEIN Bild, Emoji-Fallback für '%.60s'",
+                best_qscore, IMAGE_QUALITY_FLOOR, story_title,
+            )
             return None
         log.info("  Fresh-prompt regenerate loop exhausted — using best image (score=%.1f)", best_qscore)
         image_bytes = best_image_bytes
@@ -1849,9 +1871,16 @@ def run() -> None:
 
             seen_titles_normalized.append(normalized)
 
-            # ---- STAGE 6: Image generation ----
+            # ---- STAGE 6: Image generation (nur für Hero-/Post-Kandidaten) ----
             image_url: str | None = None
-            if IMAGE_GENERATION_ENABLED:
+            # BILD-GATE: teure FLUX-Generierung nur, wenn die Story eine echte Chance
+            # auf Bühne hat (impact≥70 ODER ig_ok). Schwache Stories → kein Bild, Feed
+            # nutzt Emoji-Fallback. Spart ~70-80% Bildkosten, erzwingt Qualität.
+            _img_impact = result.get("impact_score", 0) or 0
+            _img_ig_ok = bool(result.get("ig_ok"))
+            image_worthy = _img_impact >= IMAGE_GATE_MIN_IMPACT or _img_ig_ok
+
+            if IMAGE_GENERATION_ENABLED and image_worthy:
                 image_prompt = result.get("image_prompt", "")
                 if image_prompt:
                     try:
@@ -1864,6 +1893,11 @@ def run() -> None:
                     time.sleep(IMAGE_API_DELAY_SECONDS)
                 else:
                     log.info("  No image_prompt in AI response — skipping image generation.")
+            elif IMAGE_GENERATION_ENABLED and not image_worthy:
+                log.info(
+                    "  Bild-Gate: übersprungen (impact=%s, ig_ok=%s) — Emoji-Fallback. Spart Kosten.",
+                    _img_impact, _img_ig_ok,
+                )
             else:
                 log.info("  Image generation disabled (no FAL_KEY) — skipping.")
 

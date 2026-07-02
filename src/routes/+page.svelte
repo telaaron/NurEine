@@ -18,6 +18,17 @@
 	// Fallback auf den faktischen Dek, falls kein Hook generiert wurde.
 	const heroLead = $derived(featured?.shareHook?.trim() || featured?.dek || '');
 
+	// Fluid hero headline: scale the type DOWN as the title gets longer, so a long
+	// title doesn't blow the hero into too many lines / too much height. Tiers by
+	// character count (incl. spaces). Short punchy title → huge; long title → calmer.
+	const heroSizeClass = $derived.by(() => {
+		const n = (featured?.title || '').length;
+		if (n <= 22) return 'text-[2.6rem] sm:text-[3.6rem] md:text-[4.6rem] lg:text-[5.4rem] xl:text-[6rem]';
+		if (n <= 38) return 'text-[2.4rem] sm:text-[3.2rem] md:text-[4rem] lg:text-[4.6rem] xl:text-[5.1rem]';
+		if (n <= 54) return 'text-[2.15rem] sm:text-[2.8rem] md:text-[3.4rem] lg:text-[3.9rem] xl:text-[4.3rem]';
+		return 'text-[1.95rem] sm:text-[2.45rem] md:text-[2.9rem] lg:text-[3.3rem] xl:text-[3.7rem]';
+	});
+
 	// Hero illustration: prefer the story's real image (via WebP-Proxy), else category.
 	const featuredImg = $derived(
 		featured
@@ -115,7 +126,7 @@
 				{#if featured}
 					<a href={base + '/geschichte/' + featured.slug} class="block mt-4 sm:mt-5 group rise rise-d2">
 						<h1
-							class="display leading-[0.95] sm:leading-[0.93] text-[2.3rem] sm:text-[3.1rem] md:text-[3.7rem] lg:text-[4.2rem] xl:text-[4.8rem] max-w-[15ch] hyphens-auto break-words"
+							class="display leading-[0.95] sm:leading-[0.93] {heroSizeClass} max-w-[15ch] hyphens-auto break-words"
 							style="color: var(--color-ink); font-weight: 700; letter-spacing: -0.045em;"
 							lang="de"
 						>

@@ -100,7 +100,7 @@
 						style="background: var(--color-amber);"
 						aria-hidden="true"
 					></span>
-					<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">
+					<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-display); font-weight: 600;">
 						Ehrlicher Fortschritt · heute
 					</span>
 				</div>
@@ -115,8 +115,8 @@
 				{#if featured}
 					<a href={base + '/geschichte/' + featured.slug} class="block mt-4 sm:mt-5 group rise rise-d2">
 						<h1
-							class="display leading-[1.0] sm:leading-[0.98] text-[2rem] sm:text-[2.8rem] md:text-[3.6rem] lg:text-[4.4rem] xl:text-[5rem] max-w-[16ch]"
-							style="color: var(--color-ink); font-weight: 600;"
+							class="display leading-[0.95] sm:leading-[0.93] text-[2.3rem] sm:text-[3.1rem] md:text-[4rem] lg:text-[4.8rem] xl:text-[5.4rem] max-w-[15ch]"
+							style="color: var(--color-ink); font-weight: 700; letter-spacing: -0.045em;"
 						>
 							{featured.title}
 						</h1>
@@ -175,35 +175,37 @@
 					class="relative hidden lg:block group rise rise-d2"
 					aria-label={featured.title}
 				>
-					<div
-						class="relative aspect-[3/4] rounded-2xl overflow-hidden"
-						style="border: 1px solid var(--color-rule); box-shadow: var(--shadow-lg); background: var(--color-paper);"
-					>
-						{#if featuredImg}
-							<img
-								src={featuredImg}
-								alt=""
-								class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] group-hover:scale-[1.04]"
-								loading="eager"
-							/>
-						{/if}
-						<span
-							class="absolute top-4 left-4 badge px-2.5 py-1 rounded-full backdrop-blur-sm"
-							style="background: rgba(251,248,241,0.85); color: {tone.fg}; border: 1px solid {tone.ring}; font-family: var(--font-mono);"
-						>
-							{featured.category}
-						</span>
-					</div>
-					<!-- Impact chip overlapping the card edge -->
-					<div
-						class="absolute -bottom-4 -right-3 text-center rounded-xl px-4 py-3"
-						style="background: var(--color-paper); border: 1px solid var(--color-rule); box-shadow: var(--shadow-md);"
-					>
-						<div class="display tnum text-2xl leading-none" style="color: var(--color-ink); font-weight: 600;">
-							{featured.impactScore}
+					<!-- amber tab peeking below the panel (ref: framed magazine card) -->
+					<div class="absolute left-4 right-4 -bottom-2 h-6 rounded-b-2xl" style="background: var(--color-amber); opacity: 0.9;" aria-hidden="true"></div>
+
+					<!-- paper frame around the image -->
+					<div class="relative rounded-[20px] p-3.5" style="background: var(--color-paper); border: 1px solid var(--color-rule); box-shadow: var(--shadow-lg);">
+						<!-- bookmark ribbon -->
+						<div class="absolute -top-0.5 right-8 w-6 h-12 rounded-b-md" style="background: var(--color-amber); box-shadow: var(--shadow-sm);" aria-hidden="true"></div>
+
+						<div class="relative aspect-[3/4] rounded-xl overflow-hidden" style="background: var(--color-canvas-soft);">
+							{#if featuredImg}
+								<img
+									src={featuredImg}
+									alt=""
+									class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] group-hover:scale-[1.04]"
+									loading="eager"
+								/>
+							{/if}
+							<span
+								class="absolute top-3 left-3 badge px-2.5 py-1 rounded-full backdrop-blur-sm"
+								style="background: rgba(251,248,241,0.85); color: {tone.fg}; border: 1px solid {tone.ring}; font-family: var(--font-mono);"
+							>
+								{featured.category}
+							</span>
 						</div>
-						<div class="mt-1.5 uppercase" style="font-family: var(--font-mono); font-size: 0.56rem; letter-spacing: 0.16em; color: var(--color-faint);">
-							Wirkung
+
+						<!-- panel caption: eyebrow + impact -->
+						<div class="flex items-center justify-between px-1 pt-3 pb-1">
+							<span class="eyebrow" style="color: var(--color-muted); font-family: var(--font-display); font-weight: 600;">Titelgeschichte</span>
+							<span class="display tnum" style="color: var(--color-amber-deep); font-weight: 700;">
+								{featured.impactScore}<span class="uppercase ml-1" style="font-family: var(--font-mono); font-size: 0.5rem; letter-spacing: 0.14em; color: var(--color-faint); font-weight: 400;">Wirkung</span>
+							</span>
 						</div>
 					</div>
 				</a>

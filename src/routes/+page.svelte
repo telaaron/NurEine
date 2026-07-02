@@ -91,7 +91,7 @@
 	></div>
 
 	<div class="relative mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-12 lg:pt-20 pb-12 sm:pb-14 lg:pb-16">
-		<div class="grid lg:grid-cols-[minmax(0,1fr)_360px] gap-8 lg:gap-16 items-center">
+		<div class="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] gap-8 lg:gap-14 items-center">
 			<!-- Left: editorial text column -->
 			<div class="min-w-0">
 				<div class="flex items-center gap-3 rise">
@@ -115,8 +115,9 @@
 				{#if featured}
 					<a href={base + '/geschichte/' + featured.slug} class="block mt-4 sm:mt-5 group rise rise-d2">
 						<h1
-							class="display leading-[0.95] sm:leading-[0.93] text-[2.3rem] sm:text-[3.1rem] md:text-[4rem] lg:text-[4.8rem] xl:text-[5.4rem] max-w-[15ch]"
+							class="display leading-[0.95] sm:leading-[0.93] text-[2.3rem] sm:text-[3.1rem] md:text-[3.7rem] lg:text-[4.2rem] xl:text-[4.8rem] max-w-[15ch] hyphens-auto break-words"
 							style="color: var(--color-ink); font-weight: 700; letter-spacing: -0.045em;"
+							lang="de"
 						>
 							{featured.title}
 						</h1>
@@ -183,7 +184,7 @@
 						<!-- bookmark ribbon -->
 						<div class="absolute -top-0.5 right-8 w-6 h-12 rounded-b-md" style="background: var(--color-amber); box-shadow: var(--shadow-sm);" aria-hidden="true"></div>
 
-						<div class="relative aspect-[3/4] rounded-xl overflow-hidden" style="background: var(--color-canvas-soft);">
+						<div class="relative aspect-[16/10] rounded-xl overflow-hidden" style="background: var(--color-canvas-soft);">
 							{#if featuredImg}
 								<img
 									src={featuredImg}

@@ -16,6 +16,18 @@ struct HeroCard: View {
     }
 
     var body: some View {
+        // amber tab peeking below the framed panel (matches website hero)
+        ZStack(alignment: .bottom) {
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Theme.amber)
+                .frame(height: 26)
+                .padding(.horizontal, 16)
+                .offset(y: 12)
+            card
+        }
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Image band — tag top-left, impact chip overlapping the lower-right
             // seam (like the website hero). Text never sits on the image.
@@ -36,9 +48,10 @@ struct HeroCard: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 Text(story.title)
-                    .font(.display(large ? 30 : 23))
+                    .font(.display(large ? 38 : 30, weight: .bold))
+                    .tracking(-1.0)
                     .foregroundStyle(Theme.ink)
-                    .lineSpacing(2)
+                    .lineSpacing(large ? 1 : 0)
                     .fixedSize(horizontal: false, vertical: true)
                 Text(story.dek)
                     .font(.custom("Newsreader", size: large ? 18 : 15))

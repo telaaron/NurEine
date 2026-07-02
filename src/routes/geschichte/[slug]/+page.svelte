@@ -198,8 +198,8 @@
 			</div>
 
 			<h1
-				class="display mt-4 sm:mt-6 leading-[1.05] sm:leading-[1.02] text-[1.7rem] sm:text-[2.4rem] lg:text-[4rem] rise rise-d2"
-				style="color: var(--color-ink); font-weight: 600;"
+				class="display mt-4 sm:mt-6 leading-[0.98] sm:leading-[0.96] text-[2rem] sm:text-[2.8rem] lg:text-[4.4rem] rise rise-d2"
+				style="color: var(--color-ink); font-weight: 700; letter-spacing: -0.04em;"
 			>
 				{story.title}
 			</h1>
@@ -224,9 +224,13 @@
 			{/if}
 
 			{#if story.imageUrl}
-				<div class="mt-8 rise rise-d4">
-					<div class="aspect-[4/3] rounded-[6px] overflow-hidden" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
-						<img src={story.imageUrl.startsWith('http') ? `${base}/img?url=${encodeURIComponent(story.imageUrl)}&w=900` : story.imageUrl} alt="" class="w-full h-full object-cover" loading="eager" />
+				<div class="mt-8 rise rise-d4 relative">
+					<!-- amber tab peeking below the framed image (editorial hero panel) -->
+					<div class="absolute left-5 right-5 -bottom-2 h-6 rounded-b-2xl" style="background: var(--color-amber); opacity: 0.9;" aria-hidden="true"></div>
+					<div class="relative rounded-[20px] p-3.5" style="background: var(--color-paper); border: 1px solid var(--color-rule); box-shadow: var(--shadow-lg);">
+						<div class="aspect-[4/3] rounded-xl overflow-hidden" style="background: var(--color-canvas-soft);">
+							<img src={story.imageUrl.startsWith('http') ? `${base}/img?url=${encodeURIComponent(story.imageUrl)}&w=900` : story.imageUrl} alt="" class="w-full h-full object-cover" loading="eager" />
+						</div>
 					</div>
 				</div>
 			{/if}

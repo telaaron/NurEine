@@ -43,7 +43,8 @@ struct ArchiveView: View {
     private var filterBar: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Archiv")
-                .font(.display(34))
+                .font(.display(40, weight: .bold))
+                .tracking(-1.2)
                 .foregroundStyle(Theme.ink)
                 .padding(.horizontal, 20)
                 .padding(.top, 6)

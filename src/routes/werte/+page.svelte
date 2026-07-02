@@ -63,7 +63,7 @@
 
 <section class="mx-auto max-w-[760px] px-4 sm:px-6 lg:px-10 py-12 sm:py-20">
 	<p class="eyebrow" style="color: var(--color-amber);">Unsere Werte</p>
-	<h1 class="serif page-h1 mt-3" style="color: var(--color-ink); font-weight: 500;">
+	<h1 class="page-h1 mt-3" style="color: var(--color-ink); font-weight: 700;">
 		Woran wir Fortschritt messen.
 	</h1>
 

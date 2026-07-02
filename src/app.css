@@ -89,10 +89,11 @@ body {
 
 /* Eyebrow / section label — tiny amber uppercase with wide tracking */
 .eyebrow {
+	font-family: var(--font-display);   /* Space Grotesk — magazine-label punch */
 	font-size: 0.667rem;   /* 10px @ 15px base */
 	text-transform: uppercase;
 	letter-spacing: 0.22em;
-	font-weight: 500;
+	font-weight: 600;
 }
 @media (min-width: 768px) {
 	.eyebrow { font-size: 0.688rem; }  /* 11px @ 16px base */
@@ -145,15 +146,16 @@ body {
 /* Page heading — display h1 on sub-pages */
 .page-h1 {
 	font-family: var(--font-display);
-	font-size: 1.8rem;
-	line-height: 1.02;
-	letter-spacing: -0.03em;
+	font-size: 2rem;
+	line-height: 0.98;
+	letter-spacing: -0.04em;   /* tighter editorial tracking (matches hero) */
+	font-weight: 700;          /* bolder magazine punch */
 }
 @media (min-width: 640px) {
-	.page-h1 { font-size: 2.4rem; }
+	.page-h1 { font-size: 2.7rem; }
 }
 @media (min-width: 1024px) {
-	.page-h1 { font-size: 3.6rem; }
+	.page-h1 { font-size: 3.9rem; }
 }
 
 /* Page dek — serif intro paragraph below h1 */

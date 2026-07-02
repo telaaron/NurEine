@@ -10,8 +10,8 @@
 		Bei dir um die Ecke
 	</p>
 	<h1
-		class="serif page-h1 mt-3 rise rise-d1"
-		style="color: var(--color-ink); font-weight: 500;"
+		class="page-h1 mt-3 rise rise-d1"
+		style="color: var(--color-ink); font-weight: 700;"
 	>
 		Gute Nachrichten aus deiner Region.
 	</h1>

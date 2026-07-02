@@ -16,7 +16,7 @@
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-6">
 	<a href={base + '/archiv'} class="text-sm" style="color: var(--color-muted);">← Ganzes Archiv</a>
 	<p class="eyebrow mt-4" style="color: var(--color-amber);">Kategorie</p>
-	<h1 class="serif page-h1 mt-3" style="color: var(--color-ink);">{data.label}</h1>
+	<h1 class="page-h1 mt-3" style="color: var(--color-ink);">{data.label}</h1>
 	<p class="mt-3 text-base sm:text-lg leading-relaxed max-w-[640px]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
 		{data.intro}
 	</p>

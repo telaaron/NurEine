@@ -145,8 +145,8 @@
 		Newsletter
 	</p>
 	<h1
-		class="serif page-h1 mt-3 max-w-[18ch]"
-		style="color: var(--color-ink); font-weight: 500;"
+		class="page-h1 mt-3 max-w-[18ch]"
+		style="color: var(--color-ink); font-weight: 700;"
 	>
 		Eine Geschichte. Täglich. Mehr nicht.
 	</h1>

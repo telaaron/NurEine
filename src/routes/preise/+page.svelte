@@ -80,8 +80,8 @@
 		Preise
 	</p>
 	<h1
-		class="serif page-h1 mt-3"
-		style="color: var(--color-ink); font-weight: 500;"
+		class="page-h1 mt-3"
+		style="color: var(--color-ink); font-weight: 700;"
 	>
 		Hoffnung ist kein Luxus.
 		<br />

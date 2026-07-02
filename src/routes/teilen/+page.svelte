@@ -85,7 +85,7 @@
 
 <section class="mx-auto max-w-[820px] px-4 sm:px-6 lg:px-10 py-12 sm:py-16">
 	<p class="eyebrow" style="color: var(--color-amber);">Weiterempfehlen</p>
-	<h1 class="serif page-h1 mt-3" style="color: var(--color-ink); font-weight: 500;">
+	<h1 class="page-h1 mt-3" style="color: var(--color-ink); font-weight: 700;">
 		Eine gute Nachricht weiterschenken.
 	</h1>
 	<p class="mt-5 text-lg leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">

@@ -83,7 +83,7 @@ export const reelDailyDefault: ReelDailyProps = {
 	],
 	category: 'innovation',
 	seed: 'demo',
-	musicFile: 'audio/hope-1.wav',
+	musicFile: 'audio/uplift-1.mp3',
 	hasVo: false,
 	durationInFrames: 390
 };
@@ -146,7 +146,12 @@ const HookScene: React.FC<Extract<DailyScene, { kind: 'hook' }>> = ({ text, punc
 	const accent = AMBER;
 	const settle = interpolate(frame, [0, 14], [1.035, 1], { extrapolateRight: 'clamp' });
 	const sweep = interpolate(frame, [6, 22], [0, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-	const size = text.length <= 55 ? 108 : text.length <= 85 ? 92 : 78;
+	// Schriftgröße: nach Gesamtlänge, aber gedeckelt durch das LÄNGSTE Wort —
+	// "Feuerwehrschläuche" (18 Zeichen) lief sonst aus dem Bild (kein Umbruch
+	// innerhalb eines Wortes). ~0.58em mittlere Glyphenbreite bei Grotesk Bold.
+	const longestWord = Math.max(...text.split(/\s+/).map((w) => w.length));
+	const byLength = text.length <= 55 ? 108 : text.length <= 85 ? 92 : 78;
+	const size = Math.min(byLength, Math.floor((1080 - 2 * M) / (longestWord * 0.58) / 1.12));
 
 	const idx = punch ? text.toLowerCase().indexOf(punch.toLowerCase()) : -1;
 	const pre = idx >= 0 ? text.slice(0, idx) : text;
@@ -162,7 +167,7 @@ const HookScene: React.FC<Extract<DailyScene, { kind: 'hook' }>> = ({ text, punc
 			</div>
 			{/* Vertikal zentriert zwischen Kicker und Footer — kein toter Raum */}
 			<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 220, bottom: SAFE_BOTTOM + 120, display: 'flex', alignItems: 'center', transform: `scale(${settle})`, transformOrigin: 'left center' }}>
-				<div style={{ fontFamily: FF.grotesk, fontWeight: 700, fontSize: Math.round(size * 1.12), lineHeight: 1.08, letterSpacing: '-0.03em', color: INK }}>
+				<div style={{ fontFamily: FF.grotesk, fontWeight: 700, fontSize: Math.round(size * 1.12), lineHeight: 1.08, letterSpacing: '-0.03em', color: INK, wordBreak: 'break-word' }}>
 					{pre}
 					{hit ? (
 						// Marker als background-image des Spans: folgt Zeilenumbrüchen korrekt
@@ -203,7 +208,7 @@ const NumberScene: React.FC<Extract<DailyScene, { kind: 'number' }> & { category
 			<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 170 }}>
 				<CountUpNumber value={value} unit={unit} category={category} startFrame={2} />
 				<div style={{ height: 10, background: accent, marginTop: 30, width: lineW, borderRadius: 8 }} />
-				<div style={{ fontFamily: FF.grotesk, fontWeight: 700, fontSize: 66, lineHeight: 1.12, letterSpacing: '-0.02em', color: '#fff', marginTop: 44, opacity: ctxOp, transform: `translateY(${ctxY}px)` }}>
+				<div style={{ fontFamily: FF.grotesk, fontWeight: 700, fontSize: 66, lineHeight: 1.12, letterSpacing: '-0.02em', color: '#fff', marginTop: 44, wordBreak: 'break-word', opacity: ctxOp, transform: `translateY(${ctxY}px)` }}>
 					{context}
 				</div>
 			</div>
@@ -234,7 +239,7 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 					</div>
 					<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 820, transform: `translateY(${interpolate(textS, [0, 1], [40, 0])}px)`, opacity: interpolate(textS, [0, 0.4], [0, 1]) }}>
 						<div style={{ width: 96, height: 8, background: accent, marginBottom: 26, borderRadius: 4 }} />
-						<div style={{ fontFamily: FF.grotesk, fontWeight: 700, fontSize: 60, lineHeight: 1.12, letterSpacing: '-0.025em', color: INK }}>{text}</div>
+						<div style={{ fontFamily: FF.grotesk, fontWeight: 700, fontSize: 60, lineHeight: 1.12, letterSpacing: '-0.025em', color: INK, wordBreak: 'break-word' }}>{text}</div>
 					</div>
 				</>
 			) : (
@@ -242,11 +247,13 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 				<div style={{ position: 'absolute', left: M, right: 340, top: SAFE_TOP + 60, bottom: SAFE_BOTTOM + 260, display: 'flex', alignItems: 'center', transform: `translateY(${interpolate(textS, [0, 1], [40, 0])}px)`, opacity: interpolate(textS, [0, 0.4], [0, 1]) }}>
 					<div>
 						<div style={{ width: 96, height: 8, background: accent, marginBottom: 30, borderRadius: 4 }} />
-						<div style={{ fontFamily: FF.grotesk, fontWeight: 700, fontSize: 78, lineHeight: 1.1, letterSpacing: '-0.025em', color: INK }}>{text}</div>
+						<div style={{ fontFamily: FF.grotesk, fontWeight: 700, fontSize: 78, lineHeight: 1.1, letterSpacing: '-0.025em', color: INK, wordBreak: 'break-word' }}>{text}</div>
 					</div>
 				</div>
 			)}
-			{!image ? <Character pose={pose} enterFrame={0} from="bottom" size={760} align="right" seed={seed} person={person} /> : null}
+			{/* point-side zeigt gespiegelt zum TEXT (statt aus dem Bild raus — dort wurde
+			    der Finger vom Rand abgeschnitten und die Geste lief ins Leere) */}
+			{!image ? <Character pose={pose} enterFrame={0} from="bottom" size={760} align="right" flip={pose === 'point-side'} seed={seed} person={person} /> : null}
 			{/* Ohne Bild steht der VOLLE Text schon groß im Bild und die Figur variiert je
 			    Pose ihre Position — Caption wäre redundant und kollidiert mit dem Kopf → aus. */}
 			<SceneVoice vo={vo} captions={!!image} />
@@ -329,6 +336,7 @@ export const ReelDaily: React.FC<ReelDailyProps> = (p) => {
 		<AbsoluteFill style={{ background: CANVAS }}>
 			<Audio
 				src={staticFile(p.musicFile)}
+				loop
 				volume={(f) => interpolate(f, [0, 16, total - 26, total], [0, musicVol, musicVol, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })}
 			/>
 			{p.scenes.map((sc, i) => (

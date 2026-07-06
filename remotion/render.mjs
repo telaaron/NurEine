@@ -94,7 +94,9 @@ async function generateScript(story) {
 	}
 	const prompt = `Du schreibst das Skript für ein 20-Sekunden-Instagram-Reel von "NurEine" (deutschsprachige Good-News-Plattform, Positionierung: "ehrlicher Fortschritt", belegt statt behauptet, warm aber nie kitschig, duzt).
 
-Das Reel hat feste Szenen. Pro Szene gibt es "screen" (Text im Bild, KURZ) und "vo" (der gesprochene Satz eines Moderators). REGEL: "vo" sagt inhaltlich EXAKT das, was "screen" zeigt — nur als natürlicher gesprochener Satz. Niemals andere Fakten, niemals andere Reihenfolge.
+Das Reel hat feste Szenen. Pro Szene gibt es "screen" (Text im Bild) und "vo" (der gesprochene Satz eines Moderators). REGELN:
+- "screen" ist die ESSENZ (kurz, plakativ), "vo" ERZÄHLT denselben Fakt ausformuliert — NICHT wortgleich, aber niemals andere Fakten oder andere Reihenfolge. Die Untertitel zeigen das Gesprochene, der Screen-Text ergänzt.
+- "vo" enthält NUR deutsche Wörter — keine englischen Namen/Begriffe (die Stimme kippt sonst in englische Aussprache). Englische Eigennamen nur in "screen", im VO umschreiben ("eine Jugend-Tanzkompanie" statt "National Youth Dance Company").
 
 STORY:
 Titel: ${story.title}
@@ -105,10 +107,10 @@ Quelle: ${story.source || '—'}
 
 Liefere NUR ein JSON-Objekt (kein Markdown):
 {
-  "hook":   { "screen": "MAX 9 Wörter, die überraschendste Konkretheit zuerst (Zahl wenn vorhanden), keine Frage, kein Clickbait", "vo": "derselbe Inhalt als 1 gesprochener Satz, max 16 Wörter" },
-  "number": { "screen": "Halbsatz MAX 12 Wörter, der die Kernzahl einordnet", "vo": "derselbe Inhalt als 1 Satz mit der Zahl, max 16 Wörter" },
-  "beats":  [ { "screen": "MAX 14 Wörter NEUE Info (nicht den Hook wiederholen)", "vo": "derselbe Inhalt als 1 Satz, max 18 Wörter" } ],
-  "proofVo": "1 kurzer Satz wie: 'Belegt — nachgeprüft, Quelle: ${story.source || 'siehe nureine.de'}.'",
+  "hook":   { "screen": "MAX 9 Wörter, die überraschendste Konkretheit zuerst (Zahl wenn vorhanden), keine Frage, kein Clickbait", "vo": "derselbe Fakt erzählt, max 16 Wörter, nicht wortgleich" },
+  "number": { "screen": "Halbsatz MAX 12 Wörter, der die Kernzahl einordnet", "vo": "derselbe Fakt als Satz mit der Zahl, max 16 Wörter" },
+  "beats":  [ { "screen": "MAX 14 Wörter NEUE Info (nicht den Hook wiederholen)", "vo": "derselbe Fakt erzählt, max 18 Wörter, nur deutsche Wörter" } ],
+  "proofVo": "EXAKT: 'Belegt — von uns nachgeprüft.'",
   "endVo":  "EXAKT: 'Schick das jemandem, der heute eine gute Nachricht braucht.'"
 }
 "beats": 1-2 Einträge. Kurze Hauptsätze, warm, klar, keine Superlativ-Floskeln.`;
@@ -204,7 +206,9 @@ function buildScenes(story, script, voWanted, slug) {
 			vo = synthSegment(voText, slug, name);
 			if (vo) anyVo = true;
 		}
-		const dur = vo ? Math.max(readDur, vo.durFrames + 12) : readDur;
+		// TIMING: die Stimme führt. Szene = VO-Länge + kurzer Nachlauf (min 2s);
+		// ohne VO gilt die Lesezeit.
+		const dur = vo ? Math.max(60, vo.durFrames + 10) : readDur;
 		scenes.push({ ...sc, vo, start: t, dur });
 		t += dur;
 	};
@@ -251,7 +255,8 @@ function buildScenesFromPlan(plan, voWanted, slug) {
 		const baseText = sc.text || sc.context || sc.share || 'x'.repeat(30);
 		const minMax = sc.kind === 'end' ? [3.4, 3.4] : sc.kind === 'proof' ? [2.3, 2.3] : [2.4, 4.4];
 		const readDur = readFrames(baseText, minMax[0], minMax[1]);
-		const dur = vo ? Math.max(readDur, vo.durFrames + 12) : readDur;
+		// Die Stimme führt das Timing (min 2s); Endcard hält mindestens ihre Lesezeit.
+		const dur = vo ? Math.max(sc.kind === 'end' ? readDur : 60, vo.durFrames + 10) : readDur;
 		scenes.push({ ...sc, vo, start: t, dur });
 		t += dur;
 	});
@@ -348,7 +353,9 @@ async function main() {
 	// Musik deterministisch variieren (per Slug), damit der Feed nicht monoton klingt.
 	let h = 0;
 	for (const c of slug) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-	const music = plan?.music || ['audio/hope-1.wav', 'audio/calm-1.wav'][h % 2];
+	// uplift-1/2: fal.ai Stable Audio (loudnorm -20 LUFS). Die alten hope/calm-WAVs
+	// waren mit -47dB praktisch stumm (das "Brummen" im ersten geposteten Reel).
+	const music = plan?.music || ['audio/uplift-1.mp3', 'audio/uplift-2.mp3'][h % 2];
 
 	const props = {
 		scenes,

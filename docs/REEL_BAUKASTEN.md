@@ -15,9 +15,15 @@ bekommt ihre eigene Dramaturgie**, aber Marke/Safe-Zones/Sync sind nicht verhand
 | `proof` | Beleg-Stempel (USP!) | `source`, `impact` (Zahl oder null — **nur ≥50 zeigen**) | Fast immer vorletzte Szene |
 | `end` | Share-CTA (Sends!) | `share` (schickbare Zeile), `cta` (Standard: `Schick’s jemandem, der das heute braucht`), `hasVo` (bool) | Immer letzte Szene |
 
-Jede Szene zusätzlich: `voText` — der gesprochene Satz. **Eiserne Regel: voText sagt
-exakt das, was die Szene zeigt** (nur natürlicher formuliert). End-voText Standard:
-`Schick das jemandem, der heute eine gute Nachricht braucht.`
+Jede Szene zusätzlich: `voText` — der gesprochene Satz. **Eiserne Regeln:**
+- voText erzählt DENSELBEN Fakt wie die Szene (gleiche Reihenfolge), aber **nicht
+  wortgleich** — Screen = Essenz, Stimme = Erzählung, Untertitel = Gesprochenes.
+- voText enthält **nur deutsche Wörter**. Englische Eigennamen (Quellen, Organisationen)
+  kippen die Multilingual-Stimme in englische Aussprache → nur auf dem Screen zeigen,
+  im VO umschreiben („eine Jugend-Tanzkompanie in England").
+- proof-voText EXAKT: `Belegt — von uns nachgeprüft.` (Quellenname steht im Bild).
+- end-voText EXAKT: `Schick das jemandem, der heute eine gute Nachricht braucht.`
+- Timing macht das System: die Stimme führt die Szenendauer (VO + kurzer Nachlauf).
 
 ## Dramaturgie-Rezepte (variieren!)
 

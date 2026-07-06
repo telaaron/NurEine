@@ -75,11 +75,13 @@ export const Character: React.FC<CharacterProps> = ({ pose, enterFrame = 0, size
 
 	// Horizontale Verankerung: bei left/right sitzt die Figur am Rand, bleibt aber
 	// sichtbar (die Motiv-Mitte liegt bei ~50% des Bildes → grober Rand-Versatz).
+	// Rand-Versatz klein halten: bei -0.18 wurden ausgestreckte Hände/Finger
+	// vom Bildrand abgeschnitten (Aaron-Feedback 2026-07-06).
 	const anchor =
 		align === 'left'
-			? { left: -w * 0.18, right: 'auto' as const, transformX: '0px' }
+			? { left: -w * 0.05, right: 'auto' as const, transformX: '0px' }
 			: align === 'right'
-				? { left: 'auto' as const, right: -w * 0.18, transformX: '0px' }
+				? { left: 'auto' as const, right: -w * 0.05, transformX: '0px' }
 				: { left: '50%', right: 'auto' as const, transformX: '-50%' };
 
 	return (

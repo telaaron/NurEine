@@ -209,7 +209,8 @@ async function fetchStory(baseUrl, slug) {
 async function uploadToSupabase(mp4Path, slug) {
 	const supa = env.SUPABASE_URL.replace(/\/$/, '');
 	const key = env.SUPABASE_SERVICE_KEY;
-	const bucket = env.REEL_BUCKET || 'story_images';
+	// Eigener Bucket: story_images erlaubt nur Bilder ≤5MB (mime-Whitelist) → 400.
+	const bucket = env.REEL_BUCKET || 'story_reels';
 	const fname = `reels/${slug}-${statSync(mp4Path).size % 100000}.mp4`;
 	const data = readFileSync(mp4Path);
 	const r = await fetch(`${supa}/storage/v1/object/${bucket}/${fname}`, {

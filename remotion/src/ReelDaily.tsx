@@ -14,7 +14,7 @@ import {
 } from 'remotion';
 import { loadFont } from '@remotion/fonts';
 import { CANVAS, PAPER, INK, AMBER, AMBER_DEEP, MUTED, accentFor, FF, FONTS } from './brand';
-import { Character, type Pose } from './character/Character';
+import { Character, personForSeed, type Person, type Pose } from './character/Character';
 import { CountUpNumber } from './components/brand-graphics';
 import { PaperTextureOverlay } from './scenes/paper-textures';
 
@@ -66,6 +66,8 @@ export interface ReelDailyProps {
 	scenes: DailyScene[];
 	category: string;
 	seed: string;
+	/** Moderator:in — fehlt sie, entscheidet der Seed (Feed wechselt ab). */
+	person?: Person | null;
 	musicFile: string;
 	hasVo: boolean;
 	durationInFrames: number;
@@ -211,7 +213,7 @@ const NumberScene: React.FC<Extract<DailyScene, { kind: 'number' }> & { category
 };
 
 // ── Szene 3: BEAT — Bild-Panel (editorial) + Zeile + Figur klein ────────────
-const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: string; seed: string }> = ({ text, image, pose, category, seed, vo }) => {
+const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: string; seed: string; person: Person }> = ({ text, image, pose, category, seed, person, vo }) => {
 	const frame = useCurrentFrame();
 	const accent = accentFor(category);
 	const panelS = spring({ frame: frame - 2, fps: DAILY_FPS, config: { damping: 15, mass: 0.8, stiffness: 120 } });
@@ -244,7 +246,7 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 					</div>
 				</div>
 			)}
-			{!image ? <Character pose={pose} enterFrame={0} from="bottom" size={760} align="right" seed={seed} /> : null}
+			{!image ? <Character pose={pose} enterFrame={0} from="bottom" size={760} align="right" seed={seed} person={person} /> : null}
 			{/* Ohne Bild steht der VOLLE Text schon groß im Bild und die Figur variiert je
 			    Pose ihre Position — Caption wäre redundant und kollidiert mit dem Kopf → aus. */}
 			<SceneVoice vo={vo} captions={!!image} />
@@ -290,7 +292,7 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 };
 
 // ── Szene 5: ENDCARD — Share-Zeile zentriert + Schick-CTA + Loop-Anschluss ──
-const EndScene: React.FC<Extract<DailyScene, { kind: 'end' }> & { category: string; seed: string }> = ({ share, cta, hasVo, category, seed, vo }) => {
+const EndScene: React.FC<Extract<DailyScene, { kind: 'end' }> & { category: string; seed: string; person: Person }> = ({ share, cta, hasVo, category, seed, person, vo }) => {
 	const frame = useCurrentFrame();
 	const accent = accentFor(category);
 	const s = spring({ frame: frame - 2, fps: DAILY_FPS, config: { damping: 15, mass: 0.7 } });
@@ -303,7 +305,7 @@ const EndScene: React.FC<Extract<DailyScene, { kind: 'end' }> & { category: stri
 				<div style={{ fontFamily: FF.grotesk, fontWeight: 700, fontSize: share.length <= 70 ? 72 : 58, lineHeight: 1.12, letterSpacing: '-0.03em', color: INK }}>{share}</div>
 			</div>
 			{/* Figur klein unten rechts — CTA-Block liegt IMMER darüber (zIndex) und endet vor ihr */}
-			<Character pose="wave" enterFrame={4} from="bottom" size={680} align="right" seed={seed} />
+			<Character pose="wave" enterFrame={4} from="bottom" size={680} align="right" seed={seed} person={person} />
 			<div style={{ position: 'absolute', left: M, right: 400, bottom: SAFE_BOTTOM, transform: `scale(${pulse})`, transformOrigin: 'left center', zIndex: 5 }}>
 				<div style={{ display: 'inline-flex', alignItems: 'center', height: 100, background: accent, borderRadius: 60, padding: '0 46px', boxShadow: '0 16px 40px rgba(60,40,20,0.28)' }}>
 					<div style={{ fontFamily: FF.interSemi, fontSize: 36, color: '#fff' }}>{cta} ↗</div>
@@ -320,6 +322,7 @@ const EndScene: React.FC<Extract<DailyScene, { kind: 'end' }> & { category: stri
 // ── Haupt-Komposition ───────────────────────────────────────────────────────
 export const ReelDaily: React.FC<ReelDailyProps> = (p) => {
 	useFonts();
+	const person = p.person || personForSeed(p.seed);
 	const total = p.durationInFrames;
 	const musicVol = p.hasVo ? 0.14 : 0.3;
 	return (
@@ -332,9 +335,9 @@ export const ReelDaily: React.FC<ReelDailyProps> = (p) => {
 				<Sequence key={i} from={sc.start} durationInFrames={sc.dur}>
 					{sc.kind === 'hook' ? <HookScene {...sc} /> : null}
 					{sc.kind === 'number' ? <NumberScene {...sc} category={p.category} /> : null}
-					{sc.kind === 'beat' ? <BeatScene {...sc} category={p.category} seed={p.seed} /> : null}
+					{sc.kind === 'beat' ? <BeatScene {...sc} category={p.category} seed={p.seed} person={person} /> : null}
 					{sc.kind === 'proof' ? <ProofScene {...sc} category={p.category} /> : null}
-					{sc.kind === 'end' ? <EndScene {...sc} category={p.category} seed={p.seed} /> : null}
+					{sc.kind === 'end' ? <EndScene {...sc} category={p.category} seed={p.seed} person={person} /> : null}
 				</Sequence>
 			))}
 		</AbsoluteFill>

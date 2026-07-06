@@ -54,6 +54,8 @@ curl -fsS -X POST "$PUBLIC_BASE_URL/api/cron/social-reel-select" -H "Authorizati
   "caption": "<caption mit keyword + send-anlass>",
   "hashtags": ["#gutenachrichten", "..."],
   "music": "audio/hope-1.wav",            // oder audio/calm-1.wav
+  "person": "frau",                        // "mann" | "frau" | weglassen (Seed wechselt ab);
+                                           // die VO-Stimme folgt der Figur automatisch
   "scenes": [ { "kind": "hook", "text": "...", "punch": "...", "kicker": "GUTE NACHRICHT · KULTUR", "voText": "..." }, ... ]
 }
 

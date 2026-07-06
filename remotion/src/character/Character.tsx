@@ -15,14 +15,25 @@ import { POSE_VARIANTS } from './pose-manifest';
 
 export type Pose = 'idle' | 'point-up' | 'reading' | 'point-side' | 'thinking' | 'wave';
 
-/** Wählt deterministisch eine Varianten-Datei für die Geste (per seed). */
-function poseFile(gesture: Pose, seed: string): string {
-	const variants = POSE_VARIANTS[gesture] ?? POSE_VARIANTS['idle'] ?? [];
-	if (variants.length === 0) return 'character/idle-1.png';
+export type Person = 'mann' | 'frau';
+
+/** Wählt deterministisch eine Varianten-Datei für Person+Geste (per seed).
+ *  Fallback-Kette: gewünschte Person → mann → idle (fehlende Posen brechen nie). */
+function poseFile(gesture: Pose, seed: string, person: Person): string {
+	const forPerson = POSE_VARIANTS[person] ?? {};
+	const variants = forPerson[gesture] ?? POSE_VARIANTS['mann']?.[gesture] ?? forPerson['idle'] ?? POSE_VARIANTS['mann']?.['idle'] ?? [];
+	if (variants.length === 0) return 'character/mann/idle-1.png';
 	let h = 0;
 	const s = seed + gesture;
 	for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
 	return variants[h % variants.length];
+}
+
+/** Person pro Reel deterministisch aus dem Seed (Feed wechselt zwischen Moderator:in). */
+export function personForSeed(seed: string): Person {
+	let h = 0;
+	for (let i = 0; i < seed.length; i++) h = (h * 33 + seed.charCodeAt(i)) >>> 0;
+	return h % 2 === 0 ? 'mann' : 'frau';
 }
 
 interface CharacterProps {
@@ -38,9 +49,11 @@ interface CharacterProps {
 	align?: 'left' | 'center' | 'right';
 	/** Seed für deterministische Varianten-Wahl (z.B. Story-id). */
 	seed?: string;
+	/** Welche Figur: Moderator oder Moderatorin. */
+	person?: Person;
 }
 
-export const Character: React.FC<CharacterProps> = ({ pose, enterFrame = 0, size = 900, from = 'bottom', flip = false, align = 'center', seed = 'default' }) => {
+export const Character: React.FC<CharacterProps> = ({ pose, enterFrame = 0, size = 900, from = 'bottom', flip = false, align = 'center', seed = 'default', person = 'mann' }) => {
 	const frame = useCurrentFrame();
 	const { fps } = useVideoConfig();
 	const local = frame - enterFrame;
@@ -85,7 +98,7 @@ export const Character: React.FC<CharacterProps> = ({ pose, enterFrame = 0, size
 				filter: 'drop-shadow(0 24px 40px rgba(60,40,20,0.22))'
 			}}
 		>
-			<Img src={staticFile(poseFile(pose, seed))} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+			<Img src={staticFile(poseFile(pose, seed, person))} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
 		</div>
 	);
 };

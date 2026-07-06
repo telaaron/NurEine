@@ -138,7 +138,17 @@ Liefere NUR ein JSON-Objekt (kein Markdown):
 
 // ── Voiceover (edge-tts) ────────────────────────────────────────────────────
 
-const VOICE = env.REEL_VOICE || 'de-DE-FlorianMultilingualNeural'; // männlich, passt zum Moderator
+// Stimme passt zur gezeigten Figur: Moderator → Florian, Moderatorin → Seraphina.
+// REEL_VOICE-Env übersteuert beides (nach Aarons Abnahme ggf. fixieren).
+const VOICES = { mann: 'de-DE-FlorianMultilingualNeural', frau: 'de-DE-SeraphinaMultilingualNeural' };
+let VOICE = env.REEL_VOICE || VOICES.mann;
+
+/** Gleiche Hash-Logik wie personForSeed in ReelDaily.tsx — Stimme folgt der Figur. */
+function personForSeed(seed) {
+	let h = 0;
+	for (let i = 0; i < seed.length; i++) h = (h * 33 + seed.charCodeAt(i)) >>> 0;
+	return h % 2 === 0 ? 'mann' : 'frau';
+}
 
 /**
  * Synthetisiert EIN VO-Segment (einen Szenen-Satz). Rückgabe mit Wort-Timings
@@ -321,6 +331,10 @@ async function main() {
 	// VO: Default AUS (Stimm-Qualität muss einmal abgenommen werden) — an per --vo oder VO=1.
 	const voWanted = arg('no-vo') ? false : arg('vo') === true || env.VO === '1';
 
+	// Figur bestimmen (Plan > Seed) und Stimme daran koppeln.
+	const person = plan?.person || personForSeed(slug);
+	if (!env.REEL_VOICE) VOICE = VOICES[person] || VOICES.mann;
+
 	let scenes, duration, anyVo;
 	if (plan) {
 		// Regie-Modus: Szenenplan kommt fertig von der Claude-Routine.
@@ -340,6 +354,7 @@ async function main() {
 		scenes,
 		category: story.category || 'gemeinschaft',
 		seed: slug,
+		person, // Figur (Plan > Seed) — Stimme ist bereits daran gekoppelt
 		musicFile: music,
 		hasVo: anyVo,
 		durationInFrames: duration

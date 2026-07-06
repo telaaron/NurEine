@@ -1,4 +1,9 @@
-# NurEine-Erzähler ("Terracotta Man") — Posen erweitern
+# NurEine-Moderator:innen — Posen erweitern
+
+Zwei Figuren: **Moderator** (`mann/`, beiger Anzug) und **Moderatorin** (`frau/`,
+Dutt + Terracotta-Schal, seit 2026-07-06). Pro Reel wählt der Seed (oder der
+Regie-Plan via `"person"`) die Figur; die VO-Stimme folgt automatisch
+(Florian/Seraphina).
 
 Der Character ist die Signatur-Figur der Reels. Er nutzt **freigestellte PNGs**
 (transparenter Hintergrund) und wechselt je Reel-Moment die Geste + Micro-Motion.
@@ -7,7 +12,8 @@ Der Character ist die Signatur-Figur der Reels. Er nutzt **freigestellte PNGs**
 
 1. Character in gewünschter Geste generieren, **freistellen** (transparenter BG,
    z.B. Photoroom / remove.bg), als PNG exportieren.
-2. Nach `remotion/public/character/` legen, benannt nach dem Schema:
+2. Nach `remotion/public/character/<person>/` legen (person: `mann` | `frau`,
+   neue Person = neuer Ordner), benannt nach dem Schema:
 
    ```
    <geste>-<nummer>.png

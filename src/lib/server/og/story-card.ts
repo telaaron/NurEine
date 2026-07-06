@@ -63,11 +63,13 @@ const AMBER = '#bd6a35';
 const HOOK = '#f5b969'; // helles Amber für die Hook-Zahl
 
 // IG-Story-SAFE-ZONES. Instagram legt eigene UI über die Story:
-//   oben  ~130px: Fortschrittsbalken + Profilzeile
-//   unten ~250px: "Antwort …" + Like + Teilen
+//   oben  ~230px: Fortschrittsbalken + Profilzeile ("Deine Story" + Avatar + X)
+//   unten ~330px: "Schreibe etwas dazu …"-Feld + Aktions-Leiste
 // Alles Wichtige (Labels, Headline, CTA) muss INNERHALB dieser Zonen bleiben.
-const SAFE_TOP = 130;
-const SAFE_BOTTOM = 260; // freier Abstand von der Unterkante bis zum CTA
+// (2026-07-06: 130/260 reichte nicht — Kicker-Chip und CTA lagen auf echten
+// Geräten unter der IG-UI, siehe Screenshots von Aaron.)
+const SAFE_TOP = 240;
+const SAFE_BOTTOM = 340; // freier Abstand von der Unterkante bis zum CTA
 
 const IMG_MIN_H = 940;
 const IMG_MAX_H = 1140;
@@ -257,7 +259,7 @@ function tplStat(input: StoryCardInput, accent: string, catLabel: string, hook: 
     ${imageCover(input.imageBase64, imgH)}
     ${fade}
     ${topLabels(accent, catLabel, input.logoDataUri)}
-    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:260px;width:968px;">
+    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:${SAFE_BOTTOM}px;width:968px;">
       ${hookInline(hook, accent)}
       <div style="display:flex;font-family:'Space Grotesk';font-size:${headlineSize(input.title)}px;font-weight:700;color:#fff;line-height:1.0;letter-spacing:-0.03em;">${esc(input.title)}</div>
       ${dekText(input.dek)}
@@ -282,7 +284,7 @@ function tplPoster(input: StoryCardInput, accent: string, catLabel: string): str
     ${scrimTop}
     ${scrim}
     ${topLabels(accent, catLabel, input.logoDataUri)}
-    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:260px;width:968px;">
+    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:${SAFE_BOTTOM}px;width:968px;">
       <div style="display:flex;width:120px;height:12px;border-radius:12px;background:${accent};margin-bottom:30px;"></div>
       <div style="display:flex;font-family:'Space Grotesk';font-size:${hs}px;font-weight:700;color:#fff;line-height:0.98;letter-spacing:-0.03em;">${esc(input.title)}</div>
       ${dekText(input.dek)}
@@ -304,7 +306,7 @@ function tplStatement(input: StoryCardInput, accent: string, catLabel: string): 
 		`
     ${texture}
     ${topLabels(accent, catLabel, input.logoDataUri, true)}
-    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;top:280px;bottom:260px;width:968px;justify-content:space-between;">
+    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;top:${SAFE_TOP + 60}px;bottom:${SAFE_BOTTOM}px;width:968px;justify-content:space-between;">
       <div style="display:flex;">
         <!-- dicker vertikaler Akzentbalken links (Editorial-Pattern) -->
         <div style="display:flex;width:18px;border-radius:18px;background:${accent};margin-right:40px;"></div>
@@ -384,7 +386,7 @@ function tplTicker(
     ${imageCover(input.imageBase64, imgH)}
     ${fade}
     ${topLabels(accent, catLabel, input.logoDataUri)}
-    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:260px;width:968px;">
+    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:${SAFE_BOTTOM}px;width:968px;">
       <!-- Wirkungs-Pill ÜBER der Headline = erster Kontext-Geber -->
       ${input.impactScore != null ? `<div style="display:flex;margin-bottom:24px;">${impactPill(input.impactScore, accent)}</div>` : ''}
       ${locPill}

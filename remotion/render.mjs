@@ -33,10 +33,17 @@ function arg(name, def = null) {
 
 // ── Extraktion (Fallbacks ohne LLM) ─────────────────────────────────────────
 
+const UNIT_STOPWORDS = new Set(['und', 'der', 'die', 'das', 'den', 'dem', 'von', 'bis', 'im', 'in', 'am', 'an', 'mit', 'auf', 'aus', 'für', 'pro', 'je', 'bei', 'nach', 'seit', 'oder', 'als', 'ihnen', 'davon']);
+
 /** Held-Zahl + Einheit (Wort danach) aus Text. */
 function extractNumber(text) {
 	let m = text.match(/([−-]?\d[\d.,]*\s?(?:%|Mrd|Mio|Millionen|Milliarden|Tsd)?)\s+([A-Za-zÄÖÜäöüß]+)/);
-	if (m) return { num: m[1].replace(/\s+/g, ' ').trim(), unit: m[2] };
+	if (m) {
+		const num = m[1].replace(/\s+/g, ' ').trim();
+		// %-Zahlen brauchen keine Einheit; Stopwörter ("und", "der" …) sind keine.
+		const unit = num.endsWith('%') || UNIT_STOPWORDS.has(m[2].toLowerCase()) ? null : m[2];
+		return { num, unit };
+	}
 	m = text.match(/[−-]?\d[\d.,]*\s?%/);
 	if (m) return { num: m[0].replace(/\s/g, ''), unit: null };
 	m = text.match(/\d[\d.,]*\s?(Mrd|Mio|Millionen|Milliarden|Tsd)\b/i);
@@ -62,21 +69,32 @@ function pickPunchWord(hook, heroNumber) {
 function fallbackScript(story) {
 	const hook = story.hook || story.title;
 	const aufloesung = story.aufloesung || hook;
+	const ctx = aufloesung.length <= 90 ? aufloesung : aufloesung.slice(0, 87) + '…';
 	return {
-		hook,
-		beats: [aufloesung].filter(Boolean),
-		numberContext: aufloesung.length <= 90 ? aufloesung : aufloesung.slice(0, 87) + '…',
-		vo: null
+		hook: { screen: hook, vo: null },
+		number: { screen: ctx, vo: null },
+		beats: [{ screen: aufloesung, vo: null }],
+		proofVo: null,
+		endVo: null
 	};
 }
 
+/**
+ * EIN Skript für Screen UND Stimme: jede Szene hat 'screen' (kurzer Text im
+ * Bild) und 'vo' (der gesprochene Satz, der EXAKT dasselbe sagt, nur
+ * ausformuliert). Die Stimme liest also immer das, was gerade zu sehen ist —
+ * gleiche Reihenfolge, gleicher Inhalt (Aarons Feedback 2026-07-06: vorher
+ * liefen Screen-Beats und VO als zwei getrennte Erzählungen auseinander).
+ */
 async function generateScript(story) {
 	const key = env.DEEPSEEK_API_KEY;
 	if (!key) {
-		console.log('kein DEEPSEEK_API_KEY — regelbasiertes Skript');
+		console.log('kein DEEPSEEK_API_KEY — regelbasiertes Skript (ohne VO)');
 		return fallbackScript(story);
 	}
 	const prompt = `Du schreibst das Skript für ein 20-Sekunden-Instagram-Reel von "NurEine" (deutschsprachige Good-News-Plattform, Positionierung: "ehrlicher Fortschritt", belegt statt behauptet, warm aber nie kitschig, duzt).
+
+Das Reel hat feste Szenen. Pro Szene gibt es "screen" (Text im Bild, KURZ) und "vo" (der gesprochene Satz eines Moderators). REGEL: "vo" sagt inhaltlich EXAKT das, was "screen" zeigt — nur als natürlicher gesprochener Satz. Niemals andere Fakten, niemals andere Reihenfolge.
 
 STORY:
 Titel: ${story.title}
@@ -85,13 +103,15 @@ Kern: ${story.aufloesung}
 Region: ${story.region || '—'}
 Quelle: ${story.source || '—'}
 
-Liefere NUR ein JSON-Objekt (kein Markdown) mit exakt diesen Feldern:
+Liefere NUR ein JSON-Objekt (kein Markdown):
 {
-  "hook": "Bildschirm-Hook, MAX 9 Wörter. Die überraschendste Konkretheit zuerst (Zahl, wenn vorhanden). Kein Clickbait ohne Substanz, keine Frage.",
-  "beats": ["1-2 Zeilen à MAX 14 Wörter. Jede Zeile NEUE Info (Kontext/Warum es zählt) — den Hook NICHT wiederholen."],
-  "numberContext": "Halbsatz MAX 12 Wörter, der die Kernzahl einordnet (was/wo/seit wann).",
-  "vo": "Gesprochener Voiceover-Text, 40-55 Wörter: Hook-Satz → Kern → das überraschendste Detail → letzter Satz EXAKT: 'Schick das jemandem, der heute eine gute Nachricht braucht.' Kurze Hauptsätze, warm, klar, keine Superlativ-Floskeln."
-}`;
+  "hook":   { "screen": "MAX 9 Wörter, die überraschendste Konkretheit zuerst (Zahl wenn vorhanden), keine Frage, kein Clickbait", "vo": "derselbe Inhalt als 1 gesprochener Satz, max 16 Wörter" },
+  "number": { "screen": "Halbsatz MAX 12 Wörter, der die Kernzahl einordnet", "vo": "derselbe Inhalt als 1 Satz mit der Zahl, max 16 Wörter" },
+  "beats":  [ { "screen": "MAX 14 Wörter NEUE Info (nicht den Hook wiederholen)", "vo": "derselbe Inhalt als 1 Satz, max 18 Wörter" } ],
+  "proofVo": "1 kurzer Satz wie: 'Belegt — nachgeprüft, Quelle: ${story.source || 'siehe nureine.de'}.'",
+  "endVo":  "EXAKT: 'Schick das jemandem, der heute eine gute Nachricht braucht.'"
+}
+"beats": 1-2 Einträge. Kurze Hauptsätze, warm, klar, keine Superlativ-Floskeln.`;
 	try {
 		const r = await fetch('https://api.deepseek.com/chat/completions', {
 			method: 'POST',
@@ -99,17 +119,17 @@ Liefere NUR ein JSON-Objekt (kein Markdown) mit exakt diesen Feldern:
 			body: JSON.stringify({
 				model: 'deepseek-chat',
 				messages: [{ role: 'user', content: prompt }],
-				temperature: 0.7,
+				temperature: 0.6,
 				response_format: { type: 'json_object' }
 			}),
 			signal: AbortSignal.timeout(60000)
 		});
 		if (!r.ok) throw new Error(`DeepSeek ${r.status}`);
 		const data = await r.json();
-		const s = JSON.parse(data.choices[0].message.content);
-		if (!s.hook || !Array.isArray(s.beats)) throw new Error('Skript unvollständig');
-		s.beats = s.beats.filter(Boolean).slice(0, 2);
-		return s;
+		const raw = JSON.parse(data.choices[0].message.content);
+		if (!raw.hook?.screen || !Array.isArray(raw.beats)) throw new Error('Skript unvollständig');
+		raw.beats = raw.beats.filter((b) => b && b.screen).slice(0, 2);
+		return raw;
 	} catch (e) {
 		console.log(`DeepSeek-Skript fehlgeschlagen (${e.message}) — regelbasiert`);
 		return fallbackScript(story);
@@ -118,24 +138,31 @@ Liefere NUR ein JSON-Objekt (kein Markdown) mit exakt diesen Feldern:
 
 // ── Voiceover (edge-tts) ────────────────────────────────────────────────────
 
-function makeVoiceover(voText, slug) {
+const VOICE = env.REEL_VOICE || 'de-DE-FlorianMultilingualNeural'; // männlich, passt zum Moderator
+
+/**
+ * Synthetisiert EIN VO-Segment (einen Szenen-Satz). Rückgabe mit Wort-Timings
+ * RELATIV zum Segment-Start — das Audio wird in Remotion in der jeweiligen
+ * Szenen-Sequence abgespielt, Sync ist damit konstruktionsbedingt exakt.
+ */
+function synthSegment(text, slug, name) {
 	const dir = fileURLToPath(new URL('./public/vo/', import.meta.url));
 	mkdirSync(dir, { recursive: true });
-	const mp3 = `${dir}${slug}.mp3`;
-	const wordsPath = `/tmp/reel-words-${slug}.json`;
+	const file = `vo/${slug}-${name}.mp3`;
+	const wordsPath = `/tmp/reel-words-${slug}-${name}.json`;
 	const py = env.TTS_PYTHON || 'python3';
 	try {
-		execFileSync(py, [fileURLToPath(new URL('./scripts/tts.py', import.meta.url)), '--text', voText, '--out', mp3, '--words', wordsPath], { stdio: 'inherit', timeout: 120000 });
+		execFileSync(py, [fileURLToPath(new URL('./scripts/tts.py', import.meta.url)), '--text', text, '--voice', VOICE, '--out', `${dir}${slug}-${name}.mp3`, '--words', wordsPath], { stdio: 'inherit', timeout: 120000 });
 		const words = JSON.parse(readFileSync(wordsPath, 'utf8'));
 		if (!words.length) throw new Error('keine Wort-Timestamps');
 		return {
-			voFile: `vo/${slug}.mp3`,
+			file,
 			words: words.map((w) => ({ t: w.t, start: Math.round(w.start * FPS), end: Math.round(w.end * FPS) })),
-			voSeconds: words[words.length - 1].end + 0.4
+			durFrames: Math.round((words[words.length - 1].end + 0.35) * FPS)
 		};
 	} catch (e) {
-		console.log(`Voiceover fehlgeschlagen (${e.message}) — Reel läuft mit Musik/Text`);
-		return { voFile: null, words: null, voSeconds: 0 };
+		console.log(`VO-Segment "${name}" fehlgeschlagen (${e.message}) — Szene ohne Stimme`);
+		return null;
 	}
 }
 
@@ -147,55 +174,50 @@ function readFrames(text, min, max) {
 	return Math.round(sec * FPS);
 }
 
-function buildScenes(story, script, vo) {
-	const { num, unit } = extractNumber(`${story.title} ${script.hook} ${story.aufloesung || ''}`);
+function buildScenes(story, script, voWanted, slug) {
+	const hookScreen = script.hook.screen;
+	// Kern-Zahl bevorzugt aus dem Zahl-Kontext des Skripts (dort steht die
+	// Zahl, um die es GEHT) — sonst greift der Extraktor z.B. ein Alter ('16')
+	// aus der Auflösung, während der Kontext von '90%' spricht.
+	const { num, unit } = extractNumber(`${script.number?.screen || ''} ${hookScreen} ${story.title} ${story.aufloesung || ''}`);
 	const kicker = `GUTE NACHRICHT · ${(story.category || 'gemeinschaft').toUpperCase()}`;
 	const scenes = [];
 	let t = 0;
-	const push = (sc, dur) => {
-		scenes.push({ ...sc, start: t, dur });
+	let anyVo = false;
+
+	// Szene anlegen: Dauer = max(Lesezeit, VO-Länge + Nachlauf). VO nur, wenn
+	// gewünscht UND das Segment einen Text hat UND die Synthese klappt.
+	const push = (sc, minSec, maxSec, voText, name) => {
+		const readDur = readFrames(sc.kind === 'proof' || sc.kind === 'end' ? 'x'.repeat(30) : sc.text || sc.context || '', minSec, maxSec);
+		let vo = null;
+		if (voWanted && voText) {
+			vo = synthSegment(voText, slug, name);
+			if (vo) anyVo = true;
+		}
+		const dur = vo ? Math.max(readDur, vo.durFrames + 12) : readDur;
+		scenes.push({ ...sc, vo, start: t, dur });
 		t += dur;
 	};
 
-	push({ kind: 'hook', text: script.hook, punch: pickPunchWord(script.hook, num), kicker }, readFrames(script.hook, 2.4, 3.4));
-	if (num) {
-		push({ kind: 'number', value: num, unit, context: script.numberContext || '' }, readFrames(script.numberContext || 'x'.repeat(40), 2.4, 3.4));
+	push({ kind: 'hook', text: hookScreen, punch: pickPunchWord(hookScreen, num), kicker }, 2.4, 3.6, script.hook.vo, 'hook');
+	if (num && script.number?.screen) {
+		push({ kind: 'number', value: num, unit, context: script.number.screen }, 2.4, 3.4, script.number.vo, 'number');
 	}
-	const beats = script.beats.length ? script.beats : [story.aufloesung];
+	const beats = script.beats.length ? script.beats : [{ screen: story.aufloesung, vo: null }];
 	beats.forEach((b, i) => {
-		// erstes Beat mit Story-Bild (falls vorhanden), weitere mit Figur
-		push({ kind: 'beat', text: b, image: i === 0 ? story.image || null : null, pose: i % 2 === 0 ? 'point-side' : 'thinking' }, readFrames(b, 2.6, 4.2));
+		push({ kind: 'beat', text: b.screen, image: i === 0 ? story.image || null : null, pose: i % 2 === 0 ? 'point-side' : 'thinking' }, 2.6, 4.4, b.vo, `beat${i}`);
 	});
 	if (story.source) {
 		// Wirkungsindex nur zeigen, wenn er die Story TRÄGT (≥50). Der Stempel
 		// belegt die Verifikation — ein "30/100" würde die Story schlechtreden.
 		const impact = (story.impactScore ?? 0) >= 50 ? story.impactScore : null;
-		push({ kind: 'proof', source: story.source, impact }, 68);
+		push({ kind: 'proof', source: story.source, impact }, 2.3, 2.3, script.proofVo, 'proof');
 	}
-	push({ kind: 'end', share: story.shareHook || script.hook, cta: 'Schick’s jemandem, der das heute braucht', hasVo: !!vo.voFile }, 100);
+	push({ kind: 'end', share: story.shareHook || hookScreen, cta: 'Schick’s jemandem, der das heute braucht', hasVo: anyVo }, 3.4, 3.4, script.endVo, 'end');
+	// hasVo erst nach allen Segmenten final setzen (endVo könnte das erste erfolgreiche sein)
+	scenes[scenes.length - 1].hasVo = anyVo;
 
-	// Auf VO-Länge strecken: Szenen (außer Endcard) proportional skalieren, bis
-	// die VO bequem VOR der Endcard endet (CTA bleibt „clean").
-	if (vo.voSeconds > 0) {
-		const endDur = scenes[scenes.length - 1].dur;
-		const bodyTarget = Math.round(vo.voSeconds * FPS) + 10;
-		const body = t - endDur;
-		if (bodyTarget > body) {
-			const scale = bodyTarget / body;
-			let acc = 0;
-			for (const sc of scenes) {
-				if (sc.kind === 'end') {
-					sc.start = acc;
-				} else {
-					sc.start = acc;
-					sc.dur = Math.round(sc.dur * scale);
-					acc += sc.dur;
-				}
-			}
-			t = acc + endDur;
-		}
-	}
-	return { scenes, duration: t, heroNum: num };
+	return { scenes, duration: t, anyVo };
 }
 
 // ── Story holen ─────────────────────────────────────────────────────────────
@@ -269,9 +291,8 @@ async function main() {
 
 	// VO: Default AUS (Stimm-Qualität muss einmal abgenommen werden) — an per --vo oder VO=1.
 	const voWanted = arg('no-vo') ? false : arg('vo') === true || env.VO === '1';
-	const vo = voWanted && script.vo ? makeVoiceover(script.vo, slug) : { voFile: null, words: null, voSeconds: 0 };
 
-	const { scenes, duration } = buildScenes(story, script, vo);
+	const { scenes, duration, anyVo } = buildScenes(story, script, voWanted, slug);
 
 	// Musik deterministisch variieren (per Slug), damit der Feed nicht monoton klingt.
 	let h = 0;
@@ -282,14 +303,13 @@ async function main() {
 		scenes,
 		category: story.category || 'gemeinschaft',
 		seed: slug,
-		voFile: vo.voFile,
 		musicFile: music,
-		words: vo.words,
+		hasVo: anyVo,
 		durationInFrames: duration
 	};
 	const propsPath = `/tmp/reel-props-${slug}.json`;
 	writeFileSync(propsPath, JSON.stringify(props));
-	console.log(`szenen: ${scenes.map((s) => s.kind).join(' → ')} | ${Math.round(duration / FPS)}s | VO: ${vo.voFile ? 'ja' : 'nein'}`);
+	console.log(`szenen: ${scenes.map((s) => s.kind).join(' → ')} | ${Math.round(duration / FPS)}s | VO: ${anyVo ? `ja (${VOICE})` : 'nein'}`);
 
 	execFileSync('npx', ['remotion', 'render', 'ReelDaily', out, `--props=${propsPath}`, '--log=error'], {
 		stdio: 'inherit',

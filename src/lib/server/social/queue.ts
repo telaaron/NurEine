@@ -332,18 +332,39 @@ function isRateLimit(body: string): boolean {
  */
 async function assertImageUrl(url: string): Promise<void> {
 	let lastReason = 'unknown';
-	for (let attempt = 0; attempt < 3; attempt++) {
+	// 5 Versuche à 45s + 5s Pause → ein kalter Card-Render (1080×1920 + Bild)
+	// hat genug Zeit. Vorher: 3×20s → brach bei langsamem Render ab ("timeout").
+	for (let attempt = 0; attempt < 5; attempt++) {
 		try {
-			const resp = await fetch(url, { signal: AbortSignal.timeout(20000) });
+			const resp = await fetch(url, { signal: AbortSignal.timeout(45000) });
 			const ct = resp.headers.get('content-type') || '';
 			if (resp.ok && ct.startsWith('image/')) return;
 			lastReason = `HTTP ${resp.status}, content-type "${ct}"`;
 		} catch (e) {
 			lastReason = (e as Error).message;
 		}
-		if (attempt < 2) await new Promise((r) => setTimeout(r, 4000));
+		if (attempt < 4) await new Promise((r) => setTimeout(r, 5000));
 	}
 	throw new Error(`image url not a valid image (${lastReason}): ${url.slice(0, 120)}`);
+}
+
+/**
+ * Wärmt eine Card-URL vor: fetcht sie wiederholt, bis sie ein GÜLTIGES Bild
+ * liefert (200 + image/*) — max. ~4 Min Budget. Danach liegt sie im CDN, IG
+ * bekommt sie sofort. Wirft NICHT (Vorwärmen ist best-effort); der eigentliche
+ * assertImageUrl-Check entscheidet danach über Erfolg/Fehler.
+ */
+async function warmCard(url: string): Promise<void> {
+	for (let attempt = 0; attempt < 5; attempt++) {
+		try {
+			const resp = await fetch(url, { signal: AbortSignal.timeout(50000) });
+			const ct = resp.headers.get('content-type') || '';
+			if (resp.ok && ct.startsWith('image/')) return; // fertig & warm
+		} catch {
+			// weiter versuchen — Render evtl. noch nicht fertig
+		}
+		await new Promise((r) => setTimeout(r, 3000));
+	}
 }
 
 async function igCreateContainer(body: Record<string, unknown>): Promise<string> {
@@ -539,6 +560,8 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 				// 3-Folien-Carousel (4:5). URLs aus og_url-Slug abgeleitet.
 				const urls = carouselUrlsFor(p);
 				if (!urls) throw new Error('cannot derive carousel urls from og_url');
+				// Alle Folien vorwärmen, damit IG sie fertig vorfindet (kein 9004/Timeout).
+				for (const u of urls) await warmCard(u);
 				mediaId = await igPostCarousel(urls, fullCaption);
 			} else {
 				// Einzelbild — 4:5 Hook-Folie (NICHT das quere 1.91:1-OG, das sieht
@@ -546,6 +569,7 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 				const urls = carouselUrlsFor(p);
 				const imageUrl = urls?.[0] || p.card_url || p.og_url;
 				if (!imageUrl) throw new Error('no image url');
+				await warmCard(imageUrl);
 				mediaId = await igPost(imageUrl, fullCaption);
 			}
 			await supabaseAdmin
@@ -767,14 +791,12 @@ export async function publishStoryDue(): Promise<{ posted: boolean; reason: stri
 	const slug = `${slugify(story.title)}-${story.id.slice(0, 8)}`;
 	const imageUrl = `${BASE_URL}/api/share-card/${slug}`;
 
-	// CDN VORWÄRMEN: Wir fetchen die share-card einmal selbst, damit sie im CDN
-	// liegt, BEVOR IG sie abruft. Sonst muss IG die ~6s-Satori-Render abwarten →
-	// Container bleibt zu lange IN_PROGRESS → 9007 / Timeout. Warm = IG-Fetch instant.
-	try {
-		await fetch(imageUrl, { signal: AbortSignal.timeout(20000) });
-	} catch {
-		// Vorwärmen optional — schlägt es fehl, versucht IG es trotzdem.
-	}
+	// CDN VORWÄRMEN — bis die Karte WIRKLICH ein gültiges Bild liefert. Ein
+	// kalter Satori-Render (1080×1920 + FLUX-Bild) kann >20s dauern; ein einzelner
+	// 20s-Fetch bricht dann ab und die Karte ist beim IG-Abruf noch nicht fertig
+	// → assertImageUrl-Timeout → 'failed' (Ursache der ausbleibenden Stories).
+	// Darum: mehrere Versuche mit langem Budget, bis Status 200 + image/*.
+	await warmCard(imageUrl);
 
 	try {
 		const mediaId = await igPostStory(imageUrl);

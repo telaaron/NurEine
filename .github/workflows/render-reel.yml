@@ -7,8 +7,11 @@ name: Social — Reel rendern (Remotion)
 # der Select-Endpoint liefert dann sonst story:null.
 # Wochenplan: Mo/Di/Mi/Fr/Sa Reel · Do Carousel (social-generate) · So Digest.
 on:
-  schedule:
-    - cron: '0 16 * * 1,2,3,5,6'  # Mo/Di/Mi/Fr/Sa 16:00 UTC — nur Fallback
+  # PAUSIERT (2026-07-06, Aaron): Reels gehen bis zur Qualitäts-Abnahme NUR
+  # manuell raus — erst rendern, Aaron ansehen lassen, dann posten.
+  # Zum Reaktivieren den schedule-Block wieder einkommentieren:
+  # schedule:
+  #   - cron: '0 16 * * 1,2,3,5,6'  # Mo/Di/Mi/Fr/Sa 16:00 UTC — nur Fallback
   workflow_dispatch:
     inputs:
       vo:

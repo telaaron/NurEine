@@ -83,9 +83,15 @@ export async function generateTodayDraft(): Promise<{
 	reason: string;
 	storyId?: string;
 }> {
-	// Sonntag = Digest-Tag (Wochenplan): wenn heute schon ein Digest-Draft existiert,
-	// macht der tägliche Story-Post Platz — nur EIN Feed-Post/Tag, der Digest gewinnt
-	// sonntags. (Greift nur, wenn der Digest-Cron zuerst lief.)
+	// Sonntag = Digest-Tag: der Generator legt sonntags GAR KEIN Carousel an.
+	// (Vorher: Guard prüfte nur, ob der Digest-Draft schon existiert — der
+	// Digest-Cron läuft aber erst 15:30 UTC, der Generator 06:15 → das Carousel
+	// gewann IMMER den Morgen-Slot und der Digest blieb liegen / verstopfte
+	// montags die Queue. Schlägt der Digest fehl, bleibt der Feed sonntags leer —
+	// lieber leer als falsch.)
+	if (new Date().getUTCDay() === 0) {
+		return { created: false, reason: 'Sonntag = Digest-Tag — kein Carousel' };
+	}
 	const dayStart0 = new Date();
 	dayStart0.setUTCHours(0, 0, 0, 0);
 	const { count: digestToday } = await supabaseAdmin

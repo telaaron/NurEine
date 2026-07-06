@@ -167,7 +167,10 @@ function buildScenes(story, script, vo) {
 		push({ kind: 'beat', text: b, image: i === 0 ? story.image || null : null, pose: i % 2 === 0 ? 'point-side' : 'thinking' }, readFrames(b, 2.6, 4.2));
 	});
 	if (story.source) {
-		push({ kind: 'proof', source: story.source, impact: story.impactScore ?? null }, 68);
+		// Wirkungsindex nur zeigen, wenn er die Story TRÄGT (≥50). Der Stempel
+		// belegt die Verifikation — ein "30/100" würde die Story schlechtreden.
+		const impact = (story.impactScore ?? 0) >= 50 ? story.impactScore : null;
+		push({ kind: 'proof', source: story.source, impact }, 68);
 	}
 	push({ kind: 'end', share: story.shareHook || script.hook, cta: 'Schick’s jemandem, der das heute braucht', hasVo: !!vo.voFile }, 100);
 

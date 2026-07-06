@@ -237,7 +237,9 @@ async function queueReel(storyId, videoUrl, caption, hashtags, category, hookTyp
 			card_url: videoUrl,
 			og_url: videoUrl,
 			slide_urls: [videoUrl],
-			hook_type: hookType || 'zahl',
+			// Check-Constraint erlaubt nur zahl|frage|kontrast (Legacy-A/B-Feld) —
+			// ig_hook_type-Werte wie 'charme'/'mensch' darauf abbilden.
+			hook_type: ['zahl', 'frage', 'kontrast'].includes(hookType) ? hookType : 'zahl',
 			hook_style: 'image',
 			category,
 			is_carousel: false,

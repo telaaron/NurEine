@@ -62,6 +62,13 @@ const BG = '#0c0a08'; // dunkle Fläche, in die das Bild ausläuft
 const AMBER = '#bd6a35';
 const HOOK = '#f5b969'; // helles Amber für die Hook-Zahl
 
+// IG-Story-SAFE-ZONES. Instagram legt eigene UI über die Story:
+//   oben  ~130px: Fortschrittsbalken + Profilzeile
+//   unten ~250px: "Antwort …" + Like + Teilen
+// Alles Wichtige (Labels, Headline, CTA) muss INNERHALB dieser Zonen bleiben.
+const SAFE_TOP = 130;
+const SAFE_BOTTOM = 260; // freier Abstand von der Unterkante bis zum CTA
+
 const IMG_MIN_H = 940;
 const IMG_MAX_H = 1140;
 const FADE_H = 260;
@@ -148,7 +155,7 @@ function pickTemplate(input: StoryCardInput): TemplateName {
 
 function topLabels(accent: string, catLabel: string, logoDataUri?: string | null, onDark = false): string {
 	const brandBg = onDark ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.42)';
-	return `<div style="position:absolute;display:flex;align-items:center;justify-content:space-between;top:56px;left:56px;right:56px;width:968px;">
+	return `<div style="position:absolute;display:flex;align-items:center;justify-content:space-between;top:${SAFE_TOP}px;left:56px;right:56px;width:968px;">
       <div style="display:flex;align-items:center;background:#fff;border-radius:100px;padding:14px 30px;">
         <div style="display:flex;width:14px;height:14px;border-radius:14px;background:${accent};margin-right:14px;"></div>
         <div style="display:flex;font-family:'Inter';font-size:28px;font-weight:700;letter-spacing:0.12em;color:#111;">${esc(catLabel)}</div>
@@ -250,7 +257,7 @@ function tplStat(input: StoryCardInput, accent: string, catLabel: string, hook: 
     ${imageCover(input.imageBase64, imgH)}
     ${fade}
     ${topLabels(accent, catLabel, input.logoDataUri)}
-    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:72px;width:968px;">
+    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:260px;width:968px;">
       ${hookInline(hook, accent)}
       <div style="display:flex;font-family:'Space Grotesk';font-size:${headlineSize(input.title)}px;font-weight:700;color:#fff;line-height:1.0;letter-spacing:-0.03em;">${esc(input.title)}</div>
       ${dekText(input.dek)}
@@ -275,7 +282,7 @@ function tplPoster(input: StoryCardInput, accent: string, catLabel: string): str
     ${scrimTop}
     ${scrim}
     ${topLabels(accent, catLabel, input.logoDataUri)}
-    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:72px;width:968px;">
+    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:260px;width:968px;">
       <div style="display:flex;width:120px;height:12px;border-radius:12px;background:${accent};margin-bottom:30px;"></div>
       <div style="display:flex;font-family:'Space Grotesk';font-size:${hs}px;font-weight:700;color:#fff;line-height:0.98;letter-spacing:-0.03em;">${esc(input.title)}</div>
       ${dekText(input.dek)}
@@ -297,7 +304,7 @@ function tplStatement(input: StoryCardInput, accent: string, catLabel: string): 
 		`
     ${texture}
     ${topLabels(accent, catLabel, input.logoDataUri, true)}
-    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;top:280px;bottom:72px;width:968px;justify-content:space-between;">
+    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;top:280px;bottom:260px;width:968px;justify-content:space-between;">
       <div style="display:flex;">
         <!-- dicker vertikaler Akzentbalken links (Editorial-Pattern) -->
         <div style="display:flex;width:18px;border-radius:18px;background:${accent};margin-right:40px;"></div>
@@ -317,17 +324,18 @@ function tplStatement(input: StoryCardInput, accent: string, catLabel: string): 
 
 // ─── Template 4: SPLIT (obere Hälfte Bild, untere Hälfte Kategorie-Farbe) ────
 function tplSplit(input: StoryCardInput, accent: string, catLabel: string, hook: Hook | null): string {
-	const splitY = 1000;
+	// Bild GRÖSSER (1180) → grüne Fläche kleiner. Panel füllt von splitY bis
+	// SAFE_BOTTOM als flex-column mit space-between: Text oben, CTA unten,
+	// gleichmäßig verteilt → KEIN toter Raum mehr in der Mitte.
+	const splitY = 1180;
 	const panelBg = CATEGORY_PANEL[input.category] || '#2a2118';
 	const image = input.imageBase64
 		? `<img src="${input.imageBase64}" width="${W}" height="${splitY}" style="position:absolute;top:0;left:0;width:${W}px;height:${splitY}px;object-fit:cover;object-position:center;" />`
 		: imageCover(null, splitY);
 	const panel = `<div style="position:absolute;left:0;top:${splitY}px;display:flex;width:${W}px;height:${H - splitY}px;background:${panelBg};"></div>`;
-	// Weicher Übergang Bild → Panel (kein harter Schnitt).
 	const blend = `<div style="position:absolute;left:0;top:${splitY - 90}px;display:flex;width:${W}px;height:90px;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,${panelBg} 100%);"></div>`;
 	const n = input.title.length;
-	const hs = n <= 32 ? 80 : n <= 55 ? 68 : n <= 80 ? 56 : 48;
-	// Orts-/Zahl-Label als eigene Zeile, WEISS, größer (kein graues Micro-Label).
+	const hs = n <= 32 ? 76 : n <= 55 ? 64 : n <= 80 ? 54 : 46;
 	const locParts = [input.country?.toUpperCase(), hook?.fromText ? hook.value : null].filter(Boolean);
 	const locLine = locParts.length
 		? `<div style="display:flex;align-items:center;margin-bottom:18px;">
@@ -340,15 +348,17 @@ function tplSplit(input: StoryCardInput, accent: string, catLabel: string, hook:
     ${blend}
     ${panel}
     ${topLabels(accent, catLabel, input.logoDataUri)}
-    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;top:${splitY + 50}px;width:968px;">
-      ${locLine}
-      <div style="display:flex;font-family:'Space Grotesk';font-size:${hs}px;font-weight:700;color:#fff;line-height:1.0;letter-spacing:-0.03em;">${esc(input.title)}</div>
-      ${dekText(input.dek, 'rgba(255,255,255,0.92)', 42)}
-    </div>
-    <!-- CTA: weiß auf dunkel-amber, konsistent mit System -->
-    <div style="position:absolute;display:flex;left:56px;right:56px;bottom:64px;width:968px;flex-direction:column;align-items:center;justify-content:center;background:${AMBER};border-radius:34px;padding:42px 32px;">
-      <div style="display:flex;font-family:'Space Grotesk';font-size:44px;font-weight:700;color:#fff;letter-spacing:-0.02em;text-align:center;white-space:nowrap;">Deine gute Nachricht für heute →</div>
-      <div style="display:flex;font-family:'Inter';font-size:34px;font-weight:600;color:rgba(255,255,255,0.96);margin-top:12px;">Kostenlos abonnieren · Link im Profil</div>
+    <!-- Panel-Inhalt füllt von splitY+44 bis SAFE_BOTTOM, gleichmäßig verteilt -->
+    <div style="position:absolute;display:flex;flex-direction:column;justify-content:space-between;left:56px;right:56px;top:${splitY + 44}px;bottom:${SAFE_BOTTOM}px;width:968px;">
+      <div style="display:flex;flex-direction:column;">
+        ${locLine}
+        <div style="display:flex;font-family:'Space Grotesk';font-size:${hs}px;font-weight:700;color:#fff;line-height:1.04;letter-spacing:-0.03em;">${esc(input.title)}</div>
+        ${dekText(input.dek, 'rgba(255,255,255,0.92)', 42)}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:968px;background:${AMBER};border-radius:34px;padding:38px 32px;">
+        <div style="display:flex;font-family:'Space Grotesk';font-size:44px;font-weight:700;color:#fff;letter-spacing:-0.02em;text-align:center;white-space:nowrap;">Deine gute Nachricht für heute →</div>
+        <div style="display:flex;font-family:'Inter';font-size:34px;font-weight:600;color:rgba(255,255,255,0.96);margin-top:12px;">Kostenlos abonnieren · Link im Profil</div>
+      </div>
     </div>`);
 }
 
@@ -374,7 +384,7 @@ function tplTicker(
     ${imageCover(input.imageBase64, imgH)}
     ${fade}
     ${topLabels(accent, catLabel, input.logoDataUri)}
-    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:64px;width:968px;">
+    <div style="position:absolute;display:flex;flex-direction:column;left:56px;right:56px;bottom:260px;width:968px;">
       <!-- Wirkungs-Pill ÜBER der Headline = erster Kontext-Geber -->
       ${input.impactScore != null ? `<div style="display:flex;margin-bottom:24px;">${impactPill(input.impactScore, accent)}</div>` : ''}
       ${locPill}

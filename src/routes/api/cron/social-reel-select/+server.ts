@@ -19,6 +19,21 @@ export async function POST({ request }) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
 	}
 	try {
+		// Tages-Guard: Die Claude-Regie-Routine produziert das Reel des Tages
+		// lokal. Dieser Endpoint speist nur noch den FALLBACK-Cron (16:00 UTC) —
+		// existiert heute schon ein Reel, gibt es nichts zu tun.
+		const dayStart = new Date();
+		dayStart.setUTCHours(0, 0, 0, 0);
+		const { count: reelToday } = await supabaseAdmin
+			.from('nureine_social_posts')
+			.select('*', { count: 'exact', head: true })
+			.eq('platform', 'instagram')
+			.eq('post_kind', 'reel')
+			.gte('created_at', dayStart.toISOString());
+		if ((reelToday ?? 0) > 0) {
+			return json({ ok: true, story: null, reason: 'Reel für heute existiert schon (Regie-Routine)' });
+		}
+
 		const story = await selectInstagramStory();
 		if (!story) return json({ ok: true, story: null, reason: 'keine ig_ok-Story heute' });
 

@@ -1,15 +1,14 @@
 name: Social — Reel rendern (Remotion)
 
-# Tägliches NurEine-Reel (v3): Hook-first Kinetic-Typography, Beleg-Stempel,
-# optionales KI-Voiceover (edge-tts) + wortsynchrone Captions.
-#
+# FALLBACK-Renderer. Das Reel des Tages produziert normalerweise die lokale
+# Claude-Regie-Routine ("nureine-reel-regie", morgens auf Aarons Mac) mit
+# eigener Dramaturgie (--script Regie-Modus). Dieser Workflow springt nur ein,
+# wenn bis 16:00 UTC KEIN Reel existiert (Mac aus/Routine nicht gelaufen) —
+# der Select-Endpoint liefert dann sonst story:null.
 # Wochenplan: Mo/Di/Mi/Fr/Sa Reel · Do Carousel (social-generate) · So Digest.
-# Ablauf: 04:35 UTC Story wählen + rendern + Draft einreihen → 05:30 UTC postet
-# der social-publish-Cron → 06:15 UTC überspringt social-generate das Carousel
-# (Reel existiert). Schlägt der Render fehl, greift das Carousel als Fallback.
 on:
   schedule:
-    - cron: '35 4 * * 1,2,3,5,6'  # Mo/Di/Mi/Fr/Sa 04:35 UTC (06:35 CEST)
+    - cron: '0 16 * * 1,2,3,5,6'  # Mo/Di/Mi/Fr/Sa 16:00 UTC — nur Fallback
   workflow_dispatch:
     inputs:
       vo:
@@ -79,6 +78,15 @@ jobs:
           # Scharf schalten: Repo-Variable REEL_VO=1 setzen (Settings → Variables).
           VO: ${{ github.event.inputs.vo || vars.REEL_VO || '0' }}
 
+      - name: Sofort posten (Publish-Cron läuft sonst erst morgen früh)
+        if: steps.pick.outputs.slug != ''
+        run: |
+          curl -fsS -X POST "${BASE_URL}/api/cron/social-publish" \
+            -H "Authorization: Bearer ${CRON_SECRET}" || true
+        env:
+          BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
       - name: Nichts zu tun
         if: steps.pick.outputs.slug == ''
-        run: echo "Heute keine Reel-Story (lieber leer als falsch)."
+        run: echo "Kein Fallback nötig (Regie-Reel existiert) oder keine Story."

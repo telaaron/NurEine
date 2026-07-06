@@ -44,10 +44,17 @@ Regeln aus dem IG-Research Juni/Juli 2026 (Sends = Top-Signal, Hook ab Frame 0,
   Textlänge, auf VO-Länge skaliert), `npx remotion render ReelDaily`, Upload, Draft
   (mit `scheduled_for=now`, sonst findet publishDue ihn nie).
   Lokaler Test ohne Server: `--data story.json`.
-- **Workflow `render-reel.yml`: Mo/Di/Mi/Fr/Sa 04:35 UTC** → 05:30 postet
-  social-publish das Reel → 06:15 überspringt social-generate das Carousel
-  (Guard in `generateTodayDraft`). Render fehlgeschlagen → Carousel-Fallback,
-  Feed bleibt nie leer. Do = Carousel-Tag, So = Digest.
+- **Produktion: Claude-Regie-Routine `nureine-reel-regie`** (lokal, Mo/Di/Mi/Fr/Sa
+  09:00, läuft solange die Claude-App offen ist): wählt die Story, baut pro Story
+  eine EIGENE Dramaturgie aus dem Baukasten (`docs/REEL_BAUKASTEN.md`), schreibt
+  Skript+VO, rendert (`render.mjs --script plan.json`), sichtet Frames, reiht ein
+  und triggert social-publish. Bei starken Stories (Impact ≥80) auch 2 Reels.
+- **Fallback: `render-reel.yml` 16:00 UTC** (Mo/Di/Mi/Fr/Sa) — rendert das
+  Standard-Skelett NUR, wenn bis dahin kein Reel existiert (Tages-Guard im
+  Select-Endpoint; z.B. Mac aus) und postet direkt. Render fehlgeschlagen →
+  Carousel-Fallback via `generateTodayDraft`. Do = Carousel-Tag, So = Digest.
+- **publishDue: max 2 Feed-Posts/Tag, ≥3h Abstand** (Carousel morgens +
+  Regie-Reel vormittags ist der Normalfall).
 - **Frische-Guard in `publishDue`**: Posts älter als 72h werden nicht mehr
   gepostet (alte Drafts blockieren sonst die tagesaktuellen Reels; „gute
   Nachricht von vorgestern" ist redaktionell tot).

@@ -112,7 +112,7 @@ const SAFE_BOTTOM = 420;
 const M = 84; // Seitenrand
 
 // ── Szenen-lokales VO + Karaoke-Captions (Frames relativ zur Szene) ─────────
-const SceneVoice: React.FC<{ vo: SceneVo | null | undefined; dark?: boolean; captions?: boolean }> = ({ vo, dark, captions = true }) => {
+const SceneVoice: React.FC<{ vo: SceneVo | null | undefined; dark?: boolean; captions?: boolean; align?: 'center' | 'left' }> = ({ vo, dark, captions = true, align = 'center' }) => {
 	const frame = useCurrentFrame();
 	if (!vo) return null;
 	const chunks: CaptionWord[][] = [];
@@ -122,9 +122,9 @@ const SceneVoice: React.FC<{ vo: SceneVo | null | undefined; dark?: boolean; cap
 		<>
 			<Audio src={staticFile(vo.file)} volume={1} />
 			{captions && current ? (
-				<div style={{ position: 'absolute', left: 60, right: 60, bottom: SAFE_BOTTOM + 30, display: 'flex', justifyContent: 'center', zIndex: 20 }}>
+				<div style={{ position: 'absolute', left: align === 'left' ? M : 60, right: align === 'left' ? 380 : 60, bottom: SAFE_BOTTOM + 30, display: 'flex', justifyContent: align === 'left' ? 'flex-start' : 'center', zIndex: 20 }}>
 					<div style={{ background: dark ? 'rgba(244,239,230,0.94)' : 'rgba(22,20,15,0.85)', borderRadius: 18, padding: '16px 28px', maxWidth: 920 }}>
-						<div style={{ fontFamily: FF.interSemi, fontSize: 40, lineHeight: 1.25, color: dark ? INK : '#fff', textAlign: 'center' }}>
+						<div style={{ fontFamily: FF.interSemi, fontSize: 40, lineHeight: 1.25, color: dark ? INK : '#fff', textAlign: align === 'left' ? 'left' : 'center' }}>
 							{current.map((w, i) => (
 								<span key={i} style={{ color: frame >= w.start ? (frame <= w.end ? (dark ? AMBER_DEEP : AMBER) : dark ? INK : '#fff') : dark ? 'rgba(22,20,15,0.4)' : 'rgba(255,255,255,0.45)' }}>
 									{w.t}{' '}
@@ -245,7 +245,9 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 				</div>
 			)}
 			{!image ? <Character pose={pose} enterFrame={0} from="bottom" size={760} align="right" seed={seed} /> : null}
-			<SceneVoice vo={vo} />
+			{/* Ohne Bild steht der VOLLE Text schon groß im Bild und die Figur variiert je
+			    Pose ihre Position — Caption wäre redundant und kollidiert mit dem Kopf → aus. */}
+			<SceneVoice vo={vo} captions={!!image} />
 		</AbsoluteFill>
 	);
 };

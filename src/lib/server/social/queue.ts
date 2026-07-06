@@ -540,18 +540,23 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 	const autopilot = (await getAppSetting('social_autopilot')) === 'true' || env.SOCIAL_AUTOPILOT === 'true';
 	const statuses = autopilot ? ['approved', 'draft'] : ['approved'];
 
-	// GUARD: max 1 Feed-Post pro Tag (kein Spam, IG straft Bulk ab). Schon heute
-	// gepostet → Schluss. Schützt besonders im Autopilot-Modus.
+	// GUARD: max 2 Feed-Posts pro Tag mit ≥3h Abstand (kein Spam, IG straft
+	// Bulk ab; 2/Tag erlaubt Carousel morgens + Regie-Reel vormittags/abends).
 	const todayStart = new Date();
 	todayStart.setUTCHours(0, 0, 0, 0);
-	const { count: postedToday } = await supabaseAdmin
+	const { data: postedTodayRows } = await supabaseAdmin
 		.from('nureine_social_posts')
-		.select('*', { count: 'exact', head: true })
+		.select('posted_at')
 		.eq('platform', 'instagram')
 		.eq('status', 'posted')
-		.gte('posted_at', todayStart.toISOString());
-	if ((postedToday ?? 0) >= 1) {
-		return { posted: 0, failed: 0, skipped: 'daily feed-post limit reached (1/day)' };
+		.gte('posted_at', todayStart.toISOString())
+		.order('posted_at', { ascending: false });
+	const postedToday = postedTodayRows ?? [];
+	if (postedToday.length >= 2) {
+		return { posted: 0, failed: 0, skipped: 'daily feed-post limit reached (2/day)' };
+	}
+	if (postedToday[0] && Date.now() - new Date(postedToday[0].posted_at as string).getTime() < 3 * 60 * 60 * 1000) {
+		return { posted: 0, failed: 0, skipped: 'min 3h gap between feed posts' };
 	}
 
 	const { data } = await supabaseAdmin

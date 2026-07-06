@@ -220,6 +220,36 @@ function buildScenes(story, script, voWanted, slug) {
 	return { scenes, duration: t, anyVo };
 }
 
+/**
+ * REGIE-MODUS (--script plan.json): Claude ordnet die Szenen selbst an —
+ * beliebige Reihenfolge/Anzahl aus dem Baukasten (hook, number, beat, proof,
+ * end), eigene Texte, eigenes VO. render.mjs übernimmt nur noch TTS, Timing,
+ * Render, Upload, Queue. So variiert die Dramaturgie täglich, ohne dass die
+ * technische Qualität (Safe-Zones, Sync, Marke) verhandelbar wird.
+ */
+function buildScenesFromPlan(plan, voWanted, slug) {
+	const scenes = [];
+	let t = 0;
+	let anyVo = false;
+	plan.scenes.forEach((raw, i) => {
+		const { voText, ...sc } = raw;
+		let vo = null;
+		if (voWanted && voText) {
+			vo = synthSegment(voText, slug, `s${i}-${sc.kind}`);
+			if (vo) anyVo = true;
+		}
+		const baseText = sc.text || sc.context || sc.share || 'x'.repeat(30);
+		const minMax = sc.kind === 'end' ? [3.4, 3.4] : sc.kind === 'proof' ? [2.3, 2.3] : [2.4, 4.4];
+		const readDur = readFrames(baseText, minMax[0], minMax[1]);
+		const dur = vo ? Math.max(readDur, vo.durFrames + 12) : readDur;
+		scenes.push({ ...sc, vo, start: t, dur });
+		t += dur;
+	});
+	const end = scenes.find((sc) => sc.kind === 'end');
+	if (end) end.hasVo = anyVo;
+	return { scenes, duration: t, anyVo };
+}
+
 // ── Story holen ─────────────────────────────────────────────────────────────
 
 async function fetchStory(baseUrl, slug) {
@@ -284,20 +314,27 @@ async function main() {
 	const out = arg('out') || `/tmp/reel-${slug}.mp4`;
 	const dataFile = arg('data');
 
-	const story = dataFile ? JSON.parse(readFileSync(dataFile, 'utf8')) : await fetchStory(baseUrl, slug);
-
-	const script = await generateScript(story);
-	console.log('skript:', JSON.stringify(script).slice(0, 240));
+	const scriptFile = arg('script');
+	const plan = scriptFile ? JSON.parse(readFileSync(scriptFile, 'utf8')) : null;
+	const story = plan ? plan.story : dataFile ? JSON.parse(readFileSync(dataFile, 'utf8')) : await fetchStory(baseUrl, slug);
 
 	// VO: Default AUS (Stimm-Qualität muss einmal abgenommen werden) — an per --vo oder VO=1.
 	const voWanted = arg('no-vo') ? false : arg('vo') === true || env.VO === '1';
 
-	const { scenes, duration, anyVo } = buildScenes(story, script, voWanted, slug);
+	let scenes, duration, anyVo;
+	if (plan) {
+		// Regie-Modus: Szenenplan kommt fertig von der Claude-Routine.
+		({ scenes, duration, anyVo } = buildScenesFromPlan(plan, voWanted, slug));
+	} else {
+		const script = await generateScript(story);
+		console.log('skript:', JSON.stringify(script).slice(0, 240));
+		({ scenes, duration, anyVo } = buildScenes(story, script, voWanted, slug));
+	}
 
 	// Musik deterministisch variieren (per Slug), damit der Feed nicht monoton klingt.
 	let h = 0;
 	for (const c of slug) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-	const music = ['audio/hope-1.wav', 'audio/calm-1.wav'][h % 2];
+	const music = plan?.music || ['audio/hope-1.wav', 'audio/calm-1.wav'][h % 2];
 
 	const props = {
 		scenes,
@@ -321,10 +358,10 @@ async function main() {
 		const videoUrl = await uploadToSupabase(out, slug);
 		console.log(`OK upload → ${videoUrl}`);
 		if (arg('queue')) {
-			const storyId = arg('story-id');
+			const storyId = arg('story-id') || plan?.story?.id;
 			if (!storyId) throw new Error('--queue braucht --story-id');
-			const tags = (arg('hashtags') || '').split(',').map((t) => t.trim()).filter(Boolean);
-			await queueReel(storyId, videoUrl, arg('caption') || '', tags, arg('category') || 'gemeinschaft', story.igHookType);
+			const tags = plan?.hashtags?.length ? plan.hashtags : (arg('hashtags') || '').split(',').map((t) => t.trim()).filter(Boolean);
+			await queueReel(storyId, videoUrl, plan?.caption || arg('caption') || '', tags, plan?.story?.category || arg('category') || 'gemeinschaft', story.igHookType);
 			console.log('OK reel-draft angelegt (status=draft)');
 		}
 	}

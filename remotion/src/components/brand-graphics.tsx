@@ -79,7 +79,13 @@ export const CountUpNumber: React.FC<{ value: string; unit: string | null; categ
 	const m = value.match(/^([\d.,]+)(.*)$/);
 	const target = m ? parseFloat(m[1].replace(/\./g, '').replace(',', '.')) : null;
 	const suffix = m ? m[2] : '';
-	const shown = target !== null ? Math.round(interpolate(prog, [0, 1], [0, target])).toLocaleString('de-DE') + suffix : value;
+	// Dezimalstellen der Eingabe beibehalten: "3,69 Mio" zählte sonst auf
+	// gerundete "4 Mio" hoch (falsche Zahl im Bild!).
+	const decimals = m && m[1].includes(',') ? (m[1].split(',')[1] || '').length : 0;
+	const shown =
+		target !== null
+			? interpolate(prog, [0, 1], [0, target]).toLocaleString('de-DE', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }) + suffix
+			: value;
 	const blur = interpolate(prog, [0, 0.7, 1], [10, 2, 0]);
 	const scale = interpolate(prog, [0, 0.85, 1], [0.7, 1.08, 1]);
 	const size = value.length <= 4 ? 360 : value.length <= 7 ? 260 : 190;

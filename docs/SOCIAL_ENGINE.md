@@ -25,13 +25,35 @@ liegt bei dir** — nichts geht live, bevor du ihn bewusst umlegst.
 - Wochentag bestimmt die Carousel-FORM, damit der Feed über die Woche variiert:
   - Di → Beleg-Carousel · Do → Methodik · Sa → ruhig (Stille) · Mo/Mi/Fr → Standard (bzw. Reel) · So → Digest.
 
-### Reels (Phase 2, „Atmendes Papier v2") — 3 validierte Typen
-- Frames: `src/lib/server/og/reel-frames.ts` + `GET /api/reel-frame/<slug>/<hook|aufloesung|endcard>` (9:16).
-- Typ-Router aus `ig_hook_type`: zahl/kontrast → **C** (echte Zahl), wow/sieg → **A** (Satz auf Schwarz), mensch/charme → **B** (atmendes Bild, bewusst stilisiert = ehrlich-KI).
-  - Typ C fällt automatisch auf A zurück, wenn keine echte Zahl extrahierbar ist (nie „Zahl-Reel ohne Zahl").
-- Renderer: `scripts/render_reel.py` (ffmpeg, Single-Pass zoompan+xfade+Vignette+Korn+Audio). ~10s/Reel, ~700 KB.
-- Workflow: `render-reel.yml` (Mo/Mi/Fr 15:30 UTC) → wählt Story (`/api/cron/social-reel-select`), rendert, lädt nach Supabase Storage, legt Reel-Draft an.
-- Posten: `media_type=REELS` in `queue.ts` (`igPostReel`), MP4-URL in `slide_urls[0]`.
+### Reels v3 — „ReelDaily" (Stand 2026-07-06, LIVE Mo/Di/Mi/Fr/Sa)
+Regeln aus dem IG-Research Juni/Juli 2026 (Sends = Top-Signal, Hook ab Frame 0,
+15–40s, Keyword-Captions, keine sprechenden AI-Avatare, Beleg als USP):
+- **Komposition `ReelDaily`** (`remotion/src/ReelDaily.tsx`): Hook-Text steht ab
+  Frame 0 (Marker-Sweep aufs Punch-Wort) → Zahl-Count-up auf dunklem Kontrast →
+  1-2 Beats (Story-Bild als Editorial-Panel / Figur) → **Beleg-Stempel** („Belegt."
+  + Quelle + Wirkungsindex — kein Konkurrent zeigt Evidenz im Format) → Endcard
+  mit Schick-CTA (Sends!) + Follow-Zeile + KI-Kennzeichnung. Figur = Marken-Element
+  in Nebenrolle, kein sprechender Avatar.
+- **Skript: DeepSeek** (Hook ≤9 Wörter, Beats, VO-Text) mit regelbasiertem Fallback.
+- **Voiceover: edge-tts** (kostenlos, de-DE-Seraphina) mit Wort-Timestamps →
+  wortsynchrone Karaoke-Captions. **Default AUS** (`VO=0`), bis Aaron die
+  Stimm-Qualität einmal abgenommen hat → dann Repo-Variable `REEL_VO=1` setzen.
+  Kennzeichnung „Stimme: KI" liegt im Endcard.
+- Render: `node remotion/render.mjs --slug … --queue [--vo]` → `/api/reel-data/<slug>`
+  (liefert jetzt auch source/impactScore), DeepSeek, TTS, Szenen-Plan (Timings aus
+  Textlänge, auf VO-Länge skaliert), `npx remotion render ReelDaily`, Upload, Draft
+  (mit `scheduled_for=now`, sonst findet publishDue ihn nie).
+  Lokaler Test ohne Server: `--data story.json`.
+- **Workflow `render-reel.yml`: Mo/Di/Mi/Fr/Sa 04:35 UTC** → 05:30 postet
+  social-publish das Reel → 06:15 überspringt social-generate das Carousel
+  (Guard in `generateTodayDraft`). Render fehlgeschlagen → Carousel-Fallback,
+  Feed bleibt nie leer. Do = Carousel-Tag, So = Digest.
+- **Frische-Guard in `publishDue`**: Posts älter als 72h werden nicht mehr
+  gepostet (alte Drafts blockieren sonst die tagesaktuellen Reels; „gute
+  Nachricht von vorgestern" ist redaktionell tot).
+- Alt-Bestand: `Reel.tsx`/`ReelPro.tsx`/`CharacterReel.tsx` bleiben als
+  Studio-Referenz; ffmpeg-Variante `scripts/render_reel.py` = 0€-Fallback,
+  falls die Remotion-Lizenz kostenpflichtig wird (gratis ≤3 Mitarbeiter).
 
 ### Dev-Preview (ohne Posten)
 - `/admin/social/preview` (hinter Admin-Login). Zeigt: heutige Carousel-Form, alle Slide-Stile, Reel-Frames, Wochen-Digest. **Postet nichts.** `?slug=…` testet eine andere Story.

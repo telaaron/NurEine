@@ -98,6 +98,20 @@ export async function generateTodayDraft(): Promise<{
 		return { created: false, reason: 'Digest-Tag — täglicher Story-Post macht Platz' };
 	}
 
+	// Reel-Tage (Mo/Di/Mi/Fr/Sa, gesteuert über den render-reel-Cron): existiert
+	// heute schon ein Reel-Draft/Post, ist das Reel der Feed-Post des Tages und
+	// das Carousel entfällt. Ist der Reel-Render fehlgeschlagen (kein Eintrag),
+	// läuft das Carousel als Fallback weiter — der Feed bleibt nie leer.
+	const { count: reelToday } = await supabaseAdmin
+		.from('nureine_social_posts')
+		.select('*', { count: 'exact', head: true })
+		.eq('platform', 'instagram')
+		.eq('post_kind', 'reel')
+		.gte('created_at', dayStart0.toISOString());
+	if ((reelToday ?? 0) >= 1) {
+		return { created: false, reason: 'Reel-Tag — Reel ist der Feed-Post, Carousel entfällt' };
+	}
+
 	// "Lieber leer als falsch": nur eine Instagram-taugliche Story wird zum Draft.
 	// Hat heute keine Story ig_ok → kein Post. Qualität vor Rhythmus.
 	const story = await selectInstagramStory();
@@ -539,6 +553,10 @@ export async function publishDue(): Promise<{ posted: number; failed: number; sk
 		.select('*')
 		.in('status', statuses)
 		.lte('scheduled_for', new Date().toISOString())
+		// FRISCHE-GUARD: Posts älter als 72h posten wir nicht mehr — eine „gute
+		// Nachricht von vorgestern" ist redaktionell tot. Verhindert außerdem, dass
+		// ein alter Draft-Backlog (ascending-Order) die tagesaktuellen Reels blockiert.
+		.gte('created_at', new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString())
 		.eq('platform', 'instagram')
 		.order('scheduled_for', { ascending: true })
 		.limit(1); // nur 1/Tag

@@ -47,7 +47,7 @@ Wochenplan (ein Feed-Post/Tag, gepostet ~07:30 CEST):
 
 | Tag | Format |
 |---|---|
-| Mo/Di/Mi/Fr/Sa | **Reel** (`ReelDaily`: Hook ab Frame 0 → Zahl-Count-up → Beats → **Beleg-Stempel** → Schick-CTA) |
+| Mo/Mi/Fr | **Reel** (`ReelDaily`: Hook ab Frame 0 → Zahl-Count-up → Beats → **Beleg-Stempel** → Schick-CTA). 3/Woche = Sweet Spot (Buffer/Mosseri); >1/Tag kannibalisiert Reichweite. |
 | Do | Carousel (Beleg/Methodik — Save-Format) |
 | So | Wochen-Digest (7 Folien, Ritual) |
 | täglich | + bis 10 IG-Stories (bestehend) |

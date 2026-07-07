@@ -5,13 +5,15 @@ name: Social — Reel rendern (Remotion)
 # eigener Dramaturgie (--script Regie-Modus). Dieser Workflow springt nur ein,
 # wenn bis 16:00 UTC KEIN Reel existiert (Mac aus/Routine nicht gelaufen) —
 # der Select-Endpoint liefert dann sonst story:null.
-# Wochenplan: Mo/Di/Mi/Fr/Sa Reel · Do Carousel (social-generate) · So Digest.
+# Wochenplan (2026-07-07): 3 Reels/Woche Mo/Mi/Fr — das ist der Sweet Spot
+# (Buffer/Mosseri: 3–5 Reels/Woche; >1/Tag kannibalisiert die Reichweite).
+# Di/Do/Sa Carousel bzw. Stories · So Digest.
 on:
   # PAUSIERT (2026-07-06, Aaron): Reels gehen bis zur Qualitäts-Abnahme NUR
   # manuell raus — erst rendern, Aaron ansehen lassen, dann posten.
   # Zum Reaktivieren den schedule-Block wieder einkommentieren:
   # schedule:
-  #   - cron: '0 16 * * 1,2,3,5,6'  # Mo/Di/Mi/Fr/Sa 16:00 UTC — nur Fallback
+  #   - cron: '0 16 * * 1,3,5'  # Mo/Mi/Fr 16:00 UTC — nur Fallback
   workflow_dispatch:
     inputs:
       vo:

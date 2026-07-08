@@ -21,15 +21,27 @@ Stand: 2026-07-07.
 
 ## ALS NÄCHSTES (nach Aaron-OK, diese/nächste Woche)
 
-### 1. Bild-Regie mit REALISTISCHEM Ansatz — HÖCHSTE PRIO nach Chefredakteur
-- **Warum:** Aaron: „Menschen wollen keine abstrakten Bilder, sie wollen visuelle
-  Aufhänger." Der aktuelle Paper-Collage-Stil ist der schwächste Hebel für Stopp-Kraft.
-- **Was:** Weg von Abstraktion → **realistische/fotografische Bilder** mit NurEine-Stil-
-  Rahmen (Bildsprache, Farbwelt, Wärme) + klare KI-Kennzeichnung. Modell testen
-  (FLUX realistic/dev, ggf. Imagen/andere), Stil-Guide definieren, Vision-QA modernisieren.
-- **Warten auf:** Aaron-Freigabe des Stil-Rahmens (ich lege 3–4 Test-Bilder vor).
+### 1. Bild-Regie mit REALISTISCHEM Ansatz — ENTSCHIEDEN (Aaron 2026-07-08), Umbau offen
+- **Warum:** Aaron: „Menschen wollen visuelle Aufhänger, keine abstrakten Bilder."
+  Alter Paper-Collage-Stil raus.
+- **Modell FIX: Seedream v4.5** (`fal-ai/bytedance/seedream/v4.5/text-to-image`, $0,04/Bild).
+  Im Test klarer Sieger vs. altem flux-pro UND vs. FLUX.2 (wärmer, filmischer, saubere Hände).
+- **Fotografen-DNA (übergeordneter Stil, konstant):** Leica 35mm Reportage-Lens, Kodak
+  Portra 400 Emulation, warmes natürliches Licht, flache Tiefenschärfe, feines Filmkorn,
+  EIN Terracotta-Akzent, dokumentarisch, kein Text/Logo. Prompt = Subject-first (Seedream-
+  Regel), 30–100 Wörter, dann DNA. Motiv immer ins Konkret-Menschliche übersetzen
+  (kein wörtliches „Forschung"/„Protein" — sondern die menschliche Szene dahinter).
+- **Nur ~5–6 Premium-Bilder/Tag** (Perlen + Newsletter/Reel-Hero), nicht ~10. ~7–8€/Monat.
+- **Umbau (offen):** `scripts/fetch_stories.py` — image_prompt-Bau + `generate_image_fal`
+  von flux-pro auf Seedream v4.5 + DNA umstellen; Bild-Gate auf „nur Perlen/Hero" verengen;
+  Vision-QA modernisieren (statt LLaVA-NeXT). KI-Kennzeichnung bleibt.
 - **Ergebnis-Ziel:** Bilder, die im Feed sofort als „echt & relevant" gelesen werden →
   höhere Verweildauer/Stopp-Kraft; messbar an saves/reach der bebilderten Posts.
+
+### 1b. Strengerer Vorfilter — weniger, aber bessere Stories (Aaron 2026-07-08)
+- **Was:** Statt ~22 Stories/Tag nur ~8–12 wirklich relevante in die DB. Chefredakteur +
+  Vorfilter-Prompt (`fetch_stories.py`) strenger gegen Kuriosität/Lokal-Fluff.
+- **Ergebnis-Ziel:** Weniger Rauschen, kuratierteres Archiv, höhere Perlenrate im Rohmaterial.
 
 ### 2. Quellen-Qualitäts-Layer — „haben wir gute Rohstoffe?"
 - **Warum:** Aaron: nicht das Maximum aus schlechten Storys holen, sondern prüfen, ob

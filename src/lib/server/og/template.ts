@@ -70,15 +70,25 @@ function escapeHtml(text: string): string {
 		.replace(/'/g, '&#039;');
 }
 
-/** Pick a headline font-size that keeps long titles inside the column.
- *  Größer als zuvor (Story-Headline soll dominieren, nicht zurückhaltend wirken). */
+/** Headline-Größe, die lange Titel sicher in der Spalte hält.
+ *  WICHTIG: berücksichtigt nicht nur die Zeichenzahl, sondern auch das LÄNGSTE
+ *  Wort — lange Komposita ("Meeresboden-Entstehung") können nicht umbrechen und
+ *  zwingen sonst zu breit/hoch. Ist ein Wort sehr lang, eine Stufe kleiner.
+ *  Konservativer als zuvor, damit Headline + Dek nie die Meta-Zeile überlaufen. */
 function headlineSize(title: string): number {
 	const len = title.length;
-	if (len <= 32) return 74;
-	if (len <= 50) return 64;
-	if (len <= 72) return 54;
-	if (len <= 95) return 46;
-	return 42;
+	// Bindestrich-Komposita dürfen an "-" umbrechen → als getrennte Wörter zählen.
+	const longestWord = Math.max(0, ...title.split(/[\s-]+/).map((w) => w.length));
+	let size: number;
+	if (len <= 32) size = 66;
+	else if (len <= 50) size = 56;
+	else if (len <= 72) size = 46;
+	else if (len <= 95) size = 38;
+	else size = 34;
+	// Sehr langes Einzelwort (kein Umbruch möglich) → eine Stufe kleiner.
+	if (longestWord >= 15 && size > 42) size -= 8;
+	else if (longestWord >= 12 && size > 48) size -= 6;
+	return size;
 }
 
 export function buildOgTemplate(input: OgTemplateInput): string {
@@ -87,7 +97,7 @@ export function buildOgTemplate(input: OgTemplateInput): string {
 	const categoryLabel = (CATEGORY_LABELS[category] || category).toUpperCase();
 	const hSize = headlineSize(title);
 
-	const maxDek = 110;
+	const maxDek = 95;
 	const displayDek =
 		dek && dek.length > 0 ? (dek.length > maxDek ? dek.slice(0, maxDek - 1) + '…' : dek) : '';
 
@@ -125,15 +135,16 @@ export function buildOgTemplate(input: OgTemplateInput): string {
       <div style="font-family:'Space Grotesk';font-size:27px;font-weight:700;color:${INK};margin-left:12px;letter-spacing:-0.02em;">NurEine</div>
     </div>
 
-    <!-- Headline -->
-    <div style="display:flex;font-family:'Space Grotesk';font-size:${hSize}px;font-weight:700;color:${INK};line-height:1.03;letter-spacing:-0.03em;margin-top:34px;max-width:${COL_W}px;">
+    <!-- Headline — hart auf max. 3 Zeilen begrenzt (line-clamp), damit ein
+         langer Titel nie die Dek/Meta-Zeile überläuft. -->
+    <div style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;font-family:'Space Grotesk';font-size:${hSize}px;font-weight:700;color:${INK};line-height:1.05;letter-spacing:-0.03em;margin-top:30px;max-width:${COL_W}px;">
       ${escapeHtml(title)}
     </div>
 
     ${
 		displayDek
-			? `<!-- Dek (serif italic, amber) -->
-    <div style="display:flex;font-family:'Newsreader';font-style:italic;font-size:29px;font-weight:400;color:${AMBER_DEEP};line-height:1.3;margin-top:24px;max-width:560px;">
+			? `<!-- Dek (serif italic, amber) — max. 2 Zeilen -->
+    <div style="display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-family:'Newsreader';font-style:italic;font-size:26px;font-weight:400;color:${AMBER_DEEP};line-height:1.28;margin-top:20px;max-width:560px;">
       ${escapeHtml(displayDek)}
     </div>`
 			: ''

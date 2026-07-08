@@ -4,37 +4,31 @@
 
 	let { children, data } = $props();
 
-	// Schlanke Nav (2026-07-08): nur das Essenzielle vorn. KI-Cockpit ist der
-	// neue Einstieg fürs autonome System; Redundantes (Delivery→im Dashboard,
-	// impact/history→Tab) & Nebenfeatures unter „Mehr".
+	// Minimal-Nav (2026-07-08, Aaron: „nur das Nötigste, hauptsächlich autonom").
+	// Vorn NUR die 4 Seiten, die man wirklich täglich braucht. Alles andere
+	// bedient das autonome System selbst → einklappbar unter „Selten gebraucht".
+	let moreOpen = $state(false);
 	const navGroups = $derived([
 		{
-			title: 'Überblick',
+			title: '',
 			items: [
-				{ href: '/admin', label: 'Dashboard', icon: 'grid', badge: 0 },
+				{ href: '/admin', label: 'Übersicht', icon: 'grid', badge: 0 },
 				{ href: '/admin/ki', label: 'KI-Cockpit', icon: 'heart', badge: 0 },
+				{ href: '/admin/social', label: 'Social', icon: 'share', badge: 0 },
 				{ href: '/admin/kosten', label: 'Kosten', icon: 'coins', badge: 0 }
-			]
-		},
-		{
-			title: 'Inhalt',
-			items: [
-				{ href: '/admin/stories', label: 'Stories', icon: 'doc', badge: 0 },
-				{ href: '/admin/redaktion', label: 'Redaktion', icon: 'search', badge: data?.newFeedback ?? 0 },
-				{ href: '/admin/social', label: 'Social', icon: 'share', badge: 0 }
-			]
-		},
-		{
-			title: 'Mehr',
-			items: [
-				{ href: '/admin/impact', label: 'Impact-Läufe', icon: 'heart', badge: 0 },
-				{ href: '/admin/audience', label: 'Audience', icon: 'users', badge: 0 },
-				{ href: '/admin/submissions', label: 'Einsendungen', icon: 'inbox', badge: 0 },
-				{ href: '/admin/audio', label: 'Vorlesen', icon: 'volume', badge: 0 },
-				{ href: '/admin/b2b', label: 'B2B', icon: 'briefcase', badge: 0 }
 			]
 		}
 	]);
+	// Selten gebraucht (autonom bedient): nur bei Bedarf ausklappen.
+	const moreItems = [
+		{ href: '/admin/stories', label: 'Stories', icon: 'doc', badge: 0 },
+		{ href: '/admin/redaktion', label: 'Redaktion', icon: 'search', badge: data?.newFeedback ?? 0 },
+		{ href: '/admin/impact', label: 'Impact-Läufe', icon: 'heart', badge: 0 },
+		{ href: '/admin/audience', label: 'Audience', icon: 'users', badge: 0 },
+		{ href: '/admin/submissions', label: 'Einsendungen', icon: 'inbox', badge: 0 },
+		{ href: '/admin/audio', label: 'Vorlesen', icon: 'volume', badge: 0 },
+		{ href: '/admin/b2b', label: 'B2B', icon: 'briefcase', badge: 0 }
+	];
 
 	function isActive(path: string) {
 		return $page.url.pathname === path;
@@ -99,6 +93,39 @@
 				</div>
 			</div>
 		{/each}
+
+		<!-- Selten gebraucht: einklappbar (das autonome System bedient das selbst) -->
+		<div>
+			<button
+				onclick={() => (moreOpen = !moreOpen)}
+				class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
+				style="color: var(--color-faint); background: transparent;"
+			>
+				<span class="text-[0.6rem] uppercase tracking-[0.16em]" style="font-family: var(--font-mono);">Selten gebraucht</span>
+				<span class="flex-1"></span>
+				<span style="display:inline-block; transition: transform 0.15s; transform: rotate({moreOpen ? 90 : 0}deg);">›</span>
+			</button>
+			{#if moreOpen}
+				<div class="flex flex-col gap-0.5 mt-1">
+					{#each moreItems as item}
+						<a
+							href={base + item.href}
+							onclick={() => (mobileOpen = false)}
+							class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+							style={isActive(item.href) ? 'background: var(--color-ink); color: var(--color-paper);' : 'color: var(--color-ink-soft);'}
+							onmouseenter={(e) => { if (!isActive(item.href)) e.currentTarget.style.background = 'var(--color-canvas-soft)'; }}
+							onmouseleave={(e) => { if (!isActive(item.href)) e.currentTarget.style.background = 'transparent'; }}
+						>
+							<span style="opacity: {isActive(item.href) ? '1' : '0.6'};">{@render icon(item.icon)}</span>
+							<span class="flex-1">{item.label}</span>
+							{#if item.badge > 0}
+								<span class="inline-flex items-center justify-center text-[0.6rem] font-bold rounded-full" style="min-width:18px;height:18px;padding:0 5px;background: var(--color-rose); color:#fff;">{item.badge}</span>
+							{/if}
+						</a>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</nav>
 
 	<!-- Bottom -->

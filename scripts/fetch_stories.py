@@ -1844,19 +1844,42 @@ def run() -> None:
             story_title = result.get("title", "")
 
             # ---- STAGE 5: Near-duplicate check (in-memory) ----
+            # DeepSeek formuliert Titel frei — dieselbe Nachricht aus zwei Quellen
+            # heißt z.B. "Solarstrom überholt Kohle" vs "Solarstrom erstmals stärker
+            # als Kohle". Darum: Stopp-/Füllwörter raus und nur SIGNIFIKANTE
+            # Kernwörter (>3 Zeichen) vergleichen — sonst verwässern "in/den/als/…"
+            # die Überlappung unter die Schwelle. Schwelle 0.6 (statt 0.7), weil
+            # der Kernwort-Vergleich präziser ist.
             import re as _re  # noqa: PLC0415
-            normalized = _re.sub(r"[^a-z0-9äöüß\s]", "", story_title.lower())
-            normalized = _re.sub(r"\s+", " ", normalized).strip()
+            _STOP = {
+                "der", "die", "das", "den", "dem", "des", "ein", "eine", "einen", "und",
+                "oder", "in", "im", "an", "am", "auf", "aus", "mit", "für", "von", "vom",
+                "zu", "zum", "zur", "bei", "als", "wie", "ist", "sind", "wird", "werden",
+                "nach", "über", "unter", "vor", "erstmals", "neuer", "neue", "neues",
+                "welt", "welten", "erste", "ersten", "erster",
+            }
+            def _core(t: str) -> set[str]:
+                t = _re.sub(r"[^a-z0-9äöüß\s]", "", t.lower())
+                return {w for w in t.split() if len(w) > 3 and w not in _STOP}
+            normalized = _re.sub(r"\s+", " ", _re.sub(r"[^a-z0-9äöüß\s]", "", story_title.lower())).strip()
 
-            new_words = set(normalized.split())
+            new_core = _core(story_title)
             is_duplicate = False
             for seen_title in seen_titles_normalized:
-                seen_words = set(seen_title.split())
-                if new_words and seen_words:
-                    overlap = len(new_words & seen_words) / min(len(new_words), len(seen_words))
-                    if overlap > 0.7:
+                seen_core = _core(seen_title)
+                if new_core and seen_core:
+                    shared = new_core & seen_core
+                    overlap = len(shared) / min(len(new_core), len(seen_core))
+                    # ≥60% Kernwort-Überlappung, ≥2 gemeinsame Kernwörter UND mind.
+                    # ein gemeinsames LANGES Wort (>6 Zeichen) — das trägt das
+                    # eigentliche Thema. Verhindert Falsch-Positive, bei denen sich
+                    # zwei Titel nur generische Wörter teilen ("weltweite",
+                    # "tiefststand"), aber verschiedene Themen meinen
+                    # (Kinder- vs. Säuglingssterblichkeit).
+                    _has_long = any(len(w) > 6 for w in shared)
+                    if overlap >= 0.6 and len(shared) >= 2 and _has_long:
                         log.info(
-                            "  Skipping near-duplicate (%.0f%% word overlap with '%s'): %s",
+                            "  Skipping near-duplicate (%.0f%% Kernwort-Überlappung mit '%s'): %s",
                             overlap * 100,
                             seen_title,
                             story_title,

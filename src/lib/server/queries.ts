@@ -252,6 +252,7 @@ export async function getAllStories(): Promise<StoryResult[]> {
   const { data, error } = await supabaseAdmin
     .from('nureine_stories')
     .select('*')
+    .is('duplicate_of', null) // thematische Dubletten ausblenden
     .order('published_at', { ascending: false });
 
   if (error || !data) {
@@ -272,6 +273,7 @@ export async function getStoryList(): Promise<StoryResult[]> {
   const { data, error } = await supabaseAdmin
     .from('nureine_stories')
     .select(LIST_COLUMNS)
+    .is('duplicate_of', null) // thematische Dubletten ausblenden
     .order('published_at', { ascending: false });
 
   if (error || !data) {
@@ -290,6 +292,7 @@ export async function getRecentStories(limit = 12): Promise<StoryResult[]> {
   const { data, error } = await supabaseAdmin
     .from('nureine_stories')
     .select(LIST_COLUMNS)
+    .is('duplicate_of', null) // thematische Dubletten ausblenden
     .order('published_at', { ascending: false })
     .limit(limit);
 
@@ -408,6 +411,7 @@ export async function getLatestFeatured(): Promise<StoryResult | undefined> {
     .from('nureine_stories')
     .select('*')
     .not('impact_score', 'is', null)
+    .is('duplicate_of', null) // keine Dublette als Aufmacher
     .gte('created_at', since48h)
     .order('impact_score', { ascending: false })
     .order('created_at', { ascending: false })
@@ -507,6 +511,7 @@ export async function selectInstagramStory(): Promise<StoryResult | undefined> {
     .from('nureine_stories')
     .select('*')
     .eq('ig_ok', true)
+    .is('duplicate_of', null) // keine Dublette posten
     .gte('created_at', since)
     .order('created_at', { ascending: false })
     .limit(50);

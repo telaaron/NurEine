@@ -4,12 +4,15 @@
 
 	let { children, data } = $props();
 
+	// Schlanke Nav (2026-07-08): nur das Essenzielle vorn. KI-Cockpit ist der
+	// neue Einstieg fürs autonome System; Redundantes (Delivery→im Dashboard,
+	// impact/history→Tab) & Nebenfeatures unter „Mehr".
 	const navGroups = $derived([
 		{
 			title: 'Überblick',
 			items: [
 				{ href: '/admin', label: 'Dashboard', icon: 'grid', badge: 0 },
-				{ href: '/admin/impact', label: 'Impact', icon: 'heart', badge: 0 },
+				{ href: '/admin/ki', label: 'KI-Cockpit', icon: 'heart', badge: 0 },
 				{ href: '/admin/kosten', label: 'Kosten', icon: 'coins', badge: 0 }
 			]
 		},
@@ -18,17 +21,17 @@
 			items: [
 				{ href: '/admin/stories', label: 'Stories', icon: 'doc', badge: 0 },
 				{ href: '/admin/redaktion', label: 'Redaktion', icon: 'search', badge: data?.newFeedback ?? 0 },
-				{ href: '/admin/audio', label: 'Vorlesen', icon: 'volume', badge: 0 },
-				{ href: '/admin/submissions', label: 'Einsendungen', icon: 'inbox', badge: 0 },
 				{ href: '/admin/social', label: 'Social', icon: 'share', badge: 0 }
 			]
 		},
 		{
-			title: 'Wachstum',
+			title: 'Mehr',
 			items: [
+				{ href: '/admin/impact', label: 'Impact-Läufe', icon: 'heart', badge: 0 },
 				{ href: '/admin/audience', label: 'Audience', icon: 'users', badge: 0 },
-				{ href: '/admin/b2b', label: 'B2B Pipeline', icon: 'briefcase', badge: 0 },
-				{ href: '/admin/delivery', label: 'Delivery', icon: 'send', badge: 0 }
+				{ href: '/admin/submissions', label: 'Einsendungen', icon: 'inbox', badge: 0 },
+				{ href: '/admin/audio', label: 'Vorlesen', icon: 'volume', badge: 0 },
+				{ href: '/admin/b2b', label: 'B2B', icon: 'briefcase', badge: 0 }
 			]
 		}
 	]);

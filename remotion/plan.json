@@ -1,0 +1,51 @@
+{
+  "story": {
+    "id": "20ff7130-730a-4fbb-8682-c62c335bd3c6",
+    "slug": "jugendtanzkompanie-oeffnet-buehnen-fuer-alle-20ff7130",
+    "category": "kultur",
+    "image": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/story-images/jugendtanzkompanie-oeffnet-buehnen-fuer--02d4d69cf6a5.png",
+    "source": "Positive.News",
+    "impactScore": 55,
+    "shareHook": "Eine Tanzkompanie in England holt Jugendliche ohne Ausbildung auf große Bühnen."
+  },
+  "caption": "Tanz-Talent ohne Ausbildung: Eine Jugend-Tanzkompanie in England holt gezielt 16- bis 24-Jährige ohne formalen Unterricht auf große Bühnen – und 90% von ihnen landen später im Job. 32 Jugendliche aus 25 Orten sind dabei. 👇\nSchick's jemandem, der ans eigene Talent glauben soll.\nQuelle: Positive.News",
+  "hashtags": ["#gutenachrichten", "#tanz", "#kultur", "#bildung", "#chancengleichheit"],
+  "music": "audio/uplift-1.mp3",
+  "person": "frau",
+  "scenes": [
+    {
+      "kind": "hook",
+      "text": "Kein Tanzunterricht – trotzdem auf die größte Bühne.",
+      "punch": "größte",
+      "kicker": "GUTE NACHRICHT · KULTUR",
+      "voText": "Kein Tanzunterricht – und trotzdem auf die größte Bühne."
+    },
+    {
+      "kind": "beat",
+      "text": "Eine Kompanie in England sucht 16- bis 24-Jährige ganz ohne Ausbildung.",
+      "image": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/story-images/jugendtanzkompanie-oeffnet-buehnen-fuer--02d4d69cf6a5.png",
+      "pose": "point-side",
+      "voText": "Eine Jugend-Tanzkompanie in England sucht Talente zwischen sechzehn und vierundzwanzig – ganz ohne formale Ausbildung."
+    },
+    {
+      "kind": "number",
+      "value": "90%",
+      "unit": null,
+      "context": "der aufgenommenen Jugendlichen finden später einen Job im Tanz.",
+      "voText": "Neunzig Prozent von ihnen finden später einen Job im Tanz."
+    },
+    {
+      "kind": "proof",
+      "source": "Positive.News",
+      "impact": 55,
+      "voText": "Belegt — von uns nachgeprüft."
+    },
+    {
+      "kind": "end",
+      "share": "Talent braucht keine Startlinie – nur eine Bühne.",
+      "cta": "Schick’s jemandem, der das heute braucht",
+      "hasVo": true,
+      "voText": "Schick das jemandem, der heute eine gute Nachricht braucht."
+    }
+  ]
+}

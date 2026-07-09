@@ -72,6 +72,10 @@ except ImportError:
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY")
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
+# Claude ist ab 2026-07-09 das primäre Analyse-Modell (Aaron: DeepSeek liefert
+# unklare/abgeschnittene Texte). Ist ANTHROPIC_API_KEY gesetzt, läuft der
+# Story-Analyse-Call über Claude; sonst Fallback auf DeepSeek (kein Bruch).
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 FAL_KEY = os.environ.get("FAL_KEY")
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY")
 
@@ -82,6 +86,11 @@ PUBLIC_BASE_URL = os.environ.get("PUBLIC_BASE_URL", "https://nureine.de")
 
 DEEPSEEK_MODEL = "deepseek-chat"
 DEEPSEEK_ENDPOINT = "https://api.deepseek.com/chat/completions"
+
+# Claude (Anthropic) — primäres Analyse-Modell. Sonnet trifft Qualität/Kosten:
+# klare, vollständige deutsche Texte ohne den Kuriositäts-Bias von DeepSeek.
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5")
+ANTHROPIC_ENDPOINT = "https://api.anthropic.com/v1/messages"
 
 # fal.ai FLUX.1 [pro]
 FAL_ENDPOINT = "https://fal.run/fal-ai/flux-pro"
@@ -453,8 +462,9 @@ if not SUPABASE_URL:
     MISSING_ENVVARS.append("SUPABASE_URL")
 if not SUPABASE_SERVICE_KEY:
     MISSING_ENVVARS.append("SUPABASE_SERVICE_KEY")
-if not DEEPSEEK_API_KEY:
-    MISSING_ENVVARS.append("DEEPSEEK_API_KEY")
+# Analyse-Modell: mindestens EINES von Claude/DeepSeek muss da sein (Claude bevorzugt).
+if not ANTHROPIC_API_KEY and not DEEPSEEK_API_KEY:
+    MISSING_ENVVARS.append("ANTHROPIC_API_KEY oder DEEPSEEK_API_KEY")
 # FAL_KEY is optional — if missing, image generation is skipped
 IMAGE_GENERATION_ENABLED = bool(FAL_KEY)
 
@@ -663,21 +673,69 @@ def source_exists(source_url: str) -> bool:
     return len(rows) > 0
 
 
-def call_deepseek(prompt: str) -> str | None:
-    """Send a prompt to DeepSeek Chat and return the response text.
-
-    Uses the OpenAI-compatible chat completions API.
-    The prompt is treated as a combined system + user message.
-    """
-    # Split the prompt into system context and user query
-    # The prompt template starts with "Du bist Redakteur..." (system role)
-    # followed by the article analysis task (user role)
+def _split_prompt(prompt: str) -> tuple[str, str]:
+    """Teilt den kombinierten Prompt in System-Anweisung + User-Artikel."""
     lines = prompt.split("\n")
-    # Find the separator between system instructions and article data
     sep_idx = next((i for i, line in enumerate(lines) if line.startswith("Artikel-Titel:")), len(lines))
     system_content = "\n".join(lines[:sep_idx]).strip()
     user_content = "\n".join(lines[sep_idx:]).strip()
+    return system_content, user_content or prompt
 
+
+def call_claude(prompt: str) -> str | None:
+    """Analyse-Call über Claude (Anthropic Messages API). Gibt den Text (JSON) zurück.
+
+    Claude ist ab 2026-07 das primäre Modell: klare, vollständige deutsche Texte,
+    kein Kuriositäts-Bias. Antwortet als reines JSON (Prompt fordert das).
+    """
+    system_content, user_content = _split_prompt(prompt)
+    payload = {
+        "model": ANTHROPIC_MODEL,
+        "max_tokens": 4096,
+        "temperature": 0.3,
+        "system": system_content,
+        "messages": [{"role": "user", "content": user_content}],
+    }
+    headers = {
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+    }
+    try:
+        resp = requests.post(ANTHROPIC_ENDPOINT, json=payload, headers=headers, timeout=90)
+        resp.raise_for_status()
+        data = resp.json()
+        blocks = data.get("content", [])
+        text = "".join(b.get("text", "") for b in blocks if b.get("type") == "text")
+        # Claude umschließt JSON manchmal mit ```json … ``` — abstreifen.
+        text = text.strip()
+        if text.startswith("```"):
+            text = text.split("```", 2)[1]
+            if text.startswith("json"):
+                text = text[4:]
+            text = text.strip()
+        return text or None
+    except requests.RequestException as exc:
+        log.error("Claude API request failed: %s", exc)
+        return None
+
+
+def call_deepseek(prompt: str) -> str | None:
+    """Analyse-Call — Dispatcher: Claude bevorzugt, DeepSeek als Fallback.
+
+    Der Name bleibt für die bestehenden Aufrufstellen; intern wählt er Claude,
+    wenn ANTHROPIC_API_KEY gesetzt ist (Aaron-Entscheidung 2026-07-09).
+    """
+    if ANTHROPIC_API_KEY:
+        result = call_claude(prompt)
+        if result:
+            return result
+        log.warning("Claude-Call leer/fehlgeschlagen — Fallback auf DeepSeek")
+
+    if not DEEPSEEK_API_KEY:
+        return None
+
+    system_content, user_content = _split_prompt(prompt)
     payload: dict[str, Any] = {
         "model": DEEPSEEK_MODEL,
         "messages": [

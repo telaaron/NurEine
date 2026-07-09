@@ -304,6 +304,43 @@ export async function getRecentStories(limit = 12): Promise<StoryResult[]> {
 }
 
 /**
+ * Die MAIN-Story je Tag der letzten `days` Tage — eine kuratierte „Tages-Perle"
+ * pro Datum, nicht einfach die letzten Stories (Aaron-Feedback 2026-07-09: unter
+ * dem Hero standen irrelevante 30er-Stories). Nimmt pro Kalendertag die stärkste
+ * Geschichte (resonance_score, dann impact_score), Dubletten ausgeschlossen.
+ * Rückgabe je Eintrag: die Story + der Tag (für die Kalender-/Tagesansicht).
+ */
+export async function getDailyMainStories(days = 7): Promise<{ day: string; story: StoryResult }[]> {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabaseAdmin
+    .from('nureine_stories')
+    .select(LIST_COLUMNS)
+    .is('duplicate_of', null)
+    .not('sensitive', 'is', true)
+    .gte('published_at', since)
+    .order('published_at', { ascending: false })
+    .limit(300);
+
+  if (error || !data) {
+    console.error('getDailyMainStories error:', error);
+    return [];
+  }
+
+  const rows = (data as Partial<SupabaseStory>[]).map(mapListRow);
+  // Pro Kalendertag die stärkste Story wählen (nach Wirkungsindex).
+  const bestByDay = new Map<string, StoryResult>();
+  for (const s of rows) {
+    const day = (s.publishedAt || '').slice(0, 10);
+    if (!day) continue;
+    const cur = bestByDay.get(day);
+    if (!cur || (s.impactScore ?? 0) > (cur.impactScore ?? 0)) bestByDay.set(day, s);
+  }
+  return Array.from(bestByDay.entries())
+    .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+    .map(([day, story]) => ({ day, story }));
+}
+
+/**
  * Site-wide aggregates (count, avg impact, avg reading time) for the homepage hero
  * stats. PostgREST aggregate functions are disabled on this project, so instead of
  * pulling full rows we fetch ONLY the two numeric columns (~16 bytes/row vs ~3.5 kB)
@@ -314,9 +351,13 @@ export async function getStoryAggregates(): Promise<{
   avgImpact: number;
   avgReadingMin: number;
 }> {
+  // count IMMER per exact-header (nicht data.length — Supabase deckelt data auf
+  // 1000 Zeilen, sonst friert die angezeigte Story-Zahl bei 1000 ein).
+  // Für die Durchschnitte reichen die (bis zu 1000) gelesenen Zeilen als Stichprobe.
   const { data, count, error } = await supabaseAdmin
     .from('nureine_stories')
-    .select('impact_score, reading_time_min', { count: 'exact' });
+    .select('impact_score, reading_time_min', { count: 'exact' })
+    .limit(1000);
 
   if (error || !data || data.length === 0) {
     if (error) console.error('getStoryAggregates error:', error);

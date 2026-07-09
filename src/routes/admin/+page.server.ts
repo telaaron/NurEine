@@ -1,9 +1,10 @@
-import { getAllStories, getSubscriberStats, getLatestFeatured, getB2BDashboardStats, getDeliveryLog, getFunnelStats } from '$lib/server/queries';
+import { getAllStories, getSubscriberStats, getLatestFeatured, getB2BDashboardStats, getDeliveryLog, getFunnelStats, getStats } from '$lib/server/queries';
 import { supabaseAdmin } from '$lib/server/supabase/client';
 
 export async function load() {
-  const [stories, subscribers, heroStory, b2bStats, deliveryLog, funnel, openCuration] = await Promise.all([
+  const [stories, storyStats, subscribers, heroStory, b2bStats, deliveryLog, funnel, openCuration] = await Promise.all([
     getAllStories(),
+    getStats(), // echter exact-count (stories.length ist auf 1000 gedeckelt)
     getSubscriberStats(),
     getLatestFeatured(),
     getB2BDashboardStats(),
@@ -23,7 +24,7 @@ export async function load() {
   }
 
   return {
-    totalStories: stories.length,
+    totalStories: storyStats.storiesCount,
     categories: categoryCount,
     subscribers,
     b2bStats,

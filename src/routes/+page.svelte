@@ -10,7 +10,17 @@
 	let { data } = $props();
 	const featured = $derived(data.featured);
 	const tone = $derived(featured ? toneStyles[featured.tone] : toneStyles['amber']);
-	const rest = $derived(data.rest);
+	// Tages-Perlen der letzten Woche (jede mit Datum), statt der letzten N Stories.
+	const days = $derived(data.days ?? []);
+	const dateFmt = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
+	function dayLabel(iso: string): string {
+		const d = new Date(iso + 'T12:00:00');
+		const today = new Date(); today.setHours(12, 0, 0, 0);
+		const diff = Math.round((today.getTime() - d.getTime()) / 86400000);
+		if (diff === 0) return 'Heute';
+		if (diff === 1) return 'Gestern';
+		return dateFmt.format(d);
+	}
 
 	// Standfirst unter der Headline: der menschliche Funke (share_hook) führt, nicht
 	// der Institutions-Dek. Genau diese erste Zeile entscheidet beim Erstbesucher in
@@ -37,9 +47,6 @@
 				: getStoryHeroImageSrc(featured.category, base)
 			: ''
 	);
-	// First card in the grid becomes the wide "feature" card
-	const feature = $derived(rest[0]);
-	const restTail = $derived(rest.slice(1));
 
 	const baseUrl = $derived(data.baseUrl || 'https://nureine.de');
 	const featuredUrl = $derived(featured ? `${baseUrl}/geschichte/${featured.slug}` : baseUrl);
@@ -285,7 +292,7 @@
 				Diese Woche
 			</p>
 			<h2 class="display text-2xl sm:text-3xl lg:text-4xl mt-1.5 sm:mt-2" style="color: var(--color-ink); font-weight: 600;">
-				Geschichten, die weitertragen
+				Die Geschichte jedes Tages
 			</h2>
 		</div>
 		<a
@@ -297,15 +304,15 @@
 		</a>
 	</div>
 
-	{#if feature}
-		<div class="rise mb-5 sm:mb-6 lg:mb-8" style="animation-delay: 0.1s;">
-			<StoryCard story={feature} size="feature" />
-		</div>
-	{/if}
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
-		{#each restTail as story, i (story.slug)}
-			<div class="rise" style="animation-delay: {0.16 + i * 0.06}s;">
-				<StoryCard {story} />
+	<!-- Tagesansicht: pro Tag die staerkste Story, mit Datum. -->
+	<div class="flex flex-col gap-8 sm:gap-10">
+		{#each days as { day, story }, i (story.slug)}
+			<div class="rise" style="animation-delay: {0.1 + i * 0.06}s;">
+				<div class="flex items-center gap-3 mb-3 sm:mb-4">
+					<span class="text-sm font-medium capitalize" style="color: var(--color-ink-soft);">{dayLabel(day)}</span>
+					<span class="flex-1 h-px" style="background: var(--color-rule);"></span>
+				</div>
+				<StoryCard {story} size={i === 0 ? 'feature' : undefined} />
 			</div>
 		{/each}
 	</div>

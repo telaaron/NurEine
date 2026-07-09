@@ -10,6 +10,7 @@
  * SOCIAL_AUTOPILOT aus → bleibt bei 'approved' bis manuell/Token vorhanden).
  */
 import { supabaseAdmin } from '$lib/server/supabase/client';
+import { normalizeResonance } from '$lib/server/resonance';
 import { env } from '$env/dynamic/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 import { selectInstagramStory, selectWeeklyDigestStories } from '$lib/server/queries';
@@ -880,13 +881,17 @@ export async function publishStoryDue(): Promise<{ posted: boolean; reason: stri
 		.neq('image_url', '')
 		.gte('impact_score', 50)
 		.gte('created_at', since72h)
-		// RELEVANTESTE zuerst: hohe Resonanz schlägt Neuheit (NULLS LAST, dann impact).
-		.order('resonance_score', { ascending: false, nullsFirst: false })
-		.order('impact_score', { ascending: false })
 		.limit(40);
 
-	// Zweiter Riegel in JS (falls die Spalte je Whitespace/kaputte URL enthält).
+	// RELEVANTESTE zuerst: hohe Resonanz schlägt Neuheit. resonance_score steht
+	// gemischt auf 0–10 (alt) und 0–100 (neu) → NICHT per SQL sortieren (das rankte
+	// jede neue 0–100-Story pauschal über jede alte 0–10-Story), sondern auf
+	// kanonische 0–100 normalisieren und in JS sortieren (improvement #1). Danach
+	// zweiter Riegel: nur ungepostete MIT echtem Bild (Aaron 2026-07-10 — bildlose
+	// Story sah auf IG wie ein Platzhalter aus).
 	const story = (cand as { id: string; title: string; subtitle: string | null; category: string; image_url: string | null; impact_score: number; resonance_score: number | null }[] ?? [])
+		.map((s) => ({ ...s, _r: normalizeResonance(s.resonance_score) }))
+		.sort((a, b) => (b._r ?? -1) - (a._r ?? -1) || b.impact_score - a.impact_score)
 		.find((s) => !usedIds.has(s.id) && !!s.image_url && s.image_url.trim() !== '');
 	if (!story) return { posted: false, reason: 'no fresh story with image to post' };
 

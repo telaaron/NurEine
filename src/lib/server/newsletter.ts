@@ -15,6 +15,7 @@
  */
 
 import { supabaseAdmin } from './supabase/client';
+import { normalizeResonance, RESONANCE_HERO_THRESHOLD } from './resonance';
 import { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME, BREVO_REPLY_TO_EMAIL } from '$env/static/private';
 import { env } from '$env/dynamic/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
@@ -583,18 +584,21 @@ export async function selectApprovedOrBestHero(): Promise<string | null> {
   if (approvedId) return approvedId;
 
   // 2) Fallback: beste kuratierte des Tages, aber NUR wenn sie die Schwelle reißt.
-  const { data: best } = await supabaseAdmin
+  // resonance_score steht gemischt auf 0–10 (alt) und 0–100 (neu) — deshalb NICHT
+  // per SQL-.gte(7.0) filtern (das ließe jede neue 0–100-Story durch), sondern auf
+  // kanonische 0–100 normalisieren und in JS gegen die Schwelle vergleichen/sortieren.
+  // (improvement #1, Verbesserer-Agent)
+  const { data: candidates } = await supabaseAdmin
     .from('nureine_curation_queue')
     .select('story_id, resonance_score')
     .eq('for_date', today)
-    .not('story_id', 'is', null)
-    .gte('resonance_score', 7.0)
-    .order('resonance_score', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const bestId = (best as { story_id: string | null } | null)?.story_id;
+    .not('story_id', 'is', null);
+  const bestId = ((candidates as { story_id: string | null; resonance_score: number | null }[] ?? [])
+    .map((c) => ({ story_id: c.story_id, r: normalizeResonance(c.resonance_score) }))
+    .filter((c) => c.story_id != null && c.r != null && c.r >= RESONANCE_HERO_THRESHOLD)
+    .sort((a, b) => (b.r ?? 0) - (a.r ?? 0))[0])?.story_id;
   if (bestId) {
-    console.log('[newsletter] Hero-Fallback: beste kuratierte ≥7.0 (keine Freigabe vorhanden)');
+    console.log('[newsletter] Hero-Fallback: beste kuratierte ≥70/100 (keine Freigabe vorhanden)');
     return bestId;
   }
 

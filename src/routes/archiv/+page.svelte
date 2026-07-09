@@ -10,6 +10,10 @@
 	let active = $state<(typeof cats)[number]>('Alle');
 	// Default: stärkste Wirkung zuerst (kuratiertes Gefühl). Manuell auf Datum wechselbar.
 	let sortBy = $state<'date' | 'impact'>('impact');
+	// Standard-Qualitätsfilter (Aaron 2026-07-09): nur Stories mit Wirkung ≥65 zeigen
+	// — so wirkt das Archiv durchgängig stark & bebildert. Auf 0 umschaltbar („alle").
+	const MIN_IMPACT_DEFAULT = 65;
+	let minImpact = $state(MIN_IMPACT_DEFAULT);
 	let filterOpen = $state(false);
 	// Suchbegriff aus ?q= übernehmen (Sitelinks-Searchbox / Deep-Links).
 	let query = $state($page.url.searchParams.get('q') ?? '');
@@ -25,6 +29,7 @@
 	const filtered = $derived.by(() => {
 		const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
 		let list = active === 'Alle' ? stories : stories.filter((s) => s.category.toLowerCase() === active.toLowerCase());
+		if (minImpact > 0) list = list.filter((s) => (s.impactScore ?? 0) >= minImpact);
 		if (terms.length) list = list.filter((s) => matches(s, terms));
 		return list.slice().sort((a, b) => {
 			if (sortBy === 'impact') return b.impactScore - a.impactScore;
@@ -35,7 +40,7 @@
 	// Progressive Anzeige: nur die ersten N rendern (sonst hunderte img-Tags → riesiges DOM/HTML).
 	const PAGE = 24;
 	let shown = $state(PAGE);
-	$effect(() => { void active; void sortBy; void query; shown = PAGE; }); // Filter/Sort/Such-Wechsel → reset
+	$effect(() => { void active; void sortBy; void query; void minImpact; shown = PAGE; }); // Filter/Sort/Such-Wechsel → reset
 	const visible = $derived(filtered.slice(0, shown));
 
 	function pick(cat: (typeof cats)[number]) {
@@ -149,6 +154,14 @@
 				>
 					Wirkung
 				</button>
+			</div>
+		</div>
+
+		<!-- Qualitaets-Filter: nur starke Stories (Wirkung >=65) oder alle -->
+		<div class="flex items-center gap-2 text-xs mt-3 lg:mt-0" style="color: var(--color-muted);">
+			<div class="flex items-center rounded-full p-0.5" style="background: var(--color-canvas-soft); border: 1px solid var(--color-rule);">
+				<button type="button" onclick={() => (minImpact = MIN_IMPACT_DEFAULT)} class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all" style="background: {minImpact > 0 ? 'var(--color-ink)' : 'transparent'}; color: {minImpact > 0 ? 'var(--color-paper)' : 'var(--color-muted)'};">Nur starke</button>
+				<button type="button" onclick={() => (minImpact = 0)} class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all" style="background: {minImpact === 0 ? 'var(--color-ink)' : 'transparent'}; color: {minImpact === 0 ? 'var(--color-paper)' : 'var(--color-muted)'};">Alle</button>
 			</div>
 		</div>
 	</div>

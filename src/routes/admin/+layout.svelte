@@ -21,6 +21,7 @@
 	]);
 	// Selten gebraucht (autonom bedient): nur bei Bedarf ausklappen.
 	const moreItems = [
+		{ href: '/admin/tiktok', label: 'TikTok', icon: 'send', badge: 0 },
 		{ href: '/admin/stories', label: 'Stories', icon: 'doc', badge: 0 },
 		{ href: '/admin/redaktion', label: 'Redaktion', icon: 'search', badge: data?.newFeedback ?? 0 },
 		{ href: '/admin/impact', label: 'Impact-Läufe', icon: 'heart', badge: 0 },

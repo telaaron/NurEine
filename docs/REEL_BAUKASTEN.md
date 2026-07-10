@@ -39,8 +39,32 @@ Jede Szene zusätzlich: `voText` — der gesprochene Satz. **Eiserne Regeln:**
 2. `number.value` = die Zahl, um die es GEHT (nie Neben-Zahlen wie Alter/Jahreszahl).
 3. Wirkungsindex nur zeigen, wenn ≥50 (`impact: null` sonst) — Quelle immer.
 4. Duzen, warm, nie kitschig, keine Superlative ohne Beleg. Emojis sparsam (Caption ja, Szenen nein).
-5. Caption: Kern-Keyword in den ersten 125 Zeichen, 3–5 Hashtags, endet mit Send-/Save-Anlass.
+5. Caption (IG): Kern-Keyword in den ersten 125 Zeichen, 3–5 Hashtags, endet mit Send-/Save-Anlass.
 6. Nach dem Render IMMER Frame-Grid ansehen (Qualitäts-Sicht) — erst dann einreihen.
+
+## TikTok-Caption (`tiktok`-Block im Plan) — eigene Regeln
+
+Dasselbe Reel läuft auch auf TikTok, aber mit **eigener Caption** (nicht die IG-Caption
+kopieren). Regeln aus `docs/TIKTOK_PLAN.md` §3/§5:
+
+- **Keyword-SEO:** Das Kern-Keyword MUSS in den **ersten ~60 Zeichen** stehen (TikTok
+  gewichtet Caption-Anfang am stärksten) — und es MUSS im Video vorkommen (gesprochen
+  UND als Texteinblendung; das ist ohnehin durch Hook/VO gegeben).
+- **Hook sofort:** Payoff/Zahl/Überraschung in Zeile 1, kein Intro.
+- **3–5 Hashtags**, nie mehr: `#gutenachrichten` immer zuerst (unser Marken-Tag) + 1 breit
+  + 1–2 Thema. Kein Hashtag-Spam.
+- **CTA = Save/Comment**, NICHT der IG-„Schick's jemandem"-Send-CTA: „Speichern für später."
+  oder „Was denkst du? Schreib's in die Kommentare." (Save/Comment sind auf TikTok die
+  starken Signale).
+- **Quellenzeile** am Ende wie bei IG: „Quelle: … — von uns nachgeprüft." (Beleg = USP).
+- Ton wie immer: duzen, warm, nie kitschig, kein Superlativ ohne Beleg.
+
+Schreib den `tiktok`-Block ins `plan.json` (siehe Schema unten). Beim `--queue`-Schritt
+persistiert `render.mjs` `tiktok.caption`/`tiktok.hashtags` automatisch nach
+`nureine_stories` — von dort liest sie das Admin-Tool **/admin/tiktok** fürs manuelle
+Posten. Fehlt der `tiktok`-Block, baut das Tool eine Caption regelbasiert aus den
+Story-Feldern (`src/lib/server/social/tiktok-caption.ts`) — die feinere, handgeschriebene
+Variante ist aber besser.
 
 ## Kommandos
 
@@ -57,9 +81,13 @@ curl -fsS -X POST "$PUBLIC_BASE_URL/api/cron/social-reel-select" -H "Authorizati
   "story": { "id": "<uuid>", "slug": "<slug>", "category": "kultur",
              "image": "<url|null>", "source": "<quelle>", "impactScore": 55,
              "shareHook": "<schickbare zeile>" },
-  "caption": "<caption mit keyword + send-anlass>",
+  "caption": "<IG-caption mit keyword + send-anlass>",
   "hashtags": ["#gutenachrichten", "..."],
-  "music": "audio/hope-1.wav",            // oder audio/calm-1.wav
+  "tiktok": {                              // TikTok-Variante (eigener Hook, siehe unten)
+    "caption": "<tiktok-caption: keyword in ersten ~60 zeichen + save/comment-cta>",
+    "hashtags": ["#gutenachrichten", "..."]
+  },
+  "music": "audio/uplift-1.mp3",           // oder audio/uplift-2.mp3 — NICHT hope-1/calm-1.wav (zu leise)
   "person": "frau",                        // "mann" | "frau" | weglassen (Seed wechselt ab);
                                            // die VO-Stimme folgt der Figur automatisch
   "scenes": [ { "kind": "hook", "text": "...", "punch": "...", "kicker": "GUTE NACHRICHT · KULTUR", "voText": "..." }, ... ]

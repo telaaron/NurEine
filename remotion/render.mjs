@@ -321,6 +321,25 @@ async function queueReel(storyId, videoUrl, caption, hashtags, category, hookTyp
 	if (!r.ok) throw new Error(`Queue-Insert ${r.status}`);
 }
 
+/**
+ * TikTok-Caption der Story hinterlegen (nureine_stories.tiktok_caption/_hashtags).
+ * Wird vom Admin-Tool /admin/tiktok fürs manuelle Posten gelesen; solange TikTok
+ * nicht auto-postet, ist das der einzige Ort, an dem die TikTok-Variante lebt.
+ * Rein additiv, ändert nur diese zwei Story-Spalten (kein Reel-Insert berührt).
+ */
+async function persistTikTokCaption(storyId, caption, hashtags) {
+	if (!storyId || !caption) return;
+	const supa = env.SUPABASE_URL.replace(/\/$/, '');
+	const key = env.SUPABASE_SERVICE_KEY;
+	const r = await fetch(`${supa}/rest/v1/nureine_stories?id=eq.${storyId}`, {
+		method: 'PATCH',
+		headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+		body: JSON.stringify({ tiktok_caption: caption, tiktok_hashtags: hashtags || [] })
+	});
+	if (!r.ok) console.log(`TikTok-Caption-Update fehlgeschlagen (${r.status}) — nicht kritisch`);
+	else console.log('OK TikTok-Caption hinterlegt');
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -385,6 +404,11 @@ async function main() {
 			const tags = plan?.hashtags?.length ? plan.hashtags : (arg('hashtags') || '').split(',').map((t) => t.trim()).filter(Boolean);
 			await queueReel(storyId, videoUrl, plan?.caption || arg('caption') || '', tags, plan?.story?.category || arg('category') || 'gemeinschaft', story.igHookType);
 			console.log('OK reel-draft angelegt (status=draft)');
+			// TikTok-Variante (eigener Hook + Keyword-SEO + Save-CTA) mitschreiben,
+			// falls die Regie sie in den Plan gelegt hat → landet im /admin/tiktok-Tool.
+			if (plan?.tiktok?.caption) {
+				await persistTikTokCaption(storyId, plan.tiktok.caption, plan.tiktok.hashtags || []);
+			}
 		}
 	}
 }

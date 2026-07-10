@@ -12,15 +12,27 @@
 	const tone = $derived(featured ? toneStyles[featured.tone] : toneStyles['amber']);
 	// Tages-Perlen der letzten Woche (jede mit Datum), statt der letzten N Stories.
 	const days = $derived(data.days ?? []);
-	const dateFmt = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
-	function dayLabel(iso: string): string {
+	// Datum in Wochentag / Tag / Monat zerlegen — für den Kalender-Anker.
+	// Heute/Gestern werden statt des Wochentags gezeigt.
+	function dayParts(iso: string): { weekday: string; day: string; month: string } {
 		const d = new Date(iso + 'T12:00:00');
 		const today = new Date(); today.setHours(12, 0, 0, 0);
 		const diff = Math.round((today.getTime() - d.getTime()) / 86400000);
-		if (diff === 0) return 'Heute';
-		if (diff === 1) return 'Gestern';
-		return dateFmt.format(d);
+		const weekday =
+			diff === 0 ? 'Heute'
+			: diff === 1 ? 'Gestern'
+			: new Intl.DateTimeFormat('de-DE', { weekday: 'short' }).format(d).replace('.', '');
+		return {
+			weekday,
+			day: new Intl.DateTimeFormat('de-DE', { day: 'numeric' }).format(d),
+			month: new Intl.DateTimeFormat('de-DE', { month: 'short' }).format(d).replace('.', '')
+		};
 	}
+	const CAT_COLOR: Record<string, string> = {
+		klima: '#56764e', gesundheit: '#b06f6f', wissenschaft: '#5d7e9c',
+		gemeinschaft: '#bd6a35', tiere: '#56764e', kultur: '#bd6a35', innovation: '#5d7e9c'
+	};
+	const catColor = (c: string) => CAT_COLOR[c?.toLowerCase()] ?? '#bd6a35';
 
 	// Standfirst unter der Headline: der menschliche Funke (share_hook) führt, nicht
 	// der Institutions-Dek. Genau diese erste Zeile entscheidet beim Erstbesucher in
@@ -304,16 +316,48 @@
 		</a>
 	</div>
 
-	<!-- Tagesansicht: pro Tag die staerkste Story, mit Datum. -->
-	<div class="flex flex-col gap-8 sm:gap-10">
+	<!-- Kalender-Timeline: je Tag eine kompakte Zeile — Datum-Anker links,
+	     kleine Story-Karte rechts. Dynamisch, nicht wie ein endloser Feed. -->
+	<div class="cal">
 		{#each days as { day, story }, i (story.slug)}
-			<div class="rise" style="animation-delay: {0.1 + i * 0.06}s;">
-				<div class="flex items-center gap-3 mb-3 sm:mb-4">
-					<span class="text-sm font-medium capitalize" style="color: var(--color-ink-soft);">{dayLabel(day)}</span>
-					<span class="flex-1 h-px" style="background: var(--color-rule);"></span>
+			{@const parts = dayParts(day)}
+			<a
+				href={base + '/geschichte/' + story.slug}
+				class="cal-row rise group"
+				style="animation-delay: {0.06 + i * 0.05}s;"
+			>
+				<!-- Datum-Anker -->
+				<div class="cal-date">
+					<span class="cal-weekday">{parts.weekday}</span>
+					<span class="cal-daynum">{parts.day}</span>
+					<span class="cal-month">{parts.month}</span>
 				</div>
-				<StoryCard {story} size={i === 0 ? 'feature' : undefined} />
-			</div>
+				<!-- Timeline-Punkt + Linie -->
+				<div class="cal-track" aria-hidden="true">
+					<span class="cal-dot" style="background: {catColor(story.category)};"></span>
+				</div>
+				<!-- Story-Karte (kompakt, horizontal) -->
+				<div class="cal-card">
+					<div class="cal-thumb">
+						<img
+							src={story.hero && story.hero.startsWith('http')
+								? `${base}/img?url=${encodeURIComponent(story.hero)}&w=200`
+								: getStoryHeroImageSrc(story.category, base)}
+							alt=""
+							loading="lazy"
+						/>
+					</div>
+					<div class="cal-body">
+						<div class="cal-meta">
+							<span class="cal-cat" style="color: {catColor(story.category)};">{story.category}</span>
+							{#if story.impactScore}<span class="cal-impact">Wirkung {story.impactScore}</span>{/if}
+						</div>
+						<h3 class="cal-title">{story.title}</h3>
+						{#if story.dek}<p class="cal-dek">{story.dek}</p>{/if}
+					</div>
+					<span class="cal-arrow" aria-hidden="true">→</span>
+				</div>
+			</a>
 		{/each}
 	</div>
 
@@ -459,3 +503,156 @@
 		<a href={base + '/roadmap'} class="underline decoration-dotted underline-offset-2 hover:opacity-70" style="color: var(--color-amber);">Sieh unsere Roadmap &amp; gib Feedback →</a>
 	</p>
 </section>
+
+<style>
+	/* Kalender-Timeline — kompakte Tagesansicht statt großer Karten. */
+	.cal {
+		display: flex;
+		flex-direction: column;
+	}
+	.cal-row {
+		display: grid;
+		grid-template-columns: 68px 20px 1fr;
+		align-items: stretch;
+		text-decoration: none;
+		color: inherit;
+	}
+	.cal-date {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		justify-content: center;
+		padding: 0.9rem 0.75rem 0.9rem 0;
+		text-align: right;
+		line-height: 1.05;
+	}
+	.cal-weekday {
+		font-size: 0.7rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--color-amber);
+	}
+	.cal-daynum {
+		font-family: var(--font-display, inherit);
+		font-size: 1.5rem;
+		font-weight: 600;
+		color: var(--color-ink);
+	}
+	.cal-month {
+		font-size: 0.68rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: var(--color-faint);
+	}
+	.cal-track {
+		position: relative;
+		display: flex;
+		justify-content: center;
+	}
+	/* durchgehende vertikale Linie */
+	.cal-track::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: 2px;
+		background: var(--color-rule);
+	}
+	.cal-dot {
+		position: relative;
+		margin-top: 1.5rem;
+		width: 11px;
+		height: 11px;
+		border-radius: 50%;
+		box-shadow: 0 0 0 4px var(--color-canvas, #f4efe6);
+	}
+	.cal-card {
+		display: flex;
+		align-items: center;
+		gap: 0.9rem;
+		margin: 0.5rem 0;
+		padding: 0.6rem 0.9rem 0.6rem 0.6rem;
+		border-radius: 14px;
+		border: 1px solid transparent;
+		transition: border-color 0.15s, background 0.15s, transform 0.15s;
+	}
+	.cal-row:hover .cal-card {
+		border-color: var(--color-rule);
+		background: var(--color-paper, #fbf8f1);
+		transform: translateX(2px);
+	}
+	.cal-thumb {
+		flex-shrink: 0;
+		width: 84px;
+		height: 84px;
+		border-radius: 10px;
+		overflow: hidden;
+		background: var(--color-canvas-soft, #ece5d8);
+	}
+	.cal-thumb img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+	.cal-body {
+		flex: 1;
+		min-width: 0;
+	}
+	.cal-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		margin-bottom: 0.2rem;
+	}
+	.cal-cat {
+		font-size: 0.62rem;
+		font-weight: 700;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+	}
+	.cal-impact {
+		font-size: 0.62rem;
+		color: var(--color-faint);
+		font-family: var(--font-mono, monospace);
+	}
+	.cal-title {
+		font-family: var(--font-display, inherit);
+		font-size: 1.02rem;
+		font-weight: 600;
+		line-height: 1.2;
+		color: var(--color-ink);
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+	.cal-dek {
+		margin-top: 0.2rem;
+		font-size: 0.82rem;
+		line-height: 1.35;
+		color: var(--color-muted);
+		display: -webkit-box;
+		-webkit-line-clamp: 1;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+	.cal-arrow {
+		flex-shrink: 0;
+		color: var(--color-faint);
+		opacity: 0;
+		transition: opacity 0.15s, transform 0.15s;
+	}
+	.cal-row:hover .cal-arrow {
+		opacity: 1;
+		transform: translateX(3px);
+		color: var(--color-amber);
+	}
+	@media (max-width: 640px) {
+		.cal-row { grid-template-columns: 52px 16px 1fr; }
+		.cal-daynum { font-size: 1.25rem; }
+		.cal-thumb { width: 64px; height: 64px; }
+		.cal-dek { display: none; }
+		.cal-title { font-size: 0.95rem; }
+	}
+</style>

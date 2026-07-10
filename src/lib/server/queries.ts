@@ -453,11 +453,35 @@ export async function getStoryById(id: string): Promise<StoryResult | undefined>
  * Uses created_at (true insert time), not published_at (RSS date, lags 24h+).
  */
 export async function getLatestFeatured(): Promise<StoryResult | undefined> {
-  // Der Tagesaufmacher soll die BESTE aktuelle Geschichte sein — nicht die, die
-  // zufällig zuletzt im Newsletter ging (der Newsletter wählt nach anderem Mix
-  // und kann eine schwächere 55er-Story enthalten). Darum: stärkste frische Story
-  // (höchster Wirkungsindex, ≤48h) gewinnt; die Newsletter-Hero zählt nur mit,
-  // wenn sie ebenfalls frisch ist. So steht nie eine schwache Story groß oben.
+  // TAGES-HERO (Aaron 2026-07-10): Der Aufmacher soll nur EINMAL pro Tag wechseln
+  // — nachts, wenn die neue Story da ist —, NICHT bei jedem 4h-Fetch mitten am Tag.
+  // Darum zuerst: die vom Chefredakteur für HEUTE kuratierte hero-Perle
+  // (curation_queue, for_date=heute). Die steht ab dem Nacht-Lauf fest.
+  // Lokales Datum (Europe/Berlin), damit der Hero zum lokalen Tagesbeginn wechselt.
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date());
+  const { data: heroPick } = await supabaseAdmin
+    .from('nureine_curation_queue')
+    .select('story_id')
+    .eq('channel', 'hero')
+    .eq('for_date', today)
+    .in('status', ['approved', 'proposed'])
+    .order('status', { ascending: true }) // 'approved' vor 'proposed'
+    .limit(1)
+    .maybeSingle();
+  if (heroPick?.story_id) {
+    // Nur zeigen, wenn die Story existiert und keine Dublette ist.
+    const { data: heroStory } = await supabaseAdmin
+      .from('nureine_stories')
+      .select('*')
+      .eq('id', (heroPick as { story_id: string }).story_id)
+      .is('duplicate_of', null)
+      .maybeSingle();
+    if (heroStory) return mapStory(heroStory as SupabaseStory);
+  }
+
+  // Fallback (kein Perlen-Hero für heute, z.B. Nacht-Lauf noch nicht gelaufen):
+  // stärkste frische Story der letzten 48h. Kann tagsüber wechseln — greift aber
+  // nur, wenn die Kuration fehlt.
   const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
   const { data: topFresh } = await supabaseAdmin
     .from('nureine_stories')

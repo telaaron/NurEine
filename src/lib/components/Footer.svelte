@@ -52,14 +52,23 @@
 			</div>
 			<div>
 				<h3 class="footer-heading" style="color: var(--color-faint);">
-					Themen
+					Gute Nachrichten
 				</h3>
+				<!--
+					Diese Spalte verlinkt bewusst die /gute-nachrichten/*-Themen-Hubs (nicht die
+					/archiv-Filter): Es sind die für Suche optimierten Landing-Pages ("Gute
+					Nachrichten über Wissenschaft" etc.). Sie hingen bisher NUR an der XML-Sitemap
+					→ Google-Status "Gefunden – zurzeit nicht indexiert". Ein sitewide-Footer-Link
+					von der (indexierten) Startseite gibt Google einen echten Crawl-Pfad hinein.
+				-->
 				<ul class="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2 text-sm">
-					<li><a class="hover:opacity-70" href={base + '/archiv/klima'}>Klima</a></li>
-					<li><a class="hover:opacity-70" href={base + '/archiv/gesundheit'}>Gesundheit</a></li>
-					<li><a class="hover:opacity-70" href={base + '/archiv/wissenschaft'}>Wissenschaft</a></li>
-					<li><a class="hover:opacity-70" href={base + '/archiv/tiere'}>Tiere</a></li>
-					<li><a class="hover:opacity-70" href={base + '/archiv/innovation'}>Innovation</a></li>
+					<li><a class="hover:opacity-70" href={base + '/gute-nachrichten/klima'}>Klima</a></li>
+					<li><a class="hover:opacity-70" href={base + '/gute-nachrichten/gesundheit'}>Gesundheit</a></li>
+					<li><a class="hover:opacity-70" href={base + '/gute-nachrichten/wissenschaft'}>Wissenschaft</a></li>
+					<li><a class="hover:opacity-70" href={base + '/gute-nachrichten/tiere'}>Tiere</a></li>
+					<li><a class="hover:opacity-70" href={base + '/gute-nachrichten/innovation'}>Innovation</a></li>
+					<li><a class="hover:opacity-70" href={base + '/gute-nachrichten/land/deutschland'}>aus Deutschland</a></li>
+					<li><a class="hover:opacity-70" href={base + '/gute-nachrichten-app'}>Good-News-App</a></li>
 				</ul>
 			</div>
 		</div>

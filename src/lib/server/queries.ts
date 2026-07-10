@@ -248,19 +248,38 @@ function beschreibeWirkung(score: number, durability: number | null): string {
 
 // ---- Public Query Functions ----
 
-export async function getAllStories(): Promise<StoryResult[]> {
-  const { data, error } = await supabaseAdmin
-    .from('nureine_stories')
-    .select('*')
-    .is('duplicate_of', null) // thematische Dubletten ausblenden
-    .order('published_at', { ascending: false });
+// PostgREST deckelt JEDE Query ohne Range hart bei 1000 Zeilen (Supabase-Default
+// db-max-rows). Für die vollständige Story-Liste (Sitemap, Archiv, „alle Stories")
+// heißt das: ab Story 1001 fällt alles still weg — Google entdeckt diese URLs nie.
+// Deshalb hier über .range() paginieren, bis eine Teilseite < PAGE zurückkommt.
+// Non-Story-Queries (Cards, Marker, einzelne Rows) haben eigene, kleine Limits und
+// brauchen das nicht.
+const PAGE_SIZE = 1000;
 
-  if (error || !data) {
-    console.error('getAllStories error:', error);
-    return [];
+async function fetchAllRows<T>(columns: string): Promise<T[]> {
+  const out: T[] = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data, error } = await supabaseAdmin
+      .from('nureine_stories')
+      .select(columns)
+      .is('duplicate_of', null) // thematische Dubletten ausblenden
+      .order('published_at', { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) {
+      console.error('fetchAllRows error:', error);
+      break;
+    }
+    if (!data || data.length === 0) break;
+    out.push(...(data as T[]));
+    if (data.length < PAGE_SIZE) break; // letzte (Teil-)Seite erreicht
   }
+  return out;
+}
 
-  return (data as SupabaseStory[]).map(mapStory);
+export async function getAllStories(): Promise<StoryResult[]> {
+  const rows = await fetchAllRows<SupabaseStory>('*');
+  return rows.map(mapStory);
 }
 
 /**
@@ -270,18 +289,10 @@ export async function getAllStories(): Promise<StoryResult[]> {
  * case that genuinely needs full bodies (cron/export).
  */
 export async function getStoryList(): Promise<StoryResult[]> {
-  const { data, error } = await supabaseAdmin
-    .from('nureine_stories')
-    .select(LIST_COLUMNS)
-    .is('duplicate_of', null) // thematische Dubletten ausblenden
-    .order('published_at', { ascending: false });
-
-  if (error || !data) {
-    console.error('getStoryList error:', error);
-    return [];
-  }
-
-  return (data as Partial<SupabaseStory>[]).map(mapListRow);
+  // Paginiert (siehe fetchAllRows) — sonst deckelt PostgREST die Sitemap/Archiv-
+  // Liste bei 1000 und alle älteren Stories werden nie gecrawlt.
+  const rows = await fetchAllRows<Partial<SupabaseStory>>(LIST_COLUMNS);
+  return rows.map(mapListRow);
 }
 
 /**

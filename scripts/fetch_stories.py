@@ -21,6 +21,8 @@ from __future__ import annotations
 import json
 import logging
 import math
+import hashlib
+import json
 import os
 import sys
 import time
@@ -462,9 +464,11 @@ if not SUPABASE_URL:
     MISSING_ENVVARS.append("SUPABASE_URL")
 if not SUPABASE_SERVICE_KEY:
     MISSING_ENVVARS.append("SUPABASE_SERVICE_KEY")
-# Analyse-Modell: mindestens EINES von Claude/DeepSeek muss da sein (Claude bevorzugt).
-if not ANTHROPIC_API_KEY and not DEEPSEEK_API_KEY:
-    MISSING_ENVVARS.append("ANTHROPIC_API_KEY oder DEEPSEEK_API_KEY")
+# Analyse-Modell: im Routine-Modus (--export/--import) macht die Claude-Routine die
+# Analyse → kein Key nötig. Sonst mindestens EINES von Claude/DeepSeek.
+_ROUTINE_MODE = "--export" in sys.argv or "--import" in sys.argv
+if not _ROUTINE_MODE and not ANTHROPIC_API_KEY and not DEEPSEEK_API_KEY:
+    MISSING_ENVVARS.append("ANTHROPIC_API_KEY oder DEEPSEEK_API_KEY (oder --export/--import nutzen)")
 # FAL_KEY is optional — if missing, image generation is skipped
 IMAGE_GENERATION_ENABLED = bool(FAL_KEY)
 
@@ -720,18 +724,64 @@ def call_claude(prompt: str) -> str | None:
         return None
 
 
-def call_deepseek(prompt: str) -> str | None:
-    """Analyse-Call — Dispatcher: Claude bevorzugt, DeepSeek als Fallback.
+# ── ROUTINE-MODUS (Aaron 2026-07-10): Analyse durch die lokale Claude-Routine ──
+# Statt einen bezahlten API-Key zu nutzen, läuft die KI-Analyse über Claude Code
+# (das bezahlte Kontingent). Ablauf in zwei Durchläufen:
+#   --export <datei>: jeder Analyse-Prompt wird in die Datei geschrieben (JSONL),
+#                     der Call gibt None zurück → Story wird übersprungen (kein Insert).
+#   Dann analysiert die Claude-Routine die Prompts und schreibt <antworten>.
+#   --import <datei>: der Call liest die vorbereitete Antwort (per Prompt-Hash) statt
+#                     eine API zu rufen → normale Pipeline (Gate/Bild/Insert) läuft.
+_EXPORT_PATH = os.environ.get("FETCH_EXPORT")   # gesetzt via --export
+_IMPORT_PATH = os.environ.get("FETCH_IMPORT")   # gesetzt via --import
+_IMPORT_CACHE: dict[str, str] | None = None
 
-    Der Name bleibt für die bestehenden Aufrufstellen; intern wählt er Claude,
-    wenn ANTHROPIC_API_KEY gesetzt ist (Aaron-Entscheidung 2026-07-09).
+
+def _prompt_hash(prompt: str) -> str:
+    return hashlib.sha256(prompt.encode("utf-8")).hexdigest()[:16]
+
+
+def call_deepseek(prompt: str) -> str | None:
+    """Analyse-Call — Dispatcher.
+
+    Reihenfolge: Import-Cache (Routine) → Export (Routine) → Claude-API → DeepSeek.
     """
+    global _IMPORT_CACHE
+
+    # (1) Import-Modus: vorbereitete Antwort der Claude-Routine zurückgeben.
+    if _IMPORT_PATH:
+        if _IMPORT_CACHE is None:
+            _IMPORT_CACHE = {}
+            try:
+                with open(_IMPORT_PATH, encoding="utf-8") as fh:
+                    for line in fh:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        obj = json.loads(line)
+                        _IMPORT_CACHE[obj["hash"]] = obj["answer"]
+                log.info("Import: %d Analyse-Antworten geladen", len(_IMPORT_CACHE))
+            except Exception as exc:  # noqa: BLE001
+                log.error("Import-Datei nicht lesbar (%s): %s", _IMPORT_PATH, exc)
+        return _IMPORT_CACHE.get(_prompt_hash(prompt))
+
+    # (2) Export-Modus: Prompt sammeln, Story überspringen (kein KI-Call).
+    if _EXPORT_PATH:
+        try:
+            with open(_EXPORT_PATH, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps({"hash": _prompt_hash(prompt), "prompt": prompt}, ensure_ascii=False) + "\n")
+        except Exception as exc:  # noqa: BLE001
+            log.error("Export-Schreiben fehlgeschlagen: %s", exc)
+        return None
+
+    # (3) Claude-API (nur wenn Key gesetzt — nicht der Routine-Weg).
     if ANTHROPIC_API_KEY:
         result = call_claude(prompt)
         if result:
             return result
         log.warning("Claude-Call leer/fehlgeschlagen — Fallback auf DeepSeek")
 
+    # (4) DeepSeek-Fallback.
     if not DEEPSEEK_API_KEY:
         return None
 
@@ -1863,16 +1913,27 @@ def run() -> None:
                 if first_error is None:
                     first_error = str(exc)
 
-            # ---- STAGE 3: AI Analysis (DeepSeek API call) ----
+            # ---- STAGE 3: AI Analysis ----
             prompt = build_prompt(entry, source_name)
             log.info("  Analyzing: %s", entry.get("title", "(kein Titel)"))
             raw = call_deepseek(prompt)
             articles_processed += 1
             source_articles += 1
 
+            # Export-Modus: Prompt wurde gesammelt (raw=None) → Story überspringen,
+            # KEIN Fehler, KEIN Retry (sonst doppelter Hash). Die Claude-Routine
+            # analysiert die exportierten Prompts und der --import-Lauf inserted.
+            if _EXPORT_PATH:
+                continue
+
             result = parse_ai_response(raw)
 
-            if result is None and raw is not None:
+            # Import-Modus: keine Antwort für diesen Artikel (Routine hat ihn nicht
+            # analysiert oder verworfen) → still überspringen, kein Fehler/Retry.
+            if _IMPORT_PATH and raw is None:
+                continue
+
+            if result is None and raw is not None and not _IMPORT_PATH:
                 # Ein Retry mit explizitem JSON-Reminder rettet die meisten Faelle.
                 log.info("  Parse failed, retrying once with JSON reminder")
                 raw = call_deepseek(prompt + "\n\nWICHTIG: Antworte AUSSCHLIESSLICH mit dem validen JSON-Objekt. Kein Text davor oder danach.")
@@ -2185,10 +2246,31 @@ def run() -> None:
 # ---------------------------------------------------------------------------
 # Entrypoint
 # ---------------------------------------------------------------------------
+def _arg_value(flag: str) -> str | None:
+    """Wert eines --flag <wert> aus argv holen."""
+    if flag in sys.argv:
+        i = sys.argv.index(flag)
+        if i + 1 < len(sys.argv):
+            return sys.argv[i + 1]
+    return None
+
+
 if __name__ == "__main__":
     log.info("=" * 60)
     log.info("NurEine — Story Fetcher")
     log.info("=" * 60)
+    # Routine-Modus: --export sammelt Analyse-Prompts, --import setzt Antworten ein.
+    _EXPORT_PATH = _arg_value("--export") or _EXPORT_PATH
+    _IMPORT_PATH = _arg_value("--import") or _IMPORT_PATH
+    if _EXPORT_PATH:
+        # frische Export-Datei je Lauf
+        try:
+            open(_EXPORT_PATH, "w").close()
+        except Exception:  # noqa: BLE001
+            pass
+        log.info("EXPORT-Modus → Analyse-Prompts nach %s (keine KI, kein Insert)", _EXPORT_PATH)
+    if _IMPORT_PATH:
+        log.info("IMPORT-Modus → Analyse-Antworten aus %s", _IMPORT_PATH)
     try:
         run()
     except Exception as exc:

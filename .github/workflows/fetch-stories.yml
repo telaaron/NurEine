@@ -1,8 +1,13 @@
 name: Fetch & Score Stories
 
+# ABGESCHALTET (Aaron 2026-07-10): Der Story-Fetch läuft jetzt als lokale
+# Claude-Routine (nureine-fetch, 01:15 nachts) — die Analyse nutzt Claude Code
+# (bezahltes Kontingent) statt eines extra API-Keys. Der GitHub-Cron ist deaktiviert.
+# Als Notfall-Fallback bleibt er MANUELL auslösbar (workflow_dispatch) — nutzt dann
+# DeepSeek/Claude-API, falls die Secrets gesetzt sind.
 on:
-  schedule:
-    - cron: '0 6,10,14,18 * * *'  # 06:00, 10:00, 14:00, 18:00 UTC
+  # schedule:
+  #   - cron: '0 6,10,14,18 * * *'  # 06/10/14/18 UTC — deaktiviert, s.o.
   workflow_dispatch:
 
 jobs:

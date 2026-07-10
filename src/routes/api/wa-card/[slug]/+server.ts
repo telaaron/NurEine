@@ -30,9 +30,14 @@ export const GET: RequestHandler = async ({ params, setHeaders }) => {
 	const imageBase64 = imageUrl ? await imageToBase64(imageUrl) : null;
 	const fonts = await loadFonts();
 
+	// KEIN Spruch mehr aufs Bild (Aaron 2026-07-10): Die Teilen-Karte zeigt nur
+	// die schön aufbereitete Story (Bild + Titel + Kategorie), damit man auf den
+	// Link klicken will. Der Begleittext ("Das hat mich ruhiger gemacht") steht
+	// als kopierbarer Text UNTER der Karte, nicht darauf.
 	const html = buildWaCard({
 		title: story.title || '',
-		hook: story.waOpener || story.igHook || null,
+		hook: null,
+		category: story.category || null,
 		imageBase64
 	});
 

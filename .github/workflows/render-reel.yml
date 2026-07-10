@@ -78,10 +78,11 @@ jobs:
           BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          # VO default AUS, bis die Stimm-Qualität einmal abgenommen ist.
-          # Scharf schalten: Repo-Variable REEL_VO=1 setzen (Settings → Variables).
-          VO: ${{ github.event.inputs.vo || vars.REEL_VO || '0' }}
+          # VO default AN (Aaron 2026-07-10: Reels immer mit Sprecher). Über
+          # Repo-Variable REEL_VO=0 oder workflow_dispatch-Input abschaltbar.
+          VO: ${{ github.event.inputs.vo || vars.REEL_VO || '1' }}
 
       - name: Sofort posten (Publish-Cron läuft sonst erst morgen früh)
         if: steps.pick.outputs.slug != ''

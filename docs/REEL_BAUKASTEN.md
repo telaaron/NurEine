@@ -28,6 +28,13 @@ Jede Szene zusätzlich: `voText` — der gesprochene Satz. **Eiserne Regeln:**
   ZWEI Ausnahmen von Hand schreiben: (a) „1 + Substantiv" → „ein/eine" ausschreiben
   („ein Baum", nicht „1 Baum" — der Konverter kennt kein Genus), (b) Ordinalzahlen
   („das 113." → „das einhundertdreizehnte" ausschreiben).
+- **Gesprochene Zahlen menschlich runden:** Der Screen zeigt die exakte Zahl
+  („160.566", „2,8 Monate"), die Stimme spricht die runde Menschen-Form („über
+  160.000", „fast drei Monate"). Kommazahlen NIE als allererste gesprochene Worte
+  (sperrig, bremst den Hook). Präzision = Bild, Fluss = Stimme.
+- **Geläufige Wörter im voText:** ungewöhnliche/anglisierende Begriffe vermeiden
+  („Klippe" statt „Kliff") — die Stimme spricht seltene Wörter unnatürlich, und
+  falsche Betonungen einzelner Wörter gehören ins `remotion/tts-lexikon.json`.
 - proof-voText EXAKT: `Belegt — von uns nachgeprüft.` (Quellenname steht im Bild).
 - end-voText EXAKT: `Schick das jemandem, der heute eine gute Nachricht braucht.`
 - Timing macht das System: die Stimme führt die Szenendauer (VO + kurzer Nachlauf).
@@ -96,10 +103,13 @@ Dramaturgie-Regeln (Kurzform von Rezept §C):
    Ergebnis zuerst — die Neugier-Lücke ist „wie kann das echt sein?", nie „was ist passiert?".
 2. Dann: `hook` (Erwartungsbruch, 1 Zeile — VOLLSTÄNDIGE Behauptung mit Referent,
    nie elliptisch) → `beat` (Wer/Wo, mit Bild) → `beat` (Mechanismus/Aha) → `proof` →
-   `end`. **Payoff komplett vor Sekunde 15.** Auf TikTok die **Figur sparsam** einsetzen
-   (max. 1 Szene, bevorzugt Bild-Beats — die 3D-Figur liest sich für Skip-Personas als
-   Werbe-/KI-Marker). **Konkretheits-Check:** zentrale Entität benennen (Artname, Ort,
-   Studie) und jede Zahl mit Referent — die Share-Personas teilen nur Zitierbares.
+   `end`. **Payoff komplett vor Sekunde 15.** Auf TikTok gibt es **KEINE Moderator-Figur**
+   (Komposition blendet sie in Beats nicht mehr ein — externes + internes Panel 2026-07-11:
+   3D-Avatar ist der stärkste „Werbung/KI-Slop"-Marker der Skip-Personas).
+   **Bild-Gate:** nur fotorealistische Story-Bilder verwenden; Metaphern-Clipart
+   (Glühbirnen, Symbolgrafiken) NIE — ein slop-verdächtiges Bild kostet mehr als kein
+   Bild, dann lieber Typo-Beat. **Konkretheits-Check:** zentrale Entität benennen
+   (Artname, Ort, Studie) und jede Zahl mit Referent — Share-Personas teilen nur Zitierbares.
 3. Gesamt **45–60 gesprochene Wörter ≈ 19–22 s** (gemessen: deutsche TTS spricht
    ~2,3 Wörter/s bei +12%; Zahlen wie „97.000" zählen gesprochen als lange Wörter!).
    Blitz-Variante bei dünner Story: number → beat → proof → end, ~30 Wörter ≈ 13 s.

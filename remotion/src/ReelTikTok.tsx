@@ -302,14 +302,15 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 					</div>
 				</>
 			) : (
-				<div style={{ position: 'absolute', left: M, right: 340, top: SAFE_TOP + 60, bottom: SAFE_BOTTOM + 260, display: 'flex', alignItems: 'center', transform: `scale(${textPop})`, transformOrigin: 'left center', opacity: interpolate(textS, [0, 0.35], [0, 1]) }}>
+				// KEINE Figur auf TikTok (Panel-Befund 2026-07-11: 3D-Avatar = stärkster
+				// „Werbung/Slop"-Marker der Skip-Personas) → Text nimmt die volle Breite.
+				<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 60, bottom: SAFE_BOTTOM + 260, display: 'flex', alignItems: 'center', transform: `scale(${textPop})`, transformOrigin: 'left center', opacity: interpolate(textS, [0, 0.35], [0, 1]) }}>
 					<div>
 						<div style={{ width: 110, height: 10, background: accent, marginBottom: 30, borderRadius: 5 }} />
 						<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 82, lineHeight: 1.08, letterSpacing: '-0.03em', color: INK, wordBreak: 'break-word' }}>{text}</div>
 					</div>
 				</div>
 			)}
-			{!image ? <Character pose={pose} enterFrame={0} from="bottom" size={760} align="right" flip={pose === 'point-side'} seed={seed} person={person} /> : null}
 			<div style={{ position: 'absolute', inset: 0, transform: `scale(${punchScale})`, transformOrigin: 'center', pointerEvents: 'none' }} />
 			<FlashWipe />
 			<SceneVoice vo={vo} captions={!!image} />
@@ -333,10 +334,13 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 	return (
 		<AbsoluteFill style={{ background: PAPER, transform: `translateY(${shake}px)` }}>
 			<PaperTextureOverlay kind="halftone" opacity={0.07} />
-			{/* Stempel-Sound: Anflug + Aufschlag, synchron zur Stempel-Spring (Rezept §C) */}
-			<Audio src={staticFile('audio/fx/whoosh.wav')} volume={0.45} />
+			{/* Stempel-Sound: Anflug + satter Aufschlag (Panel: „braucht Wucht als
+			    auditives Signature-Element") — settle doppelt: normal + auf 0.55
+			    verlangsamt = tiefer Bass-Thud unter dem Klick. */}
+			<Audio src={staticFile('audio/fx/whoosh.wav')} volume={0.55} />
 			<Sequence from={6}>
-				<Audio src={staticFile('audio/fx/settle.wav')} volume={0.6} />
+				<Audio src={staticFile('audio/fx/settle.wav')} volume={0.95} />
+				<Audio src={staticFile('audio/fx/settle.wav')} volume={0.85} playbackRate={0.55} />
 			</Sequence>
 			<div style={{ position: 'absolute', left: M, top: SAFE_TOP + 230, transform: `scale(${stampScale}) rotate(-4deg)`, transformOrigin: 'left center', opacity: stampOp }}>
 				<div style={{ display: 'inline-block', border: `12px solid ${accent}`, borderRadius: 14, padding: '10px 40px' }}>

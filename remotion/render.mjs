@@ -281,6 +281,13 @@ function prepareTts(text) {
 		t = t.replace(re, repl);
 		for (let i = 0; i < hits.length; i++) subs.push({ display: orig, spoken: repl.split(/\s+/) });
 	}
+	// Bindestrich-Komposita zusammenziehen („Räum-Teams" → „Räumteams" — die
+	// Stimme macht sonst eine Roboter-Mikropause). Akronym-Teile (US-…) bleiben.
+	t = t.replace(/\b([A-ZÄÖÜ]?[a-zäöüß]{2,})-([A-ZÄÖÜ][a-zäöüß]{2,})\b/g, (m, a, b) => {
+		const merged = a + b.toLowerCase();
+		subs.push({ display: m, spoken: [merged] });
+		return merged;
+	});
 	// Gedankenstriche → Komma (die Multilingual-Stimme macht um „—" unnatürliche
 	// Pausen/Betonungen); Ellipse → Punkt. Betrifft keine Caption-Wörter.
 	t = t.replace(/\s*[—–]\s*/g, ', ').replace(/…/g, '.');

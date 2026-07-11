@@ -58,7 +58,9 @@ export type DailyScene = SceneBase &
 		// snap/kicker auf number: TikTok-Cold-Open (Zahl steht ab Frame 0, kein
 		// Count-up von 0). ReelDaily ignoriert beide Felder, nur ReelTikTok wertet sie aus.
 		| { kind: 'hook'; text: string; punch: string; kicker: string }
-		| { kind: 'number'; value: string; unit: string | null; context: string; snap?: boolean; kicker?: string | null }
+		// image auf number: Themen-Anker — Perlen-Bild dunkel HINTER der Zahl
+		// (ohne Aufmerksamkeit weiß man sonst nicht, worum es geht). Nur ReelTikTok.
+		| { kind: 'number'; value: string; unit: string | null; context: string; snap?: boolean; kicker?: string | null; image?: string | null }
 		| { kind: 'beat'; text: string; image: string | null; pose: Pose }
 		| { kind: 'proof'; source: string; impact: number | null }
 		// map: Karten-Zoom auf Story-Koordinaten (lat/lng aus nureine_stories) —

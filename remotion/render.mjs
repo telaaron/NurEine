@@ -49,7 +49,11 @@ const PAD = TIKTOK ? 4 : 10; // Nachlauf hinter dem letzten VO-Wort (Frames)
 const VO_TAIL = TIKTOK ? 0.15 : 0.35; // Sekunden hinter dem letzten Wort im TTS-Segment
 // Sprechtempo (edge-tts rate): TikTok flotter — gemessen spricht Seraphina bei +4%
 // nur ~2,2 Wörter/s, damit wird ein 50-Wort-Skript >23s. REEL_RATE übersteuert.
-const TTS_RATE = env.REEL_RATE || (TIKTOK ? '+12%' : '+4%');
+// +16% seit 2026-07-11 (Publikums-Feedback: „muss schneller geredet werden").
+const TTS_RATE = env.REEL_RATE || (TIKTOK ? '+16%' : '+4%');
+// TTS-Backend: 'edge' (kostenlos) oder 'eleven' (ElevenLabs-Premium-Stimme via
+// ELEVENLABS_API_KEY/_VOICE_ID — eine Marken-Stimme, Figur-Kopplung entfällt).
+const TTS_ENGINE = env.REEL_TTS || 'edge';
 
 // ── Extraktion (Fallbacks ohne LLM) ─────────────────────────────────────────
 
@@ -339,7 +343,7 @@ function synthSegment(text, slug, name) {
 	const { ttsText, subs } = prepareTts(text);
 	if (subs.length) console.log(`vo-fix (${name}): ${subs.map((s) => `"${s.display}"→"${s.spoken.join(' ')}"`).join(' · ')}`);
 	try {
-		execFileSync(py, [fileURLToPath(new URL('./scripts/tts.py', import.meta.url)), '--text', ttsText, '--voice', VOICE, '--rate', TTS_RATE, '--out', `${dir}${slug}-${name}.mp3`, '--words', wordsPath], { stdio: 'inherit', timeout: 120000 });
+		execFileSync(py, [fileURLToPath(new URL('./scripts/tts.py', import.meta.url)), '--text', ttsText, '--voice', VOICE, '--rate', TTS_RATE, '--engine', TTS_ENGINE, '--out', `${dir}${slug}-${name}.mp3`, '--words', wordsPath], { stdio: 'inherit', timeout: 120000 });
 		let words = JSON.parse(readFileSync(wordsPath, 'utf8'));
 		if (!words.length) throw new Error('keine Wort-Timestamps');
 		words = mergeNumberWords(words, subs); // Captions zeigen wieder „97.000", nicht das Zahlwort

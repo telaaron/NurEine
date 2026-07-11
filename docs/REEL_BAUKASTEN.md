@@ -100,6 +100,9 @@ Dramaturgie-Regeln (Kurzform von Rezept §C):
    Kernzahl steht ab Frame 0 (Cold Open, kein Count-up), voText spricht Zahl +
    `seo.keyword` als ERSTE Worte, **maximal ~6 Wörter** (Cold Open muss nach ≤2,5s
    weiterschneiden — ein 5s-Standbild am Anfang ist der größte Swipe-Treiber).
+   **`"image"` (PFLICHT wenn vorhanden):** das Perlen-Bild liegt dunkel HINTER der
+   Zahl — ohne visuellen Themen-Anker weiß man beim beiläufigen Scrollen nicht,
+   worum es geht (Publikums-Feedback 2026-07-11).
    Ergebnis zuerst — die Neugier-Lücke ist „wie kann das echt sein?", nie „was ist passiert?".
 2. Dann: `hook` (Erwartungsbruch, 1 Zeile — VOLLSTÄNDIGE Behauptung mit Referent,
    nie elliptisch) → `beat` (Wer/Wo, mit Bild) → `beat` (Mechanismus/Aha) → `proof` →
@@ -133,10 +136,19 @@ Dramaturgie-Regeln (Kurzform von Rezept §C):
 ```bash
 # TikTok-Master rendern + hochladen (eigener Slug-Suffix, sonst überschreiben sich VO-Dateien):
 node render.mjs --script tiktok-plan.json --slug <slug>-tt --out /tmp/reel-tiktok.mp4 --vo --tiktok --upload
-# --tiktok = ReelTikTok-Komposition + engerer Schnitt (PAD 4, MINF 40, VO_TAIL 0.15s) + SEO-Check.
+# --tiktok = ReelTikTok-Komposition + engerer Schnitt (PAD 4, MINF 40, VO_TAIL 0.15s,
+#            Sprechtempo +16%) + SEO-Check.
 # --upload druckt die öffentliche MP4-URL (story_reels-Bucket) → in den Tagesreport an Aaron,
 # der postet manuell via /admin/tiktok (Cover = Stempel-Frame ~Sek 14, „AI-generated"-Label AN).
 ```
+
+**Stimme & Musik (Stand 2026-07-11, Publikums-Feedback „klingt wie Werbung"):**
+- TTS-Backend: `REEL_TTS=eleven` nutzt die ElevenLabs-Marken-Stimme
+  (`ELEVENLABS_API_KEY`/`ELEVENLABS_VOICE_ID` aus `.env`, Wort-Timestamps inklusive);
+  Default `edge` = kostenlos. Sprechtempo steuert `REEL_RATE` (TikTok-Default +16%).
+- Musik: warme Betten `audio/warm-1.mp3` (Felt-Piano-Lofi), `warm-2` (Akustik-Gitarre),
+  `warm-3` (Ambient-Piano) — alle -20 LUFS. Die alten `uplift-1/2` klingen nach
+  Werbung → für TikTok nicht mehr verwenden, bis Aaron anders entscheidet.
 
 Sicht-Checks vor Abnahme (zusätzlich zum Frame-Grid): (a) Frame 0 zeigt die Zahl voll
 lesbar, (b) letzter Frame ≈ Frame 0 (Loop-Naht), (c) Badge oben rechts ab ~Sek 2 und

@@ -205,7 +205,7 @@ const HookScene: React.FC<Extract<DailyScene, { kind: 'hook' }>> = ({ text, punc
 // snap-Variante = Cold-Open (Rezept §C): Zahl steht ab Frame 0 und rastet mit
 // Overshoot ein — kein Count-up von 0 (bei Ø 3,75 s Wiedergabedauer zu langsam
 // als Opener). kicker trägt dort den Serien-Anker („TAG 217 · NUR EINE").
-const NumberScene: React.FC<Extract<DailyScene, { kind: 'number' }> & { category: string }> = ({ value, unit, context, category, vo, snap, kicker }) => {
+const NumberScene: React.FC<Extract<DailyScene, { kind: 'number' }> & { category: string }> = ({ value, unit, context, category, vo, snap, kicker, image }) => {
 	const frame = useCurrentFrame();
 	const accent = accentFor(category);
 	const punchScale = usePunch(0);
@@ -215,7 +215,15 @@ const NumberScene: React.FC<Extract<DailyScene, { kind: 'number' }> & { category
 	const ctxPop = interpolate(spring({ frame: frame - (snap ? 10 : 8), fps: TIKTOK_FPS, config: { damping: 12, mass: 0.5, stiffness: 200 } }), [0, 1], [0.86, 1]);
 	return (
 		<AbsoluteFill style={{ background: INK }}>
-			<AbsoluteFill style={{ background: `radial-gradient(90% 55% at 50% 30%, ${accent}44, transparent 70%)` }} />
+			{/* Themen-Anker: Perlen-Bild dunkel hinter der Zahl — man SIEHT sofort,
+			    worum es geht, die Typo bleibt der Star (Publikums-Feedback 2026-07-11) */}
+			{image ? (
+				<>
+					<Img src={image} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5, filter: 'saturate(0.85)', transform: `scale(${1.04 + frame * 0.0009})` }} />
+					<AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(22,20,15,0.55) 0%, rgba(22,20,15,0.78) 55%, rgba(22,20,15,0.94) 100%)' }} />
+				</>
+			) : null}
+			<AbsoluteFill style={{ background: `radial-gradient(90% 55% at 50% 30%, ${accent}${image ? '2e' : '44'}, transparent 70%)` }} />
 			{kicker ? (
 				<div style={{ position: 'absolute', left: M, top: SAFE_TOP + 40, display: 'flex', alignItems: 'center' }}>
 					<div style={{ width: 18, height: 18, background: accent, borderRadius: 3, marginRight: 16 }} />

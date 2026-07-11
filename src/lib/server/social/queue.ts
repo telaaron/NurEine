@@ -733,7 +733,7 @@ async function inChunks<T, R>(items: T[], size: number, fn: (item: T) => Promise
 const INSIGHTS_MAX_POSTS = 60;
 const INSIGHTS_CHUNK = 8;
 
-export async function refreshInsights(): Promise<{ updated: number; skipped: string }> {
+export async function refreshInsights(): Promise<{ updated: number; skipped: string; debug?: Record<string, string> }> {
 	if (!igConfigured()) return { updated: 0, skipped: 'IG not configured' };
 	const token = env.IG_ACCESS_TOKEN!;
 
@@ -757,6 +757,10 @@ export async function refreshInsights(): Promise<{ updated: number; skipped: str
 
 	let updated = 0;
 	let firstError: string | null = null;
+	// Diagnose: je Plattform die erste rohe Insights-Antwort festhalten. Wird nur
+	// via ?debug=1 nach außen gegeben (sonst verworfen) — hilft, „reach bleibt
+	// null"-Ursachen (Scope vs. Metrik vs. leer) zu sehen, ohne Vercel-Logs.
+	const debugSample: Record<string, string> = {};
 
 	await inChunks(posts, INSIGHTS_CHUNK, async (p) => {
 		const isStory = p.platform === 'instagram_story';
@@ -765,6 +769,7 @@ export async function refreshInsights(): Promise<{ updated: number; skipped: str
 		const r = await fetchJson(
 			`https://graph.facebook.com/${IG_V}/${p.ig_media_id}/insights?metric=${metrics}&access_token=${token}`
 		);
+		if (!debugSample[p.platform]) debugSample[p.platform] = `HTTP ${r.status} ${r.body.slice(0, 300)}`;
 		if (r.ok) {
 			try {
 				const json = JSON.parse(r.body) as { data?: { name: string; values: { value: number }[] }[]; error?: unknown };
@@ -810,7 +815,7 @@ export async function refreshInsights(): Promise<{ updated: number; skipped: str
 		}
 	});
 
-	return { updated, skipped: updated === 0 && firstError ? firstError : '' };
+	return { updated, skipped: firstError ?? '', debug: debugSample };
 }
 
 // ---------------------------------------------------------------------------

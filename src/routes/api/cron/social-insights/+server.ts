@@ -17,7 +17,10 @@ export async function POST({ request }) {
 	}
 	try {
 		const result = await refreshInsights();
-		return json({ ok: true, ...result });
+		// debug-Sample nur auf ?debug=1 ausgeben (Diagnose), sonst weglassen.
+		const url = new URL(request.url);
+		const { debug, ...rest } = result;
+		return json({ ok: true, ...rest, ...(url.searchParams.get('debug') === '1' ? { debug } : {}) });
 	} catch (err) {
 		console.error('[cron/social-insights] failed:', err);
 		return json({ error: String(err) }, { status: 500 });

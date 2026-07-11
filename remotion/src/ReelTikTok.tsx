@@ -14,6 +14,12 @@ import {
 	Freeze
 } from 'remotion';
 import { loadFont } from '@remotion/fonts';
+import { geoMercator, geoPath, geoGraticule10, geoContains } from 'd3-geo';
+import { feature } from 'topojson-client';
+import type { Topology } from 'topojson-specification';
+import type { FeatureCollection } from 'geojson';
+import landTopo from 'world-atlas/land-50m.json';
+import countriesTopo from 'world-atlas/countries-50m.json';
 import { CANVAS, PAPER, INK, AMBER, AMBER_DEEP, MUTED, accentFor, FF, FONTS } from './brand';
 import { Character, personForSeed, type Person } from './character/Character';
 import { PaperTextureOverlay } from './scenes/paper-textures';
@@ -318,6 +324,57 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 	);
 };
 
+// ── Szene: KARTEN-ZOOM — Welt → Story-Ort im Marken-Stil (Aaron-Go 2026-07-11)
+// Anti-Slop-Visual: echte Geografie (Natural-Earth-Daten, offline gebündelt)
+// statt KI-Bild. Tinte-See + Papier-Land + Kategorie-Farbe fürs Ziel-Land.
+const LAND_TOPO = landTopo as unknown as Topology;
+const COUNTRIES_TOPO = countriesTopo as unknown as Topology;
+const LAND = feature(LAND_TOPO, LAND_TOPO.objects.land);
+const COUNTRIES = feature(COUNTRIES_TOPO, COUNTRIES_TOPO.objects.countries) as FeatureCollection;
+
+const MapScene: React.FC<Extract<DailyScene, { kind: 'map' }> & { category: string }> = ({ lat, lng, label, category, vo }) => {
+	const frame = useCurrentFrame();
+	const accent = accentFor(category);
+	// Ziel-Land einmalig bestimmen (Highlight in Kategorie-Farbe)
+	const target = React.useMemo(() => COUNTRIES.features.find((f) => geoContains(f, [lng, lat])) ?? null, [lat, lng]);
+	// Kinozoom: träge Spring (ruhig, markentypisch) von Kontinent-Höhe aufs Land.
+	const z = spring({ frame: frame - 2, fps: TIKTOK_FPS, config: { damping: 30, mass: 1.4, stiffness: 40 } });
+	const scale = interpolate(z, [0, 1], [340, 2200]);
+	const projection = geoMercator()
+		.center([interpolate(z, [0, 1], [lng * 0.55, lng]), interpolate(z, [0, 1], [lat * 0.55 + 12, lat])])
+		.scale(scale)
+		.translate([540, 900]);
+	const path = geoPath(projection);
+	const [mx, my] = projection([lng, lat]) ?? [540, 900];
+	const markerIn = spring({ frame: frame - 14, fps: TIKTOK_FPS, config: { damping: 12, mass: 0.5, stiffness: 220 } });
+	const pulse = 1 + 0.5 * ((frame % 34) / 34);
+	const pulseOp = 0.5 * (1 - (frame % 34) / 34);
+	const labelIn = spring({ frame: frame - 20, fps: TIKTOK_FPS, config: { damping: 14, mass: 0.6, stiffness: 200 } });
+	return (
+		<AbsoluteFill style={{ background: INK }}>
+			<AbsoluteFill style={{ background: `radial-gradient(90% 55% at 50% 40%, ${accent}22, transparent 70%)` }} />
+			<svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{ position: 'absolute', inset: 0 }}>
+				<path d={path(geoGraticule10()) ?? ''} fill="none" stroke="rgba(244,239,230,0.05)" strokeWidth={1} />
+				<path d={path(LAND) ?? ''} fill="rgba(244,239,230,0.16)" stroke="rgba(244,239,230,0.28)" strokeWidth={1.2} />
+				{target ? <path d={path(target) ?? ''} fill={`${accent}59`} stroke={accent} strokeWidth={2.5} /> : null}
+				<circle cx={mx} cy={my} r={26 * pulse * markerIn} fill="none" stroke={accent} strokeWidth={3} opacity={pulseOp * markerIn} />
+				<circle cx={mx} cy={my} r={14 * markerIn} fill={accent} stroke="#fff" strokeWidth={4} />
+			</svg>
+			<div style={{ position: 'absolute', left: mx + 34, top: my - 34, transform: `scale(${interpolate(labelIn, [0, 1], [0.6, 1])})`, transformOrigin: 'left center', opacity: interpolate(labelIn, [0, 0.4], [0, 1]) }}>
+				<div style={{ display: 'inline-block', background: PAPER, borderRadius: 14, padding: '12px 24px', boxShadow: '0 12px 30px rgba(0,0,0,0.45)' }}>
+					<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 40, color: INK, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>{label}</div>
+				</div>
+			</div>
+			<div style={{ position: 'absolute', left: M, top: SAFE_TOP + 40, display: 'flex', alignItems: 'center' }}>
+				<div style={{ width: 14, height: 14, background: accent, borderRadius: 2, marginRight: 14 }} />
+				<div style={{ fontFamily: FF.interSemi, fontSize: 28, letterSpacing: '0.14em', color: 'rgba(244,239,230,0.75)' }}>ORT DER NACHRICHT</div>
+			</div>
+			<FlashWipe color={accent} />
+			<SceneVoice vo={vo} dark />
+		</AbsoluteFill>
+	);
+};
+
 // ── Szene 4: BELEG — Stempel schlägt härter ein (steifer, mehr Overshoot) ───
 const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: string }> = ({ source, impact, category, vo }) => {
 	const frame = useCurrentFrame();
@@ -496,6 +553,7 @@ export const ReelTikTok: React.FC<ReelDailyProps> = (p) => {
 					{sc.kind === 'hook' ? <HookScene {...sc} /> : null}
 					{sc.kind === 'number' ? <NumberScene {...sc} category={p.category} /> : null}
 					{sc.kind === 'beat' ? <BeatScene {...sc} category={p.category} seed={p.seed} person={person} /> : null}
+					{sc.kind === 'map' ? <MapScene {...sc} category={p.category} /> : null}
 					{sc.kind === 'proof' ? <ProofScene {...sc} category={p.category} /> : null}
 					{sc.kind === 'end' ? <EndScene {...sc} category={p.category} seed={p.seed} person={person} loopMode={loop} /> : null}
 				</Sequence>

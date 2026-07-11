@@ -429,7 +429,7 @@ function buildScenesFromPlan(plan, voWanted, slug) {
 			vo = synthSegment(voText, slug, `s${i}-${sc.kind}`);
 			if (vo) anyVo = true;
 		}
-		const baseText = sc.text || sc.context || sc.share || 'x'.repeat(30);
+		const baseText = sc.text || sc.context || sc.share || sc.label || 'x'.repeat(30);
 		// TikTok-Preset: engere Standzeiten (schnellere Cuts). Sonst wie gehabt.
 		const minMax = TIKTOK
 			? sc.kind === 'end'

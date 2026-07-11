@@ -106,10 +106,17 @@ Dramaturgie-Regeln (Kurzform von Rezept §C):
    `end`. **Payoff komplett vor Sekunde 15.** Auf TikTok gibt es **KEINE Moderator-Figur**
    (Komposition blendet sie in Beats nicht mehr ein — externes + internes Panel 2026-07-11:
    3D-Avatar ist der stärkste „Werbung/KI-Slop"-Marker der Skip-Personas).
-   **Bild-Gate:** nur fotorealistische Story-Bilder verwenden; Metaphern-Clipart
-   (Glühbirnen, Symbolgrafiken) NIE — ein slop-verdächtiges Bild kostet mehr als kein
-   Bild, dann lieber Typo-Beat. **Konkretheits-Check:** zentrale Entität benennen
-   (Artname, Ort, Studie) und jede Zahl mit Referent — Share-Personas teilen nur Zitierbares.
+   **Bild-Gate:** nur fotorealistische Story-Bilder verwenden — die nächtlichen
+   Perlen-Bilder der Bild-Regie (Seedream, Fotografen-DNA) sind erste Wahl;
+   Metaphern-Clipart (Glühbirnen, Symbolgrafiken) NIE — ein slop-verdächtiges Bild
+   kostet mehr als kein Bild, dann lieber Typo-Beat oder **Karten-Zoom** (s.u.).
+   **Konkretheits-Check:** zentrale Entität benennen (Artname, Ort, Studie) und jede
+   Zahl mit Referent — Share-Personas teilen nur Zitierbares.
+   **Karten-Zoom-Baustein** (nur TikTok): `{ "kind": "map", "lat": <lat>, "lng": <lng>,
+   "label": "<Ortsname>", "voText": "…" }` — kinoartiger Zoom von Kontinent-Höhe auf den
+   Story-Ort (lat/lng stehen in `nureine_stories`), Ziel-Land in Kategorie-Farbe,
+   Puls-Marker + Orts-Chip. Ideal als Wer/Wo-Beat, wenn der ORT die Story trägt oder
+   kein starkes Bild existiert (echte Geografie = Anti-Slop-Visual).
 3. Gesamt **45–60 gesprochene Wörter ≈ 19–22 s** (gemessen: deutsche TTS spricht
    ~2,3 Wörter/s bei +12%; Zahlen wie „97.000" zählen gesprochen als lange Wörter!).
    Blitz-Variante bei dünner Story: number → beat → proof → end, ~30 Wörter ≈ 13 s.

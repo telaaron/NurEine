@@ -61,6 +61,9 @@ export type DailyScene = SceneBase &
 		| { kind: 'number'; value: string; unit: string | null; context: string; snap?: boolean; kicker?: string | null }
 		| { kind: 'beat'; text: string; image: string | null; pose: Pose }
 		| { kind: 'proof'; source: string; impact: number | null }
+		// map: Karten-Zoom auf Story-Koordinaten (lat/lng aus nureine_stories) —
+		// nur ReelTikTok rendert diesen Baustein, ReelDaily überspringt ihn.
+		| { kind: 'map'; lat: number; lng: number; label: string }
 		// engage: Icon-Nudge (Herz/Kommentar/Teilen) im TikTok-Loop-Ende — nur ReelTikTok.
 		| { kind: 'end'; share: string; cta: string; hasVo: boolean; engage?: boolean }
 	);

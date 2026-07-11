@@ -104,11 +104,33 @@ Dramaturgie-Regeln (Kurzform von Rezept §C):
    Zahl — ohne visuellen Themen-Anker weiß man beim beiläufigen Scrollen nicht,
    worum es geht (Publikums-Feedback 2026-07-11).
    Ergebnis zuerst — die Neugier-Lücke ist „wie kann das echt sein?", nie „was ist passiert?".
-2. Dann: `hook` (Erwartungsbruch, 1 Zeile — VOLLSTÄNDIGE Behauptung mit Referent,
-   nie elliptisch) → `beat` (Wer/Wo, mit Bild) → `beat` (Mechanismus/Aha) → `proof` →
-   `end`. **Payoff komplett vor Sekunde 15.** Auf TikTok gibt es **KEINE Moderator-Figur**
-   (Komposition blendet sie in Beats nicht mehr ein — externes + internes Panel 2026-07-11:
-   3D-Avatar ist der stärkste „Werbung/KI-Slop"-Marker der Skip-Personas).
+2. Dann: `hook` (**SNAPBACK, nicht Verstärkung** — s. Spannungsphysik unten) → `beat`
+   (Wer/Wo, mit Bild) → `beat` (Mechanismus/Aha) → `proof` → `end`. **Payoff komplett
+   vor Sekunde 15.** Auf TikTok gibt es **KEINE Moderator-Figur** (Komposition blendet
+   sie in Beats nicht mehr ein — externes + internes Panel 2026-07-11: 3D-Avatar ist der
+   stärkste „Werbung/KI-Slop"-Marker der Skip-Personas).
+
+**Spannungsphysik-Regeln (Kurzform — Herleitung + Quellen: `docs/HOOK_PSYCHOLOGIE.md`):**
+- **Szene 2 = Snapback-Pflicht:** dreht die erwartete Richtung, statt die Zahl zu
+  verstärken („Aber die naheliegende Erklärung ist es nicht." / „Vor fünf Jahren galt
+  genau das als unmöglich."). Der Snapback ist implizit die Frage, deren Antwort der
+  Mechanismus-Beat ist — NIE einen Bruch bauen, der sich im Video nicht auflöst.
+- **Aha-Impasse:** Mechanismus-Beat beginnt mit Mini-Paradox, dann ~1s Pause (Punkt im
+  voText), DANN die Auflösung. (Aha = +12 Pp. Erinnerung → Saves.)
+- **Person → Zahl bei Mensch-Storys:** Charme-Storys dürfen mit Person+Bild kalt öffnen,
+  Zahl kommt später als Verstärker (Statistik vor der Person dämpft Empathie).
+- **Awe-Kontrast, wo ehrlich möglich:** Skalensprung inszenieren (1990→heute,
+  Feld→Land, klein→riesig) — stärkster positiver Share-Treiber.
+- **Elevation:** handelnde MENSCHEN benennen („Räum-Teams", „Botaniker"), nie nur
+  Institutionen — moralische Schönheit ist die meist-weitergegebene Content-Klasse.
+- **DM-CTA (Narrowcasting):** Caption-CTA adressiert EINEN konkreten Empfänger
+  („Schick's der Person, die heute nur Doom gescrollt hat") — Sends sind Top-Signal.
+- **Peak-Schutz:** Nach dem Stempel nichts Neues/Schwaches; Loop-Zeile kurz.
+- **Konstruktive-Hoffnung-Check:** Problem anerkannt? Weg gezeigt („wirkt, weil…")?
+  Wer handelt? Sonst kippt die Story in sedierende Beruhigung.
+- **Anti-Regeln:** keine offene Lücke am Ende (Clickbait-Backfire), keine gespielte
+  Überraschung (liest sich als Slop), Interrupt-Arten variieren (Habituation),
+  Hoch-Arousal-positiv statt Rührseligkeit (deaktivierende Traurigkeit senkt Shares).
    **Bild-Gate:** nur fotorealistische Story-Bilder verwenden — die nächtlichen
    Perlen-Bilder der Bild-Regie (Seedream, Fotografen-DNA) sind erste Wahl;
    Metaphern-Clipart (Glühbirnen, Symbolgrafiken) NIE — ein slop-verdächtiges Bild

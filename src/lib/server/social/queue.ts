@@ -815,6 +815,9 @@ export async function refreshInsights(): Promise<{ updated: number; skipped: str
 		}
 	});
 
+	// updated zählt auch Fallback-Treffer (likes/comments). Wenn KEINE echten
+	// Insights (reach/shares) kamen, ist firstError gesetzt → als skipped melden,
+	// damit „updated>0" nicht fälschlich wie Erfolg aussieht.
 	return { updated, skipped: firstError ?? '', debug: debugSample };
 }
 

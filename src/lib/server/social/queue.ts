@@ -818,6 +818,11 @@ export async function publishStoryDue(): Promise<{ posted: boolean; reason: stri
 		// sensibler Stoff. ig_ok IST die Ton-Entscheidung der Pipeline.
 		.eq('ig_ok', true)
 		.not('sensitive', 'is', true)
+		// HARTE Bild-Pflicht: eine IG-Story OHNE echtes Bild sieht auf dem Kanal wie
+		// ein Platzhalter aus (nur das "N"-Fallback). Lieber keine Story posten als
+		// eine bildlose. (Aaron 2026-07-10: die VR/Magersucht-Story lief ohne Bild.)
+		.not('image_url', 'is', null)
+		.neq('image_url', '')
 		.gte('impact_score', 50)
 		.gte('created_at', since72h)
 		// RELEVANTESTE zuerst: hohe Resonanz schlägt Neuheit (NULLS LAST, dann impact).
@@ -825,9 +830,10 @@ export async function publishStoryDue(): Promise<{ posted: boolean; reason: stri
 		.order('impact_score', { ascending: false })
 		.limit(40);
 
+	// Zweiter Riegel in JS (falls die Spalte je Whitespace/kaputte URL enthält).
 	const story = (cand as { id: string; title: string; subtitle: string | null; category: string; image_url: string | null; impact_score: number; resonance_score: number | null }[] ?? [])
-		.find((s) => !usedIds.has(s.id));
-	if (!story) return { posted: false, reason: 'no fresh story to post' };
+		.find((s) => !usedIds.has(s.id) && !!s.image_url && s.image_url.trim() !== '');
+	if (!story) return { posted: false, reason: 'no fresh story with image to post' };
 
 	const slug = `${slugify(story.title)}-${story.id.slice(0, 8)}`;
 	const imageUrl = `${BASE_URL}/api/share-card/${slug}`;

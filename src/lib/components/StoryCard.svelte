@@ -96,7 +96,7 @@
 	<div class="relative overflow-hidden {isFeature ? 'aspect-[4/3] lg:aspect-auto lg:w-1/2 lg:min-h-[420px]' : 'aspect-[4/3]'}"
 		style="background: var(--color-paper);"
 	>
-		{#if heroImageSrc}
+		{#if isRemote}
 			<img
 				src={heroImageSrc}
 				srcset={heroSrcset}
@@ -108,11 +108,33 @@
 				decoding="async"
 			/>
 		{:else}
+			<!-- KEIN echtes Bild (Stufe ②, impact 55–74): bewusste, redaktionelle
+			     Kategorie-Fläche statt Stockfoto/Emoji. Die Headline steht schon im
+			     Karten-Body → hier NICHT wiederholen. Stattdessen der Kategoriename
+			     als großes Typo-Motiv (Magazin-Rubrik-Look) auf Kategorie-Ton. -->
 			<div
-				class="absolute inset-0 flex items-center justify-center text-5xl sm:text-6xl lg:text-7xl"
-				style="filter: saturate(0.85);"
+				class="absolute inset-0 flex flex-col justify-between p-4 sm:p-5 overflow-hidden"
+				style="background:
+					radial-gradient(130% 100% at 100% 0%, {t.bg} 0%, transparent 60%),
+					linear-gradient(158deg, var(--color-paper) 0%, {t.bg} 100%);"
 			>
-				{story.hero || '✨'}
+				<!-- Kategorie-Kicker mit Farbpunkt (oben) -->
+				<div class="flex items-center gap-1.5 relative" style="color:{t.fg};z-index:1;">
+					<span style="width:7px;height:7px;border-radius:7px;background:{t.fg};display:inline-block;"></span>
+					<span class="badge" style="letter-spacing:0.14em;text-transform:uppercase;">{story.category}</span>
+				</div>
+				<!-- Großes, leises Kategorie-Wort als Rubrik-Motiv -->
+				<div
+					class="display font-bold leading-[0.92] {isFeature ? 'text-6xl lg:text-8xl' : 'text-5xl sm:text-6xl'}"
+					style="color:{t.fg};opacity:0.16;letter-spacing:-0.04em;text-transform:capitalize;position:relative;z-index:0;"
+				>
+					{story.category}
+				</div>
+				<!-- dünner Farbstrich als Fuß-Anker + kleine Wortmarke -->
+				<div class="flex items-center justify-between relative" style="z-index:1;">
+					<div style="width:44px;height:4px;border-radius:4px;background:{t.fg};opacity:0.85;"></div>
+					<span class="badge" style="color:{t.fg};opacity:0.6;letter-spacing:0.1em;">NurEine</span>
+				</div>
 			</div>
 		{/if}
 		<div class="absolute top-3 left-3 flex gap-2">

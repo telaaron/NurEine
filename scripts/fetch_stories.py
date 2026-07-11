@@ -101,13 +101,25 @@ FAL_NUM_IMAGES = 1
 FAL_POLL_INTERVAL = 3  # seconds between status polls (pro is slower)
 FAL_POLL_TIMEOUT = 180  # max seconds to wait for generation
 
-# BILD-GATE (Kostenkontrolle): Ein Bild kostet ~$0.04 (FLUX pro). Nur ~1 Story/Tag
-# wird Hero, aber früher bekam JEDE ein Bild (~26/Tag = 96% Verschwendung). Bild nur
-# noch für ECHTE Hero-/Post-Kandidaten. Der Rest nutzt im Feed das Emoji-Fallback
-# (queries.ts: image_url || emoji || '✨') — sieht sauber aus, kostet nichts.
-IMAGE_GATE_MIN_IMPACT = 70   # Bild ab hier ...
-# ... ODER wenn ig_ok=true (IG-tauglich, braucht ein Bild fürs Posten), auch bei
-# niedrigerem Impact (mensch/charme-Hooks). Beides zusammen = "hat echte Bühnen-Chance".
+# ─── DREI-STUFEN-QUALITÄTSMODELL (Aaron 2026-07-10) ─────────────────────────────
+#   ① impact < STORY_MIN_IMPACT      → kommt GAR NICHT rein (schon hier verworfen)
+#   ② STORY_MIN_IMPACT .. unter Perle → rein in DB/Archiv/Feed, aber OHNE KI-Bild
+#   ③ Perle (Chefredakteur, nachts)  → Premium-Seedream-Bild via Bild-Regie-Routine
+# Rationale: fal.ai-Kosten sehr konsequent sparen, Feed nur mit relevanten Stories.
+# Verteilung (14d): <55 = ~9/Tag schwache Stories (avg_resonance 10-15) → raus.
+
+# ① Aufnahme-Untergrenze: darunter ist die Story für uns nicht relevant genug.
+STORY_MIN_IMPACT = 55
+
+# ③ Bebilderung: Der FETCH generiert bewusst KEINE Bilder mehr (auch nicht für
+# ig_ok). Die einzige Bildquelle sind die TAGES-PERLEN des Chefredakteurs, die
+# nachts von der Bild-Regie-Routine (Seedream) bebildert werden — "immer die
+# relativ besten des Tages", passt sich an schwache/starke Tage an. Der Gate hier
+# ist nur noch ein Not-Schalter: praktisch unerreichbar (101), damit im normalen
+# Lauf nichts serverseitig teuer generiert wird. Auf 70 setzen NUR, wenn man den
+# alten Fetch-Bild-Weg reaktivieren will (dann wieder ~$0.04/Bild).
+IMAGE_GATE_MIN_IMPACT = 101  # effektiv AUS — Bebilderung macht die Perlen-Routine
+IMAGE_GATE_INCLUDE_IG_OK = False  # ig_ok triggert KEIN Fetch-Bild mehr
 
 # Qualitäts-Schwellen für die (jetzt wenigen) generierten Bilder. Weil der Gate nur
 # noch Hero-Kandidaten durchlässt, können wir bei diesen HÖHERE Qualität verlangen:
@@ -1960,6 +1972,30 @@ def run() -> None:
                 time.sleep(API_DELAY_SECONDS)
                 continue
 
+            # ---- STAGE 4b: WIRKUNGS-UNTERGRENZE (Stufe ①, Aaron 2026-07-10) ----
+            # Auch positive/valide Stories fliegen raus, wenn ihr Wirkungsindex zu
+            # niedrig ist ("interessiert keinen"). Denselben Score wie beim Insert
+            # berechnen, damit die Grenze exakt der gespeicherte Wert ist.
+            _gate_impact = _compute_impact_score(
+                result.get("impact_score"),
+                result.get("impact_reach"),
+                result.get("impact_durability"),
+                result.get("impact_evidence"),
+            ) or 0
+            if _gate_impact < STORY_MIN_IMPACT:
+                filter_reasons["impact_too_low"] = filter_reasons.get("impact_too_low", 0) + 1
+                log.info(
+                    "  Rejected (impact %s < %s): %s",
+                    _gate_impact, STORY_MIN_IMPACT, entry.get("title", "(kein Titel)"),
+                )
+                log_fetch_decision(
+                    source_name, source_beat, entry.get("title", ""),
+                    "rejected_impact", f"impact={_gate_impact}<{STORY_MIN_IMPACT}",
+                    impact_score=_gate_impact,
+                )
+                time.sleep(API_DELAY_SECONDS)
+                continue
+
             story_title = result.get("title", "")
 
             # ---- STAGE 5: Near-duplicate check (in-memory) ----
@@ -2015,12 +2051,15 @@ def run() -> None:
 
             # ---- STAGE 6: Image generation (nur für Hero-/Post-Kandidaten) ----
             image_url: str | None = None
-            # BILD-GATE: teure FLUX-Generierung nur, wenn die Story eine echte Chance
-            # auf Bühne hat (impact≥70 ODER ig_ok). Schwache Stories → kein Bild, Feed
-            # nutzt Emoji-Fallback. Spart ~70-80% Bildkosten, erzwingt Qualität.
+            # BILD-GATE (Stufe ③): Der Fetch bebildert normalerweise NICHT mehr —
+            # die Tages-Perlen des Chefredakteurs werden nachts von der Bild-Regie
+            # (Seedream) bebildert. IMAGE_GATE_MIN_IMPACT=101 → praktisch nie wahr;
+            # ig_ok triggert kein Bild mehr (IMAGE_GATE_INCLUDE_IG_OK=False).
             _img_impact = result.get("impact_score", 0) or 0
             _img_ig_ok = bool(result.get("ig_ok"))
-            image_worthy = _img_impact >= IMAGE_GATE_MIN_IMPACT or _img_ig_ok
+            image_worthy = _img_impact >= IMAGE_GATE_MIN_IMPACT or (
+                IMAGE_GATE_INCLUDE_IG_OK and _img_ig_ok
+            )
 
             if IMAGE_GENERATION_ENABLED and image_worthy:
                 image_prompt = result.get("image_prompt", "")

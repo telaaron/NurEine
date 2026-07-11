@@ -9,6 +9,22 @@ Dieses Dokument ist der Bauplan. Status-Spalte zeigt, was schon steht.
 
 ---
 
+## 0. Drei-Stufen-Qualitätsmodell (Aaron 2026-07-10) — die oberste Regel
+
+Weniger, aber konsequent. Reihenfolge der Abstufungen:
+
+| Stufe | Schwelle | Was passiert | Menge/Tag (real, 14d) |
+|---|---|---|---|
+| **① raus** | Wirkungsindex **< 55** | Wird beim Fetch **gar nicht** aufgenommen (`STORY_MIN_IMPACT=55` in `scripts/fetch_stories.py`, Stage 4b, decision `rejected_impact`). | schneidet ~9/Tag weg |
+| **② rein, ohne Bild** | **55 – unter Perle** | Steht in DB/Archiv/Feed, **kein** KI-Bild → redaktionelle **Typo-Karte** (Kategorie-Ton + Kategoriewort als Rubrik-Motiv, Headline im Body). KEIN Emoji, KEIN Kategorie-Stockfoto (Aaron 2026-07-10). | ~10–12/Tag |
+| **③ rein + bebildern** | **Tages-Perlen des Chefredakteurs** | Premium-Seedream-Bild via **Bild-Regie-Routine** (nachts, `nureine_curation_queue` approved, ~3–6/Tag). „Immer die relativ besten des Tages", egal ob impact 74 oder 82. | ~2–4 Bilder/Tag |
+
+**Konsequenzen im Code:**
+- Der **Fetch bebildert NICHT mehr** (`IMAGE_GATE_MIN_IMPACT=101`, `IMAGE_GATE_INCLUDE_IG_OK=False`) — die Perlen-Routine ist die *einzige* Bildquelle. fal.ai-Kosten: ~18 Bilder/Tag → ~2–4/Tag.
+- Eine **IG-Story ohne echtes Bild wird nicht gepostet** (`publishStoryDue`-Gate) → nur bebilderte Perlen erreichen IG. Alles kohärent: ① Aufnahme, ② Bestand, ③ Bühne.
+
+---
+
 ## 1. Wo heute KI steckt (Ist-Zustand, kartiert 2026-07-07)
 
 **Text-LLM = überall DeepSeek `deepseek-chat`.** Ein einziger Mega-Call in

@@ -628,7 +628,7 @@ async function main() {
 	// beides bleibt es beim IG-ReelDaily — beide teilen dieselben Props.
 	const compArg = arg('comp');
 	const comp = compArg && compArg !== true ? compArg : TIKTOK ? 'ReelTikTok' : 'ReelDaily';
-	console.log(`szenen: ${scenes.map((s) => s.kind).join(' → ')} | ${Math.round(duration / FPS)}s | VO: ${anyVo ? `ja (${VOICE})` : 'nein'} | comp: ${comp} | pace: ${PACE}${TIKTOK ? ' (tiktok)' : ''}`);
+	console.log(`szenen: ${scenes.map((s) => s.kind).join(' → ')} | ${Math.round(duration / FPS)}s | VO: ${anyVo ? `ja (${TTS_ENGINE === 'eleven' ? 'ElevenLabs' : VOICE})` : 'nein'} | comp: ${comp} | pace: ${PACE}${TIKTOK ? ' (tiktok)' : ''}`);
 
 	execFileSync('npx', ['remotion', 'render', comp, out, `--props=${propsPath}`, '--log=error'], {
 		stdio: 'inherit',

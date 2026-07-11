@@ -767,12 +767,19 @@ export async function refreshInsights(): Promise<{ updated: number; skipped: str
 		);
 		if (r.ok) {
 			try {
-				const json = JSON.parse(r.body) as { data?: { name: string; values: { value: number }[] }[] };
+				const json = JSON.parse(r.body) as { data?: { name: string; values: { value: number }[] }[]; error?: unknown };
 				const get = (name: string) => json.data?.find((m) => m.name === name)?.values?.[0]?.value ?? null;
 				const reach = get('reach');
 				const saves = get('saved');
 				const shares = get('shares');
-				if (reach === null && saves === null && shares === null) return;
+				if (reach === null && saves === null && shares === null) {
+					// 200, aber keine verwertbaren Werte (leere data / error-Objekt im
+					// Body). Ersten solchen Fall festhalten, damit „updated>0 durch
+					// Fallback" nicht fälschlich wie Erfolg aussieht.
+					if (!firstError)
+						firstError = `insights leer (${p.platform}, metric=${metrics}): ${r.body.slice(0, 220)}`;
+					return;
+				}
 				await supabaseAdmin
 					.from('nureine_social_posts')
 					.update({ reach, saves, shares, updated_at: new Date().toISOString() })

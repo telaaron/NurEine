@@ -1,5 +1,6 @@
 import { Composition } from 'remotion';
 import { ReelDaily, reelDailyDefault, calcReelDailyMetadata, DAILY_FPS } from './ReelDaily';
+import { ReelTikTok, reelTikTokDefault, calcReelTikTokMetadata, TIKTOK_FPS } from './ReelTikTok';
 import { Reel, reelDefaultProps, REEL_FPS, REEL_DURATION_FRAMES } from './Reel';
 import { ReelPro, reelProDefault, PRO_FPS, PRO_DURATION } from './ReelPro';
 import { AssetSheet } from './AssetSheet';
@@ -24,6 +25,17 @@ export const RemotionRoot: React.FC = () => {
 				height={1920}
 				defaultProps={reelDailyDefault}
 				calculateMetadata={calcReelDailyMetadata}
+			/>
+			{/* TikTok-Variante (dopaminreicher: härtere Animationen, Pattern-Interrupts) */}
+			<Composition
+				id="ReelTikTok"
+				component={ReelTikTok}
+				durationInFrames={reelTikTokDefault.durationInFrames}
+				fps={TIKTOK_FPS}
+				width={1080}
+				height={1920}
+				defaultProps={reelTikTokDefault}
+				calculateMetadata={calcReelTikTokMetadata}
 			/>
 			<Composition
 				id="Reel"

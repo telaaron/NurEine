@@ -31,6 +31,26 @@ function arg(name, def = null) {
 	return v && !v.startsWith('--') ? v : true;
 }
 
+// ── Tempo-Parameter (TikTok-Schnitt) ────────────────────────────────────────
+// Standard = altes Verhalten (rückwärtskompatibel): PACE=1.0, MINF=60, PAD=10,
+// VO-Nachlauf 0.35s. --tiktok ist ein Preset für einen aggressiveren Schnitt;
+// --pace <faktor> skaliert NUR den No-VO-Zweig (readDur), nie die Stimme.
+const TIKTOK = arg('tiktok') === true;
+// PACE aus CLI (--pace) > env PACE > Preset (--tiktok → 0.7) > 1.0.
+const PACE = (() => {
+	const cli = arg('pace');
+	if (cli && cli !== true) return parseFloat(cli) || 1.0;
+	if (env.PACE) return parseFloat(env.PACE) || 1.0;
+	return TIKTOK ? 0.7 : 1.0;
+})();
+// VO-Nachlauf/Mindestlängen: im TikTok-Modus enger, sonst wie gehabt.
+const MINF = TIKTOK ? 40 : 60; // Mindest-Szenenlänge MIT VO (Frames)
+const PAD = TIKTOK ? 4 : 10; // Nachlauf hinter dem letzten VO-Wort (Frames)
+const VO_TAIL = TIKTOK ? 0.15 : 0.35; // Sekunden hinter dem letzten Wort im TTS-Segment
+// Sprechtempo (edge-tts rate): TikTok flotter — gemessen spricht Seraphina bei +4%
+// nur ~2,2 Wörter/s, damit wird ein 50-Wort-Skript >23s. REEL_RATE übersteuert.
+const TTS_RATE = env.REEL_RATE || (TIKTOK ? '+12%' : '+4%');
+
 // ── Extraktion (Fallbacks ohne LLM) ─────────────────────────────────────────
 
 const UNIT_STOPWORDS = new Set(['und', 'der', 'die', 'das', 'den', 'dem', 'von', 'bis', 'im', 'in', 'am', 'an', 'mit', 'auf', 'aus', 'für', 'pro', 'je', 'bei', 'nach', 'seit', 'oder', 'als', 'ihnen', 'davon']);
@@ -140,6 +160,150 @@ Liefere NUR ein JSON-Objekt (kein Markdown):
 
 // ── Voiceover (edge-tts) ────────────────────────────────────────────────────
 
+// ── Zahlen → deutsche Zahlwörter fürs TTS ───────────────────────────────────
+// Die Multilingual-Stimmen (Florian/Seraphina) kippen bei Ziffern (v.a. am
+// Satzanfang) in ENGLISCHE Aussprache („ninety-seven thousand", Aaron 2026-07-11).
+// Deshalb: Ziffern werden fürs TTS ausgeschrieben; die Captions zeigen weiter die
+// Ziffern-Form (mergeNumberWords mappt die Wort-Timings zurück aufs Display-Token).
+
+const G_ONES = ['null', 'ein', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun', 'zehn', 'elf', 'zwölf', 'dreizehn', 'vierzehn', 'fünfzehn', 'sechzehn', 'siebzehn', 'achtzehn', 'neunzehn'];
+const G_TENS = ['', '', 'zwanzig', 'dreißig', 'vierzig', 'fünfzig', 'sechzig', 'siebzig', 'achtzig', 'neunzig'];
+
+// Präfixform: 1 → 'ein' (für „einundzwanzig"); Aufrufer regelt standalone 'eins'.
+function gBelow100(n) {
+	if (n < 20) return G_ONES[n];
+	const t = Math.floor(n / 10), o = n % 10;
+	return o ? `${G_ONES[o]}und${G_TENS[t]}` : G_TENS[t];
+}
+
+function gBelow1000(n) {
+	const h = Math.floor(n / 100), r = n % 100;
+	let s = h ? `${h === 1 ? 'ein' : G_ONES[h]}hundert` : '';
+	if (r) s += r === 1 ? 'eins' : gBelow100(r);
+	return s;
+}
+
+/** Kardinalzahl 0…999.999.999 als deutsches Zahlwort. */
+function intToGerman(n) {
+	if (n === 0) return 'null';
+	if (n === 1) return 'eins';
+	const mio = Math.floor(n / 1e6), tsd = Math.floor((n % 1e6) / 1000), rest = n % 1000;
+	const parts = [];
+	if (mio) parts.push(mio === 1 ? 'eine Million' : `${gBelow1000(mio)} Millionen`);
+	let tail = '';
+	if (tsd) tail += tsd === 1 ? 'eintausend' : `${gBelow1000(tsd)}tausend`;
+	if (rest) tail += rest === 1 ? 'eins' : gBelow1000(rest);
+	if (tail) parts.push(tail);
+	return parts.join(' ');
+}
+
+/** Jahreszahlen 1100–1999 klassisch („neunzehnhundertneunzig"). */
+function yearToGerman(n) {
+	const c = Math.floor(n / 100), r = n % 100;
+	return `${gBelow100(c)}hundert${r ? gBelow100(r) : ''}`;
+}
+
+/**
+ * Ersetzt Ziffern-Zahlen (inkl. %, Mio/Mrd/Tsd, „1 Million" → „eine Million",
+ * Jahreszahlen) durch Zahlwörter und liefert die Substitutionen fürs
+ * Caption-Rückmapping. Ordinalzahlen („das 113.") NICHT abgedeckt — im voText
+ * ausschreiben (Baukasten-Regel).
+ */
+function germanizeForTts(text) {
+	const subs = [];
+	const ttsText = text.replace(
+		/(\d[\d.]*)(,\d+)?(\s?%)?(\s?(?:Mio\.?|Mrd\.?|Tsd\.?|Million(?:en)?|Milliarden?))?/g,
+		(match, intRaw, dec, pct, unit) => {
+			const intVal = parseInt(intRaw.replace(/\./g, ''), 10);
+			if (!Number.isFinite(intVal)) return match;
+			const singular = intVal === 1 && !dec;
+			let unitSpoken = '';
+			if (unit) {
+				const u = unit.trim().replace(/\.$/, '');
+				unitSpoken =
+					u === 'Mio' ? (singular ? 'Million' : 'Millionen')
+					: u === 'Mrd' ? (singular ? 'Milliarde' : 'Milliarden')
+					: u === 'Tsd' ? 'tausend'
+					: u;
+			}
+			let num =
+				!dec && !pct && !unit && /^\d{4}$/.test(intRaw) && intVal >= 1100 && intVal <= 1999
+					? yearToGerman(intVal)
+					: singular && unitSpoken
+						? 'eine' // „eine Million", nicht „eins Million"
+						: intToGerman(intVal);
+			if (dec) num += ` Komma ${dec.slice(1).split('').map((d) => (d === '1' ? 'eins' : G_ONES[+d])).join(' ')}`;
+			if (pct) num += ' Prozent';
+			const spoken = unitSpoken ? `${num} ${unitSpoken}` : num;
+			subs.push({ display: match.trim(), spoken: spoken.split(/\s+/) });
+			return spoken;
+		}
+	);
+	return { ttsText, subs };
+}
+
+// ── Aussprache-Lexikon + Normalisierung ─────────────────────────────────────
+// Workflow gegen Vorlesefehler: Fehler HÖREN → Eintrag in remotion/tts-lexikon.json
+// ({"Original": "aussprache-freundliche form"}) → nächster Render sauber. Die
+// Captions zeigen weiter das Original (display-merge wie bei den Zahlen).
+let TTS_LEXICON = {};
+try {
+	TTS_LEXICON = JSON.parse(readFileSync(fileURLToPath(new URL('./tts-lexikon.json', import.meta.url)), 'utf8'));
+} catch {
+	/* kein Lexikon = keine Ersetzungen */
+}
+
+const ABBREV = { 'z.B.': 'zum Beispiel', 'z. B.': 'zum Beispiel', 'ca.': 'circa', 'u.a.': 'unter anderem', 'bzw.': 'beziehungsweise', 'Nr.': 'Nummer', '§': 'Paragraf', '&': 'und' };
+
+function escapeRegex(s) {
+	return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
+ * Kompletter TTS-Vorbereitungs-Pass: Lexikon → Gedankenstriche/Abkürzungen →
+ * Zahlen ausschreiben. Liefert subs fürs Caption-Rückmapping.
+ */
+function prepareTts(text) {
+	const subs = [];
+	let t = text;
+	for (const [orig, repl] of Object.entries(TTS_LEXICON)) {
+		if (!orig || orig.startsWith('_') || typeof repl !== 'string') continue;
+		const re = new RegExp(escapeRegex(orig), 'g');
+		const hits = t.match(re);
+		if (!hits) continue;
+		t = t.replace(re, repl);
+		for (let i = 0; i < hits.length; i++) subs.push({ display: orig, spoken: repl.split(/\s+/) });
+	}
+	for (const [orig, repl] of Object.entries(ABBREV)) {
+		const re = new RegExp(escapeRegex(orig), 'g');
+		const hits = t.match(re);
+		if (!hits) continue;
+		t = t.replace(re, repl);
+		for (let i = 0; i < hits.length; i++) subs.push({ display: orig, spoken: repl.split(/\s+/) });
+	}
+	// Gedankenstriche → Komma (die Multilingual-Stimme macht um „—" unnatürliche
+	// Pausen/Betonungen); Ellipse → Punkt. Betrifft keine Caption-Wörter.
+	t = t.replace(/\s*[—–]\s*/g, ', ').replace(/…/g, '.');
+	const g = germanizeForTts(t);
+	subs.push(...g.subs);
+	return { ttsText: g.ttsText, subs };
+}
+
+/** Gesprochene Zahlwort-Folgen in den Captions wieder durch die Ziffern-Form ersetzen. */
+function mergeNumberWords(words, subs) {
+	const norm = (s) => s.toLowerCase().replace(/[^0-9a-zäöüß]/g, '');
+	for (const sub of subs) {
+		const target = sub.spoken.map(norm);
+		for (let i = 0; i <= words.length - target.length; i++) {
+			if (target.every((t, j) => norm(words[i + j].t) === t)) {
+				words.splice(i, target.length, { t: sub.display, start: words[i].start, end: words[i + target.length - 1].end });
+				break;
+			}
+		}
+	}
+	return words;
+}
+
 // Stimme passt zur gezeigten Figur: Moderator → Florian, Moderatorin → Seraphina.
 // REEL_VOICE-Env übersteuert beides (nach Aarons Abnahme ggf. fixieren).
 const VOICES = { mann: 'de-DE-FlorianMultilingualNeural', frau: 'de-DE-SeraphinaMultilingualNeural' };
@@ -163,14 +327,19 @@ function synthSegment(text, slug, name) {
 	const file = `vo/${slug}-${name}.mp3`;
 	const wordsPath = `/tmp/reel-words-${slug}-${name}.json`;
 	const py = env.TTS_PYTHON || 'python3';
+	// Lexikon + Striche/Abkürzungen + Ziffern ausschreiben — sonst spricht die
+	// Multilingual-Stimme Ziffern englisch bzw. stolpert über Sonderzeichen.
+	const { ttsText, subs } = prepareTts(text);
+	if (subs.length) console.log(`vo-fix (${name}): ${subs.map((s) => `"${s.display}"→"${s.spoken.join(' ')}"`).join(' · ')}`);
 	try {
-		execFileSync(py, [fileURLToPath(new URL('./scripts/tts.py', import.meta.url)), '--text', text, '--voice', VOICE, '--out', `${dir}${slug}-${name}.mp3`, '--words', wordsPath], { stdio: 'inherit', timeout: 120000 });
-		const words = JSON.parse(readFileSync(wordsPath, 'utf8'));
+		execFileSync(py, [fileURLToPath(new URL('./scripts/tts.py', import.meta.url)), '--text', ttsText, '--voice', VOICE, '--rate', TTS_RATE, '--out', `${dir}${slug}-${name}.mp3`, '--words', wordsPath], { stdio: 'inherit', timeout: 120000 });
+		let words = JSON.parse(readFileSync(wordsPath, 'utf8'));
 		if (!words.length) throw new Error('keine Wort-Timestamps');
+		words = mergeNumberWords(words, subs); // Captions zeigen wieder „97.000", nicht das Zahlwort
 		return {
 			file,
 			words: words.map((w) => ({ t: w.t, start: Math.round(w.start * FPS), end: Math.round(w.end * FPS) })),
-			durFrames: Math.round((words[words.length - 1].end + 0.35) * FPS)
+			durFrames: Math.round((words[words.length - 1].end + VO_TAIL) * FPS)
 		};
 	} catch (e) {
 		console.log(`VO-Segment "${name}" fehlgeschlagen (${e.message}) — Szene ohne Stimme`);
@@ -206,9 +375,10 @@ function buildScenes(story, script, voWanted, slug) {
 			vo = synthSegment(voText, slug, name);
 			if (vo) anyVo = true;
 		}
-		// TIMING: die Stimme führt. Szene = VO-Länge + kurzer Nachlauf (min 2s);
-		// ohne VO gilt die Lesezeit.
-		const dur = vo ? Math.max(60, vo.durFrames + 10) : readDur;
+		// TIMING: die Stimme führt. Szene = VO-Länge + kurzer Nachlauf (min MINF);
+		// ohne VO gilt die Lesezeit, mit Tempo-Faktor PACE skaliert (nur No-VO,
+		// damit die Stimme nie abgeschnitten wird).
+		const dur = vo ? Math.max(MINF, vo.durFrames + PAD) : Math.round(readDur * PACE);
 		scenes.push({ ...sc, vo, start: t, dur });
 		t += dur;
 	};
@@ -253,10 +423,24 @@ function buildScenesFromPlan(plan, voWanted, slug) {
 			if (vo) anyVo = true;
 		}
 		const baseText = sc.text || sc.context || sc.share || 'x'.repeat(30);
-		const minMax = sc.kind === 'end' ? [3.4, 3.4] : sc.kind === 'proof' ? [2.3, 2.3] : [2.4, 4.4];
+		// TikTok-Preset: engere Standzeiten (schnellere Cuts). Sonst wie gehabt.
+		const minMax = TIKTOK
+			? sc.kind === 'end'
+				? [2.2, 2.2]
+				: sc.kind === 'proof'
+					? [1.8, 1.8]
+					: [1.3, 2.4]
+			: sc.kind === 'end'
+				? [3.4, 3.4]
+				: sc.kind === 'proof'
+					? [2.3, 2.3]
+					: [2.4, 4.4];
 		const readDur = readFrames(baseText, minMax[0], minMax[1]);
-		// Die Stimme führt das Timing (min 2s); Endcard hält mindestens ihre Lesezeit.
-		const dur = vo ? Math.max(sc.kind === 'end' ? readDur : 60, vo.durFrames + 10) : readDur;
+		// Die Stimme führt das Timing (min MINF); Endcard hält mind. ihre Lesezeit.
+		// PACE skaliert NUR den No-VO-Zweig (Stimme wird nie abgeschnitten).
+		const dur = vo
+			? Math.max(sc.kind === 'end' ? readDur : MINF, vo.durFrames + PAD)
+			: Math.round(readDur * PACE);
 		scenes.push({ ...sc, vo, start: t, dur });
 		t += dur;
 	});
@@ -369,6 +553,45 @@ async function main() {
 		({ scenes, duration, anyVo } = buildScenes(story, script, voWanted, slug));
 	}
 
+	// ── TikTok-Rezept-Felder (docs/TIKTOK_FORMAT_REZEPT.md §C) ────────────────
+	// loop: Video endet auf dem eingefrorenen Cold-Open-Layout (Match-Cut auf
+	// Frame 0 beim Autoloop) — braucht eine number-Szene als Opener.
+	// badge: Rewatch-Saat (Wirkungsindex unerklärt ab ~Sek 2, Auflösung im
+	// Stempel); plan.badge:false schaltet ab (A/B-Zelle Woche 3).
+	const LOOP_TAIL = 14; // muss zu TIKTOK_LOOP_TAIL in src/ReelTikTok.tsx passen
+	let loop = false;
+	let badge = null;
+	if (plan) {
+		loop = plan.loop === true && scenes[0]?.kind === 'number';
+		if (plan.loop === true && !loop) console.log('WARN plan.loop braucht eine number-Szene als Opener — Loop aus');
+		if (loop) {
+			scenes[0].snap = true; // der Loop-Schwanz friert das Snap-Layout ein → Opener muss snappen
+			duration += LOOP_TAIL;
+		}
+		if (plan.badge !== false) badge = scenes.find((s) => s.kind === 'proof')?.impact ?? null;
+	}
+
+	// TikTok-SEO: das Kern-Keyword muss GESPROCHEN + als OVERLAY + in der CAPTION
+	// vorkommen (Dreifach-Platzierung, Rezept §C). Hard-Fail, damit die Routine
+	// es nie stillschweigend vergisst; --no-seo-check übersteuert bewusst.
+	if (TIKTOK && plan) {
+		const kw = (plan.seo?.keyword || '').trim().toLowerCase();
+		if (!kw) {
+			console.log('WARN kein seo.keyword im Plan — TikTok-Suche verschenkt (Rezept §C)');
+		} else if (!arg('no-seo-check')) {
+			const first = plan.scenes?.[0] || {};
+			const spoken = (first.voText || '').toLowerCase();
+			const overlay = [first.text, first.value, first.unit, first.context, first.kicker].filter(Boolean).join(' ').toLowerCase();
+			const cap60 = (plan.tiktok?.caption || '').slice(0, 60).toLowerCase();
+			const miss = [];
+			if (!spoken.includes(kw)) miss.push('voText Szene 1 (gesprochen)');
+			if (!overlay.includes(kw)) miss.push('Overlay Szene 1');
+			if (!cap60.includes(kw)) miss.push('tiktok.caption (erste 60 Zeichen)');
+			if (miss.length) throw new Error(`seo.keyword "${plan.seo.keyword}" fehlt in: ${miss.join(' + ')} — Dreifach-Platzierung ist Pflicht (übersteuern: --no-seo-check)`);
+			console.log(`OK seo.keyword "${plan.seo.keyword}" dreifach platziert`);
+		}
+	}
+
 	// Musik deterministisch variieren (per Slug), damit der Feed nicht monoton klingt.
 	let h = 0;
 	for (const c of slug) h = (h * 31 + c.charCodeAt(0)) >>> 0;
@@ -383,13 +606,20 @@ async function main() {
 		person, // Figur (Plan > Seed) — Stimme ist bereits daran gekoppelt
 		musicFile: music,
 		hasVo: anyVo,
-		durationInFrames: duration
+		durationInFrames: duration, // enthält bei loop bereits den LOOP_TAIL-Schwanz
+		loop,
+		badge
 	};
 	const propsPath = `/tmp/reel-props-${slug}.json`;
 	writeFileSync(propsPath, JSON.stringify(props));
-	console.log(`szenen: ${scenes.map((s) => s.kind).join(' → ')} | ${Math.round(duration / FPS)}s | VO: ${anyVo ? `ja (${VOICE})` : 'nein'}`);
+	// Welche Komposition rendern? --tiktok rendert standardmäßig ReelTikTok
+	// (Rezept-Regie: Snap/Badge/Loop/Stempel-Sound), --comp übersteuert; ohne
+	// beides bleibt es beim IG-ReelDaily — beide teilen dieselben Props.
+	const compArg = arg('comp');
+	const comp = compArg && compArg !== true ? compArg : TIKTOK ? 'ReelTikTok' : 'ReelDaily';
+	console.log(`szenen: ${scenes.map((s) => s.kind).join(' → ')} | ${Math.round(duration / FPS)}s | VO: ${anyVo ? `ja (${VOICE})` : 'nein'} | comp: ${comp} | pace: ${PACE}${TIKTOK ? ' (tiktok)' : ''}`);
 
-	execFileSync('npx', ['remotion', 'render', 'ReelDaily', out, `--props=${propsPath}`, '--log=error'], {
+	execFileSync('npx', ['remotion', 'render', comp, out, `--props=${propsPath}`, '--log=error'], {
 		stdio: 'inherit',
 		cwd: fileURLToPath(new URL('.', import.meta.url))
 	});
@@ -398,6 +628,12 @@ async function main() {
 	if (arg('upload') || arg('queue')) {
 		const videoUrl = await uploadToSupabase(out, slug);
 		console.log(`OK upload → ${videoUrl}`);
+		// TikTok-Master (--tiktok --upload ohne --queue): Caption trotzdem an der
+		// Story hinterlegen — /admin/tiktok liest sie, und tiktok_caption IS NOT NULL
+		// markiert die Story als „für TikTok verbraucht" (Dedup der täglichen Routine).
+		if (TIKTOK && !arg('queue') && plan?.tiktok?.caption && plan?.story?.id) {
+			await persistTikTokCaption(plan.story.id, plan.tiktok.caption, plan.tiktok.hashtags || []);
+		}
 		if (arg('queue')) {
 			const storyId = arg('story-id') || plan?.story?.id;
 			if (!storyId) throw new Error('--queue braucht --story-id');

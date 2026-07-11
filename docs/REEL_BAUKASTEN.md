@@ -21,6 +21,13 @@ Jede Szene zusätzlich: `voText` — der gesprochene Satz. **Eiserne Regeln:**
 - voText enthält **nur deutsche Wörter**. Englische Eigennamen (Quellen, Organisationen)
   kippen die Multilingual-Stimme in englische Aussprache → nur auf dem Screen zeigen,
   im VO umschreiben („eine Jugend-Tanzkompanie in England").
+- **Ziffern im voText sind erlaubt** (seit 2026-07-11): render.mjs schreibt sie fürs TTS
+  automatisch als deutsche Zahlwörter aus („97.000" → „siebenundneunzigtausend" — sonst
+  liest die Multilingual-Stimme sie ENGLISCH) und die Captions zeigen wieder die
+  Ziffern-Form. Abgedeckt: Tausender-Punkte, Dezimal-Komma, %, Mio/Mrd/Tsd, Jahreszahlen.
+  ZWEI Ausnahmen von Hand schreiben: (a) „1 + Substantiv" → „ein/eine" ausschreiben
+  („ein Baum", nicht „1 Baum" — der Konverter kennt kein Genus), (b) Ordinalzahlen
+  („das 113." → „das einhundertdreizehnte" ausschreiben).
 - proof-voText EXAKT: `Belegt — von uns nachgeprüft.` (Quellenname steht im Bild).
 - end-voText EXAKT: `Schick das jemandem, der heute eine gute Nachricht braucht.`
 - Timing macht das System: die Stimme führt die Szenendauer (VO + kurzer Nachlauf).
@@ -65,6 +72,58 @@ persistiert `render.mjs` `tiktok.caption`/`tiktok.hashtags` automatisch nach
 Posten. Fehlt der `tiktok`-Block, baut das Tool eine Caption regelbasiert aus den
 Story-Feldern (`src/lib/server/social/tiktok-caption.ts`) — die feinere, handgeschriebene
 Variante ist aber besser.
+
+## TikTok-Master „Beweis-Loop 20" (`--tiktok`, Komposition ReelTikTok)
+
+Seit 2026-07-11 entsteht ZUSÄTZLICH zum IG-Reel ein eigener TikTok-Master — NICHT die
+IG-Dramaturgie kopieren. Vollständiges Rezept + Begründungen: `docs/TIKTOK_FORMAT_REZEPT.md`.
+Gleiches plan.json-Schema, plus drei Felder:
+
+```jsonc
+"seo":   { "keyword": "<Kern-Keyword>" }, // PFLICHT: muss in Szene-1-voText UND Szene-1-Overlay
+                                          // UND tiktok.caption (erste 60 Zeichen) stehen —
+                                          // render.mjs bricht sonst ab (Dreifach-Platzierung)
+"loop":  true,                            // Loop-Naht: Video endet auf dem Cold-Open-Layout
+"badge": false                            // OPTIONAL: Rewatch-Badge aus (A/B Woche 3);
+                                          // Default an = nutzt proof.impact
+```
+
+Dramaturgie-Regeln (Kurzform von Rezept §C):
+1. **Szene 1 = `number` mit `"snap": true`** + `"kicker": "TAG <N> · NUR EINE"` — die
+   Kernzahl steht ab Frame 0 (Cold Open, kein Count-up), voText spricht Zahl +
+   `seo.keyword` als ERSTE Worte, **maximal ~6 Wörter** (Cold Open muss nach ≤2,5s
+   weiterschneiden — ein 5s-Standbild am Anfang ist der größte Swipe-Treiber).
+   Ergebnis zuerst — die Neugier-Lücke ist „wie kann das echt sein?", nie „was ist passiert?".
+2. Dann: `hook` (Erwartungsbruch, 1 Zeile — VOLLSTÄNDIGE Behauptung mit Referent,
+   nie elliptisch) → `beat` (Wer/Wo, mit Bild) → `beat` (Mechanismus/Aha) → `proof` →
+   `end`. **Payoff komplett vor Sekunde 15.** Auf TikTok die **Figur sparsam** einsetzen
+   (max. 1 Szene, bevorzugt Bild-Beats — die 3D-Figur liest sich für Skip-Personas als
+   Werbe-/KI-Marker). **Konkretheits-Check:** zentrale Entität benennen (Artname, Ort,
+   Studie) und jede Zahl mit Referent — die Share-Personas teilen nur Zitierbares.
+3. Gesamt **45–60 gesprochene Wörter ≈ 19–22 s** (gemessen: deutsche TTS spricht
+   ~2,3 Wörter/s bei +12%; Zahlen wie „97.000" zählen gesprochen als lange Wörter!).
+   Blitz-Variante bei dünner Story: number → beat → proof → end, ~30 Wörter ≈ 13 s.
+4. `end` im Loop-Modus: KEIN Send-CTA (`"cta": ""`), keine Figur — voText endet als
+   Satzanfang, der in Szene 1 mündet, EXAKT: `Und die nächste gute Nachricht ist schon
+   nachgeprüft. Nämlich:` (Loop-Naht; TikTok-Ausnahme von der End-VO-Regel oben).
+   Automatisch dazu: dezente Icon-Pops Herz→Kommentar→Teilen unter der Share-Zeile
+   (Engagement-Nudge; abschaltbar pro Video mit `"engage": false` in der end-Szene).
+5. `proof`-voText bleibt EXAKT: `Belegt — von uns nachgeprüft.` (Stempel bekommt auf
+   TikTok Sound + Shake + Badge-Auflösung automatisch).
+6. Hooks aus der Bibliothek in Rezept §D wählen; Overpromise-Audit: löst Sekunde ≤15
+   den Hook wörtlich ein? Wenn nein → Story fürs Video aussetzen.
+
+```bash
+# TikTok-Master rendern + hochladen (eigener Slug-Suffix, sonst überschreiben sich VO-Dateien):
+node render.mjs --script tiktok-plan.json --slug <slug>-tt --out /tmp/reel-tiktok.mp4 --vo --tiktok --upload
+# --tiktok = ReelTikTok-Komposition + engerer Schnitt (PAD 4, MINF 40, VO_TAIL 0.15s) + SEO-Check.
+# --upload druckt die öffentliche MP4-URL (story_reels-Bucket) → in den Tagesreport an Aaron,
+# der postet manuell via /admin/tiktok (Cover = Stempel-Frame ~Sek 14, „AI-generated"-Label AN).
+```
+
+Sicht-Checks vor Abnahme (zusätzlich zum Frame-Grid): (a) Frame 0 zeigt die Zahl voll
+lesbar, (b) letzter Frame ≈ Frame 0 (Loop-Naht), (c) Badge oben rechts ab ~Sek 2 und
+Auflösung im Stempel, (d) Mute-Test — funktioniert der Bogen ohne Ton?
 
 ## Kommandos
 

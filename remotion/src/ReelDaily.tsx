@@ -55,11 +55,14 @@ interface SceneBase {
 
 export type DailyScene = SceneBase &
 	(
+		// snap/kicker auf number: TikTok-Cold-Open (Zahl steht ab Frame 0, kein
+		// Count-up von 0). ReelDaily ignoriert beide Felder, nur ReelTikTok wertet sie aus.
 		| { kind: 'hook'; text: string; punch: string; kicker: string }
-		| { kind: 'number'; value: string; unit: string | null; context: string }
+		| { kind: 'number'; value: string; unit: string | null; context: string; snap?: boolean; kicker?: string | null }
 		| { kind: 'beat'; text: string; image: string | null; pose: Pose }
 		| { kind: 'proof'; source: string; impact: number | null }
-		| { kind: 'end'; share: string; cta: string; hasVo: boolean }
+		// engage: Icon-Nudge (Herz/Kommentar/Teilen) im TikTok-Loop-Ende — nur ReelTikTok.
+		| { kind: 'end'; share: string; cta: string; hasVo: boolean; engage?: boolean }
 	);
 
 export interface ReelDailyProps {
@@ -71,6 +74,12 @@ export interface ReelDailyProps {
 	musicFile: string;
 	hasVo: boolean;
 	durationInFrames: number;
+	/** TikTok-Rezept (docs/TIKTOK_FORMAT_REZEPT.md §C): Loop-Naht — durationInFrames
+	 *  enthält dann den Loop-Schwanz (14 Frames). Von ReelDaily ignoriert. */
+	loop?: boolean;
+	/** Rewatch-Badge: Wirkungsindex unerklärt ab ~Sek 2, Auflösung im Stempel.
+	 *  Von ReelDaily ignoriert. */
+	badge?: number | null;
 }
 
 export const reelDailyDefault: ReelDailyProps = {

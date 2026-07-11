@@ -37,6 +37,7 @@ export interface SocialPostRow {
 	error: string | null;
 	saves: number | null;
 	reach: number | null;
+	shares: number | null; // migration 00046 — Sends (Leitmetrik shares/reach)
 	created_at: string;
 	updated_at: string;
 	// Wochen-Digest + Reel-Erweiterung (migration 00041/00042).
@@ -694,74 +695,113 @@ export async function publishPostNow(id: number): Promise<{ ok: boolean; reason:
 // Eintragen mehr). Läuft täglich für geposteten Content der letzten 30 Tage.
 // ---------------------------------------------------------------------------
 
+// Kleiner fetch-Wrapper mit hartem Timeout — ein hängender Graph-Call darf NIE
+// die ganze Funktion in den Vercel-60s-Timeout reißen (Ursache der alten 504er).
+async function fetchJson(url: string, ms = 6000): Promise<{ ok: boolean; status: number; body: string }> {
+	try {
+		const resp = await fetch(url, { signal: AbortSignal.timeout(ms) });
+		const body = await resp.text().catch(() => '');
+		return { ok: resp.ok, status: resp.status, body };
+	} catch (err) {
+		return { ok: false, status: 0, body: String(err) };
+	}
+}
+
+// Verarbeitet ein Array in Häppchen fester Größe parallel (einfacher Pool ohne
+// externe Lib) — hält die Graph-API-Last im Zaum, bleibt aber schnell.
+async function inChunks<T, R>(items: T[], size: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+	const out: R[] = [];
+	for (let i = 0; i < items.length; i += size) {
+		out.push(...(await Promise.all(items.slice(i, i + size).map(fn))));
+	}
+	return out;
+}
+
 /**
- * Holt IG-Insights pro geposteten Post via Graph API und schreibt saves/reach
- * in die DB. Insights sind erst ein paar Stunden nach dem Post verfügbar.
+ * Holt IG-Insights pro geposteten Post via Graph API und schreibt saves/reach/
+ * likes/shares/comments in die DB.
+ *
+ * WICHTIG (Fix 2026-07-12): der alte Lauf ging SEQUENZIELL über 30 Tage × ~256
+ * Posts × 2 Calls → >500 Requests → Vercel-60s-Timeout (504), der Analyst sah
+ * NIE Daten. Jetzt:
+ *  - Nur Posts im sinnvollen Fenster: Stories laufen 24h → Insights nur für die
+ *    letzten 3 Tage sinnvoll; Feed-Posts 30 Tage. Spart hunderte tote Calls.
+ *  - Cap auf MAX_POSTS, PARALLEL in Häppchen, harter Fetch-Timeout je Call.
+ *  - Story-Insights nutzen ANDERE Metriken als Feed (reach,replies,shares vs
+ *    saved,reach,likes,shares) — sonst „metric not supported"-Fehler.
  */
+const INSIGHTS_MAX_POSTS = 60;
+const INSIGHTS_CHUNK = 8;
+
 export async function refreshInsights(): Promise<{ updated: number; skipped: string }> {
 	if (!igConfigured()) return { updated: 0, skipped: 'IG not configured' };
 	const token = env.IG_ACCESS_TOKEN!;
 
+	const since3d = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
 	const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+	// Feed-Posts (30d) + Stories NUR der letzten 3 Tage (danach sind Story-
+	// Insights ohnehin weg). Neueste zuerst, hart gecappt.
 	const { data } = await supabaseAdmin
 		.from('nureine_social_posts')
-		.select('id,ig_media_id')
+		.select('id,ig_media_id,platform,posted_at')
 		.eq('status', 'posted')
 		.not('ig_media_id', 'is', null)
-		.gte('posted_at', since30d);
+		.or(`platform.eq.instagram,and(platform.eq.instagram_story,posted_at.gte.${since3d})`)
+		.gte('posted_at', since30d)
+		.order('posted_at', { ascending: false })
+		.limit(INSIGHTS_MAX_POSTS);
 
-	const posts = (data as { id: number; ig_media_id: string }[]) ?? [];
+	const posts = (data as { id: number; ig_media_id: string; platform: string; posted_at: string }[]) ?? [];
+	if (posts.length === 0) return { updated: 0, skipped: 'no recent posts in window' };
+
 	let updated = 0;
 	let firstError: string | null = null;
 
-	for (const p of posts) {
-		try {
-			// IG-Media-Insights: saved, reach, likes, shares, total_interactions.
-			const metrics = 'saved,reach,likes,shares,total_interactions';
-			const resp = await fetch(
-				`https://graph.facebook.com/${IG_V}/${p.ig_media_id}/insights?metric=${metrics}&access_token=${token}`
-			);
-			if (!resp.ok) {
-				// manche Metriken fehlen je Medientyp → skip; erste Fehlerursache
-				// trotzdem festhalten, sonst sieht "updated:0" wie Erfolg aus
-				if (!firstError) {
-					const body = await resp.text().catch(() => '');
-					firstError = `media ${p.ig_media_id}: HTTP ${resp.status} ${body.slice(0, 300)}`;
-					console.error('[social] insights request failed:', firstError);
-				}
-				// Fallback ohne instagram_manage_insights (Fehlercode 10):
-				// like_count/comments_count gehen mit dem Basis-Token.
-				const fb = await fetch(
-					`https://graph.facebook.com/${IG_V}/${p.ig_media_id}?fields=like_count,comments_count&access_token=${token}`
-				);
-				if (fb.ok) {
-					const j = (await fb.json()) as { like_count?: number; comments_count?: number };
-					if (j.like_count !== undefined || j.comments_count !== undefined) {
-						await supabaseAdmin
-							.from('nureine_social_posts')
-							.update({ likes: j.like_count ?? null, comments: j.comments_count ?? null, updated_at: new Date().toISOString() })
-							.eq('id', p.id);
-						updated += 1;
-					}
-				}
-				continue;
-			}
-			const json = (await resp.json()) as { data?: { name: string; values: { value: number }[] }[] };
-			const get = (name: string) => json.data?.find((m) => m.name === name)?.values?.[0]?.value ?? null;
-
-			const saves = get('saved');
-			const reach = get('reach');
-			if (saves === null && reach === null) continue;
-
-			await supabaseAdmin
-				.from('nureine_social_posts')
-				.update({ saves, reach, updated_at: new Date().toISOString() })
-				.eq('id', p.id);
-			updated += 1;
-		} catch (err) {
-			console.error('[social] insights failed for', p.id, err);
+	await inChunks(posts, INSIGHTS_CHUNK, async (p) => {
+		const isStory = p.platform === 'instagram_story';
+		// Story vs. Feed: unterschiedliche gültige Metriken (Graph API 2024+).
+		const metrics = isStory ? 'reach,replies,shares' : 'saved,reach,likes,shares,total_interactions';
+		const r = await fetchJson(
+			`https://graph.facebook.com/${IG_V}/${p.ig_media_id}/insights?metric=${metrics}&access_token=${token}`
+		);
+		if (r.ok) {
+			try {
+				const json = JSON.parse(r.body) as { data?: { name: string; values: { value: number }[] }[] };
+				const get = (name: string) => json.data?.find((m) => m.name === name)?.values?.[0]?.value ?? null;
+				const reach = get('reach');
+				const saves = get('saved');
+				const shares = get('shares');
+				if (reach === null && saves === null && shares === null) return;
+				await supabaseAdmin
+					.from('nureine_social_posts')
+					.update({ reach, saves, shares, updated_at: new Date().toISOString() })
+					.eq('id', p.id);
+				updated += 1;
+				return;
+			} catch { /* fällt unten in den Basis-Fallback */ }
 		}
-	}
+		if (!firstError && !r.ok) {
+			firstError = `media ${p.ig_media_id} (${p.platform}): HTTP ${r.status} ${r.body.slice(0, 240)}`;
+			console.error('[social] insights request failed:', firstError);
+		}
+		// Basis-Fallback ohne instagram_manage_insights: like_count/comments_count.
+		const fb = await fetchJson(
+			`https://graph.facebook.com/${IG_V}/${p.ig_media_id}?fields=like_count,comments_count&access_token=${token}`
+		);
+		if (fb.ok) {
+			try {
+				const j = JSON.parse(fb.body) as { like_count?: number; comments_count?: number };
+				if (j.like_count !== undefined || j.comments_count !== undefined) {
+					await supabaseAdmin
+						.from('nureine_social_posts')
+						.update({ likes: j.like_count ?? null, comments: j.comments_count ?? null, updated_at: new Date().toISOString() })
+						.eq('id', p.id);
+					updated += 1;
+				}
+			} catch { /* ignore */ }
+		}
+	});
 
 	return { updated, skipped: updated === 0 && firstError ? firstError : '' };
 }

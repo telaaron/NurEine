@@ -7,7 +7,8 @@ import { json } from '@sveltejs/kit';
 import { CRON_SECRET } from '$env/static/private';
 import { refreshInsights } from '$lib/server/social/queue';
 
-export const config = { maxDuration: 60 };
+// 120s: viele Graph-Calls, aber jetzt parallel + gecappt (refreshInsights).
+export const config = { maxDuration: 120 };
 
 export async function POST({ request }) {
 	if (!CRON_SECRET) return json({ error: 'Server misconfigured' }, { status: 500 });

@@ -134,8 +134,9 @@ Dramaturgie-Regeln (Kurzform von Rezept §C):
    den Hook wörtlich ein? Wenn nein → Story fürs Video aussetzen.
 
 ```bash
-# TikTok-Master rendern + hochladen (eigener Slug-Suffix, sonst überschreiben sich VO-Dateien):
-node render.mjs --script tiktok-plan.json --slug <slug>-tt --out /tmp/reel-tiktok.mp4 --vo --tiktok --upload
+# TikTok-Master rendern + hochladen (eigener Slug-Suffix, sonst überschreiben sich VO-Dateien).
+# REEL_TTS=eleven = Marken-Stimme (Aaron-Entscheid 2026-07-11; braucht .env geladen):
+REEL_TTS=eleven node render.mjs --script tiktok-plan.json --slug <slug>-tt --out /tmp/reel-tiktok.mp4 --vo --tiktok --upload
 # --tiktok = ReelTikTok-Komposition + engerer Schnitt (PAD 4, MINF 40, VO_TAIL 0.15s,
 #            Sprechtempo +16%) + SEO-Check.
 # --upload druckt die öffentliche MP4-URL (story_reels-Bucket) → in den Tagesreport an Aaron,

@@ -20,12 +20,14 @@ async function imageToBase64(
 		if (!resp.ok) return null;
 		const input = Buffer.from(await resp.arrayBuffer());
 		const sharp = (await import('sharp')).default;
-		// 860px @ q72 statt 1080 @ q80: das Bild ist nur Cover/Hintergrund der Card,
-		// die kleinere base64-Nutzlast beschleunigt den Satori-Parse spürbar
-		// (Render-Zeit ist der Engpass, der Stories ausbremste).
+		// VOLLE 1080px Breite (nicht 860): die Card ist 1080px breit, das Bild deckt
+		// sie voll ab. Bei 860px-Quelle streckt object-fit:cover auf 1080 → sichtbar
+		// UNSCHARF (Aarons Feedback). 1080 @ q78 mozjpeg bleibt klein genug für den
+		// Satori-Parse (Story-Cron hat 60s Budget). withoutEnlargement lässt kleinere
+		// Quellbilder unangetastet — nie hochskalieren.
 		const out = await sharp(input)
-			.resize({ width: 860, height: 860, fit: 'inside', withoutEnlargement: true })
-			.jpeg({ quality: 72, mozjpeg: true })
+			.resize({ width: 1080, height: 1920, fit: 'inside', withoutEnlargement: true })
+			.jpeg({ quality: 78, mozjpeg: true })
 			.toBuffer();
 		const meta = await sharp(out).metadata();
 		const aspect = meta.width && meta.height ? meta.height / meta.width : 1;

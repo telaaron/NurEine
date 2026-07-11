@@ -1,15 +1,24 @@
 <script lang="ts">
-	import StoryCard from '$lib/components/StoryCard.svelte';
+	import ArchivePulse from '$lib/components/ArchivePulse.svelte';
+	import ArchiveTrace from '$lib/components/ArchiveTrace.svelte';
+	import ArchiveLogbook from '$lib/components/ArchiveLogbook.svelte';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
 
 	let { data } = $props();
 	const stories = $derived(data.stories);
 
+	// Drei Archiv-Ansichten (Aaron testet, entscheidet). Standard: Puls.
+	type ViewMode = 'pulse' | 'trace' | 'logbook';
+	const VIEWS: { id: ViewMode; label: string }[] = [
+		{ id: 'pulse', label: 'Puls' },
+		{ id: 'trace', label: 'Spur' },
+		{ id: 'logbook', label: 'Logbuch' }
+	];
+	let view = $state<ViewMode>((($page.url.searchParams.get('v') as ViewMode) ?? 'pulse'));
+
 	const cats = ['Alle', 'Klima', 'Gesundheit', 'Wissenschaft', 'Gemeinschaft', 'Tiere', 'Kultur', 'Innovation'] as const;
 	let active = $state<(typeof cats)[number]>('Alle');
-	// Default: stärkste Wirkung zuerst (kuratiertes Gefühl). Manuell auf Datum wechselbar.
-	let sortBy = $state<'date' | 'impact'>('impact');
 	// Standard-Qualitätsfilter (Aaron 2026-07-09): nur Stories mit Wirkung ≥65 zeigen
 	// — so wirkt das Archiv durchgängig stark & bebildert. Auf 0 umschaltbar („alle").
 	const MIN_IMPACT_DEFAULT = 65;
@@ -26,22 +35,15 @@
 		return terms.every((t) => hay.includes(t));
 	}
 
+	// Die Zeitreise-Ansichten ordnen selbst nach Datum/Monat — hier nur FILTERN,
+	// nicht sortieren.
 	const filtered = $derived.by(() => {
 		const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
 		let list = active === 'Alle' ? stories : stories.filter((s) => s.category.toLowerCase() === active.toLowerCase());
 		if (minImpact > 0) list = list.filter((s) => (s.impactScore ?? 0) >= minImpact);
 		if (terms.length) list = list.filter((s) => matches(s, terms));
-		return list.slice().sort((a, b) => {
-			if (sortBy === 'impact') return b.impactScore - a.impactScore;
-			return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
-		});
+		return list;
 	});
-
-	// Progressive Anzeige: nur die ersten N rendern (sonst hunderte img-Tags → riesiges DOM/HTML).
-	const PAGE = 24;
-	let shown = $state(PAGE);
-	$effect(() => { void active; void sortBy; void query; void minImpact; shown = PAGE; }); // Filter/Sort/Such-Wechsel → reset
-	const visible = $derived(filtered.slice(0, shown));
 
 	function pick(cat: (typeof cats)[number]) {
 		active = cat;
@@ -132,28 +134,21 @@
 			{/if}
 		</div>
 
-		<!-- Sort toggles -->
+		<!-- Ansicht-Umschalter: Puls / Spur / Logbuch -->
 		<div class="flex items-center gap-2 text-xs ml-auto lg:ml-0" style="color: var(--color-muted);">
-			<span class="hidden sm:inline uppercase tracking-[0.16em]">Sortierung</span>
+			<span class="hidden sm:inline uppercase tracking-[0.16em]">Ansicht</span>
 			<div class="flex items-center rounded-full p-0.5" style="background: var(--color-canvas-soft); border: 1px solid var(--color-rule);">
-				<button
-					type="button"
-					onclick={() => (sortBy = 'date')}
-					class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all"
-					style="background: {sortBy === 'date' ? 'var(--color-ink)' : 'transparent'};
-						color: {sortBy === 'date' ? 'var(--color-paper)' : 'var(--color-muted)'};"
-				>
-					Datum
-				</button>
-				<button
-					type="button"
-					onclick={() => (sortBy = 'impact')}
-					class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all"
-					style="background: {sortBy === 'impact' ? 'var(--color-ink)' : 'transparent'};
-						color: {sortBy === 'impact' ? 'var(--color-paper)' : 'var(--color-muted)'};"
-				>
-					Wirkung
-				</button>
+				{#each VIEWS as v}
+					<button
+						type="button"
+						onclick={() => (view = v.id)}
+						class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all"
+						style="background: {view === v.id ? 'var(--color-ink)' : 'transparent'};
+							color: {view === v.id ? 'var(--color-paper)' : 'var(--color-muted)'};"
+					>
+						{v.label}
+					</button>
+				{/each}
 			</div>
 		</div>
 
@@ -179,21 +174,12 @@
 				<button type="button" onclick={() => (query = '')} class="mt-4 px-4 py-2 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Suche zurücksetzen</button>
 			{/if}
 		</div>
+	{:else if view === 'trace'}
+		<ArchiveTrace stories={filtered} />
+	{:else if view === 'logbook'}
+		<ArchiveLogbook stories={filtered} />
 	{:else}
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-8">
-		{#each visible as story, i (story.slug)}
-			<div class="rise" style="animation-delay: {Math.min(i * 0.04, 0.6)}s;">
-				<StoryCard {story} />
-			</div>
-		{/each}
-	</div>
-	{/if}
-	{#if shown < filtered.length}
-		<div class="mt-10 flex justify-center">
-			<button type="button" onclick={() => (shown += PAGE)} class="px-6 py-3 rounded-full text-sm font-medium" style="border: 1px solid var(--color-rule-strong); color: var(--color-ink);">
-				Mehr laden ({filtered.length - shown})
-			</button>
-		</div>
+		<ArchivePulse stories={filtered} />
 	{/if}
 
 	<!--

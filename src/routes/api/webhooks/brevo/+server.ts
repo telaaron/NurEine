@@ -55,5 +55,38 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		}
 	}
 
+	// improvement #5: newsletter_open_rate was structurally 0 (opened never set on
+	// any of 583 sends). logSend() stores no Brevo messageId, so we can't map an
+	// open to an exact send — but email + recency is enough: on an open event, mark
+	// the subscriber's most recent send as opened. Makes the leitmetrik measurable
+	// without a schema change. Best-effort; never fails the webhook.
+	if (name === 'email_open' && email) {
+		try {
+			const { data: sub } = await supabaseAdmin
+				.from('nureine_subscribers')
+				.select('id')
+				.eq('email', email)
+				.maybeSingle();
+			if (sub?.id) {
+				const { data: lastSend } = await supabaseAdmin
+					.from('nureine_newsletter_sends')
+					.select('id')
+					.eq('subscriber_id', sub.id)
+					.eq('opened', false)
+					.order('sent_at', { ascending: false })
+					.limit(1)
+					.maybeSingle();
+				if (lastSend?.id) {
+					await supabaseAdmin
+						.from('nureine_newsletter_sends')
+						.update({ opened: true })
+						.eq('id', lastSend.id);
+				}
+			}
+		} catch {
+			/* swallow — never fail the webhook */
+		}
+	}
+
 	return json({ ok: true });
 };

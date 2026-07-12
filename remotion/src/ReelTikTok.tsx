@@ -427,11 +427,11 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 		const spacing = n <= 40 ? 34 : n <= 90 ? 27 : 21;
 		const dotR = n <= 40 ? 15 : n <= 90 ? 12 : 9;
 		const cx = 540, cy = SAFE_TOP + 880;
-		// Der neue Punkt (Index shown-1, außen) fliegt ab Frame 16 vom Stempel in die Spirale.
-		const fly = spring({ frame: frame - 16, fps: TIKTOK_FPS, config: { damping: 13, mass: 0.7, stiffness: 120 } });
+		// Der neue Punkt entsteht dort, wo das Rewatch-Badge landet (Frame ~30 —
+		// synchron zur Badge-Flugdauer in der Haupt-Komposition): die heutige
+		// geprüfte Nachricht reiht sich sichtbar ins Archiv ein.
+		const dotIn = spring({ frame: frame - 30, fps: TIKTOK_FPS, config: { damping: 11, mass: 0.5, stiffness: 220 } });
 		const [txRel, tyRel] = spiralPos(shown - 1, spacing);
-		const nx = interpolate(fly, [0, 1], [M + 210 - cx, txRel]);
-		const ny = interpolate(fly, [0, 1], [SAFE_TOP + 90 - cy, tyRel]);
 		const zoomOut = interpolate(frame, [16, 44], [1.07, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 		const breathe = 1 + 0.008 * Math.sin(frame / 11);
 		const numPop = spring({ frame: frame - 12, fps: TIKTOK_FPS, config: { damping: 12, mass: 0.6, stiffness: 210 } });
@@ -460,7 +460,7 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 						const jitter = 0.75 + ((i * 2654435761) % 100) / 400; // deterministisch
 						return <circle key={i} cx={cx + x} cy={cy + y} r={dotR * jitter} fill={accent} opacity={0.32} />;
 					})}
-					<circle cx={cx + nx} cy={cy + ny} r={dotR * 1.5 + 3 * Math.sin(Math.max(0, frame - 30) / 5)} fill={accent} stroke={PAPER} strokeWidth={3} opacity={interpolate(fly, [0, 0.15], [0, 1])} />
+					<circle cx={cx + txRel} cy={cy + tyRel} r={Math.max(0.01, dotR * 1.5 * dotIn + 3 * Math.sin(Math.max(0, frame - 40) / 5))} fill={accent} stroke={PAPER} strokeWidth={3} opacity={dotIn} />
 				</svg>
 				{/* Wirkungsindex kompakt unten */}
 				{impact != null ? (
@@ -588,13 +588,17 @@ const EngageIcons: React.FC<{ accent: string }> = ({ accent }) => {
 // schaut den Anfang nochmal — ohne dass Information vorenthalten wird (der
 // Beleg bleibt jederzeit voll lesbar, kein Dark Pattern).
 const BADGE_START = 60;
-const RewatchBadge: React.FC<{ value: number; proofStart: number; category: string }> = ({ value, proofStart, category }) => {
+const RewatchBadge: React.FC<{ value: number; proofStart: number; category: string; targetDX?: number; targetDY?: number; toArchive?: boolean }> = ({ value, proofStart, category, targetDX = -20, targetDY = 700, toArchive = false }) => {
 	const frame = useCurrentFrame();
-	if (frame < BADGE_START || frame > proofStart + 18) return null;
+	// toArchive: das Badge fliegt in die Spiralen-Position des neuen Archiv-Punkts
+	// und schrumpft dabei zum Punkt — die Übergabe „Nachricht → Archiv" in einer
+	// Bewegung (der Punkt in ProofScene erscheint synchron bei Szenen-Frame ~30).
+	const flightEnd = toArchive ? 30 : 16;
+	if (frame < BADGE_START || frame > proofStart + flightEnd + 4) return null;
 	const accent = accentFor(category);
 	const inS = spring({ frame: frame - BADGE_START, fps: TIKTOK_FPS, config: { damping: 12, mass: 0.5, stiffness: 200 } });
-	const hand = interpolate(frame, [proofStart, proofStart + 16], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-	const scale = interpolate(inS, [0, 1], [0.4, 1]) * interpolate(hand, [0, 1], [1, 1.5]);
+	const hand = interpolate(frame, [proofStart, proofStart + flightEnd], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+	const scale = interpolate(inS, [0, 1], [0.4, 1]) * interpolate(hand, [0, 1], [1, toArchive ? 0.42 : 1.5]);
 	return (
 		<div
 			style={{
@@ -602,13 +606,13 @@ const RewatchBadge: React.FC<{ value: number; proofStart: number; category: stri
 				right: M,
 				top: SAFE_TOP + 34,
 				zIndex: 40,
-				transform: `translate(${interpolate(hand, [0, 1], [0, -20])}px, ${interpolate(hand, [0, 1], [0, 700])}px) scale(${scale})`,
+				transform: `translate(${interpolate(hand, [0, 1], [0, targetDX])}px, ${interpolate(hand, [0, 1], [0, targetDY])}px) scale(${scale})`,
 				transformOrigin: 'center',
-				opacity: interpolate(hand, [0, 0.75, 1], [1, 0.85, 0])
+				opacity: interpolate(hand, [0, toArchive ? 0.92 : 0.75, 1], [1, toArchive ? 1 : 0.85, 0])
 			}}
 		>
-			<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 92, height: 92, borderRadius: 20, background: accent, boxShadow: '0 10px 26px rgba(60,40,20,0.3)' }}>
-				<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 44, color: '#fff' }}>{value}</div>
+			<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 92, height: 92, borderRadius: toArchive ? 46 : 20, background: accent, boxShadow: '0 10px 26px rgba(60,40,20,0.3)' }}>
+				<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 44, color: '#fff', opacity: interpolate(hand, [0, 0.6], [1, 0], { extrapolateRight: 'clamp' }) }}>{value}</div>
 			</div>
 		</div>
 	);
@@ -625,7 +629,23 @@ export const ReelTikTok: React.FC<ReelDailyProps> = (p) => {
 	// eingerastete Cold-Open-Layout ein → Match-Cut auf Frame 0 beim Autoloop.
 	const first = p.scenes[0];
 	const loop = !!p.loop && !!first && first.kind === 'number';
-	const proofStart = p.scenes.find((s) => s.kind === 'proof')?.start ?? total;
+	const proofScene = p.scenes.find((s) => s.kind === 'proof');
+	const proofStart = proofScene?.start ?? total;
+	// Badge → Archiv-Punkt: Im progress-Modus fliegt das Badge exakt an die
+	// Spiralen-Position des neuen Punkts (gleiche Formel wie in ProofScene).
+	const progressN = proofScene && proofScene.kind === 'proof' ? proofScene.progress ?? null : null;
+	let badgeDX = -20;
+	let badgeDY = 700;
+	let badgeToArchive = false;
+	if (progressN != null && progressN > 0) {
+		const n = Math.max(1, Math.round(progressN));
+		const shown = Math.min(n, 160);
+		const spacing = n <= 40 ? 34 : n <= 90 ? 27 : 21;
+		const [sx, sy] = spiralPos(shown - 1, spacing);
+		badgeDX = 540 + sx - (1080 - M - 46); // Badge-Zentrum liegt bei right:M, 92px breit
+		badgeDY = SAFE_TOP + 880 + sy - (SAFE_TOP + 34 + 46);
+		badgeToArchive = true;
+	}
 	return (
 		<AbsoluteFill style={{ background: CANVAS }}>
 			<Audio
@@ -652,7 +672,7 @@ export const ReelTikTok: React.FC<ReelDailyProps> = (p) => {
 					</Freeze>
 				</Sequence>
 			) : null}
-			{p.badge != null ? <RewatchBadge value={p.badge} proofStart={proofStart} category={p.category} /> : null}
+			{p.badge != null ? <RewatchBadge value={p.badge} proofStart={proofStart} category={p.category} targetDX={badgeDX} targetDY={badgeDY} toArchive={badgeToArchive} /> : null}
 		</AbsoluteFill>
 	);
 };

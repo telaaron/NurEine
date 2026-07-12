@@ -522,17 +522,22 @@ async function queueReel(storyId, videoUrl, caption, hashtags, category, hookTyp
  * nicht auto-postet, ist das der einzige Ort, an dem die TikTok-Variante lebt.
  * Rein additiv, ändert nur diese zwei Story-Spalten (kein Reel-Insert berührt).
  */
-async function persistTikTokCaption(storyId, caption, hashtags) {
-	if (!storyId || !caption) return;
+async function persistTikTokMeta(storyId, { caption, hashtags, videoUrl }) {
+	if (!storyId) return;
 	const supa = env.SUPABASE_URL.replace(/\/$/, '');
 	const key = env.SUPABASE_SERVICE_KEY;
+	const patch = {};
+	if (caption) patch.tiktok_caption = caption;
+	if (caption) patch.tiktok_hashtags = hashtags || [];
+	if (videoUrl) patch.tiktok_video_url = videoUrl; // Master-MP4 → /admin/tiktok zeigt genau dieses Video
+	if (!Object.keys(patch).length) return;
 	const r = await fetch(`${supa}/rest/v1/nureine_stories?id=eq.${storyId}`, {
 		method: 'PATCH',
 		headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
-		body: JSON.stringify({ tiktok_caption: caption, tiktok_hashtags: hashtags || [] })
+		body: JSON.stringify(patch)
 	});
-	if (!r.ok) console.log(`TikTok-Caption-Update fehlgeschlagen (${r.status}) — nicht kritisch`);
-	else console.log('OK TikTok-Caption hinterlegt');
+	if (!r.ok) console.log(`TikTok-Meta-Update fehlgeschlagen (${r.status}) — nicht kritisch`);
+	else console.log(`OK TikTok-Meta hinterlegt (${Object.keys(patch).join(', ')})`);
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
@@ -639,22 +644,25 @@ async function main() {
 	if (arg('upload') || arg('queue')) {
 		const videoUrl = await uploadToSupabase(out, slug);
 		console.log(`OK upload → ${videoUrl}`);
-		// TikTok-Master (--tiktok --upload ohne --queue): Caption trotzdem an der
-		// Story hinterlegen — /admin/tiktok liest sie, und tiktok_caption IS NOT NULL
-		// markiert die Story als „für TikTok verbraucht" (Dedup der täglichen Routine).
-		if (TIKTOK && !arg('queue') && plan?.tiktok?.caption && plan?.story?.id) {
-			await persistTikTokCaption(plan.story.id, plan.tiktok.caption, plan.tiktok.hashtags || []);
+		const storyId = arg('story-id') || plan?.story?.id;
+		// TikTok-Master (--tiktok): Caption UND Master-MP4-URL an der Story hinterlegen
+		// → /admin/tiktok zeigt genau dieses Video; tiktok_caption IS NOT NULL markiert
+		// die Story zugleich als „für TikTok verbraucht" (Dedup der täglichen Routine).
+		if (TIKTOK && storyId) {
+			await persistTikTokMeta(storyId, {
+				caption: plan?.tiktok?.caption,
+				hashtags: plan?.tiktok?.hashtags || [],
+				videoUrl
+			});
 		}
 		if (arg('queue')) {
-			const storyId = arg('story-id') || plan?.story?.id;
 			if (!storyId) throw new Error('--queue braucht --story-id');
 			const tags = plan?.hashtags?.length ? plan.hashtags : (arg('hashtags') || '').split(',').map((t) => t.trim()).filter(Boolean);
 			await queueReel(storyId, videoUrl, plan?.caption || arg('caption') || '', tags, plan?.story?.category || arg('category') || 'gemeinschaft', story.igHookType);
 			console.log('OK reel-draft angelegt (status=draft)');
-			// TikTok-Variante (eigener Hook + Keyword-SEO + Save-CTA) mitschreiben,
-			// falls die Regie sie in den Plan gelegt hat → landet im /admin/tiktok-Tool.
-			if (plan?.tiktok?.caption) {
-				await persistTikTokCaption(storyId, plan.tiktok.caption, plan.tiktok.hashtags || []);
+			// Falls NICHT --tiktok (reiner IG-Lauf), die TikTok-Caption trotzdem mitschreiben.
+			if (!TIKTOK && plan?.tiktok?.caption) {
+				await persistTikTokMeta(storyId, { caption: plan.tiktok.caption, hashtags: plan.tiktok.hashtags || [] });
 			}
 		}
 	}

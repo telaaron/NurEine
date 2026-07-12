@@ -35,7 +35,11 @@ interface StoryRow extends TikTokStoryInput {
 	image_url: string | null;
 	tiktok_caption: string | null;
 	tiktok_hashtags: string[] | null;
+	tiktok_video_url: string | null;
 }
+
+const STORY_COLS =
+	'id,title,subtitle,share_hook,summary,category,source_name,impact_score,image_url,tiktok_caption,tiktok_hashtags,tiktok_video_url';
 
 export interface TikTokReelCard {
 	postId: number;
@@ -79,9 +83,7 @@ export const load: PageServerLoad = async () => {
 	if (storyIds.length) {
 		const { data: storyRows } = await supabaseAdmin
 			.from('nureine_stories')
-			.select(
-				'id,title,subtitle,share_hook,summary,category,source_name,impact_score,image_url,tiktok_caption,tiktok_hashtags'
-			)
+			.select(STORY_COLS)
 			.in('id', storyIds);
 		for (const s of (storyRows as StoryRow[] | null) ?? []) storyById.set(s.id, s);
 	}
@@ -133,7 +135,8 @@ export const load: PageServerLoad = async () => {
 			impactScore: s?.impact_score ?? null,
 			igStatus: r.status,
 			igPostedAt: r.posted_at,
-			videoUrl: r.slide_urls?.[0] ?? null,
+			// Bevorzugt der eigens für TikTok gerenderte Master, sonst das IG-Reel-Video.
+			videoUrl: s?.tiktok_video_url ?? r.slide_urls?.[0] ?? null,
 			imageUrl: s?.image_url ?? null,
 			caption,
 			hashtags,
@@ -144,6 +147,45 @@ export const load: PageServerLoad = async () => {
 			tiktokPostedAt: tiktokByStory.get(r.story_id) ?? null
 		};
 	});
+
+	// TikTok-only-Master: Stories, für die ein eigener TikTok-Master gerendert wurde
+	// (tiktok_video_url gesetzt), die aber (noch) KEIN IG-Reel haben — sonst wären sie
+	// hier unsichtbar. Genau der Normalfall der täglichen Routine (TikTok läuft jeden
+	// Tag, IG nur Mo/Mi/Fr). Negatives Post-ID, damit die Keys nicht mit Reels kollidieren.
+	const coveredStoryIds = new Set(cards.map((c) => c.storyId));
+	const { data: ttOnlyRows } = await supabaseAdmin
+		.from('nureine_stories')
+		.select(STORY_COLS)
+		.not('tiktok_video_url', 'is', null)
+		.order('published_at', { ascending: false })
+		.limit(60);
+	let synthId = -1;
+	for (const s of (ttOnlyRows as StoryRow[] | null) ?? []) {
+		if (coveredStoryIds.has(s.id)) continue;
+		const built = buildTikTokCaption(storyInput(s));
+		const curated = !!(s.tiktok_caption && s.tiktok_caption.trim());
+		const caption = curated ? s.tiktok_caption!.trim() : built.caption;
+		let hashtags = curated ? (s.tiktok_hashtags ?? []).filter(Boolean) : built.hashtags;
+		if (!hashtags.length) hashtags = built.hashtags;
+		cards.push({
+			postId: synthId--,
+			storyId: s.id,
+			title: s.title ?? '(ohne Titel)',
+			category: s.category ?? null,
+			impactScore: s.impact_score ?? null,
+			igStatus: 'none',
+			igPostedAt: null,
+			videoUrl: s.tiktok_video_url,
+			imageUrl: s.image_url ?? null,
+			caption,
+			hashtags,
+			keyword: built.keyword,
+			full: `${caption}\n\n${hashtags.join(' ')}`.trim(),
+			captionCurated: curated,
+			tiktokPosted: tiktokByStory.has(s.id),
+			tiktokPostedAt: tiktokByStory.get(s.id) ?? null
+		});
+	}
 
 	const postedCount = cards.filter((c) => c.tiktokPosted).length;
 	return { cards, stats: { total: cards.length, posted: postedCount, open: cards.length - postedCount } };
@@ -167,22 +209,32 @@ export const actions: Actions = {
 	markPosted: async ({ request }) => {
 		const form = await request.formData();
 		const storyId = String(form.get('storyId') ?? '');
+		if (!storyId) return fail(400, { error: 'storyId fehlt' });
 		const postId = Number(form.get('postId') ?? 0);
-		if (!storyId || !postId) return fail(400, { error: 'storyId/postId fehlt' });
 
-		// Quelldaten vom IG-Reel + die TikTok-Caption übernehmen (Snapshot).
-		const { data: src } = await supabaseAdmin
-			.from('nureine_social_posts')
-			.select('story_id,category,slide_urls,card_url,og_url,hook_type,hook_style')
-			.eq('id', postId)
-			.single();
-		if (!src) return fail(404, { error: 'Reel nicht gefunden' });
+		// Quelldaten vom IG-Reel (Snapshot), falls vorhanden. Bei TikTok-only-Mastern
+		// (synthetische negative postId, kein IG-Reel) fallen wir auf die Story-Daten
+		// + tiktok_video_url zurück.
+		const { data: src } =
+			postId > 0
+				? await supabaseAdmin
+						.from('nureine_social_posts')
+						.select('story_id,category,slide_urls,card_url,og_url,hook_type,hook_style')
+						.eq('id', postId)
+						.single()
+				: { data: null };
 
 		const { data: story } = await supabaseAdmin
 			.from('nureine_stories')
-			.select('tiktok_caption,tiktok_hashtags')
+			.select('tiktok_caption,tiktok_hashtags,tiktok_video_url,category')
 			.eq('id', storyId)
 			.single();
+		const st = story as {
+			tiktok_caption: string | null;
+			tiktok_hashtags: string[] | null;
+			tiktok_video_url: string | null;
+			category: string | null;
+		} | null;
 
 		const s = src as {
 			category: string | null;
@@ -191,9 +243,9 @@ export const actions: Actions = {
 			og_url: string | null;
 			hook_type: string;
 			hook_style: string | null;
-		};
-		const st = story as { tiktok_caption: string | null; tiktok_hashtags: string[] | null } | null;
+		} | null;
 
+		const videoUrl = st?.tiktok_video_url ?? s?.slide_urls?.[0] ?? null;
 		const { error } = await supabaseAdmin.from('nureine_social_posts').upsert(
 			{
 				story_id: storyId,
@@ -201,12 +253,13 @@ export const actions: Actions = {
 				post_kind: 'reel',
 				caption: st?.tiktok_caption ?? '',
 				hashtags: st?.tiktok_hashtags ?? [],
-				slide_urls: s.slide_urls,
-				card_url: s.card_url,
-				og_url: s.og_url,
-				hook_type: s.hook_type,
-				hook_style: s.hook_style ?? 'image',
-				category: s.category,
+				slide_urls: videoUrl ? [videoUrl] : (s?.slide_urls ?? null),
+				card_url: s?.card_url ?? videoUrl,
+				og_url: s?.og_url ?? videoUrl,
+				// hook_type-Check-Constraint erlaubt nur zahl|frage|kontrast.
+				hook_type: ['zahl', 'frage', 'kontrast'].includes(s?.hook_type ?? '') ? s!.hook_type : 'zahl',
+				hook_style: s?.hook_style ?? 'image',
+				category: s?.category ?? st?.category ?? null,
 				is_carousel: false,
 				status: 'posted',
 				posted_at: new Date().toISOString(),

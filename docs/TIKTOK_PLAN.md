@@ -163,6 +163,50 @@ Der TikTok-Post-Schritt ist damit klein:
 
 ---
 
+## 8b. „Post-and-Prune" (5 posten, 3 löschen) — GEPRÜFT, NICHT nutzen (2026-07-12)
+
+Taktik (von einem Freund): 5 Videos posten, je ~1h prüfen, Unterperformer löschen, ~2
+stehen lassen. Behauptung: schwache Videos „vergiften" einen Account-Score, Löschen
+schützt künftige Reichweite. **Verdikt: Cargo-Cult — der Mechanismus existiert nicht.**
+- ✅ [TikTok offiziell, Newsroom]: *„neither follower count nor whether the account has
+  had previous high-performing videos are direct factors in the recommendation system."*
+  → Es gibt keinen wandernden Account-Score, den Löschen reinigen könnte. Jedes Video
+  wird einzeln bewertet.
+- ⚠️ Die 1h-Frist ist falsch: TikTok testet Videos 24–72h (3-Day-Rule), Kategorisierung
+  bis 48h, Videos gehen teils Tage/Wochen später viral. Nach 1h löschen = Video köpfen,
+  bevor der Algorithmus es eingeordnet hat → wirft die Long-Tail-Reichweite weg.
+- ⚠️ Bei 0 Followern ist das 1h-Sample (Dutzende Impressions) reines Rauschen — man würde
+  zufällig gute Videos killen. Löschen entfernt zudem die Lern-Daten des Algorithmus.
+- **Stattdessen (Konsens 2025/26):** konsistent posten (5×/Woche+), Hooks A/B-testen statt
+  Videos löschen, erst nach 48–72h beurteilen, erster viraler Treffer meist Video 20–30.
+  Seriöse Kompromiss-Version falls je gewünscht: nie löschen, schwache Clips nach ≥72h auf
+  **privat** setzen (Profil sauber, Lern-/Long-Tail-Daten bleiben) — aber Kosmetik, kein Hebel.
+
+## 8c. Vollautomatisches Posten (App löschbar) — Weg steht, ~2–3 Tage (2026-07-12)
+
+Ziel: automatisch posten, damit Aaron die TikTok-App vom Handy löschen kann.
+- **Offizielle TikTok Content Posting API scheidet praktisch aus:** kostenlos, aber
+  unauditierte Apps posten nur `SELF_ONLY` (privat) für max 5 Nutzer. Öffentlich posten
+  braucht einen SEPARATEN „Content Posting API"-Audit (2–4 Wochen), der eine interaktive
+  Consent-UI verlangt — ein Headless-Cron passt nicht ins Prüfschema. Zudem: `PULL_FROM_URL`
+  verlangt Domain-Verifizierung (Supabase-Bucket-URL geht nicht direkt; `FILE_UPLOAD` als
+  Ausweg).
+- **Realistischer Weg: auditierter Drittanbieter-Wrapper mit REST-API** (postet öffentlich,
+  weil der ANBIETER der auditierte Client ist). Empfehlung **upload-post.com** (~16–24 $/Mon,
+  akzeptiert `PUBLIC_TO_EVERYONE` + öffentliche Video-URL), Fallback **Blotato** (~29 $/Mon,
+  REST+MCP). Ayrshare braucht Business-Plan ab 299 $/Mon → zu teuer. Postiz self-hosted löst
+  den Audit NICHT.
+- **Aufwand ~2–3 Tage** (analog Threads-Poster): (1) Account + einmalige OAuth-Kanal-
+  Verknüpfung im Anbieter-Dashboard (der EINE manuelle Rest-Schritt), (2) Modul
+  `src/lib/server/social/tiktok-autopost.ts` nach `threads.ts`-Muster (MP4-URL +
+  tiktok_caption/_hashtags → POST, platform='tiktok'-Zeile loggen, 2/Tag+3h-Guard),
+  (3) env `TIKTOK_UPLOADPOST_KEY` + Cron-Trigger, (4) /admin/tiktok-Häkchen automatisch.
+- **Beachten beim Auto-Post:** AIGC/„AI-generated"-Flag setzen (Pflicht, KI-Stimme); kein
+  Drittanbieter-Watermark (unsere Stempel-Signature ist Eigenmarke = ok); Modul so bauen,
+  dass der Anbieter austauschbar ist (Wrapper = Single Point of Failure).
+- **BLOCKER für Aaron:** Anbieter-Account + API-Key (Aaron legt an, Key an mich). Erst dann
+  baue ich das Modul. Bis dahin bleibt der manuelle /admin/tiktok-Flow.
+
 ## 9. Offene Aaron-Entscheidungen / To-dos
 
 1. **Kontotyp bestätigen:** Creator-Account (empfohlen). Account gründen (Aaron —

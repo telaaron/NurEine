@@ -15,13 +15,13 @@
 				{ href: '/admin', label: 'Übersicht', icon: 'grid', badge: 0 },
 				{ href: '/admin/ki', label: 'KI-Cockpit', icon: 'heart', badge: 0 },
 				{ href: '/admin/social', label: 'Social', icon: 'share', badge: 0 },
+				{ href: '/admin/tiktok', label: 'TikTok', icon: 'send', badge: 0, sub: true },
 				{ href: '/admin/kosten', label: 'Kosten', icon: 'coins', badge: 0 }
 			]
 		}
 	]);
 	// Selten gebraucht (autonom bedient): nur bei Bedarf ausklappen.
 	const moreItems = [
-		{ href: '/admin/tiktok', label: 'TikTok', icon: 'send', badge: 0 },
 		{ href: '/admin/stories', label: 'Stories', icon: 'doc', badge: 0 },
 		{ href: '/admin/redaktion', label: 'Redaktion', icon: 'search', badge: data?.newFeedback ?? 0 },
 		{ href: '/admin/impact', label: 'Impact-Läufe', icon: 'heart', badge: 0 },
@@ -77,7 +77,7 @@
 						<a
 							href={base + item.href}
 							onclick={() => (mobileOpen = false)}
-							class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all"
+							class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all {item.sub ? 'ml-4' : ''}"
 							style={isActive(item.href)
 								? 'background: var(--color-ink); color: var(--color-paper); box-shadow: var(--shadow-sm);'
 								: 'color: var(--color-ink-soft);'}

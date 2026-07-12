@@ -19,17 +19,6 @@ import { supabaseAdmin } from '$lib/server/supabase/client';
 import { buildTikTokCaption, type TikTokStoryInput } from '$lib/server/social/tiktok-caption';
 import type { Actions, PageServerLoad } from './$types';
 
-interface ReelRow {
-	id: number;
-	story_id: string;
-	status: string;
-	posted_at: string | null;
-	created_at: string;
-	category: string | null;
-	slide_urls: string[] | null;
-	caption: string | null;
-}
-
 interface StoryRow extends TikTokStoryInput {
 	id: string;
 	image_url: string | null;
@@ -65,30 +54,19 @@ export interface TikTokReelCard {
 }
 
 export const load: PageServerLoad = async () => {
-	// Alle Reels (Bestand — bewusst OHNE 72h-Frische-Guard, damit der Startbestand
-	// nutzbar ist). Neueste zuerst.
-	const { data: reelRows } = await supabaseAdmin
-		.from('nureine_social_posts')
-		.select('id,story_id,status,posted_at,created_at,category,slide_urls,caption')
-		.eq('post_kind', 'reel')
-		.eq('platform', 'instagram')
-		.order('created_at', { ascending: false })
-		.limit(60);
+	// NUR echte TikTok-Master: Stories, für die die Reel-Regie ein eigenes ReelTikTok-
+	// Video gerendert hat (tiktok_video_url gesetzt). Bewusst KEINE alten IG-Reels mehr
+	// (andere Ästhetik, Fallback-Caption) — diese Seite ist der TikTok-Kanal, nicht das
+	// IG-Reel-Archiv. Neueste Master zuerst.
+	const { data: storyRows } = await supabaseAdmin
+		.from('nureine_stories')
+		.select(STORY_COLS + ',published_at')
+		.not('tiktok_video_url', 'is', null)
+		.order('published_at', { ascending: false })
+		.limit(80);
+	const stories = (storyRows as (StoryRow & { published_at: string | null })[] | null) ?? [];
 
-	const reels = (reelRows as ReelRow[] | null) ?? [];
-	const storyIds = [...new Set(reels.map((r) => r.story_id))];
-
-	// Story-Daten (für Caption-Fallback + Titel/Bild) in einem Rutsch.
-	const storyById = new Map<string, StoryRow>();
-	if (storyIds.length) {
-		const { data: storyRows } = await supabaseAdmin
-			.from('nureine_stories')
-			.select(STORY_COLS)
-			.in('id', storyIds);
-		for (const s of (storyRows as StoryRow[] | null) ?? []) storyById.set(s.id, s);
-	}
-
-	// Welche Stories sind bereits auf TikTok markiert?
+	// Welche Stories sind bereits als auf TikTok gepostet markiert?
 	const { data: tiktokRows } = await supabaseAdmin
 		.from('nureine_social_posts')
 		.select('story_id,posted_at')
@@ -98,76 +76,16 @@ export const load: PageServerLoad = async () => {
 	for (const t of (tiktokRows as { story_id: string; posted_at: string | null }[] | null) ?? [])
 		tiktokByStory.set(t.story_id, t.posted_at);
 
-	const cards: TikTokReelCard[] = reels.map((r) => {
-		const s = storyById.get(r.story_id);
-		const curated = !!(s?.tiktok_caption && s.tiktok_caption.trim());
-
-		let caption: string;
-		let hashtags: string[];
-		let keyword: string;
-
-		if (curated && s) {
-			caption = s.tiktok_caption!.trim();
-			hashtags = (s.tiktok_hashtags ?? []).filter(Boolean);
-			// Keyword-Hinweis auch bei handgepflegter Caption aus dem Builder ableiten.
-			keyword = buildTikTokCaption(storyInput(s)).keyword;
-			// Falls handgepflegt keine Hashtags hinterlegt sind: Fallback-Tags nehmen.
-			if (!hashtags.length) hashtags = buildTikTokCaption(storyInput(s)).hashtags;
-		} else if (s) {
-			const built = buildTikTokCaption(storyInput(s));
-			caption = built.caption;
-			hashtags = built.hashtags;
-			keyword = built.keyword;
-		} else {
-			// Story fehlt (sollte nicht vorkommen) — auf die IG-Caption zurückfallen.
-			caption = r.caption ?? '';
-			hashtags = ['#gutenachrichten'];
-			keyword = '';
-		}
-
-		const full = `${caption}\n\n${hashtags.join(' ')}`.trim();
-
-		return {
-			postId: r.id,
-			storyId: r.story_id,
-			title: s?.title ?? '(Story nicht gefunden)',
-			category: r.category ?? s?.category ?? null,
-			impactScore: s?.impact_score ?? null,
-			igStatus: r.status,
-			igPostedAt: r.posted_at,
-			// Bevorzugt der eigens für TikTok gerenderte Master, sonst das IG-Reel-Video.
-			videoUrl: s?.tiktok_video_url ?? r.slide_urls?.[0] ?? null,
-			imageUrl: s?.image_url ?? null,
-			caption,
-			hashtags,
-			keyword,
-			full,
-			captionCurated: curated,
-			tiktokPosted: tiktokByStory.has(r.story_id),
-			tiktokPostedAt: tiktokByStory.get(r.story_id) ?? null
-		};
-	});
-
-	// TikTok-only-Master: Stories, für die ein eigener TikTok-Master gerendert wurde
-	// (tiktok_video_url gesetzt), die aber (noch) KEIN IG-Reel haben — sonst wären sie
-	// hier unsichtbar. Genau der Normalfall der täglichen Routine (TikTok läuft jeden
-	// Tag, IG nur Mo/Mi/Fr). Negatives Post-ID, damit die Keys nicht mit Reels kollidieren.
-	const coveredStoryIds = new Set(cards.map((c) => c.storyId));
-	const { data: ttOnlyRows } = await supabaseAdmin
-		.from('nureine_stories')
-		.select(STORY_COLS)
-		.not('tiktok_video_url', 'is', null)
-		.order('published_at', { ascending: false })
-		.limit(60);
+	// Post-ID ist hier synthetisch/negativ — es gibt (noch) keine social_posts-Zeile,
+	// bis Aaron „gepostet" klickt. markPosted arbeitet dann rein über die storyId.
 	let synthId = -1;
-	for (const s of (ttOnlyRows as StoryRow[] | null) ?? []) {
-		if (coveredStoryIds.has(s.id)) continue;
-		const built = buildTikTokCaption(storyInput(s));
+	const cards: TikTokReelCard[] = stories.map((s) => {
 		const curated = !!(s.tiktok_caption && s.tiktok_caption.trim());
+		const built = buildTikTokCaption(storyInput(s));
 		const caption = curated ? s.tiktok_caption!.trim() : built.caption;
 		let hashtags = curated ? (s.tiktok_hashtags ?? []).filter(Boolean) : built.hashtags;
 		if (!hashtags.length) hashtags = built.hashtags;
-		cards.push({
+		return {
 			postId: synthId--,
 			storyId: s.id,
 			title: s.title ?? '(ohne Titel)',
@@ -184,8 +102,8 @@ export const load: PageServerLoad = async () => {
 			captionCurated: curated,
 			tiktokPosted: tiktokByStory.has(s.id),
 			tiktokPostedAt: tiktokByStory.get(s.id) ?? null
-		});
-	}
+		};
+	});
 
 	const postedCount = cards.filter((c) => c.tiktokPosted).length;
 	return { cards, stats: { total: cards.length, posted: postedCount, open: cards.length - postedCount } };

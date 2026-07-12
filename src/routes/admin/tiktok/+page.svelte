@@ -34,8 +34,9 @@
 			style="font-family: var(--font-mono); background: var(--color-amber-tint, rgba(200,150,40,0.12)); color: var(--color-amber);">manuell</span>
 	</div>
 	<p class="text-sm max-w-2xl" style="color: var(--color-ink-soft);">
+		Jeden Tag baut die Reel-Regie einen eigenen <strong>TikTok-Master</strong> (Beweis-Loop, Wachstums-Archiv).
 		Lade das Video herunter, kopiere Caption + Hashtags, poste in der TikTok-App — dann hier abhaken.
-		Erinnerung: Das <strong>Keyword muss im Video vorkommen</strong> (gesprochen &amp; eingeblendet) — das ist TikTok-SEO.
+		Cover = der „Belegt."-Stempel-Moment · das „KI-generiert"-Label anschalten.
 	</p>
 	<div class="flex gap-4 mt-4 text-sm" style="color: var(--color-ink-soft);">
 		<span><strong style="color: var(--color-ink);">{data.stats.total}</strong> Reels</span>
@@ -124,6 +125,14 @@
 								class="text-xs px-2.5 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5" style="color: var(--color-ink-soft); border: 1px solid var(--color-rule);">
 								<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 								Video
+							</a>
+						{/if}
+						{#if card.imageUrl}
+							<a href={card.imageUrl} download target="_blank" rel="noopener"
+								class="text-xs px-2.5 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5" style="color: var(--color-ink-soft); border: 1px solid var(--color-rule);"
+								title="Story-Bild als TikTok-Cover — visueller als der Text-Startframe.">
+								<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+								Cover
 							</a>
 						{/if}
 

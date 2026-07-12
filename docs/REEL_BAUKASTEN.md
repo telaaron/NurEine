@@ -150,8 +150,17 @@ Dramaturgie-Regeln (Kurzform von Rezept §C):
    nachgeprüft. Nämlich:` (Loop-Naht; TikTok-Ausnahme von der End-VO-Regel oben).
    Automatisch dazu: dezente Icon-Pops Herz→Kommentar→Teilen unter der Share-Zeile
    (Engagement-Nudge; abschaltbar pro Video mit `"engage": false` in der end-Szene).
-5. `proof`-voText bleibt EXAKT: `Belegt — von uns nachgeprüft.` (Stempel bekommt auf
-   TikTok Sound + Shake + Badge-Auflösung automatisch).
+5. **`proof` = Wachstums-Archiv-Klimax** (Aaron-Reframe 2026-07-12: Der Klimax feiert
+   den FORTSCHRITT, nicht unseren Prüfprozess — „von uns nachgeprüft" war für Viewer
+   unverständlich). PFLICHT-Feld `"progress": <N>` — N = Anzahl veröffentlichter
+   Stories im Archiv, per SQL: `SELECT count(*) FROM nureine_stories WHERE
+   published_at IS NOT NULL;` Die Szene zeigt „Fortschritt Nr. N" + die wachsende
+   Punkt-Spirale (jeder Punkt = eine geprüfte Nachricht, der heutige fliegt aus dem
+   Stempel hinein) + Subline „Jeden Tag einer. Nur was geprüft ist, zählt." — DAS
+   erklärt dem Viewer nebenbei, warum wir prüfen: Der Beleg ist die Eintrittskarte
+   ins Archiv, nicht die Show. proof-voText EXAKT: `Geprüft und echt — Fortschritt
+   Nummer <N>.` (Ziffer schreiben, wird automatisch deutsch gesprochen; Stempel
+   behält Sound + Shake + Badge-Auflösung).
 6. Hooks aus der Bibliothek in Rezept §D wählen; Overpromise-Audit: löst Sekunde ≤15
    den Hook wörtlich ein? Wenn nein → Story fürs Video aussetzen.
 

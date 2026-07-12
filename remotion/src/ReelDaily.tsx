@@ -62,7 +62,9 @@ export type DailyScene = SceneBase &
 		// (ohne Aufmerksamkeit weiß man sonst nicht, worum es geht). Nur ReelTikTok.
 		| { kind: 'number'; value: string; unit: string | null; context: string; snap?: boolean; kicker?: string | null; image?: string | null }
 		| { kind: 'beat'; text: string; image: string | null; pose: Pose }
-		| { kind: 'proof'; source: string; impact: number | null }
+		// progress: Wachstums-Archiv-Klimax (nur ReelTikTok) — „Fortschritt Nr. N"
+		// mit wachsender Punkt-Spirale; N = Zahl geprüfter Stories im Archiv.
+		| { kind: 'proof'; source: string; impact: number | null; progress?: number | null }
 		// map: Karten-Zoom auf Story-Koordinaten (lat/lng aus nureine_stories) —
 		// nur ReelTikTok rendert diesen Baustein, ReelDaily überspringt ihn.
 		| { kind: 'map'; lat: number; lng: number; label: string }

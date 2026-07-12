@@ -384,7 +384,20 @@ const MapScene: React.FC<Extract<DailyScene, { kind: 'map' }> & { category: stri
 };
 
 // ── Szene 4: BELEG — Stempel schlägt härter ein (steifer, mehr Overshoot) ───
-const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: string }> = ({ source, impact, category, vo }) => {
+// progress-Modus (Aaron 2026-07-12): Der Klimax feiert nicht unseren Prüfprozess,
+// sondern DEN FORTSCHRITT — „Fortschritt Nr. N" + wachsende Phyllotaxis-Spirale
+// (jeder Punkt = eine geprüfte gute Nachricht im Archiv, der heutige fliegt aus
+// dem Stempel hinein). Der Beleg wird zur Eintrittskarte: „Nur was geprüft ist,
+// zählt." Ohne progress: klassisches Layout (IG-kompatibel).
+
+// Goldener Winkel — die Spirale wächst organisch nach außen wie Sonnenblumensamen.
+const PHI_ANGLE = 2.39996;
+function spiralPos(i: number, spacing: number): [number, number] {
+	const r = spacing * Math.sqrt(i + 0.6);
+	return [Math.cos(i * PHI_ANGLE) * r, Math.sin(i * PHI_ANGLE) * r];
+}
+
+const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: string }> = ({ source, impact, category, vo, progress }) => {
 	const frame = useCurrentFrame();
 	const accent = accentFor(category);
 	const stamp = spring({ frame: frame - 2, fps: TIKTOK_FPS, config: { damping: 11, mass: 0.5, stiffness: 260 } });
@@ -396,17 +409,82 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 	// und der Wirkungsindex-Wert puncht rein, wenn das Badge sich dort auflöst.
 	const shake = frame >= 7 && frame <= 13 ? Math.sin((frame - 7) * 2.6) * (13 - frame) : 0;
 	const impactPop = interpolate(spring({ frame: frame - 12, fps: TIKTOK_FPS, config: { damping: 11, mass: 0.5, stiffness: 240 } }), [0, 1], [1.35, 1]);
-	return (
-		<AbsoluteFill style={{ background: PAPER, transform: `translateY(${shake}px)` }}>
-			<PaperTextureOverlay kind="halftone" opacity={0.07} />
-			{/* Stempel-Sound: Anflug + satter Aufschlag (Panel: „braucht Wucht als
-			    auditives Signature-Element") — settle doppelt: normal + auf 0.55
-			    verlangsamt = tiefer Bass-Thud unter dem Klick. */}
+	const sounds = (
+		<>
+			{/* Stempel-Sound: Anflug + satter Aufschlag — settle doppelt: normal + auf
+			    0.55 verlangsamt = tiefer Bass-Thud unter dem Klick. */}
 			<Audio src={staticFile('audio/fx/whoosh.wav')} volume={0.55} />
 			<Sequence from={6}>
 				<Audio src={staticFile('audio/fx/settle.wav')} volume={0.95} />
 				<Audio src={staticFile('audio/fx/settle.wav')} volume={0.85} playbackRate={0.55} />
 			</Sequence>
+		</>
+	);
+
+	if (progress != null && progress > 0) {
+		const n = Math.max(1, Math.round(progress));
+		const shown = Math.min(n, 160); // Darstellungs-Cap; die echte Zahl trägt der Text
+		const spacing = n <= 40 ? 34 : n <= 90 ? 27 : 21;
+		const dotR = n <= 40 ? 15 : n <= 90 ? 12 : 9;
+		const cx = 540, cy = SAFE_TOP + 880;
+		// Der neue Punkt (Index shown-1, außen) fliegt ab Frame 16 vom Stempel in die Spirale.
+		const fly = spring({ frame: frame - 16, fps: TIKTOK_FPS, config: { damping: 13, mass: 0.7, stiffness: 120 } });
+		const [txRel, tyRel] = spiralPos(shown - 1, spacing);
+		const nx = interpolate(fly, [0, 1], [M + 210 - cx, txRel]);
+		const ny = interpolate(fly, [0, 1], [SAFE_TOP + 90 - cy, tyRel]);
+		const zoomOut = interpolate(frame, [16, 44], [1.07, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+		const breathe = 1 + 0.008 * Math.sin(frame / 11);
+		const numPop = spring({ frame: frame - 12, fps: TIKTOK_FPS, config: { damping: 12, mass: 0.6, stiffness: 210 } });
+		return (
+			<AbsoluteFill style={{ background: PAPER, transform: `translateY(${shake}px)` }}>
+				<PaperTextureOverlay kind="halftone" opacity={0.07} />
+				{sounds}
+				{/* Kompakter Stempel oben — Ritual bleibt (Design/Sound nie ändern) */}
+				<div style={{ position: 'absolute', left: M, top: SAFE_TOP + 20, transform: `scale(${stampScale}) rotate(-4deg)`, transformOrigin: 'left center', opacity: stampOp }}>
+					<div style={{ display: 'inline-block', border: `9px solid ${accent}`, borderRadius: 12, padding: '8px 30px' }}>
+						<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 96, letterSpacing: '-0.03em', color: accent, lineHeight: 1 }}>Belegt.</div>
+					</div>
+				</div>
+				<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 200, opacity: rowOp, fontFamily: FF.newsreader, fontSize: 42, color: INK }}>Quelle: {source}</div>
+				{/* Der Held: die wachsende Summe */}
+				<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 300, transform: `scale(${interpolate(numPop, [0, 1], [0.85, 1])})`, transformOrigin: 'left center', opacity: interpolate(numPop, [0, 0.35], [0, 1]) }}>
+					<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 88, letterSpacing: '-0.03em', color: INK, lineHeight: 1.05 }}>
+						Fortschritt <span style={{ color: accent }}>Nr. {n.toLocaleString('de-DE')}</span>
+					</div>
+					<div style={{ fontFamily: FF.interSemi, fontSize: 32, color: MUTED, marginTop: 18 }}>Jeden Tag einer. Nur was geprüft ist, zählt.</div>
+				</div>
+				{/* Das Archiv: Phyllotaxis-Spirale, wächst nach außen */}
+				<svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{ position: 'absolute', inset: 0, transform: `scale(${zoomOut * breathe})`, transformOrigin: `${cx}px ${cy}px` }}>
+					{Array.from({ length: Math.max(0, shown - 1) }, (_, i) => {
+						const [x, y] = spiralPos(i, spacing);
+						const jitter = 0.75 + ((i * 2654435761) % 100) / 400; // deterministisch
+						return <circle key={i} cx={cx + x} cy={cy + y} r={dotR * jitter} fill={accent} opacity={0.32} />;
+					})}
+					<circle cx={cx + nx} cy={cy + ny} r={dotR * 1.5 + 3 * Math.sin(Math.max(0, frame - 30) / 5)} fill={accent} stroke={PAPER} strokeWidth={3} opacity={interpolate(fly, [0, 0.15], [0, 1])} />
+				</svg>
+				{/* Wirkungsindex kompakt unten */}
+				{impact != null ? (
+					<div style={{ position: 'absolute', left: M, right: M, bottom: SAFE_BOTTOM + 60, opacity: rowOp }}>
+						<div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+							<div style={{ fontFamily: FF.interSemi, fontSize: 28, color: MUTED }}>Wirkungsindex — nureine.de</div>
+							<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 36, color: INK, transform: `scale(${impactPop})`, transformOrigin: 'right center' }}>{impact}/100</div>
+						</div>
+						<div style={{ width: '100%', height: 14, borderRadius: 14, background: 'rgba(22,20,15,0.1)', overflow: 'hidden' }}>
+							<div style={{ width: `${barW}%`, height: 14, borderRadius: 14, background: accent }} />
+						</div>
+					</div>
+				) : null}
+				<FlashWipe color={accent} />
+				{/* raise: Caption sitzt über dem Wirkungsindex-Block (sonst Überdeckung) */}
+				<SceneVoice vo={vo} raise={220} />
+			</AbsoluteFill>
+		);
+	}
+
+	return (
+		<AbsoluteFill style={{ background: PAPER, transform: `translateY(${shake}px)` }}>
+			<PaperTextureOverlay kind="halftone" opacity={0.07} />
+			{sounds}
 			<div style={{ position: 'absolute', left: M, top: SAFE_TOP + 230, transform: `scale(${stampScale}) rotate(-4deg)`, transformOrigin: 'left center', opacity: stampOp }}>
 				<div style={{ display: 'inline-block', border: `12px solid ${accent}`, borderRadius: 14, padding: '10px 40px' }}>
 					<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 156, letterSpacing: '-0.03em', color: accent, lineHeight: 1 }}>Belegt.</div>
@@ -454,14 +532,14 @@ const EndScene: React.FC<Extract<DailyScene, { kind: 'end' }> & { category: stri
 			{loopMode && engage !== false ? <EngageIcons accent={accent} /> : null}
 			<div style={{ position: 'absolute', left: M, right: loopMode ? M : 400, bottom: SAFE_BOTTOM, transform: `scale(${loopMode ? 1 : pulse})`, transformOrigin: 'left center', zIndex: 5 }}>
 				{loopMode ? (
-					<div style={{ fontFamily: FF.interSemi, fontSize: 34, color: AMBER_DEEP }}>Morgen die nächste. Belegt.</div>
+					<div style={{ fontFamily: FF.interSemi, fontSize: 34, color: AMBER_DEEP }}>Morgen wächst es weiter.</div>
 				) : (
 					<div style={{ display: 'inline-flex', alignItems: 'center', height: 104, background: accent, borderRadius: 60, padding: '0 48px', boxShadow: '0 18px 46px rgba(60,40,20,0.32)' }}>
 						<div style={{ fontFamily: FF.interSemi, fontSize: 38, color: '#fff', fontWeight: 700 }}>{cta} ↗</div>
 					</div>
 				)}
 				<div style={{ fontFamily: FF.interSemi, fontSize: 30, color: loopMode ? MUTED : AMBER_DEEP, marginTop: 24 }}>@nureine.de — täglich eine gute Nachricht</div>
-				<div style={{ fontFamily: FF.inter, fontSize: 22, color: MUTED, marginTop: 14 }}>{hasVo ? 'Illustration & Stimme: KI · ' : 'Illustration: KI · '}Kuratiert von Menschen</div>
+				<div style={{ fontFamily: FF.inter, fontSize: 22, color: MUTED, marginTop: 14 }}>{hasVo ? 'Illustration & Stimme: KI · ' : 'Illustration: KI · '}von Menschen geprüft</div>
 			</div>
 			<FlashWipe />
 			{/* raise: Caption sitzt im Loop-Modus über dem Follow-Block (sonst Überlappung) */}

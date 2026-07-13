@@ -347,6 +347,10 @@ function synthSegment(text, slug, name) {
 		let words = JSON.parse(readFileSync(wordsPath, 'utf8'));
 		if (!words.length) throw new Error('keine Wort-Timestamps');
 		words = mergeNumberWords(words, subs); // Captions zeigen wieder „97.000", nicht das Zahlwort
+		// Caption-Tokens glätten: Pausen-Marker im voText (Gedankenstrich, Komma für
+		// Sprech-Pacing) dürfen nicht als „weniger,," / „—" in den Untertiteln landen.
+		const cleanTok = (t) => t.replace(/[—–]/g, '').replace(/([,.!?;:])\1+/g, '$1').replace(/\s+([,.!?;:])/g, '$1').replace(/^[,;:—–\s]+/, '').replace(/\s{2,}/g, ' ').trim();
+		words = words.map((w) => ({ ...w, t: cleanTok(w.t) })).filter((w) => w.t.length);
 		return {
 			file,
 			words: words.map((w) => ({ t: w.t, start: Math.round(w.start * FPS), end: Math.round(w.end * FPS) })),

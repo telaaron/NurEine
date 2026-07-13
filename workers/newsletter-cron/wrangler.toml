@@ -2,10 +2,14 @@ name = "nureine-newsletter-cron"
 main = "src/index.ts"
 compatibility_date = "2026-05-01"
 
-# Cron: 04:20 UTC every day (= 06:20 CEST). Matches the previous
-# GitHub Actions schedule from newsletter-daily.yml.
+# Cron: 04:20 UTC täglich (= 06:20 CEST) — Haupt-Lauf.
+# 05:40 UTC (= 07:40 CEST) — BACKUP-Lauf: Cloudflare-Free-Cron-Trigger sind
+# "best effort" und werden gelegentlich übersprungen (Ursache: am 2026-07-13 kam
+# kein Newsletter, obwohl Endpoint+Code gesund waren). Der Endpoint ist idempotent
+# (fetchRecentSendsByStory überspringt bereits gesendete Stories/Empfänger) → ein
+# zweiter Lauf schickt NIE doppelt, fängt aber einen verpassten Haupt-Lauf ab.
 [triggers]
-crons = ["20 4 * * *"]
+crons = ["20 4 * * *", "40 5 * * *"]
 
 # Public vars (non-secret). Override per environment in the dashboard if needed.
 [vars]

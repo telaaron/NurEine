@@ -189,6 +189,12 @@ REEL_TTS=eleven node render.mjs --script tiktok-plan.json --slug <slug>-tt --out
   `warm-3` (Ambient-Piano) — alle -20 LUFS. Die alten `uplift-1/2` klingen nach
   Werbung → für TikTok nicht mehr verwenden, bis Aaron anders entscheidet.
 
+**Reichweiten-Signale (optional im tiktok-Block, docs/TIKTOK_PLAN.md §8d):** Du kannst
+`tiktok.mentions` (1–2 verifizierte TikTok-Handles der Quelle, NUR wenn die Org wirklich
+auf TikTok ist — nie erfinden) und `tiktok.location` (immer große DACH-Stadt wie „Berlin",
+NIE der Story-Ort) mitliefern. Beides erscheint als Empfehlung in der /admin/tiktok-Checkliste
+fürs manuelle Posten (Quelle @-erwähnen bringt kleinen Accounts +21% Reichweite).
+
 Sicht-Checks vor Abnahme (zusätzlich zum Frame-Grid): (a) Frame 0 zeigt die Zahl voll
 lesbar, (b) letzter Frame ≈ Frame 0 (Loop-Naht), (c) Badge oben rechts ab ~Sek 2 und
 Auflösung im Stempel, (d) Mute-Test — funktioniert der Bogen ohne Ton?

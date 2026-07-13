@@ -199,7 +199,12 @@ SOURCE_CONFIG: dict[str, dict[str, int]] = {
     "WHO News":               {"max_per_run": 4,  "priority": 2},
     "UN News":                {"max_per_run": 5,  "priority": 2},
     "Johns Hopkins Hub":      {"max_per_run": 5,  "priority": 2},
-    "ScienceDaily Tech":      {"max_per_run": 5,  "priority": 2},
+    # improvement #12 (Verbesserer-Agent): ScienceDaily Tech war P2/5, lieferte aber
+    # über 89 Stories fast nur Wissenschafts-Kuriosität (Ø impact 46.8, nur 1 echte
+    # Impact-Perle ≥75, 38 unbewertet) — kein Nutzen für echte Menschen. Auf P3
+    # heruntergestuft (wird nach den relevanten Quellen verarbeitet) + Durchsatz 5→3,
+    # ohne die Quelle abzuschalten (die seltene echte Perle kommt weiter durch).
+    "ScienceDaily Tech":      {"max_per_run": 3,  "priority": 3},
     "The Conversation":       {"max_per_run": 6,  "priority": 2},
     "Medical Xpress":         {"max_per_run": 6,  "priority": 3},
     "STAT News":              {"max_per_run": 5,  "priority": 3},

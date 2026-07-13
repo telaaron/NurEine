@@ -2179,6 +2179,31 @@ def run() -> None:
                 except (ValueError, TypeError, AttributeError):
                     pass
 
+            # ---- STAGE 7b: FINALE WIRKUNGS-UNTERGRENZE (improvement #23) ────────
+            # STAGE 4b gatet auf result.get("impact_score"); der TATSÄCHLICH
+            # gespeicherte Wert wird bei 2116 aber erneut über _compute_impact_score
+            # gebildet und kann abweichen (z.B. wenn dieselbe URL in derselben
+            # Runde ein zweites, niedriger bewertetes Mal analysiert wird — DeepSeek
+            # ist nicht deterministisch). Messung 07-13: fetch_log zeigte accepted
+            # mit impact 55–58, in nureine_stories landeten dieselben Stories mit
+            # 30–52. Deshalb hier ein zweiter, autoritativer Gate auf EXAKT den
+            # Wert, der gleich persistiert wird — so kann strukturell keine Sub-55-
+            # Story mehr in die DB gelangen, egal welcher Analyse-Pfad sie erzeugt.
+            _final_impact = story_record.get("impact_score") or 0
+            if _final_impact < STORY_MIN_IMPACT:
+                filter_reasons["impact_too_low"] = filter_reasons.get("impact_too_low", 0) + 1
+                log.info(
+                    "  Rejected at insert (final impact %s < %s): %s",
+                    _final_impact, STORY_MIN_IMPACT, story_record.get("title", "(kein Titel)"),
+                )
+                log_fetch_decision(
+                    source_name, source_beat, story_record.get("title", ""),
+                    "rejected_impact", f"final impact={_final_impact}<{STORY_MIN_IMPACT}",
+                    impact_score=_final_impact,
+                )
+                time.sleep(API_DELAY_SECONDS)
+                continue
+
             try:
                 supabase_post("nureine_stories", story_record)
                 stories_added += 1

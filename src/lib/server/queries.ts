@@ -459,6 +459,21 @@ export async function getLatestFeatured(): Promise<StoryResult | undefined> {
   // (curation_queue, for_date=heute). Die steht ab dem Nacht-Lauf fest.
   // Lokales Datum (Europe/Berlin), damit der Hero zum lokalen Tagesbeginn wechselt.
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(new Date());
+  const yesterday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Berlin' }).format(
+    new Date(Date.now() - 24 * 60 * 60 * 1000)
+  );
+  // Gestrige Hero-Story ermitteln — sie darf HEUTE NICHT wieder Aufmacher sein
+  // (Aaron 2026-07-13: „Hero nie 2 Tage gleich"). Sicherheitsnetz im Code, falls
+  // der Chefredakteur trotz Regel dieselbe Perle setzt.
+  const { data: yHero } = await supabaseAdmin
+    .from('nureine_curation_queue')
+    .select('story_id')
+    .eq('channel', 'hero')
+    .eq('for_date', yesterday)
+    .limit(1)
+    .maybeSingle();
+  const yesterdayHeroId = (yHero as { story_id: string } | null)?.story_id ?? null;
+
   const { data: heroPick } = await supabaseAdmin
     .from('nureine_curation_queue')
     .select('story_id')
@@ -468,12 +483,15 @@ export async function getLatestFeatured(): Promise<StoryResult | undefined> {
     .order('status', { ascending: true }) // 'approved' vor 'proposed'
     .limit(1)
     .maybeSingle();
-  if (heroPick?.story_id) {
+  const heroId = (heroPick as { story_id: string } | null)?.story_id ?? null;
+  // Nur nehmen, wenn es NICHT die gestrige Hero-Story ist. Sonst fällt es unten
+  // auf die stärkste frische Story durch (die ≠ gestern sein wird).
+  if (heroId && heroId !== yesterdayHeroId) {
     // Nur zeigen, wenn die Story existiert und keine Dublette ist.
     const { data: heroStory } = await supabaseAdmin
       .from('nureine_stories')
       .select('*')
-      .eq('id', (heroPick as { story_id: string }).story_id)
+      .eq('id', heroId)
       .is('duplicate_of', null)
       .maybeSingle();
     if (heroStory) return mapStory(heroStory as SupabaseStory);
@@ -483,12 +501,14 @@ export async function getLatestFeatured(): Promise<StoryResult | undefined> {
   // stärkste frische Story der letzten 48h. Kann tagsüber wechseln — greift aber
   // nur, wenn die Kuration fehlt.
   const since48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-  const { data: topFresh } = await supabaseAdmin
+  let freshQ = supabaseAdmin
     .from('nureine_stories')
     .select('*')
     .not('impact_score', 'is', null)
     .is('duplicate_of', null) // keine Dublette als Aufmacher
-    .gte('created_at', since48h)
+    .gte('created_at', since48h);
+  if (yesterdayHeroId) freshQ = freshQ.neq('id', yesterdayHeroId); // nicht = gestern
+  const { data: topFresh } = await freshQ
     .order('impact_score', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(1)

@@ -271,16 +271,59 @@ const TikTokCountUp: React.FC<{ value: string; unit: string | null; category: st
 // Cold-Open-Zahl: steht ab Frame 0 voll lesbar und rastet in ~9 Frames mit
 // Overshoot ein — ersetzt den Count-up am Videoanfang (Rezept §C: erstes
 // gesprochenes Wort <0,5 s, die Zahl darf dem Wort nicht hinterherzählen).
+// Odometer-Ziffer (OPT-IN, NICHT im Cold-Open — dort muss die Zahl ab Frame 0 lesbar
+// sein). Verfügbar für künftige Bausteine, wo Hochrollen erwünscht ist (z.B. ein
+// dediziertes „Zähler"-Beat). Ein vertikaler 0–9-Stapel, der auf den Zielwert einrastet.
+// Bewusst NICHT in SnapValue/TikTokCountUp verdrahtet: Cold-Open = Sofort-Lesbarkeit,
+// Count-up = bewährte numerische Interpolation (Dezimal/Einheit-sicher).
+const DIGIT_H = 1; // relativ (em), via lineHeight gesetzt
+const OdoDigit: React.FC<{ target: number; size: number; delay: number }> = ({ target, size, delay }) => {
+	const frame = useCurrentFrame();
+	// Rollt ~1.6 volle Umdrehungen und landet auf target (schneller mechanischer Einrast).
+	const prog = spring({ frame: frame - delay, fps: TIKTOK_FPS, config: { damping: 18, mass: 0.7, stiffness: 150 } });
+	const spins = 16 + target; // wie weit hochgerollt wird, endet auf target
+	const pos = interpolate(prog, [0, 1], [0, spins]);
+	// modulo für den sichtbaren 0–9-Ausschnitt
+	const shownOffset = (pos % 10) * (size * DIGIT_H);
+	return (
+		<span style={{ display: 'inline-block', height: size * DIGIT_H, overflow: 'hidden', verticalAlign: 'top' }}>
+			<span style={{ display: 'block', transform: `translateY(${-shownOffset}px)` }}>
+				{Array.from({ length: 20 }, (_, i) => (
+					<span key={i} style={{ display: 'block', height: size * DIGIT_H, lineHeight: `${size * DIGIT_H}px` }}>{i % 10}</span>
+				))}
+			</span>
+		</span>
+	);
+};
+
+const OdometerNumber: React.FC<{ value: string; size: number }> = ({ value, size }) => {
+	const chars = value.split('');
+	// nur die Ziffern bekommen einen Roll-Delay (von links nach rechts leicht gestaffelt)
+	let digitIdx = 0;
+	return (
+		<span style={{ display: 'inline-flex', alignItems: 'flex-start', fontFamily: FF.grotesk, fontSize: size, fontWeight: 800, color: '#fff', lineHeight: `${size * DIGIT_H}px`, letterSpacing: '-0.045em' }}>
+			{chars.map((c, i) => {
+				if (/[0-9]/.test(c)) {
+					const d = digitIdx++;
+					return <OdoDigit key={i} target={parseInt(c, 10)} size={size} delay={d * 2} />;
+				}
+				return <span key={i} style={{ display: 'inline-block', height: size * DIGIT_H }}>{c}</span>;
+			})}
+		</span>
+	);
+};
+
 const SnapValue: React.FC<{ value: string; unit: string | null }> = ({ value, unit }) => {
 	const frame = useCurrentFrame();
-	// Wächst REIN statt von >1 zu schrumpfen — Overshoot >1.03 würde die Zahl
-	// am rechten Rand abschneiden (transformOrigin left, Zahl füllt die Breite).
 	const scale = interpolate(frame, [0, 5, 9], [0.92, 1.03, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 	const blur = interpolate(frame, [0, 6], [4, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 	const size = value.length <= 4 ? 380 : value.length <= 7 ? 270 : 200;
+	// KEIN Odometer im Cold-Open: die Zahl MUSS ab Frame 0 lesbar sein (3,75s
+	// Ø-Wiedergabe → hochrollen von 0 verschenkt die Kern-Info). Snap = sofort da,
+	// nur kurzer Blur-Einrast. Der Odometer lebt im Count-up-Modus (Mittel-Szenen).
 	return (
-		<div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap' }}>
-			<div style={{ fontFamily: FF.grotesk, fontSize: size, fontWeight: 800, color: '#fff', lineHeight: 0.9, letterSpacing: '-0.045em', filter: `blur(${blur}px)`, transform: `scale(${scale})`, transformOrigin: 'left center' }}>{value}</div>
+		<div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', transform: `scale(${scale})`, transformOrigin: 'left center' }}>
+			<div style={{ fontFamily: FF.grotesk, fontSize: size, fontWeight: 800, color: '#fff', lineHeight: 0.9, letterSpacing: '-0.045em', filter: `blur(${blur}px)` }}>{value}</div>
 			{unit ? <div style={{ fontFamily: FF.interSemi, fontSize: 54, color: 'rgba(255,255,255,0.94)', marginLeft: 24 }}>{unit}</div> : null}
 		</div>
 	);
@@ -397,7 +440,51 @@ function spiralPos(i: number, spacing: number): [number, number] {
 	return [Math.cos(i * PHI_ANGLE) * r, Math.sin(i * PHI_ANGLE) * r];
 }
 
-const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: string }> = ({ source, impact, category, vo, progress }) => {
+// ── Quellen-Snapshot: der USP wird ein sichtbares Dokument (Aaron 2026-07-14) ──
+// Ein sauber gesetztes Faksimile-Kärtchen der Quelle (KEIN echter Screenshot —
+// Rechte/Lesbarkeit) fliegt herein, ein Marker sweept über das belegende Zitat,
+// ein Tinten-Häkchen zeichnet sich. Macht aus „wir behaupten belegt" einen Beleg.
+const SourceSnapshot: React.FC<{ snapshot: { title: string; outlet: string; year: string; quote: string }; accent: string; startFrame: number }> = ({ snapshot, accent, startFrame }) => {
+	const frame = useCurrentFrame();
+	const f = frame - startFrame;
+	if (f < 0) return null;
+	// Kärtchen fliegt von rechts unten herein und rastet leicht gekippt ein.
+	const inS = spring({ frame: f, fps: TIKTOK_FPS, config: { damping: 15, mass: 0.8, stiffness: 130 } });
+	const tx = interpolate(inS, [0, 1], [140, 0]);
+	const ty = interpolate(inS, [0, 1], [80, 0]);
+	const rot = interpolate(inS, [0, 1], [6, -1.5]);
+	const op = interpolate(inS, [0, 0.35], [0, 1]);
+	// Highlight-Marker sweept über das Zitat (Frame 16–30).
+	const sweep = interpolate(f, [16, 30], [0, 100], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+	// Tinten-Häkchen zeichnet sich (dashoffset) ab Frame 26.
+	const checkDraw = interpolate(f, [26, 40], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+	const checkOp = interpolate(f, [26, 30], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+	return (
+		<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 560, opacity: op, transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg)`, transformOrigin: 'center' }}>
+			<div style={{ position: 'relative', background: '#fffdf8', borderRadius: 10, padding: '26px 30px 30px', boxShadow: '0 26px 60px rgba(60,40,20,0.28)', border: '1px solid rgba(22,20,15,0.08)' }}>
+				{/* Kopf: Outlet + Jahr, wie eine Studien-Kopfzeile */}
+				<div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+					<div style={{ width: 12, height: 12, borderRadius: 3, background: accent }} />
+					<div style={{ fontFamily: FF.interSemi, fontSize: 26, letterSpacing: '0.06em', color: MUTED, textTransform: 'uppercase' }}>{snapshot.outlet} · {snapshot.year}</div>
+				</div>
+				{/* Titel der Quelle, Serifen = redaktionell */}
+				<div style={{ fontFamily: FF.newsreader, fontSize: 40, lineHeight: 1.22, color: INK, marginBottom: 18 }}>{snapshot.title}</div>
+				{/* Belegendes Zitat mit Highlight-Sweep */}
+				<div style={{ fontFamily: FF.newsreader, fontSize: 34, fontStyle: 'italic', lineHeight: 1.32, color: INK }}>
+					<span style={{ backgroundImage: `linear-gradient(${accent}44, ${accent}44)`, backgroundRepeat: 'no-repeat', backgroundSize: `${sweep}% 82%`, backgroundPosition: '0 88%', borderRadius: 4 }}>
+						„{snapshot.quote}“
+					</span>
+				</div>
+				{/* Tinten-Häkchen unten rechts, zeichnet sich in einem Zug */}
+				<svg width={56} height={56} viewBox="0 0 24 24" style={{ position: 'absolute', right: 22, bottom: 20, opacity: checkOp }}>
+					<path d="M4 12.5l5 5L20 6" fill="none" stroke={accent} strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" pathLength={1} strokeDasharray={1} strokeDashoffset={checkDraw} />
+				</svg>
+			</div>
+		</div>
+	);
+};
+
+const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: string }> = ({ source, impact, category, vo, progress, snapshot }) => {
 	const frame = useCurrentFrame();
 	const accent = accentFor(category);
 	const stamp = spring({ frame: frame - 2, fps: TIKTOK_FPS, config: { damping: 11, mass: 0.5, stiffness: 260 } });
@@ -456,7 +543,19 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 					</div>
 					<div style={{ fontFamily: FF.interSemi, fontSize: 32, color: MUTED, marginTop: 18 }}>Jeden Tag einer. Nur was geprüft ist, zählt.</div>
 				</div>
-				{/* Das Archiv: Phyllotaxis-Spirale, wächst nach außen */}
+				{/* Der Beleg als Dokument (snapshot) hat Vorrang — löst den USP visuell ein;
+				    die Spirale trägt ihn dann kleiner/dezent darunter weiter. */}
+				{snapshot ? (
+					<>
+						<SourceSnapshot snapshot={snapshot} accent={accent} startFrame={8} />
+						<svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{ position: 'absolute', inset: 0, opacity: 0.5 }}>
+							{Array.from({ length: Math.max(0, Math.min(shown - 1, 60)) }, (_, i) => {
+								const [x, y] = spiralPos(i, 13);
+								return <circle key={i} cx={540 + x} cy={SAFE_BOTTOM + 1555} r={4} fill={accent} opacity={0.28} />;
+							})}
+						</svg>
+					</>
+				) : (
 				<svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{ position: 'absolute', inset: 0, transform: `scale(${zoomOut * breathe})`, transformOrigin: `${cx}px ${cy}px` }}>
 					{Array.from({ length: Math.max(0, shown - 1) }, (_, i) => {
 						const [x, y] = spiralPos(i, spacing);
@@ -465,6 +564,7 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 					})}
 					<circle cx={cx + txRel} cy={cy + tyRel} r={Math.max(0.01, dotR * 1.5 * dotIn + 3 * Math.sin(Math.max(0, frame - 40) / 5))} fill={accent} stroke={PAPER} strokeWidth={3} opacity={dotIn} />
 				</svg>
+				)}
 				{/* Wirkungsindex kompakt unten — bei Ankunft des Badges (Frame ~30) blitzt die
 				    Zahl in Akzentfarbe auf + kurzer Glow, damit die Klammer „unerklärte 78 oben
 				    → DAS war der Wirkungsindex" beim ERSTEN Sehen klick macht (Panel-Fix). */}
@@ -488,8 +588,9 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 					);
 				})() : null}
 				<FlashWipe color={accent} />
-				{/* raise: Caption sitzt über dem Wirkungsindex-Block (sonst Überdeckung) */}
-				<SceneVoice vo={vo} raise={220} />
+				{/* Bei snapshot Karaoke AUS (das Kärtchen zeigt das Beleg-Zitat, die Pille
+				    würde es überlappen); sonst Caption über dem Wirkungsindex-Block. */}
+				<SceneVoice vo={vo} raise={220} captions={!snapshot} />
 			</AbsoluteFill>
 		);
 	}
@@ -631,6 +732,25 @@ const RewatchBadge: React.FC<{ value: number; proofStart: number; category: stri
 	);
 };
 
+// ── Soft-CTA (Strategie §5): stiller Text-Overlay, loop-schonend ────────────
+// Erscheint ~Sek 8, hält bis ~Sek 15 (nach dem Aha, vor dem Stempel), NIE gesprochen,
+// NIE am Ende (Autoplay überspringt den Loop-Frame). Für Sound-off-Scroller. Sitzt
+// unten Mitte über der TikTok-UI-Zone, dezent, bricht den Loop nicht.
+const SoftCta: React.FC<{ text: string; fromFrame: number; toFrame: number }> = ({ text, fromFrame, toFrame }) => {
+	const frame = useCurrentFrame();
+	if (frame < fromFrame || frame > toFrame) return null;
+	const op = interpolate(frame, [fromFrame, fromFrame + 10, toFrame - 10, toFrame], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+	const y = interpolate(frame, [fromFrame, fromFrame + 12], [16, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+	return (
+		<div style={{ position: 'absolute', left: 60, right: 60, bottom: SAFE_BOTTOM - 30, display: 'flex', justifyContent: 'center', zIndex: 25, opacity: op, transform: `translateY(${y}px)` }}>
+			<div style={{ background: 'rgba(22,20,15,0.82)', borderRadius: 16, padding: '14px 26px', display: 'flex', alignItems: 'center', gap: 12 }}>
+				<div style={{ width: 8, height: 8, borderRadius: 4, background: AMBER }} />
+				<div style={{ fontFamily: FF.interSemi, fontSize: 32, color: '#fff', letterSpacing: '-0.01em' }}>{text}</div>
+			</div>
+		</div>
+	);
+};
+
 // ── Haupt-Komposition ───────────────────────────────────────────────────────
 export const ReelTikTok: React.FC<ReelDailyProps> = (p) => {
 	useFonts();
@@ -693,6 +813,9 @@ export const ReelTikTok: React.FC<ReelDailyProps> = (p) => {
 				</Sequence>
 			) : null}
 			{p.badge != null ? <RewatchBadge value={p.badge} proofStart={proofStart} category={p.category} targetDX={badgeDX} targetDY={badgeDY} toArchive={badgeToArchive} /> : null}
+			{/* Soft-CTA: von ~Sek 8 bis kurz vor dem Stempel (proofStart) — nach dem Aha,
+			    vor der Beleg-Klimax; nie am Ende, damit der Loop intakt bleibt. */}
+			{p.softCta ? <SoftCta text={p.softCta} fromFrame={Math.min(8 * TIKTOK_FPS, proofStart - 90)} toFrame={proofStart - 20} /> : null}
 		</AbsoluteFill>
 	);
 };

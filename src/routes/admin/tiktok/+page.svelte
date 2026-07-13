@@ -126,6 +126,27 @@
 						</ul>
 					</details>
 
+					<!-- Funnel: der Weg von TikTok zu Newsletter/App (docs/TIKTOK_STRATEGIE.md) -->
+					<details class="mb-3 rounded-lg overflow-hidden" style="border: 1px solid var(--color-rule);">
+						<summary class="text-xs font-medium px-3 py-2 cursor-pointer select-none" style="background: var(--color-canvas-soft); color: var(--color-ink);">
+							🌱 Funnel — Newsletter/App (Nordstern: Abos aus TikTok)
+						</summary>
+						<div class="text-[0.78rem] leading-relaxed px-3 py-2.5 space-y-2.5" style="color: var(--color-ink-soft);">
+							<p><strong style="color: var(--color-ink);">Gepinnten Kommentar setzen</strong> (primärer Klick-Kanal — Link erst ab 1k Follower ODER Business-Account):</p>
+							<div class="rounded-lg p-2.5 text-[0.8rem] whitespace-pre-wrap" style="background: var(--color-canvas-soft); color: var(--color-ink); font-family: var(--font-mono);">{card.pinnedComment}</div>
+							<button type="button" onclick={() => copy(card.pinnedComment, 'pin-' + card.postId)}
+								class="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+								style="background: var(--color-ink); color: var(--color-paper);">
+								{copiedKey === 'pin-' + card.postId ? '✓ kopiert' : 'Kommentar kopieren'}
+							</button>
+							<ul class="space-y-1.5 pt-1">
+								<li><strong style="color: var(--color-ink);">Bio-Text:</strong> „Jeden Tag eine belegte gute Nachricht. Kein Doom. → Newsletter" + Link <code style="color: var(--color-amber);">nureine.de/go?to=newsletter&src=tiktok</code> (trackt die Abos).</li>
+								<li><strong style="color: var(--color-ink);">Newsletter zuerst, App später</strong> — E-Mail ist die niedrigere Hürde; App kommt in der Willkommensstrecke.</li>
+								<li style="color: var(--color-faint);">Ziel ist NICHT Views, sondern bestätigte Abos. Erst Vertrauen (Format), dann Conversion.</li>
+							</ul>
+						</div>
+					</details>
+
 					<!-- Aktionen -->
 					<div class="flex flex-wrap items-center gap-2">
 						<button type="button" onclick={() => copy(card.full, 'full-' + card.postId)}

@@ -64,7 +64,9 @@ export type DailyScene = SceneBase &
 		| { kind: 'beat'; text: string; image: string | null; pose: Pose }
 		// progress: Wachstums-Archiv-Klimax (nur ReelTikTok) — „Fortschritt Nr. N"
 		// mit wachsender Punkt-Spirale; N = Zahl geprüfter Stories im Archiv.
-		| { kind: 'proof'; source: string; impact: number | null; progress?: number | null }
+		// snapshot: Quellen-Faksimile-Kärtchen (USP visuell — Titel/Journal/Jahr/Zitat,
+		// belegende Zeile wird gesweept, Tinten-Häkchen zeichnet sich). Nur ReelTikTok.
+		| { kind: 'proof'; source: string; impact: number | null; progress?: number | null; snapshot?: { title: string; outlet: string; year: string; quote: string } | null }
 		// map: Karten-Zoom auf Story-Koordinaten (lat/lng aus nureine_stories) —
 		// nur ReelTikTok rendert diesen Baustein, ReelDaily überspringt ihn.
 		| { kind: 'map'; lat: number; lng: number; label: string }
@@ -87,6 +89,9 @@ export interface ReelDailyProps {
 	/** Rewatch-Badge: Wirkungsindex unerklärt ab ~Sek 2, Auflösung im Stempel.
 	 *  Von ReelDaily ignoriert. */
 	badge?: number | null;
+	/** Soft-CTA (Strategie §5): stiller Text-Overlay bei ~Sek 8–15, nie gesprochen,
+	 *  nie am Ende, loop-schonend. Framing aus §2 (Erleichterung/Kontrast). ReelDaily ignoriert. */
+	softCta?: string | null;
 }
 
 export const reelDailyDefault: ReelDailyProps = {

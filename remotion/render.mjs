@@ -628,7 +628,8 @@ async function main() {
 		hasVo: anyVo,
 		durationInFrames: duration, // enthält bei loop bereits den LOOP_TAIL-Schwanz
 		loop,
-		badge
+		badge,
+		softCta: plan?.softCta || null // stiller Text-CTA ~Sek 8-15 (Strategie §5)
 	};
 	const propsPath = `/tmp/reel-props-${slug}.json`;
 	writeFileSync(propsPath, JSON.stringify(props));

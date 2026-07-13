@@ -55,6 +55,8 @@ export interface TikTokReelCard {
 	sourceName: string | null;
 	/** Vorgeschlagener @-Handle der Quelle, wenn hinterlegt (sonst null → Hinweis „prüfen"). */
 	mentionHint: string | null;
+	/** Fertiger Text für den gepinnten Kommentar (Quelle + Wert + Funnel-Verweis). */
+	pinnedComment: string;
 }
 
 // Bekannte, verifizierte TikTok-Handles häufiger Quellen. Nur eintragen, was WIRKLICH
@@ -130,7 +132,8 @@ export const load: PageServerLoad = async () => {
 			tiktokPosted: tiktokByStory.has(s.id),
 			tiktokPostedAt: tiktokByStory.get(s.id) ?? null,
 			sourceName: s.source_name ?? null,
-			mentionHint: mentionForSource(s.source_name)
+			mentionHint: mentionForSource(s.source_name),
+			pinnedComment: `Quelle, von uns nachgeprüft: ${s.source_name ?? '—'}. Jeden Tag EINE belegte gute Nachricht — der Newsletter ist im Profil. 🌱`
 		};
 	});
 

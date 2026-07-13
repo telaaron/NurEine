@@ -55,11 +55,14 @@ export const POST: RequestHandler = async ({ request, url }) => {
 		}
 	}
 
-	// improvement #5: newsletter_open_rate was structurally 0 (opened never set on
-	// any of 583 sends). logSend() stores no Brevo messageId, so we can't map an
-	// open to an exact send — but email + recency is enough: on an open event, mark
-	// the subscriber's most recent send as opened. Makes the leitmetrik measurable
-	// without a schema change. Best-effort; never fails the webhook.
+	// improvement #5: newsletter_open_rate war strukturell 0 (opened wurde nie
+	// gesetzt). logSend() speichert keine Brevo-messageId, also mappen wir per
+	// E-Mail + Zeit: bei einem open-Event den Send markieren, der ZEITLICH am
+	// besten passt — der letzte Send dieses Subscribers VOR dem Öffnungszeitpunkt.
+	// (Nicht pauschal den jüngsten: eine späte Öffnung eines alten Newsletters
+	// darf nicht den neuesten Send als geöffnet markieren.) Idempotent (opened=
+	// false-Filter), best-effort, bricht den Webhook nie ab. Die echte E-Mail wird
+	// NUR zum Matchen genutzt, nicht in nureine_events gespeichert (Datenschutz).
 	if (name === 'email_open' && email) {
 		try {
 			const { data: sub } = await supabaseAdmin
@@ -68,19 +71,28 @@ export const POST: RequestHandler = async ({ request, url }) => {
 				.eq('email', email)
 				.maybeSingle();
 			if (sub?.id) {
-				const { data: lastSend } = await supabaseAdmin
+				// Brevo liefert die Event-Zeit als `ts_event` (Unix-Sekunden) oder `date`.
+				const evTs =
+					typeof body.ts_event === 'number'
+						? new Date(body.ts_event * 1000)
+						: typeof body.date === 'string'
+							? new Date(body.date)
+							: new Date();
+				const evIso = isNaN(evTs.getTime()) ? new Date().toISOString() : evTs.toISOString();
+				const { data: match } = await supabaseAdmin
 					.from('nureine_newsletter_sends')
 					.select('id')
 					.eq('subscriber_id', sub.id)
 					.eq('opened', false)
+					.lte('sent_at', evIso) // nur Sends VOR der Öffnung
 					.order('sent_at', { ascending: false })
 					.limit(1)
 					.maybeSingle();
-				if (lastSend?.id) {
+				if (match?.id) {
 					await supabaseAdmin
 						.from('nureine_newsletter_sends')
 						.update({ opened: true })
-						.eq('id', lastSend.id);
+						.eq('id', match.id);
 				}
 			}
 		} catch {

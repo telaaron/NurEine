@@ -105,6 +105,27 @@
 						{/if}
 					</div>
 
+					<!-- Upload-Checkliste: die Zusatzsignale, die beim manuellen Posten Reichweite bringen (docs/TIKTOK_PLAN.md §8d) -->
+					<details class="mb-3 rounded-lg overflow-hidden" style="border: 1px solid var(--color-rule);">
+						<summary class="text-xs font-medium px-3 py-2 cursor-pointer select-none" style="background: var(--color-canvas-soft); color: var(--color-ink);">
+							📋 Beim Posten mitgeben — Reichweiten-Signale
+						</summary>
+						<ul class="text-[0.78rem] leading-relaxed px-3 py-2.5 space-y-1.5" style="color: var(--color-ink-soft);">
+							<li><strong style="color: var(--color-ink);">Cover:</strong> den „Belegt."-Stempel-Moment (~Sek 15) wählen — NICHT den Text-Startframe.</li>
+							<li><strong style="color: var(--color-ink);">KI-Label AN:</strong> „KI-generierte Inhalte" unter „Mehr Optionen" (Pflicht, KI-Stimme).</li>
+							<li><strong style="color: var(--color-ink);">Auto-Captions AN:</strong> stützt Watch-Time (Ton-aus-Viewer) + Keyword-Indexierung.</li>
+							<li>
+								<strong style="color: var(--color-ink);">Standort = große DACH-Stadt</strong> (z.B. Berlin), NIE der Story-Ort — bringt uns in den deutschen „Nearby"-Feed.
+							</li>
+							<li>
+								<strong style="color: var(--color-ink);">Quelle @-erwähnen</strong>, WENN sie einen echten TikTok-Account hat:
+								{#if card.mentionHint}<span style="color: var(--color-amber);"> {card.mentionHint}</span>{:else}<span style="color: var(--color-faint);"> Quelle „{card.sourceName ?? '—'}“ prüfen — kein Account gefunden? dann weglassen (nie erfinden).</span>{/if}
+							</li>
+							<li><strong style="color: var(--color-ink);">Musik:</strong> unser Original-Ton reicht. KEINE Chart-Trending-Sounds (DMCA-/Stummschalt-Risiko für Marken). Höchstens ein Commercial-Library-Track leise.</li>
+							<li style="color: var(--color-faint);">Zeit: Di–Do ~16:30–17:30 CET (30–90 Min vor dem Abend-Peak).</li>
+						</ul>
+					</details>
+
 					<!-- Aktionen -->
 					<div class="flex flex-wrap items-center gap-2">
 						<button type="button" onclick={() => copy(card.full, 'full-' + card.postId)}

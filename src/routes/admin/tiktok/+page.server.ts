@@ -51,6 +51,33 @@ export interface TikTokReelCard {
 	/** true = schon als auf TikTok gepostet markiert. */
 	tiktokPosted: boolean;
 	tiktokPostedAt: string | null;
+	/** Quellenname der Story (für den Mention-Hinweis in der Upload-Checkliste). */
+	sourceName: string | null;
+	/** Vorgeschlagener @-Handle der Quelle, wenn hinterlegt (sonst null → Hinweis „prüfen"). */
+	mentionHint: string | null;
+}
+
+// Bekannte, verifizierte TikTok-Handles häufiger Quellen. Nur eintragen, was WIRKLICH
+// auf TikTok existiert (Mention auf nicht-existenten Account bringt nichts). Erweiterbar.
+const SOURCE_TIKTOK_HANDLES: Record<string, string> = {
+	tagesschau: '@tagesschau',
+	zdfheute: '@zdfheute',
+	'unicef': '@unicef',
+	who: '@who',
+	'world health organization': '@who',
+	'united nations': '@unitednations',
+	'un news': '@unitednations',
+	nasa: '@nasa',
+	'good news network': '@goodnews_movement'
+};
+
+function mentionForSource(source: string | null | undefined): string | null {
+	if (!source) return null;
+	const key = source.toLowerCase().trim();
+	for (const [name, handle] of Object.entries(SOURCE_TIKTOK_HANDLES)) {
+		if (key.includes(name)) return handle;
+	}
+	return null;
 }
 
 export const load: PageServerLoad = async () => {
@@ -101,7 +128,9 @@ export const load: PageServerLoad = async () => {
 			full: `${caption}\n\n${hashtags.join(' ')}`.trim(),
 			captionCurated: curated,
 			tiktokPosted: tiktokByStory.has(s.id),
-			tiktokPostedAt: tiktokByStory.get(s.id) ?? null
+			tiktokPostedAt: tiktokByStory.get(s.id) ?? null,
+			sourceName: s.source_name ?? null,
+			mentionHint: mentionForSource(s.source_name)
 		};
 	});
 

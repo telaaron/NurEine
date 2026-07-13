@@ -32,6 +32,18 @@ Stand: 2026-07-07.
   Regel), 30–100 Wörter, dann DNA. Motiv immer ins Konkret-Menschliche übersetzen
   (kein wörtliches „Forschung"/„Protein" — sondern die menschliche Szene dahinter).
 - **Nur ~5–6 Premium-Bilder/Tag** (Perlen + Newsletter/Reel-Hero), nicht ~10. ~7–8€/Monat.
+- **⚠️ ANATOMIE-HÄRTUNG (2026-07-12, nach Fehlbild „falscher Arm hinter Rücken"):** Drei
+  Hebel gegen Körperfehler (falsche Arme, zu viele Finger, verschmolzene Glieder) — jetzt
+  im SKILL `nureine-bild-regie` verankert: (1) **Hand-sichere Komposition per Default** —
+  bei Menschen Hände NICHT zeigen (`waist-up`/Profil/`hands not visible`), NIE „hands behind
+  back"/„crossed arms"/Gesten; das eliminiert die Fehlerklasse an der Quelle (billigster,
+  wirksamster Hebel). (2) **Best-of-N** — `max_images: 4` in EINEM Seedream-Call, bestes
+  wählen. (3) **Strenger Vision-Judge MIT Zoom auf Hände** (ffmpeg-crop) + Einzelpunkt-
+  Checkliste; bei geringstem Zweifel Bild raus, lieber kein Bild. Seedream hat KEINEN
+  negative_prompt/guidance_scale → alles positiv/kompositorisch lösen. Recherche-Belege:
+  Flux/Midjourney sind bei Anatomie stärker als Seedream (falls je A/B nötig); MediaPipe
+  Hands taugt NICHT als Gate (erkennt deformierte KI-Hände schlecht). Kein Modell ist
+  fehlerfrei → Judge-Gate bleibt Pflicht.
 - **Umbau (offen):** `scripts/fetch_stories.py` — image_prompt-Bau + `generate_image_fal`
   von flux-pro auf Seedream v4.5 + DNA umstellen; Bild-Gate auf „nur Perlen/Hero" verengen;
   Vision-QA modernisieren (statt LLaVA-NeXT). KI-Kennzeichnung bleibt.

@@ -135,6 +135,13 @@ Dramaturgie-Regeln (Kurzform von Rezept §C):
    Perlen-Bilder der Bild-Regie (Seedream, Fotografen-DNA) sind erste Wahl;
    Metaphern-Clipart (Glühbirnen, Symbolgrafiken) NIE — ein slop-verdächtiges Bild
    kostet mehr als kein Bild, dann lieber Typo-Beat oder **Karten-Zoom** (s.u.).
+   **⚠️ ANATOMIE-CHECK vor Verwendung (Pflicht seit 2026-07-12):** Bevor du ein Bild
+   in den Cold-Open (`number.image`) oder Beat legst, ZOOME auf sichtbare Hände/Arme
+   (`ffmpeg crop` + ansehen) und prüfe: 5 Finger/Hand? Arme in möglicher Richtung?
+   Kein verschmolzenes Glied? Bei geringstem Zweifel Bild NICHT verwenden (Typo-Beat/
+   Karte stattdessen). Falls du selbst ein Bild generierst (Seedream): `max_images: 4`
+   (Best-of-N), hand-sichere Komposition (`waist-up, hands not visible` / Profil), NIE
+   „hands behind back"/„crossed arms"/Gesten. Details: SKILL `nureine-bild-regie`.
    **Konkretheits-Check:** zentrale Entität benennen (Artname, Ort, Studie) und jede
    Zahl mit Referent — Share-Personas teilen nur Zitierbares.
    **Karten-Zoom-Baustein** (nur TikTok): `{ "kind": "map", "lat": <lat>, "lng": <lng>,

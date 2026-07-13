@@ -207,6 +207,56 @@ Ziel: automatisch posten, damit Aaron die TikTok-App vom Handy löschen kann.
 - **BLOCKER für Aaron:** Anbieter-Account + API-Key (Aaron legt an, Key an mich). Erst dann
   baue ich das Modul. Bis dahin bleibt der manuelle /admin/tiktok-Flow.
 
+## 8d. Zuordnungssignale: Mentions, Standort, Sounds — GEPRÜFT (2026-07-12)
+
+Ziel: TikTok besser verstehen lassen, WEM/WANN es unseren Content zeigt. Wichtigste
+Wahrheit vorab: **Kein Zusatzsignal ersetzt Watch-Time/Completion/Hook** (Sound ist nur
+medium-weight, Quelle Hootsuite). Zusatzsignale sagen „wem", der Hook entscheidet „ob".
+
+**Rangfolge nach Wirkung/Aufwand (für neuen faceless-VO-DACH-Account):**
+1. **Quelle @-mentionen (verifiziert, relevant)** — größter Zusatzhebel: kleine Accounts
+   +21% Reichweite/+46% Kommentare durch Tagging ([Statista]; bei >1M schadet es). Passt
+   perfekt zur Beleg-Marke. Nur 1–2 Mentions, NUR bei echtem inhaltlichem Bezug (die Org/
+   Studie der Nachricht, z.B. @who @unicef @tagesschau wenn auf TikTok). Wahllos Großaccounts
+   taggen = Spam-Signal.
+2. **Keyword in Caption-Anfang + On-Screen-Text + Auto-Captions AN** — „≥ Hashtag-Gewicht"
+   für Discovery (Hootsuite), kostenlos. Machen wir für Caption/Overlay schon (SEO-Check);
+   Auto-Captions beim Upload zusätzlich anschalten.
+3. **DACH-Location-Tag = große DACH-Stadt (z.B. Berlin), NICHT der Story-Ort.** Seit
+   04.12.2025 „Nearby Feed" in DE live = zweiter Distributionskanal. Story-Ort (Kanada/UK)
+   würde uns in einen NUTZLOSEN Lokalfeed dort schieben. Der Story-Ort gehört in Caption/
+   Overlay (Kontext), das Geo-Tag auf DACH. Effekt gering-mittel (Viewer-Opt-in gedeckelt),
+   aber 1 Klick → mitnehmen.
+4. **Stitch-Konter auf virale Negativ-News** (belegter Good-News-Konter, 5s-Ausschnitt +
+   unser Take): +20% Interaktion, zapft fremdes Publikum an — unser natürliches Format.
+   ABER: In-App-Aufnahme nötig → nicht automatisierbar, manuelles Sonderformat. Später testen.
+
+**SOUNDS — das Kernthema, mit WARNUNG:**
+- Trending Sound + durchgehendes VO geht technisch: beim Upload Sound „hinzufügen", dessen
+  Lautstärke auf **~1% (nicht 0% — sonst zählt er nicht)**, VO auf 100% → Video erscheint
+  auf der Sound-Seite (Discovery). Muss NICHT im gerenderten Video sein (nachträglich beim
+  Upload) → keine Render-Pipeline-Änderung nötig.
+- **⚠️ RECHTS-/MARKENRISIKO:** Business-Konto darf nur die Commercial Music Library (CML) —
+  Chart-Trending-Sounds werden blockiert/stummgeschaltet. Der 1%-Trick umgeht das technisch,
+  ABER UMG/Warner fuhren Ende 2024 Massen-DMCA-Takedowns gegen MARKEN-Accounts (nachträgliche
+  Stummschaltung killt Retention; Strafandrohung bis 150k USD/Werk). **Für „belegt statt
+  behauptet" ist das ein Reputationsrisiko, das den mittleren Sound-Bonus selten wert ist.**
+- **Empfohlener sauberer Weg:** (a) unser eigenes VO/Musik-Bed als konsistenten „Original
+  Sound" etablieren (risikofrei, baut Audio-Identität; bei 0 Followern kein Fremdreichweiten-
+  Effekt, aber langfristig proprietär), (b) optional/vorsichtig einen **CML-Track (KEIN
+  Chart-Hit) bei ~1%** unterlegen → Sound-Seiten-Effekt OHNE Rechtsrisiko. Chart-Trending-
+  Sounds als Marke bewusst MEIDEN. Wenn Sounds ernsthaft getestet werden: **Creator/Personal-
+  Konto**, nicht Business.
+
+**Nicht nutzbar am Start:** Playlists (Serien-Zuordnung „Fortschritt"-Reihe) erst ab 10k
+Followern → als Ziel vormerken.
+
+**KONKRETE UPLOAD-CHECKLISTE (in /admin/tiktok-Card ergänzen, langfristig):**
+Quelle @-mention · Keyword in Caption-Anfang · DACH-Location-Tag · Auto-Captions AN ·
+optional CML-Track leise. — Umsetzung: die Mention + Location-Empfehlung kann der
+Veredler/Reel-Regie künftig als Feld mitliefern (tiktok.mentions, tiktok.location); der
+Rest ist manueller Upload-Schritt. Nichts davon ist render-blockierend.
+
 ## 9. Offene Aaron-Entscheidungen / To-dos
 
 1. **Kontotyp bestätigen:** Creator-Account (empfohlen). Account gründen (Aaron —

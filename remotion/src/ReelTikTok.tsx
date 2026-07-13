@@ -411,12 +411,15 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 	const impactPop = interpolate(spring({ frame: frame - 12, fps: TIKTOK_FPS, config: { damping: 11, mass: 0.5, stiffness: 240 } }), [0, 1], [1.35, 1]);
 	const sounds = (
 		<>
-			{/* Stempel-Sound: Anflug + satter Aufschlag — settle doppelt: normal + auf
-			    0.55 verlangsamt = tiefer Bass-Thud unter dem Klick. */}
+			{/* Stempel-Sound (Panel-Fix: satter/analoger Aktenstempel, nicht digitaler Klick):
+			    Anflug-whoosh → beim Aufschlag DREI geschichtete Layer: settle (Anschlag) +
+			    settle auf 0.5 verlangsamt (tiefer Holz-Bass-Thud) + ping (kurzer metallischer
+			    Anschlag oben drauf). Die Musik duckt hier zeitgleich (Haupt-Komposition). */}
 			<Audio src={staticFile('audio/fx/whoosh.wav')} volume={0.55} />
 			<Sequence from={6}>
-				<Audio src={staticFile('audio/fx/settle.wav')} volume={0.95} />
-				<Audio src={staticFile('audio/fx/settle.wav')} volume={0.85} playbackRate={0.55} />
+				<Audio src={staticFile('audio/fx/settle.wav')} volume={1} />
+				<Audio src={staticFile('audio/fx/settle.wav')} volume={0.95} playbackRate={0.5} />
+				<Audio src={staticFile('audio/fx/ping.wav')} volume={0.4} />
 			</Sequence>
 		</>
 	);
@@ -462,18 +465,28 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 					})}
 					<circle cx={cx + txRel} cy={cy + tyRel} r={Math.max(0.01, dotR * 1.5 * dotIn + 3 * Math.sin(Math.max(0, frame - 40) / 5))} fill={accent} stroke={PAPER} strokeWidth={3} opacity={dotIn} />
 				</svg>
-				{/* Wirkungsindex kompakt unten */}
-				{impact != null ? (
-					<div style={{ position: 'absolute', left: M, right: M, bottom: SAFE_BOTTOM + 60, opacity: rowOp }}>
-						<div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-							<div style={{ fontFamily: FF.interSemi, fontSize: 28, color: MUTED }}>Wirkungsindex — nureine.de</div>
-							<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 36, color: INK, transform: `scale(${impactPop})`, transformOrigin: 'right center' }}>{impact}/100</div>
+				{/* Wirkungsindex kompakt unten — bei Ankunft des Badges (Frame ~30) blitzt die
+				    Zahl in Akzentfarbe auf + kurzer Glow, damit die Klammer „unerklärte 78 oben
+				    → DAS war der Wirkungsindex" beim ERSTEN Sehen klick macht (Panel-Fix). */}
+				{impact != null ? (() => {
+					const reveal = interpolate(frame, [26, 32, 40, 52], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+					const revealPop = 1 + 0.22 * interpolate(frame, [26, 31, 40], [0, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+					return (
+						<div style={{ position: 'absolute', left: M, right: M, bottom: SAFE_BOTTOM + 60, opacity: rowOp }}>
+							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+								<div style={{ fontFamily: FF.interSemi, fontSize: 28, color: MUTED }}>Wirkungsindex — nureine.de</div>
+								<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 36, color: INK, position: 'relative', transform: `scale(${impactPop * revealPop})`, transformOrigin: 'right center' }}>
+									{/* Akzent-Overlay derselben Zahl, blitzt beim Badge-Ankommen auf (Klammer zur „78" oben) */}
+									<span style={{ position: 'absolute', right: 0, top: 0, whiteSpace: 'nowrap', color: accent, opacity: reveal, textShadow: `0 0 ${18 * reveal}px ${accent}` }}>{impact}/100</span>
+									<span>{impact}/100</span>
+								</div>
+							</div>
+							<div style={{ width: '100%', height: 14, borderRadius: 14, background: 'rgba(22,20,15,0.1)', overflow: 'hidden' }}>
+								<div style={{ width: `${barW}%`, height: 14, borderRadius: 14, background: accent }} />
+							</div>
 						</div>
-						<div style={{ width: '100%', height: 14, borderRadius: 14, background: 'rgba(22,20,15,0.1)', overflow: 'hidden' }}>
-							<div style={{ width: `${barW}%`, height: 14, borderRadius: 14, background: accent }} />
-						</div>
-					</div>
-				) : null}
+					);
+				})() : null}
 				<FlashWipe color={accent} />
 				{/* raise: Caption sitzt über dem Wirkungsindex-Block (sonst Überdeckung) */}
 				<SceneVoice vo={vo} raise={220} />
@@ -612,7 +625,7 @@ const RewatchBadge: React.FC<{ value: number; proofStart: number; category: stri
 			}}
 		>
 			<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 92, height: 92, borderRadius: toArchive ? 46 : 20, background: accent, boxShadow: '0 10px 26px rgba(60,40,20,0.3)' }}>
-				<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 44, color: '#fff', opacity: interpolate(hand, [0, 0.6], [1, 0], { extrapolateRight: 'clamp' }) }}>{value}</div>
+				<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 44, color: '#fff', opacity: interpolate(hand, [0.75, 0.9], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }) }}>{value}</div>
 			</div>
 		</div>
 	);
@@ -651,8 +664,15 @@ export const ReelTikTok: React.FC<ReelDailyProps> = (p) => {
 			<Audio
 				src={staticFile(p.musicFile)}
 				loop
-				// Im Loop-Modus nicht auf 0 ausfaden (hörbare Naht) — nur kurz abdimmen gegen Knackser.
-				volume={(f) => interpolate(f, [0, 12, total - (loop ? 6 : 22), total], [0, musicVol, musicVol, loop ? musicVol * 0.55 : 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' })}
+				// Grundverlauf + STEMPEL-DUCKING: beim Stempel-Aufschlag (proofStart+6, ~10 Frames)
+				// duckt die Musik auf 35%, damit der Stempel-Sound das Video akustisch besiegelt
+				// (Panel-Fix 2026-07-12). Loop-Modus fadet am Ende nicht auf 0 (hörbare Naht).
+				volume={(f) => {
+					const base = interpolate(f, [0, 12, total - (loop ? 6 : 22), total], [0, musicVol, musicVol, loop ? musicVol * 0.55 : 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+					const duckStart = proofStart + 2;
+					const duck = interpolate(f, [duckStart, duckStart + 4, duckStart + 14, duckStart + 22], [1, 0.35, 0.35, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+					return base * duck;
+				}}
 			/>
 			{p.scenes.map((sc, i) => (
 				<Sequence key={i} from={sc.start} durationInFrames={sc.dur}>

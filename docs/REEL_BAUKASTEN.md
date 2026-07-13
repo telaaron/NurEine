@@ -21,6 +21,13 @@ Jede Szene zusätzlich: `voText` — der gesprochene Satz. **Eiserne Regeln:**
 - voText enthält **nur deutsche Wörter**. Englische Eigennamen (Quellen, Organisationen)
   kippen die Multilingual-Stimme in englische Aussprache → nur auf dem Screen zeigen,
   im VO umschreiben („eine Jugend-Tanzkompanie in England").
+- **Audio-Pacing (Panel-Fix 2026-07-12): entschleunigen vor harten Fakten/Fremdwörtern.**
+  KI-Stimmen hetzen und betonen Fremdwörter falsch. Baue Mikro-Pausen per Satzzeichen ein:
+  ein **Komma oder Gedankenstrich VOR** einem Fremdwort/einer Kernzahl erzeugt eine
+  natürliche Sprechpause und gibt dem Wort Gewicht („Es waren, — Exosomen." statt „Es waren
+  Exosomen."; „durch einen, — Speicheltest."). Nach der Hook und vor dem Payoff je 1 Pause.
+  Schwer aussprechbare Fremdwörter (Endometriose, Exosomen, Eigennamen) bei falscher Betonung
+  ins `remotion/tts-lexikon.json` eintragen (phonetische Schreibweise; Caption zeigt Original).
 - **Ziffern im voText sind erlaubt** (seit 2026-07-11): render.mjs schreibt sie fürs TTS
   automatisch als deutsche Zahlwörter aus („97.000" → „siebenundneunzigtausend" — sonst
   liest die Multilingual-Stimme sie ENGLISCH) und die Captions zeigen wieder die

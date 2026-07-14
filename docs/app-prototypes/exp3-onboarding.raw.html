@@ -1,0 +1,514 @@
+<title>NurEine · Experiment 3 — Tag 1</title>
+<style>
+  @font-face { font-family:'Space Grotesk'; src:url(data:font/ttf;base64,__SG_B64__) format('truetype'); font-weight:700; font-style:normal; font-display:swap; }
+  @font-face { font-family:'Newsreader'; src:url(data:font/ttf;base64,__NR_B64__) format('truetype'); font-weight:400; font-style:italic; font-display:swap; }
+
+  :root {
+    --bg:#f6f1e7; --card:#fcf9f2; --text:#211d16; --muted:#6b6359; --faint:#9a9087;
+    --line:rgba(33,29,22,.14); --amber:#bd6a35; --amber-hi:#d08048;
+    --ink:#16140f; --ink-text:#f4efe6; --ink-muted:#b0a89b; --paper:#fbf8f1;
+    --sage:#56764e; --rose:#b06f6f; --blue:#5d7e9c;
+  }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14110d; --card:#1d1914; --text:#ece5d8; --muted:#a39a8c; --faint:#7c7466; --line:rgba(236,229,216,.13); } }
+  :root[data-theme="light"] { --bg:#f6f1e7; --card:#fcf9f2; --text:#211d16; --muted:#6b6359; --faint:#9a9087; --line:rgba(33,29,22,.14); }
+  :root[data-theme="dark"]  { --bg:#14110d; --card:#1d1914; --text:#ece5d8; --muted:#a39a8c; --faint:#7c7466; --line:rgba(236,229,216,.13); }
+
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif; font-size:15px; line-height:1.6; }
+  .page { max-width: 940px; margin:0 auto; padding: 30px 20px 60px; }
+  .head { text-align:center; margin-bottom: 22px; }
+  .kicker { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:11.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--amber); }
+  .head h1 { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size: clamp(24px,4.5vw,32px); letter-spacing:-.02em; margin: 8px 0 6px; }
+  .head p { color:var(--muted); max-width: 62ch; margin: 0 auto; font-size: 14px; }
+
+  .layout { display:grid; grid-template-columns: min(390px, 96vw) 1fr; gap: 34px; align-items:start; justify-content:center; }
+  @media (max-width: 820px) { .layout { grid-template-columns: 1fr; justify-items:center; } }
+  .device-col { position: sticky; top: 20px; }
+  @media (max-width: 820px) { .device-col { position: static; } }
+
+  .phone { width: min(390px, 96vw); aspect-ratio: 390/800; position: relative; background:#0a0806; border-radius: 46px; overflow:hidden; box-shadow: 0 30px 70px rgba(40,28,16,.34), inset 0 0 0 7px #060504, 0 0 0 1px rgba(0,0,0,.3); }
+  .notch { position:absolute; top:0; left:50%; transform:translateX(-50%); width:130px; height:26px; background:#060504; border-radius: 0 0 18px 18px; z-index:60; }
+  .screen { position:absolute; inset:7px; border-radius:39px; overflow:hidden; }
+  .layer { position:absolute; inset:0; display:flex; flex-direction:column; opacity:0; pointer-events:none; transition: opacity .5s ease; }
+  .layer.on { opacity:1; pointer-events:auto; }
+  .d-dark { background: linear-gradient(178deg,#16140f 0%, #1c1812 58%, #211a12 100%); color:var(--ink-text); }
+  .d-paper { background: var(--paper); color:var(--ink); }
+  .tex::before { content:''; position:absolute; inset:0; pointer-events:none; opacity:.05; background-image: radial-gradient(rgba(244,239,230,.9) .7px, transparent .7px); background-size:7px 7px; z-index:1; }
+  .d-paper.tex::before { background-image: radial-gradient(rgba(22,20,15,.8) .7px, transparent .7px); }
+
+  .sf { font-family:'Space Grotesk',sans-serif; font-weight:700; }
+  .num { font-family:'Space Grotesk',sans-serif; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.045em; line-height:.92; }
+  .nr { font-family:'Newsreader',serif; font-style:italic; }
+
+  .statusbar { display:flex; justify-content:space-between; padding: 34px 26px 0; font-size:11px; letter-spacing:.14em; text-transform:uppercase; opacity:.6; z-index:3; }
+  .progdots { display:flex; gap:5px; padding: 14px 26px 0; z-index:3; }
+  .progdots i { flex:1; height:3px; border-radius:2px; background:currentColor; opacity:.16; transition:.4s; }
+  .progdots i.done { opacity:.9; background:var(--amber-hi); }
+  .d-paper .progdots i.done { background:var(--amber); }
+  .body { flex:1; display:flex; flex-direction:column; justify-content:center; padding: 0 28px; position:relative; z-index:3; }
+  .foot { padding: 0 26px 34px; z-index:3; display:flex; flex-direction:column; gap:10px; }
+  .tap-adv { position:absolute; inset:0; z-index:2; cursor:pointer; }
+  .hint { position:absolute; bottom:18px; left:0; right:0; text-align:center; font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; opacity:.42; z-index:3; }
+  .pill { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:15px; letter-spacing:-.01em; background:var(--amber-hi); color:#fff; border:none; border-radius:999px; padding:15px; cursor:pointer; }
+  .pill.quiet { background:none; border:1px solid rgba(244,239,230,.28); color:inherit; }
+  .d-paper .pill.quiet { border-color: rgba(22,20,15,.26); }
+  .pill:active { transform: scale(.98); }
+  .pill:focus-visible, .replay:focus-visible, .choice:focus-visible { outline:2px solid var(--amber-hi); outline-offset:3px; }
+  .kick { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--amber-hi); margin-bottom:14px; }
+  .d-paper .kick { color:var(--amber); }
+  .subtle { font-size:12.5px; color:var(--ink-muted); text-align:center; }
+
+  /* BEAT 1 — Die Frage */
+  .q-lead { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:27px; letter-spacing:-.02em; line-height:1.16; }
+  .q-sub { margin-top:12px; font-size:14px; color:var(--ink-muted); max-width:30ch; }
+  .choices { display:flex; flex-direction:column; gap:10px; }
+  .choice { text-align:left; width:100%; background:rgba(244,239,230,.05); border:1px solid rgba(244,239,230,.16); color:var(--ink-text); border-radius:14px; padding:14px 16px; cursor:pointer; font-size:14.5px; font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:-.01em; transition: border-color .25s, background .25s, transform .12s; display:flex; align-items:center; gap:11px; }
+  .choice .ch-ico { font-size:17px; opacity:.85; }
+  .choice:hover { border-color: rgba(208,128,72,.5); }
+  .choice.sel { border-color: var(--amber-hi); background: rgba(208,128,72,.14); }
+  .choice:active { transform: scale(.985); }
+
+  /* BEAT 2 — Magic Moment (Mini-Ausgabe) */
+  .mm-kick { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--amber-hi); }
+  .mm-answer { margin-top:12px; font-size:15px; line-height:1.5; color:var(--ink-text); opacity:0; }
+  .mm-answer.on { animation: fade .5s ease forwards; }
+  .mm-answer b { font-family:'Space Grotesk',sans-serif; }
+  .mm-num { font-size: clamp(58px,16vw,80px); margin-top:18px; opacity:0; }
+  .mm-num.on { animation: snapin .5s cubic-bezier(.2,1.3,.35,1) forwards; }
+  @keyframes snapin { 0%{opacity:0;transform:scale(.92);filter:blur(4px);} 60%{transform:scale(1.03);filter:blur(0);} 100%{opacity:1;transform:scale(1);} }
+  .mm-unit { margin-top:8px; font-size:14px; color:var(--ink-muted); max-width:28ch; opacity:0; }
+  .mm-unit.on { animation: fade .5s ease .1s forwards; }
+  .mm-stampwrap { margin-top:22px; opacity:0; }
+  .mm-stampwrap.on { opacity:1; }
+  .stamp { display:inline-block; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:34px; color:var(--amber-hi); border:5px solid var(--amber-hi); border-radius:10px; padding:2px 15px 5px; transform: rotate(-4deg) scale(2.4); opacity:0; transform-origin:left center; }
+  .stamp.go { animation: slam .4s cubic-bezier(.2,1.3,.35,1) forwards; }
+  @keyframes slam { 0%{transform:rotate(-4deg) scale(2.4);opacity:0;} 26%{opacity:1;} 68%{transform:rotate(-4deg) scale(.94);} 100%{transform:rotate(-4deg) scale(1);opacity:1;} }
+  .shake { animation: shk .22s linear; }
+  @keyframes shk { 0%,100%{transform:translate(0,0);} 25%{transform:translate(1px,5px);} 55%{transform:translate(-1px,-3px);} 80%{transform:translate(1px,1px);} }
+
+  /* BEAT 3 — Sichtbare Arbeit */
+  .work-lead { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:24px; letter-spacing:-.02em; line-height:1.16; }
+  .work-rows { margin-top:22px; display:flex; flex-direction:column; gap:14px; }
+  .work-row { display:flex; align-items:baseline; gap:12px; opacity:0; transform:translateY(6px); }
+  .work-row.on { animation: rise .5s cubic-bezier(.2,1,.3,1) forwards; }
+  .work-row .wn { font-family:'Space Grotesk',sans-serif; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.03em; font-size:34px; min-width:118px; color:var(--ink-text); }
+  .work-row .wl { font-size:13.5px; color:var(--ink-muted); line-height:1.4; }
+  .work-row.reject .wn { color:var(--rose); }
+  .work-note { margin-top:22px; font-family:'Newsreader',serif; font-style:italic; font-size:15px; color:var(--ink-muted); opacity:0; }
+  .work-note.on { animation: fade .5s ease forwards; }
+
+  /* BEAT 4 — Der Anker (Implementation Intention) */
+  .anc-kick { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--amber); margin-bottom:12px; }
+  .anc-lead { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:23px; letter-spacing:-.02em; line-height:1.18; }
+  .anc-lead .hl { color:var(--amber); }
+  .anc-sub { margin-top:12px; font-size:13.5px; color:var(--muted); max-width:32ch; }
+  .anc-chips { margin-top:20px; display:flex; flex-wrap:wrap; gap:9px; }
+  .anc-chip { display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--line); border-radius:999px; padding:10px 15px; cursor:pointer; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13.5px; color:var(--text); transition: border-color .25s, background .25s, transform .12s; }
+  .anc-chip .ac-ico { font-size:15px; }
+  .anc-chip:hover { border-color: var(--amber); }
+  .anc-chip.sel { border-color: var(--amber); background: rgba(189,106,53,.12); }
+  .anc-chip:active { transform: scale(.97); }
+  .anc-formed { margin-top:22px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:17px; letter-spacing:-.01em; line-height:1.3; color:var(--text); min-height:44px; opacity:0; }
+  .anc-formed.on { animation: fade .45s ease forwards; }
+  .anc-formed .hl { color:var(--amber); }
+
+  /* BEAT 5 — Geschenkter Fortschritt (Himmel) */
+  .gift-head { position:relative; z-index:3; padding: 34px 28px 0; }
+  .gift-kick { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--amber-hi); }
+  .gift-sub { font-size:13px; color:var(--ink-muted); margin-top:5px; }
+  .gift-toast { position:absolute; left:50%; top:46%; transform:translate(-50%,-50%) scale(.6); z-index:5; text-align:center; opacity:0; width:82%; }
+  .gift-toast .t1 { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:20px; letter-spacing:-.02em; color:var(--ink-text); line-height:1.2; }
+  .gift-toast .t2 { font-size:13px; color:var(--ink-muted); margin-top:8px; line-height:1.45; }
+  .gift-foot { position:absolute; left:0; right:0; bottom:0; padding: 0 26px 34px; z-index:6; display:flex; flex-direction:column; gap:10px; }
+
+  /* BEAT 6 — Push-Bitte */
+  .push-ico { width:70px; height:70px; border-radius:19px; margin:0 auto 22px; background: radial-gradient(circle at 42% 38%, rgba(232,166,104,.98), rgba(156,85,39,.9)); box-shadow: 0 0 44px rgba(208,128,72,.5); display:flex; align-items:center; justify-content:center; font-size:34px; animation: breathe 12s ease-in-out infinite; }
+  @keyframes breathe { 0%,100%{transform:scale(.94);} 33%{transform:scale(1.06);} 50%{transform:scale(1.06);} 100%{transform:scale(.94);} }
+  .push-lead { text-align:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:23px; letter-spacing:-.02em; line-height:1.2; }
+  .push-sub { text-align:center; font-size:14px; color:var(--ink-muted); margin-top:10px; max-width:30ch; margin-left:auto; margin-right:auto; line-height:1.5; }
+  .push-preview { margin:22px auto 0; max-width:300px; background:rgba(244,239,230,.06); border:1px solid rgba(244,239,230,.16); border-radius:15px; padding:12px 14px; display:flex; gap:11px; align-items:flex-start; }
+  .push-preview .pp-ico { width:30px; height:30px; border-radius:8px; background:linear-gradient(150deg,#e8a668,#bd6a35); flex-shrink:0; }
+  .push-preview .pp-t { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12.5px; color:var(--ink-text); }
+  .push-preview .pp-b { font-size:12px; color:var(--ink-muted); margin-top:2px; line-height:1.4; }
+  .push-preview .pp-when { font-size:10.5px; color:var(--faint); margin-top:5px; letter-spacing:.06em; }
+
+  .done-check { width:76px; height:76px; border-radius:50%; margin:8px auto 22px; background: radial-gradient(circle at 42% 38%, rgba(232,166,104,.98), rgba(156,85,39,.9)); box-shadow: 0 0 44px rgba(208,128,72,.5); display:flex; align-items:center; justify-content:center; font-size:38px; color:#fff; animation: pop .5s cubic-bezier(.2,1.3,.35,1); }
+  @keyframes pop { 0%{transform:scale(.4);opacity:0;} 60%{transform:scale(1.08);} 100%{transform:scale(1);opacity:1;} }
+
+  @keyframes fade { to { opacity:1; } }
+  @keyframes rise { to { opacity:1; transform:none; } }
+
+  .rail { max-width: 440px; }
+  .rail-intro { font-size:14.5px; color:var(--muted); margin-bottom: 20px; }
+  .rail-intro b { color:var(--text); font-family:'Space Grotesk',sans-serif; }
+  .step { display:grid; grid-template-columns: 30px 1fr; gap:13px; padding: 13px 0; border-top:1px solid var(--line); opacity:.5; transition: opacity .35s; }
+  .step:first-of-type { border-top:none; }
+  .step.active { opacity:1; }
+  .step.active .sn { background:var(--amber); color:#fff; }
+  .sn { width:24px; height:24px; border-radius:50%; background:var(--card); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:12px; color:var(--muted); }
+  .step h4 { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; margin:2px 0 3px; letter-spacing:-.01em; }
+  .step p { margin:0; font-size:13px; color:var(--muted); line-height:1.5; }
+  .step .tech { font-size:11.5px; color:var(--faint); margin-top:4px; font-family:ui-monospace,monospace; }
+  .ctl { margin-top:22px; display:flex; gap:10px; flex-wrap:wrap; }
+  .replay { font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; background:var(--amber); color:#fff; border:none; border-radius:999px; padding:10px 18px; cursor:pointer; }
+  .replay.sec { background:none; border:1px solid var(--line); color:var(--muted); }
+  .replay:active { transform: scale(.97); }
+  .note { margin-top:16px; font-size:12px; color:var(--faint); line-height:1.55; }
+  .selrule { margin-top:14px; background:var(--card); border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:0 11px 11px 0; padding:12px 15px; font-size:13px; color:var(--muted); }
+  .selrule b { font-family:'Space Grotesk',sans-serif; color:var(--text); }
+
+  .sound-toggle { position:absolute; top:40px; right:24px; z-index:70; width:34px; height:34px; border-radius:50%; background:rgba(0,0,0,.35); border:1px solid rgba(244,239,230,.2); color:var(--ink-text); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; backdrop-filter: blur(4px); }
+  .sound-toggle:focus-visible { outline:2px solid var(--amber-hi); outline-offset:2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .push-ico, .done-check { animation:none !important; }
+    .mm-answer, .mm-num, .mm-unit, .mm-stampwrap, .work-row, .work-note, .anc-formed { opacity:1 !important; transform:none !important; animation:none !important; }
+    .stamp { animation:none !important; opacity:1; transform:rotate(-4deg) scale(1); }
+  }
+</style>
+
+<div class="page">
+  <div class="head">
+    <div class="kicker">NurEine · Experiment 3</div>
+    <h1>Tag 1 — der erste Morgen</h1>
+    <p>Das Onboarding hat eine Aufgabe: dem neuen Menschen in unter zwei Minuten zeigen, wie sich NurEine anfuehlt — und ihn nicht bei Null anfangen lassen. Kein Feature-Rundgang, kein Konto-Zwang. Sechs Beats, dann steht die Gewohnheit. Tipp dich durch.</p>
+  </div>
+
+  <div class="layout">
+    <div class="device-col">
+      <div class="phone" id="phone">
+        <div class="notch"></div>
+        <button class="sound-toggle" id="soundToggle" aria-label="Klang an oder aus" title="Klang an/aus"></button>
+        <div class="screen" id="screen">
+
+          <!-- BEAT 1 — Die Frage -->
+          <div class="layer d-dark tex on" data-beat="1">
+            <div class="statusbar"><span class="sf">NurEine</span><span class="sf">Willkommen</span></div>
+            <div class="progdots"><i class="done"></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="body">
+              <div class="kick">Eine Frage zum Anfang</div>
+              <div class="q-lead">Was zieht dich in letzter Zeit am meisten runter?</div>
+              <div class="q-sub">Ehrlich. Wir drehen es nicht schoen — wir zeigen dir, wo sich genau da etwas bewegt.</div>
+              <div class="choices" style="margin-top:22px">
+                <button class="choice" data-choice="klima"><span class="ch-ico">&#127807;</span>Klima &amp; Umwelt</button>
+                <button class="choice" data-choice="gesundheit"><span class="ch-ico">&#129656;</span>Krankheit &amp; Gesundheit</button>
+                <button class="choice" data-choice="konflikt"><span class="ch-ico">&#128330;</span>Kriege &amp; Konflikte</button>
+              </div>
+            </div>
+            <div class="hint">Waehle eins — es steuert deinen ersten Beleg</div>
+          </div>
+
+          <!-- BEAT 2 — Magic Moment -->
+          <div class="layer d-dark tex" data-beat="2">
+            <div class="statusbar"><span class="sf" id="mmTopic">Gesundheit</span><span class="sf">Dein erster Beleg</span></div>
+            <div class="progdots"><i class="done"></i><i class="done"></i><i></i><i></i><i></i><i></i></div>
+            <div class="body">
+              <div class="mm-kick">Dann fangen wir genau hier an</div>
+              <div class="mm-answer" id="mmAnswer">Seit 1990 ist die Zahl der Kinder, die vor ihrem fuenften Geburtstag sterben, jedes Jahr gefallen. Nicht ein bisschen.</div>
+              <div class="mm-num num" id="mmNum">&#8722;63&#8201;%</div>
+              <div class="mm-unit" id="mmUnit">12,8 Millionen im Jahr &#8594; unter 4,8 Millionen. Jeden Tag rund 19.000 Kinder, die frueher gestorben waeren.</div>
+              <div class="mm-stampwrap" id="mmStampWrap"><span class="stamp" id="mmStamp">Belegt.</span></div>
+            </div>
+            <div class="foot"><button class="pill quiet" data-adv id="mmNext" style="opacity:.4; pointer-events:none;">Wie ihr das prueft</button></div>
+          </div>
+
+          <!-- BEAT 3 — Sichtbare Arbeit -->
+          <div class="layer d-paper tex" data-beat="3">
+            <div class="statusbar"><span class="sf">Warum du das glauben kannst</span><span class="sf">3 / 6</span></div>
+            <div class="progdots"><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i><i></i></div>
+            <div class="body">
+              <div class="work-lead">Fuer diesen einen Beleg<br>haben wir heute Nacht:</div>
+              <div class="work-rows">
+                <div class="work-row" id="wr1"><span class="wn">137</span><span class="wl">Quellen automatisch gelesen &mdash; Studien, Register, UN-Daten</span></div>
+                <div class="work-row reject" id="wr2"><span class="wn">124</span><span class="wl">davon aussortiert: zu duenn belegt, zu alt, zu reisserisch</span></div>
+                <div class="work-row" id="wr3"><span class="wn">13</span><span class="wl">blieben uebrig. Einer wurde dein Morgen.</span></div>
+              </div>
+              <div class="work-note" id="workNote">Kein Redakteur, der gute Laune verordnet. Eine Maschine, die nur das durchlaesst, was sich nachpruefen laesst.</div>
+            </div>
+            <div class="tap-adv" data-adv></div>
+            <div class="hint">Tippen weiter</div>
+          </div>
+
+          <!-- BEAT 4 — Der Anker -->
+          <div class="layer d-paper tex" data-beat="4">
+            <div class="statusbar"><span class="sf">Damit es ein Ritual wird</span><span class="sf">4 / 6</span></div>
+            <div class="progdots"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i></div>
+            <div class="body">
+              <div class="anc-kick">Der Trick, der es haelt</div>
+              <div class="anc-lead">Eine gute Gewohnheit haengt sich am besten an eine, die du schon hast.</div>
+              <div class="anc-sub">Wann liest du deinen NurEine-Beleg? Waehle einen Moment, den du eh jeden Morgen hast:</div>
+              <div class="anc-chips">
+                <button class="anc-chip" data-anchor="Kaffee"><span class="ac-ico">&#9749;</span>der erste Kaffee</button>
+                <button class="anc-chip" data-anchor="Bahn"><span class="ac-ico">&#128650;</span>in der Bahn</button>
+                <button class="anc-chip" data-anchor="Fruehstueck"><span class="ac-ico">&#129388;</span>beim Fruehstueck</button>
+                <button class="anc-chip" data-anchor="Aufwachen"><span class="ac-ico">&#9200;</span>direkt nach dem Aufwachen</button>
+              </div>
+              <div class="anc-formed" id="ancFormed"></div>
+            </div>
+            <div class="foot"><button class="pill quiet" data-adv id="ancNext" style="opacity:.4; pointer-events:none;">Passt</button></div>
+          </div>
+
+          <!-- BEAT 5 — Geschenkter Fortschritt -->
+          <div class="layer" data-beat="5">
+            <div style="position:absolute;inset:0;background:linear-gradient(180deg,#0e0d12 0%,#16140f 42%,#241a10 72%,#3a2413 88%,#4d2e15 100%);overflow:hidden" id="skyFull">
+              <div style="position:absolute;left:0;right:0;bottom:0;height:24%;background:linear-gradient(180deg,transparent,rgba(208,128,72,.26) 62%,rgba(208,128,72,.46))"></div>
+              <div style="position:absolute;left:50%;bottom:calc(24% - 16px);width:58px;height:58px;border-radius:50%;transform:translateX(-50%);background:radial-gradient(circle at 45% 40%,#e8a668,#bd6a35 72%);box-shadow:0 0 74px 24px rgba(208,128,72,.4)"></div>
+            </div>
+            <div class="gift-head">
+              <div class="gift-kick">Dein Himmel</div>
+              <div class="gift-sub" id="giftSub">Du faengst nicht bei Null an.</div>
+            </div>
+            <div class="gift-toast" id="giftToast">
+              <div class="t1" id="giftT1">Drei Lichter geschenkt.</div>
+              <div class="t2" id="giftT2">Pocken ausgerottet. Ozonloch schrumpft. Kindersterblichkeit halbiert. Du steigst mitten in eine laufende Erfolgsgeschichte ein &mdash; nicht am Anfang.</div>
+            </div>
+            <div class="gift-foot"><button class="pill" data-adv id="giftNext">Mein erstes eigenes Licht holen</button></div>
+          </div>
+
+          <!-- BEAT 6 — Push-Bitte -->
+          <div class="layer d-dark tex" data-beat="6">
+            <div class="statusbar"><span class="sf">Fast fertig</span><span class="sf">6 / 6</span></div>
+            <div class="progdots"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i></div>
+            <div class="body" id="pushBody">
+              <div class="push-ico">&#127749;</div>
+              <div class="push-lead">Sollen wir dich morgen<br>einmal antippen?</div>
+              <div class="push-sub" id="pushSub">Ein leiser Hinweis, wenn dein Beleg fertig ist. Kein Feed, kein Nachschub &mdash; ein Morgen, einer.</div>
+              <div class="push-preview">
+                <div class="pp-ico"></div>
+                <div>
+                  <div class="pp-t">NurEine</div>
+                  <div class="pp-b">Dein Morgen ist da. 3 Minuten, dann bist du fertig.</div>
+                  <div class="pp-when" id="ppWhen">morgen, beim ersten Kaffee</div>
+                </div>
+              </div>
+            </div>
+            <div class="foot">
+              <button class="pill" data-adv id="pushYes">Ja, einmal am Morgen</button>
+              <button class="pill quiet" data-adv id="pushNo">Ohne Erinnerung starten</button>
+            </div>
+          </div>
+
+          <!-- ABSCHLUSS -->
+          <div class="layer d-dark tex" data-beat="7">
+            <div class="statusbar"><span class="sf">NurEine</span><span class="sf">Tag 1</span></div>
+            <div class="body" style="text-align:center">
+              <div class="done-check">&#10003;</div>
+              <div class="push-lead">Du bist drin.</div>
+              <div class="push-sub" id="doneSub">Morgen wartet dein erster eigener Beleg. Bis dahin: schau dir deinen Himmel an.</div>
+            </div>
+            <div class="foot"><button class="pill quiet" id="restart2">Nochmal von vorn</button></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="rail">
+      <p class="rail-intro">Das ist <b>Screen 8 &mdash; das Onboarding</b> (/app/start). Es verkauft nichts, es <em>zeigt</em>. Der neue Mensch erlebt in Beat 2 das komplette Ritual im Kleinen, sieht in Beat 3 die Arbeit dahinter, verankert es in Beat 4 selbst &mdash; und bekommt in Beat 5 drei Lichter geschenkt, damit sein Himmel nie leer war. Push kommt zuletzt, nach dem ersten Wert.</p>
+      <div class="step active" data-s="1"><div class="sn">1</div><div><h4>Die Frage</h4><p>&bdquo;Was zieht dich runter?&ldquo; &mdash; die Sorge positiv gespiegelt, nicht weggeredet. Die Antwort steuert, welchen ersten Beleg der Mensch sieht (Personalisierung ab Sekunde eins).</p><div class="tech">Sorge &#8594; Themen-Anker</div></div></div>
+      <div class="step" data-s="2"><div class="sn">2</div><div><h4>Der Magic Moment</h4><p>Eine Mini-Ausgabe laeuft live: Antwort, Held-Zahl rastet ein, der Stempel &bdquo;Belegt.&ldquo; schlaegt zu &mdash; mit Klang und Haptik. In 15 Sekunden hat der Mensch das ganze Ritual gefuehlt, bevor er es erklaert bekommt.</p><div class="tech">Einrasten + Stempeln</div></div></div>
+      <div class="step" data-s="3"><div class="sn">3</div><div><h4>Sichtbare Arbeit</h4><p>&bdquo;137 gelesen, 124 aussortiert, 13 blieben.&ldquo; Die Ablehn-Zahl ist der Vertrauensanker &mdash; wer so viel wegwirft, meint es ernst. Kein behaupteter, ein gezeigter Wert.</p><div class="tech">Reject-Zahl = Beweis</div></div></div>
+      <div class="step" data-s="4"><div class="sn">4</div><div><h4>Der Anker</h4><p>Implementation Intentions: &bdquo;Wenn Kaffee, dann NurEine.&ldquo; Der Mensch koppelt das neue Ritual selbst an eine bestehende Gewohnheit &mdash; der staerkste bekannte Hebel gegen das Vergessen (d&nbsp;=&nbsp;0,65).</p><div class="tech">Wenn-Dann, selbst gebaut</div></div></div>
+      <div class="step" data-s="5"><div class="sn">5</div><div><h4>Geschenkter Fortschritt</h4><p>Endowed Progress: der Himmel startet nie leer. Drei Lichter der Weltgeschichte sind schon da &mdash; &bdquo;du steigst mitten in eine laufende Erfolgsgeschichte ein&ldquo;. Der Mensch erbt Momentum, statt es aufbauen zu muessen.</p><div class="tech">Start nie bei 0</div></div></div>
+      <div class="step" data-s="6"><div class="sn">6</div><div><h4>Die Push-Bitte</h4><p>Erst <em>nach</em> dem ersten Wert &mdash; nie vorher. Die Vorschau zeigt genau, wie leise es wird (&bdquo;ein Morgen, einer&ldquo;), und uebernimmt den in Beat 4 gewaehlten Moment. &bdquo;Nein&ldquo; ist gleichwertig, kein Dark Pattern.</p><div class="tech">Permission nach Wert</div></div></div>
+
+      <div class="ctl">
+        <button class="replay" id="replay">Von vorn</button>
+        <button class="replay sec" id="autoplay">Automatisch abspielen</button>
+      </div>
+      <div class="selrule"><b>Warum diese Reihenfolge?</b> Jeder Beat zahlt auf D7-Retention ein: erst fuehlen (2), dann vertrauen (3), dann selbst verankern (4), dann Momentum erben (5), dann &mdash; und nur dann &mdash; um Erlaubnis fragen (6). Der Wert kommt immer vor der Bitte.</div>
+      <p class="note">Zahlen illustrativ in UN-IGME-Groessenordnung. Themen-Auswahl steuert in der echten App den ersten Beleg (Kategorie-Feld). Klang live per Web Audio (in der App: Reel-Samples). Push-Pfad existiert bereits (/api/app/register-token).</p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var soundOn = false, ac = null;
+  function actx(){ if(!ac){ try{ ac = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return ac; }
+  function noiseBuf(d){ var c=actx(); if(!c) return null; var n=Math.floor(c.sampleRate*d),b=c.createBuffer(1,n,c.sampleRate),a=b.getChannelData(0); for(var i=0;i<n;i++)a[i]=Math.random()*2-1; return b; }
+  function whoosh(){ var c=actx(); if(!c||!soundOn) return; var b=noiseBuf(0.42); if(!b) return; var s=c.createBufferSource();s.buffer=b; var f=c.createBiquadFilter();f.type='bandpass';f.Q.value=0.8; f.frequency.setValueAtTime(400,c.currentTime);f.frequency.exponentialRampToValueAtTime(2600,c.currentTime+0.34); var g=c.createGain();g.gain.setValueAtTime(0.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(0.16,c.currentTime+0.08);g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.42); s.connect(f);f.connect(g);g.connect(c.destination);s.start(); }
+  function thud(){ var c=actx(); if(!c||!soundOn) return; var o=c.createOscillator();o.type='sine'; o.frequency.setValueAtTime(180,c.currentTime);o.frequency.exponentialRampToValueAtTime(52,c.currentTime+0.16); var g=c.createGain();g.gain.setValueAtTime(0.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(0.5,c.currentTime+0.012);g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.34); o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+0.36); var b=noiseBuf(0.06); if(b){var s=c.createBufferSource();s.buffer=b; var hp=c.createBiquadFilter();hp.type='highpass';hp.frequency.value=1800; var g2=c.createGain();g2.gain.setValueAtTime(0.22,c.currentTime);g2.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.06); s.connect(hp);hp.connect(g2);g2.connect(c.destination);s.start();} }
+  function chime(){ var c=actx(); if(!c||!soundOn) return; [523.25,783.99].forEach(function(fr,i){ var o=c.createOscillator();o.type='sine';o.frequency.value=fr; var g=c.createGain();var t=c.currentTime+i*0.09; g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.11,t+0.04);g.gain.exponentialRampToValueAtTime(0.0001,t+0.7); o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+0.72); }); }
+  function tick(){ var c=actx(); if(!c||!soundOn) return; var o=c.createOscillator();o.type='triangle';o.frequency.value=660; var g=c.createGain();g.gain.setValueAtTime(0.06,c.currentTime);g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+0.05); o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+0.06); }
+  function haptic(m){ if(navigator.vibrate){ try{navigator.vibrate(m);}catch(e){} } }
+
+  var toggle=document.getElementById('soundToggle');
+  function setSound(on){ soundOn=on; toggle.textContent = on ? '🔊' : '🔇'; toggle.style.color = on?'var(--amber-hi)':'var(--ink-muted)'; toggle.setAttribute('aria-pressed',on); if(on){ actx(); if(ac&&ac.state==='suspended') ac.resume(); } }
+  toggle.textContent='🔇'; toggle.style.color='var(--ink-muted)';
+  toggle.addEventListener('click', function(){ setSound(!soundOn); if(soundOn) tick(); });
+
+  var phone=document.getElementById('phone');
+  var layers=phone.querySelectorAll('.layer');
+  var steps=document.querySelectorAll('.step');
+  var beat=1, timers=[], autoT=[], animIv=null;
+  function clearTimers(){ timers.forEach(clearTimeout); timers=[]; autoT.forEach(clearTimeout); autoT=[]; if(animIv){ clearInterval(animIv); animIv=null; } }
+  function T(fn,ms){ var id=setTimeout(fn,ms); timers.push(id); return id; }
+  function animate(dur, onFrame, onDone){
+    if(animIv){ clearInterval(animIv); animIv=null; }
+    var start=(window.performance&&performance.now)?performance.now():Date.now();
+    onFrame(0);
+    animIv=setInterval(function(){
+      var now=(window.performance&&performance.now)?performance.now():Date.now();
+      var p=Math.min(1,(now-start)/dur);
+      onFrame(p);
+      if(p>=1){ clearInterval(animIv); animIv=null; if(onDone) onDone(); }
+    }, 1000/60);
+  }
+
+  // --- state chosen by the user ---
+  var chosenTopic = 'gesundheit';
+  var chosenAnchor = null;
+  var TOPICS = {
+    klima:      { top:'Klima & Umwelt',  answer:'Seit dem Tief 1990 hat sich das Ozonloch messbar geschlossen &mdash; weil die Welt sich an ein Abkommen gehalten hat.', num:'&#8722;28&#8201;%', unit:'FCKW-Ausstoss weltweit fast bei null. Das Ozonloch ist heute kleiner als in den 1980ern.' },
+    gesundheit: { top:'Gesundheit',      answer:'Seit 1990 ist die Zahl der Kinder, die vor ihrem fuenften Geburtstag sterben, jedes Jahr gefallen. Nicht ein bisschen.', num:'&#8722;63&#8201;%', unit:'12,8 Millionen im Jahr &#8594; unter 4,8 Millionen. Jeden Tag rund 19.000 Kinder, die frueher gestorben waeren.' },
+    konflikt:   { top:'Konflikte',       answer:'Seit 1990 wurden weltweit ueber 55 Millionen Landminen aus dem Boden geholt &mdash; von Menschen, die dafuer jeden Tag rausgehen.', num:'&#8722;55 Mio', unit:'Ganze Laender sind heute wieder minenfrei. Kambodscha meldet Doerfer, in denen Kinder erstmals frei laufen.' }
+  };
+
+  function fillMagic(){
+    var t = TOPICS[chosenTopic] || TOPICS.gesundheit;
+    document.getElementById('mmTopic').innerHTML = t.top;
+    document.getElementById('mmAnswer').innerHTML = t.answer;
+    document.getElementById('mmNum').innerHTML = t.num;
+    document.getElementById('mmUnit').innerHTML = t.unit;
+  }
+
+  function runMagic(){
+    fillMagic();
+    var ans=document.getElementById('mmAnswer'), num=document.getElementById('mmNum'), unit=document.getElementById('mmUnit');
+    var sw=document.getElementById('mmStampWrap'), st=document.getElementById('mmStamp'), nb=document.getElementById('mmNext'), body=document.getElementById('pushBody');
+    [ans,num,unit].forEach(function(el){ el.classList.remove('on'); });
+    sw.classList.remove('on'); st.classList.remove('go'); void st.offsetWidth;
+    nb.style.opacity='.4'; nb.style.pointerEvents='none';
+    if(reduced){
+      [ans,num,unit].forEach(function(el){ el.classList.add('on'); });
+      sw.classList.add('on'); st.classList.add('go');
+      nb.style.opacity='1'; nb.style.pointerEvents='auto';
+      return;
+    }
+    T(function(){ ans.classList.add('on'); if(soundOn) tick(); }, 300);
+    T(function(){ num.classList.add('on'); if(soundOn) whoosh(); }, 1200);
+    T(function(){ unit.classList.add('on'); }, 1700);
+    T(function(){
+      sw.classList.add('on'); st.classList.add('go'); thud(); haptic([8,40,22]);
+      var mmb = document.querySelector('.layer[data-beat="2"] .body');
+      if(!reduced && mmb){ mmb.classList.add('shake'); T(function(){ mmb.classList.remove('shake'); }, 240); }
+      T(function(){ nb.style.opacity='1'; nb.style.pointerEvents='auto'; if(soundOn) chime(); }, 300);
+    }, 2500);
+  }
+
+  function runWork(){
+    ['wr1','wr2','wr3'].forEach(function(id){ document.getElementById(id).classList.remove('on'); });
+    document.getElementById('workNote').classList.remove('on');
+    if(reduced){
+      ['wr1','wr2','wr3','workNote'].forEach(function(id){ document.getElementById(id).classList.add('on'); });
+      return;
+    }
+    T(function(){ document.getElementById('wr1').classList.add('on'); if(soundOn) tick(); }, 250);
+    T(function(){ document.getElementById('wr2').classList.add('on'); if(soundOn) tick(); }, 750);
+    T(function(){ document.getElementById('wr3').classList.add('on'); if(soundOn) tick(); }, 1250);
+    T(function(){ document.getElementById('workNote').classList.add('on'); }, 1800);
+  }
+
+  function pickAnchor(el){
+    document.querySelectorAll('.anc-chip').forEach(function(c){ c.classList.remove('sel'); });
+    el.classList.add('sel');
+    chosenAnchor = el.dataset.anchor;
+    // trigger clause for the "Wenn ich ..., dann NurEine" implementation intention
+    var triggerMap = { 'Kaffee':'den ersten Kaffee nehme', 'Bahn':'in die Bahn steige', 'Fruehstueck':'mich zum Fruehstueck setze', 'Aufwachen':'aufwache' };
+    // time phrase for the push preview
+    var whenMap = { 'Kaffee':'beim ersten Kaffee', 'Bahn':'in der Bahn', 'Fruehstueck':'beim Fruehstueck', 'Aufwachen':'nach dem Aufwachen' };
+    var trigger = triggerMap[chosenAnchor] || chosenAnchor;
+    var when = whenMap[chosenAnchor] || chosenAnchor;
+    var f=document.getElementById('ancFormed');
+    f.innerHTML = 'Abgemacht: <span class="hl">Wenn ich ' + trigger + ', dann NurEine.</span>';
+    f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+    if(soundOn) tick(); haptic(6);
+    var nb=document.getElementById('ancNext'); nb.style.opacity='1'; nb.style.pointerEvents='auto';
+    // carry anchor into push preview
+    document.getElementById('ppWhen').textContent = 'morgen, ' + when;
+  }
+
+  var STARS=[[8,15],[16,23],[24,10],[31,19],[38,27],[45,13],[52,21],[59,9],[66,25],[73,16],[80,29],[87,12],[12,35],[20,41],[28,32],[36,45],[44,37],[52,47],[60,34],[68,43],[76,38],[84,48],[10,53],[22,57],[34,51],[46,59],[58,53],[70,58],[82,54],[15,64],[40,67],[65,63],[87,61]];
+  var CAT=['#e8c9a8','#cdd8c5','#c5d0dc','#e8c9a8','#dcb8b0'];
+  function buildGiftSky(){
+    var sky=document.getElementById('skyFull');
+    sky.querySelectorAll('.st,.gift-star').forEach(function(s){ s.remove(); });
+    // three GIFTED lights, bright and named (endowed progress)
+    var gifts=[[28,30],[52,22],[72,34]];
+    gifts.forEach(function(p,i){
+      var s=document.createElement('div'); s.className='gift-star';
+      s.style.cssText='position:absolute;border-radius:50%;width:11px;height:11px;opacity:0;transform:scale(.3);transition:opacity .8s ease,transform .8s cubic-bezier(.2,1.4,.3,1);background:transparent;border:2.5px solid #d08048;box-shadow:0 0 20px 5px rgba(208,128,72,.55);left:'+p[0]+'%;top:'+p[1]+'%';
+      sky.appendChild(s);
+      T(function(){ s.style.opacity='1'; s.style.transform='scale(1)'; if(soundOn) chime(); }, 300+i*380);
+    });
+  }
+  function showGiftToast(){
+    var el=document.getElementById('giftToast');
+    el.style.animation='';
+    void el.offsetWidth;
+    el.style.animation='toastin 3s ease forwards';
+  }
+
+  function show(n){
+    beat=n;
+    layers.forEach(function(l){ l.classList.toggle('on', +l.dataset.beat===n); });
+    steps.forEach(function(s){ s.classList.toggle('active', +s.dataset.s===n); });
+    if(n===2){ T(runMagic, 320); }
+    if(n===3){ T(runWork, 300); }
+    if(n===5){ buildGiftSky(); T(showGiftToast, 500); }
+    if(n===6){ if(soundOn) T(tick,150); }
+  }
+
+  function advance(){
+    if(beat<7){ haptic(6); if(soundOn && beat!==1) whoosh(); show(beat+1); }
+  }
+
+  // beat 1: choosing a topic advances
+  phone.addEventListener('click', function(e){
+    var ch = e.target.closest('.choice');
+    if(ch){
+      clearTimers();
+      document.querySelectorAll('.choice').forEach(function(c){ c.classList.remove('sel'); });
+      ch.classList.add('sel');
+      chosenTopic = ch.dataset.choice;
+      if(soundOn) tick(); haptic(8);
+      T(function(){ show(2); }, reduced?0:340);
+      return;
+    }
+    var anc = e.target.closest('.anc-chip');
+    if(anc){ pickAnchor(anc); return; }
+    if(e.target.closest('[data-adv]')){ clearTimers(); advance(); }
+  });
+
+  function reset(){
+    clearTimers();
+    chosenAnchor=null;
+    document.querySelectorAll('.choice,.anc-chip').forEach(function(c){ c.classList.remove('sel'); });
+    document.getElementById('ancFormed').classList.remove('on');
+    document.getElementById('ancFormed').innerHTML='';
+    document.getElementById('ancNext').style.opacity='.4'; document.getElementById('ancNext').style.pointerEvents='none';
+    document.getElementById('ppWhen').textContent='morgen, beim ersten Kaffee';
+    document.getElementById('giftToast').style.animation='';
+    show(1);
+  }
+  document.getElementById('replay').addEventListener('click', reset);
+  document.getElementById('restart2').addEventListener('click', reset);
+  document.getElementById('autoplay').addEventListener('click', function(){
+    reset();
+    // simulate: pick gesundheit, run through, pick coffee anchor
+    var dwell={1:1500,2:4400,3:3000,4:2600,5:4200,6:2600};
+    var acc=0, seq=[2,3,4,5,6,7];
+    seq.forEach(function(target){ acc+=dwell[target-1]; autoT.push(setTimeout(function(){
+      if(target===4){ /* nothing */ }
+      show(target);
+      if(target===4){ autoT.push(setTimeout(function(){ var c=document.querySelector('.anc-chip[data-anchor="Kaffee"]'); if(c) pickAnchor(c); }, 900)); }
+    }, acc)); });
+  });
+
+  var style=document.createElement('style');
+  style.textContent='@keyframes toastin{15%{opacity:1;transform:translate(-50%,-50%) scale(1)}82%{opacity:1}100%{opacity:0;transform:translate(-50%,-54%) scale(1)}}';
+  document.head.appendChild(style);
+})();
+</script>

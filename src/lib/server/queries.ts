@@ -54,6 +54,10 @@ export type SupabaseStory = {
   // Reporter-Beats (migration 00027).
   beat: string | null;
   source_type: string | null;
+  // Familien-Feature (migration 00020) — „ab X erklärbar".
+  kid_min_age: number | null;
+  kid_explainer: string | null;
+  conversation_starter: string | null;
 };
 
 export type StoryResult = {
@@ -108,6 +112,10 @@ export type StoryResult = {
   // Reporter-Beats
   beat: string | null;
   sourceType: string | null;
+  // Familien-Feature — „ab X erklärbar" (nur App-Ritual-Abschluss)
+  kidMinAge: number | null;
+  kidExplainer: string | null;
+  conversationStarter: string | null;
 };
 
 // ---- Helpers ----
@@ -183,7 +191,10 @@ function mapStory(row: SupabaseStory): StoryResult {
     impactExplainer: row.impact_explainer ?? null,
     shareHook: row.share_hook ?? null,
     beat: row.beat ?? null,
-    sourceType: row.source_type ?? null
+    sourceType: row.source_type ?? null,
+    kidMinAge: row.kid_min_age ?? null,
+    kidExplainer: row.kid_explainer ?? null,
+    conversationStarter: row.conversation_starter ?? null
   };
 }
 

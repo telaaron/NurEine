@@ -1,0 +1,239 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NurEine App v2 — Design-DNA v0.1 (Phase 3)
+   Geerbt aus der Reel-Marke (remotion/src/brand.ts) — dieselbe Sprache wie
+   Reel, Share-Card und die abgenommenen Prototypen (Exp 1–3).
+   Bewusst getrennt von der Website-Palette (app.css @theme): die App spricht
+   die Zwei-Schichten-DNA konsequent, die die alte /app-Optik nie hatte.
+
+   Scope: alles unter .appv2 (die Root-Klasse der App-Shell). Fonts kommen
+   global aus app.html (Google Fonts) — kein @font-face nötig.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.appv2 {
+	/* Ruhe-Schicht (das Papier) */
+	--bg: #f6f1e7;
+	--card: #fcf9f2;
+	--paper: #fbf8f1;
+	--text: #211d16;
+	--muted: #6b6359;
+	--faint: #9a9087;
+	--line: rgba(33, 29, 22, 0.14);
+
+	/* Beweis-Schicht + Marke */
+	--amber: #bd6a35;
+	--amber-hi: #d08048;
+	--amber-deep: #9c5527;
+	--ink: #16140f;
+	--ink-text: #f4efe6;
+	--ink-muted: #b0a89b;
+	--ink-faint: #7c7466;
+
+	/* Text AUF der Papier-Fläche — kippt mit dem Theme mit (Light: dunkel, Dark: hell).
+	   surface-paper-Kinder MÜSSEN diese nutzen, nicht --ink direkt, sonst Dark-Mode-Kontrastfehler. */
+	--paper-ink: #211d16;
+	--paper-muted: #6b6359;
+	--paper-faint: #9a9087;
+
+	/* Kategorie-Akzente (ein Akzent pro Screen) */
+	--sage: #56764e; /* klima, tiere */
+	--rose: #b06f6f; /* gesundheit */
+	--blue: #5d7e9c; /* wissenschaft, innovation */
+
+	/* Motion-Timings (die zwei Tempi der Marke) */
+	--calm: 560ms; /* Ruhe-Schicht: 400–800ms (Headspace-Regel) */
+	--snap: 340ms; /* Beweis-Schicht: <400ms, knackig */
+
+	--ff-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+	--ff-serif: 'Newsreader', 'Cambria', Georgia, serif;
+	--ff-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+	background: var(--bg);
+	color: var(--text);
+	font-family: var(--ff-sans);
+	font-size: 15px;
+	line-height: 1.6;
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+}
+
+/* Dark Mode = „vor Sonnenaufgang", NIE klinisches Schwarz. */
+@media (prefers-color-scheme: dark) {
+	.appv2 {
+		--bg: #14110d;
+		--card: #1d1914;
+		--paper: #1d1914;
+		--text: #ece5d8;
+		--muted: #a39a8c;
+		--faint: #7c7466;
+		--line: rgba(236, 229, 216, 0.13);
+		/* Papier ist jetzt dunkel → Text darauf muss hell sein */
+		--paper-ink: #ece5d8;
+		--paper-muted: #a39a8c;
+		--paper-faint: #7c7466;
+	}
+}
+/* Explizite Theme-Wahl gewinnt über die Media-Query (beide Richtungen). */
+.appv2[data-theme='light'] {
+	--bg: #f6f1e7;
+	--card: #fcf9f2;
+	--paper: #fbf8f1;
+	--text: #211d16;
+	--muted: #6b6359;
+	--faint: #9a9087;
+	--line: rgba(33, 29, 22, 0.14);
+	--paper-ink: #211d16;
+	--paper-muted: #6b6359;
+	--paper-faint: #9a9087;
+}
+.appv2[data-theme='dark'] {
+	--bg: #14110d;
+	--card: #1d1914;
+	--paper: #1d1914;
+	--text: #ece5d8;
+	--muted: #a39a8c;
+	--faint: #7c7466;
+	--line: rgba(236, 229, 216, 0.13);
+	--paper-ink: #ece5d8;
+	--paper-muted: #a39a8c;
+	--paper-faint: #7c7466;
+}
+
+/* ── Grundgerüst ─────────────────────────────────────────────── */
+.appv2 * {
+	box-sizing: border-box;
+}
+.appv2 .sf {
+	font-family: var(--ff-display);
+	font-weight: 700;
+}
+/* Zahlen sind das Heldenelement. */
+.appv2 .num {
+	font-family: var(--ff-display);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.045em;
+	line-height: 0.92;
+}
+/* Newsreader Italic ausschließlich für Quellen & Zitate. */
+.appv2 .nr {
+	font-family: var(--ff-serif);
+	font-style: italic;
+}
+
+/* Papier- vs. Tinte-Fläche (der Kontrast IST die Marke). */
+.appv2 .surface-paper {
+	background: var(--paper);
+	color: var(--ink);
+}
+.appv2 .surface-ink {
+	background: linear-gradient(178deg, #16140f 0%, #1c1812 58%, #211a12 100%);
+	color: var(--ink-text);
+}
+
+/* Feine Papier-Textur (dezent, wie in den Prototypen). */
+.appv2 .tex {
+	position: relative;
+}
+.appv2 .tex::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	opacity: 0.05;
+	background-image: radial-gradient(rgba(22, 20, 15, 0.8) 0.7px, transparent 0.7px);
+	background-size: 7px 7px;
+	z-index: 1;
+}
+.appv2 .surface-ink.tex::before {
+	background-image: radial-gradient(rgba(244, 239, 230, 0.9) 0.7px, transparent 0.7px);
+}
+
+/* Fokus-Sichtbarkeit (Barrierefreiheit). */
+.appv2 :focus-visible {
+	outline: 2px solid var(--amber-hi);
+	outline-offset: 3px;
+}
+
+/* Der Stempel — Signature, wird NIE redesignt. */
+.appv2 .stamp {
+	display: inline-block;
+	font-family: var(--ff-display);
+	font-weight: 700;
+	color: var(--amber);
+	border: 5px solid var(--amber);
+	border-radius: 10px;
+	padding: 3px 16px 6px;
+	transform: rotate(-4deg) scale(2.4);
+	opacity: 0;
+	transform-origin: left center;
+}
+.appv2 .surface-ink .stamp {
+	color: var(--amber-hi);
+	border-color: var(--amber-hi);
+}
+.appv2 .stamp.go {
+	animation: appv2-slam 0.4s cubic-bezier(0.2, 1.3, 0.35, 1) forwards;
+}
+@keyframes appv2-slam {
+	0% {
+		transform: rotate(-4deg) scale(2.4);
+		opacity: 0;
+	}
+	26% {
+		opacity: 1;
+	}
+	68% {
+		transform: rotate(-4deg) scale(0.94);
+	}
+	100% {
+		transform: rotate(-4deg) scale(1);
+		opacity: 1;
+	}
+}
+.appv2 .shake {
+	animation: appv2-shake 0.22s linear;
+}
+@keyframes appv2-shake {
+	0%,
+	100% {
+		transform: translate(0, 0);
+	}
+	25% {
+		transform: translate(1px, 5px);
+	}
+	55% {
+		transform: translate(-1px, -3px);
+	}
+	80% {
+		transform: translate(1px, 1px);
+	}
+}
+
+/* Atmen — Idle-Puls / Abschluss-Atemzyklus. */
+@keyframes appv2-breathe {
+	0%,
+	100% {
+		transform: scale(0.94);
+	}
+	33% {
+		transform: scale(1.06);
+	}
+	50% {
+		transform: scale(1.06);
+	}
+	100% {
+		transform: scale(0.94);
+	}
+}
+
+/* Würdevolle stille Fassung bei reduzierter Bewegung. */
+@media (prefers-reduced-motion: reduce) {
+	.appv2 .stamp {
+		animation: none !important;
+		opacity: 1;
+		transform: rotate(-4deg) scale(1);
+	}
+	.appv2 .shake {
+		animation: none !important;
+	}
+}

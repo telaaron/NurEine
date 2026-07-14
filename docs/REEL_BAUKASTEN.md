@@ -1,11 +1,17 @@
 # Reel-Baukasten — Handbuch für die tägliche Regie-Routine
 
-Die Claude-Routine `nureine-reel-regie` produziert täglich das NurEine-Reel:
-Story wählen → Dramaturgie bauen → Skript schreiben → rendern → SICHTEN → einreihen → posten.
+Die Claude-Routine `nureine-reel-regie` produziert täglich das NurEine-Kurzvideo:
+Story wählen → Dramaturgie bauen → Skript schreiben → rendern → SICHTEN → hochladen → (Mo/Mi/Fr) auf IG posten.
 Der Baukasten liefert die Bausteine, die Routine liefert die Anordnung — **jede Story
 bekommt ihre eigene Dramaturgie**, aber Marke/Safe-Zones/Sync sind nicht verhandelbar.
 
-## Szenen-Bausteine (Komposition `ReelDaily`, remotion/src/ReelDaily.tsx)
+> **Eine Pipeline (seit 2026-07-15):** Es gibt nur noch den **TikTok-Master**
+> (Komposition `ReelTikTok`). Er ist täglich das TikTok UND an IG-Reel-Tagen (Mo/Mi/Fr)
+> zusätzlich das Instagram-Reel — dasselbe 9:16-MP4. Der alte `ReelDaily`-Render wurde
+> verworfen; `ReelDaily.tsx` ist nur noch das geteilte Typen-Modul. `--tiktok` ist im
+> render.mjs jetzt Default. Das TikTok-Rezept unten (§„TikTok-Master") ist DER Standard.
+
+## Szenen-Bausteine (Komposition `ReelTikTok`; Typen in remotion/src/ReelDaily.tsx)
 
 | kind | Zweck | Felder | Wann einsetzen |
 |---|---|---|---|

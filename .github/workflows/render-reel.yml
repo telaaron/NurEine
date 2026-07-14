@@ -62,6 +62,9 @@ jobs:
         run: npm ci
         working-directory: remotion
 
+      # Fallback rendert seit 2026-07-15 den TikTok-Master (Default, ReelDaily verworfen).
+      # Ohne DeepSeek/VO/Snapshot ist es ein Notfall-Skelett — die echte Qualität liefert
+      # die Reel-Regie-Routine. --queue postet es als IG-Reel.
       - name: Reel rendern + hochladen + einreihen
         if: steps.pick.outputs.slug != ''
         run: |

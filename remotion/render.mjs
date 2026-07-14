@@ -32,10 +32,12 @@ function arg(name, def = null) {
 }
 
 // ── Tempo-Parameter (TikTok-Schnitt) ────────────────────────────────────────
-// Standard = altes Verhalten (rückwärtskompatibel): PACE=1.0, MINF=60, PAD=10,
-// VO-Nachlauf 0.35s. --tiktok ist ein Preset für einen aggressiveren Schnitt;
+// Seit 2026-07-14 gibt es NUR NOCH die TikTok-Master-Pipeline → das TikTok-Preset
+// (schneller Schnitt, Loop-Tail, ReelTikTok) ist der STANDARD. `--tiktok` bleibt als
+// no-op gültig (Rückwärtskompatibilität bestehender Aufrufe/Routinen); `--no-tiktok`
+// ist der Notausgang zum alten ruhigen Tempo (praktisch ungenutzt).
 // --pace <faktor> skaliert NUR den No-VO-Zweig (readDur), nie die Stimme.
-const TIKTOK = arg('tiktok') === true;
+const TIKTOK = arg('no-tiktok') ? false : true;
 // PACE aus CLI (--pace) > env PACE > Preset (--tiktok → 0.7) > 1.0.
 const PACE = (() => {
 	const cli = arg('pace');
@@ -633,11 +635,10 @@ async function main() {
 	};
 	const propsPath = `/tmp/reel-props-${slug}.json`;
 	writeFileSync(propsPath, JSON.stringify(props));
-	// Welche Komposition rendern? --tiktok rendert standardmäßig ReelTikTok
-	// (Rezept-Regie: Snap/Badge/Loop/Stempel-Sound), --comp übersteuert; ohne
-	// beides bleibt es beim IG-ReelDaily — beide teilen dieselben Props.
+	// Nur noch EINE Komposition: ReelTikTok (der Master ist TikTok UND IG-Reel).
+	// --comp übersteuert (Debug); der ReelDaily-Build wurde 2026-07-14 verworfen.
 	const compArg = arg('comp');
-	const comp = compArg && compArg !== true ? compArg : TIKTOK ? 'ReelTikTok' : 'ReelDaily';
+	const comp = compArg && compArg !== true ? compArg : 'ReelTikTok';
 	console.log(`szenen: ${scenes.map((s) => s.kind).join(' → ')} | ${Math.round(duration / FPS)}s | VO: ${anyVo ? `ja (${TTS_ENGINE === 'eleven' ? 'ElevenLabs' : VOICE})` : 'nein'} | comp: ${comp} | pace: ${PACE}${TIKTOK ? ' (tiktok)' : ''}`);
 
 	execFileSync('npx', ['remotion', 'render', comp, out, `--props=${propsPath}`, '--log=error'], {

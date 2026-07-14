@@ -21,6 +21,11 @@ Thumbs.db
 !.env.example
 !.env.test
 
+# Mac-Mini-Runner (ops/) — Secrets & echte Agenten-Prompts nie committen
+ops/env.runner
+ops/prompts/*.md
+!ops/prompts/README.md
+
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*

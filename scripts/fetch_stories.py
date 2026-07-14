@@ -1037,6 +1037,15 @@ impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
   • 1-24: Minimaler Impact, Grenzfall der gerade noch reinkommt.
 
   Merksatz: Frag „Wird das Leben von irgendwem morgen messbar besser?" Wenn nein → max 44, egal wie gut belegt.
+
+  ⚠️ PRÄKLINIK-DECKEL (Belegbarkeits-Bremse, Verbesserung #25): Medizin-/Gesundheits-Meldungen, die NUR
+  im Tierversuch, Zellversuch/Labor oder in einer noch nicht begonnenen bzw. erst geplanten klinischen
+  Phase stehen (Human-Trials erst „in Planung"/„könnten folgen"/Jahre entfernt), bekommen impact_score
+  HART auf HÖCHSTENS 55 gedeckelt — egal wie dramatisch das Ergebnis klingt („alle Tumore verschwunden",
+  „Selbstreparatur", „Durchbruch"). Die dramatische Zahl ist eine HOFFNUNG, kein realer Nutzen für heute
+  lebende Menschen. Erst wenn ein Mittel am Menschen wirkt/zugelassen ist, darf der Score darüber steigen.
+  Beispiele die HIER hingehören (max 55): „Bakterium aus Frosch-Darm lässt bei Mäusen Tumore verschwinden",
+  „neue Arthrose-Spritze — bisher nur im Tiermodell getestet". Gib solchen Stories impact_score 30-50.
   impact_reach/durability/evidence fülle separat ehrlich aus — aber der impact_score folgt dem Wirkungs-Maßstab
   oben, NICHT einer Multiplikation der drei.
 

@@ -140,7 +140,7 @@
 								{copiedKey === 'pin-' + card.postId ? '✓ kopiert' : 'Kommentar kopieren'}
 							</button>
 							<ul class="space-y-1.5 pt-1">
-								<li><strong style="color: var(--color-ink);">Bio-Text:</strong> „Jeden Tag eine belegte gute Nachricht. Kein Doom. → Newsletter" + Link <code style="color: var(--color-amber);">nureine.de/go?to=newsletter&src=tiktok</code> (trackt die Abos).</li>
+								<li><strong style="color: var(--color-ink);">Bio-Text:</strong> „Jeden Tag eine gute Nachricht, die stimmt. Nachgeprüft. → Newsletter" + Link <code style="color: var(--color-amber);">nureine.de/go?to=newsletter&src=tiktok</code> (trackt die Abos). Positiv framen, den Schmerz NIE benennen.</li>
 								<li><strong style="color: var(--color-ink);">Newsletter zuerst, App später</strong> — E-Mail ist die niedrigere Hürde; App kommt in der Willkommensstrecke.</li>
 								<li style="color: var(--color-faint);">Ziel ist NICHT Views, sondern bestätigte Abos. Erst Vertrauen (Format), dann Conversion.</li>
 							</ul>

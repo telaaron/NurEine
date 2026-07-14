@@ -133,7 +133,9 @@ export const load: PageServerLoad = async () => {
 			tiktokPostedAt: tiktokByStory.get(s.id) ?? null,
 			sourceName: s.source_name ?? null,
 			mentionHint: mentionForSource(s.source_name),
-			pinnedComment: `Quelle, von uns nachgeprüft: ${s.source_name ?? '—'}. Jeden Tag EINE belegte gute Nachricht — der Newsletter ist im Profil. 🌱`
+			// Gepinnter Kommentar: NUR Mehrwert (die Quelle), kein wiederholtes Marken-
+			// Sprech (das dupliziert sonst die Caption und wirkt bot-haft). Kein „Doom".
+			pinnedComment: `Quelle, von uns nachgeprüft: ${s.source_name ?? '—'} 🔍`
 		};
 	});
 

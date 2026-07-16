@@ -168,10 +168,21 @@
 	</p>
 	{#if filtered.length === 0}
 		<div class="py-16 text-center">
-			<p class="serif text-lg" style="color: var(--color-ink-soft);">Nichts gefunden{#if query}{' '}für „{query}"{/if}.</p>
-			<p class="mt-2 text-sm" style="color: var(--color-muted);">Versuch ein anderes Stichwort, einen Ort oder eine Kategorie.</p>
-			{#if query}
-				<button type="button" onclick={() => (query = '')} class="mt-4 px-4 py-2 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Suche zurücksetzen</button>
+			{#if stories.length === 0}
+				<!-- Gar keine Stories geladen = kein Such-Problem, sondern das Archiv ist
+				     nicht abrufbar (z.B. Wartung/Kontingent). Ehrlich benennen, statt den
+				     Nutzer sein Stichwort verdächtigen zu lassen. -->
+				<p class="serif text-lg" style="color: var(--color-ink-soft);">Das Archiv ist gerade nicht abrufbar.</p>
+				<p class="mt-2 text-sm max-w-[42ch] mx-auto leading-relaxed" style="color: var(--color-muted);">
+					Wir haben unser Speicher-Kontingent überschritten — am 20. Juli sind alle
+					Geschichten automatisch wieder da. Nichts ist verloren.
+				</p>
+			{:else}
+				<p class="serif text-lg" style="color: var(--color-ink-soft);">Nichts gefunden{#if query}{' '}für „{query}"{/if}.</p>
+				<p class="mt-2 text-sm" style="color: var(--color-muted);">Versuch ein anderes Stichwort, einen Ort oder eine Kategorie.</p>
+				{#if query}
+					<button type="button" onclick={() => (query = '')} class="mt-4 px-4 py-2 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Suche zurücksetzen</button>
+				{/if}
 			{/if}
 		</div>
 	{:else if view === 'trace'}

@@ -3,6 +3,7 @@
         import Header from '$lib/components/Header.svelte';
         import Footer from '$lib/components/Footer.svelte';
         import Ticker from '$lib/components/Ticker.svelte';
+        import MaintenanceNotice from '$lib/components/MaintenanceNotice.svelte';
         import { dev } from '$app/environment';
         import { base } from '$app/paths';
         import { page } from '$app/state';
@@ -152,6 +153,7 @@
 {#if isBare}
         {@render children?.()}
 {:else}
+        <MaintenanceNotice />
         <Ticker story={data?.ticker ?? null} />
         <Header />
         <main>{@render children?.()}</main>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { storyImageSrc } from '$lib/story-images';
 	import { groupByMonth, CATEGORY_TONE, type ArchiveStory, type MonthGroup } from '$lib/archive-timeline';
 
 	let { stories }: { stories: ArchiveStory[] } = $props();
@@ -10,9 +11,9 @@
 	};
 	function catColor(cat: string): string { return TONE_VAR[CATEGORY_TONE[cat] ?? 'amber']; }
 	function href(slug: string) { return `${base}/geschichte/${slug}`; }
-	function imgSrc(hero: string, w = 500) {
-		return hero && hero.startsWith('http') ? `${base}/img?url=${encodeURIComponent(hero)}&w=${w}` : '';
-	}
+	// Zentral: NIE eine Supabase-URL direkt einbetten (Egress!) — siehe
+	// CLAUDE.md „Bilder & Egress". storyImageSrc leitet über den /img-Proxy.
+	function imgSrc(hero: string, w = 500) { return storyImageSrc(hero, base, w); }
 	// Highlights je Monat: die stärksten mit Bild bevorzugt, dann Rest — 1 groß + 4 klein.
 	function highlights(m: MonthGroup): ArchiveStory[] {
 		const all = m.days.flatMap((d) => d.stories);

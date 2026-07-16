@@ -196,8 +196,12 @@
 									class="w-10 h-10 flex-shrink-0 rounded-full overflow-hidden"
 									style="border: 1px solid var(--color-rule);"
 								>
+									<!-- Über den /img-Proxy (WebP, skaliert, 1 Jahr CDN-Cache): der
+									     40px-Avatar lud sonst das VOLLE Supabase-Original (2–6 MB) —
+									     ~100× Overhead pro Popup und einer der Egress-Fresser, die
+									     2026-07 das Kontingent gesprengt haben. 96px = Retina-scharf. -->
 									<img
-										src={activeStory.hero}
+										src={`${base}/img?url=${encodeURIComponent(activeStory.hero)}&w=96`}
 										alt=""
 										class="w-full h-full object-cover"
 										loading="lazy"

@@ -26,6 +26,20 @@ Bevor du Code schreibst: Lies ARCHITECTURE.md und BUSINESS.md.
 - Alle DB-Queries in src/lib/server/queries.ts zentralisieren
 - Python-Scripts: PEP8, keine globalen Variablen, alle Fehler in cron_runs loggen
 
+## Bilder & Egress — HARTE REGEL (Vorfall 2026-07-16)
+**NIE eine Supabase-Storage-URL direkt in ein `<img src>` schreiben.** Immer
+`storyImageSrc(hero, base, breite)` aus `src/lib/story-images.ts` nutzen (leitet
+über den `/img`-Proxy: skaliert, WebP, 1 Jahr CDN-Cache).
+
+Warum: Ein direkt eingebettetes Original zieht bei JEDEM Aufruf 2–6 MB aus dem
+Storage. Ein 40px-Avatar auf /karte tat genau das — zusammen mit anderen Lecks
+riss das das Supabase-Monats-Kontingent (Egress + Storage), die Seite war
+**4 Tage gesperrt** (16.–20.07.). Zwei Gegenregeln:
+1. **Anzeige:** immer `storyImageSrc(...)`, Breite = CSS-Pixel × 2 (Retina).
+2. **Upload:** Bilder vor dem Upload komprimieren —
+   `scripts/image_utils.py::encode_story_image()` (max 1200px, JPEG q85, <150 KB).
+   Seedream liefert 2,7–5 MB PNG; ungeprüft hochladen sprengt das Storage-Cap.
+
 ## Environment Variables
 Alle in .env.example dokumentiert. Nie hardcoden. Nie committen.
 Benötigt: PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_ANON_KEY,

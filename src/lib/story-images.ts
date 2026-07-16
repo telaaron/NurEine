@@ -40,3 +40,26 @@ export function getStoryHeroImageSrc(
 export function getDefaultHeroImageSrc(basePath: string, format: 'jpg' | 'webp' = 'jpg'): string {
 	return `${basePath}/images/${DEFAULT_FALLBACK}.${format}`;
 }
+
+/**
+ * DIE kanonische Art, ein Story-Bild anzuzeigen. IMMER benutzen — NIE eine
+ * Supabase-URL direkt in ein <img src> schreiben.
+ *
+ * WARUM (Vorfall 2026-07-16): Ein direkt eingebettetes Original zieht bei JEDEM
+ * Aufruf das volle Bild (2–6 MB) aus dem Supabase-Storage → Egress. Genau so hat
+ * ein 40px-Avatar auf /karte megabyteweise Traffic erzeugt und mit anderen Lecks
+ * das Monats-Kontingent gesprengt (Seite war 4 Tage gesperrt).
+ *
+ * Der /img-Proxy skaliert auf die gebrauchte Breite, liefert WebP und wird ein
+ * Jahr am CDN gecacht → ein Bruchteil der Bytes, und Supabase wird pro Variante
+ * nur EINMAL angefasst.
+ *
+ * @param hero  story.hero / image_url (Supabase-URL) oder ein Emoji/leer
+ * @param width angezeigte Breite in CSS-Pixeln × 2 für Retina (z.B. 40px → 96)
+ * @returns Proxy-URL, oder '' wenn es kein echtes Remote-Bild ist (dann
+ *          Typo-Karte/Fallback rendern statt ein <img> mit leerem src)
+ */
+export function storyImageSrc(hero: string | null | undefined, basePath: string, width: number): string {
+	if (!hero || !hero.startsWith('http')) return '';
+	return `${basePath}/img?url=${encodeURIComponent(hero)}&w=${Math.round(width)}`;
+}

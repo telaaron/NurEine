@@ -182,7 +182,7 @@ def supabase_storage_headers() -> dict[str, str]:
     return {
         "apikey": SUPABASE_SERVICE_KEY,
         "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-        "Content-Type": "image/png",
+        "Content-Type": "image/jpeg",
         "x-upsert": "true",
     }
 
@@ -209,6 +209,22 @@ def supabase_upload(image_bytes: bytes, filename: str) -> str | None:
         log.error("  Upload failed: %s", exc)
         return None
     return f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{filename}"
+
+
+def delete_from_storage(public_url: str | None) -> None:
+    """Best-effort delete of a previous story image so regenerating never
+    leaves an orphaned object behind in the bucket."""
+    if not public_url or f"/{STORAGE_BUCKET}/" not in public_url:
+        return
+    key = public_url.split(f"/{STORAGE_BUCKET}/", 1)[1]
+    try:
+        requests.delete(
+            f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{key}",
+            headers=supabase_storage_headers(),
+            timeout=30,
+        )
+    except Exception as exc:
+        log.warning("  Old image delete failed (non-fatal): %s", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -312,12 +328,14 @@ def generate_image_fal(prompt: str) -> bytes | None:
 # Post-processing: composite onto brand canvas
 # ---------------------------------------------------------------------------
 def composite_on_canvas(image_bytes: bytes) -> bytes:
-    """Soft-composite onto exact brand canvas #F5F1EA for colour consistency."""
+    """Soft-composite onto exact brand canvas #F5F1EA for colour consistency,
+    then downscale + encode as JPEG for upload (see image_utils.encode_story_image)."""
     try:
         from PIL import Image
     except ImportError:
         log.warning("  PIL not available — skipping canvas composite")
         return image_bytes
+    from image_utils import encode_story_image
 
     try:
         img = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
@@ -338,9 +356,7 @@ def composite_on_canvas(image_bytes: bytes) -> bytes:
                     nb = int(CANVAS[2] * blend + b * (1 - blend))
                     pixels[x, y] = (nr, ng, nb, a)
 
-        buf = io.BytesIO()
-        img.save(buf, format="PNG", optimize=True)
-        return buf.getvalue()
+        return encode_story_image(img)
     except Exception as exc:
         log.warning("  Canvas composite failed: %s", exc)
         return image_bytes
@@ -382,7 +398,7 @@ def run(limit: int | None = None, story_ids: list[str] | None = None) -> None:
             try:
                 result = supabase_get("nureine_stories", {
                     "id": f"eq.{sid}",
-                    "select": "id,title,category",
+                    "select": "id,title,category,image_url",
                 })
                 stories.extend(result)
             except Exception as exc:
@@ -390,7 +406,7 @@ def run(limit: int | None = None, story_ids: list[str] | None = None) -> None:
     else:
         log.info("Fetching stories from Supabase...")
         params: dict[str, str] = {
-            "select": "id,title,category",
+            "select": "id,title,category,image_url",
             "order": "created_at.desc",
         }
         if limit:
@@ -459,7 +475,7 @@ def run(limit: int | None = None, story_ids: list[str] | None = None) -> None:
         # 4. Upload to Supabase Storage
         short_id = uuid.uuid4().hex[:12]
         slug = safe_filename(title)
-        upload_path = f"story-images/{slug}-{short_id}.png"
+        upload_path = f"story-images/{slug}-{short_id}.jpg"
 
         public_url = supabase_upload(processed, upload_path)
         if not public_url:
@@ -467,11 +483,14 @@ def run(limit: int | None = None, story_ids: list[str] | None = None) -> None:
             failed += 1
             continue
 
-        # 5. Update database
+        # 5. Update database, then delete the old image (only once the DB
+        # points at the new one, so a failed write never orphans the story)
+        old_url = story.get("image_url")
         try:
             supabase_patch("nureine_stories", {"image_url": public_url}, story_id)
             log.info("    ✓ Uploaded: %s", public_url)
             success += 1
+            delete_from_storage(old_url)
         except Exception as exc:
             log.error("    DB update failed: %s", exc)
             failed += 1

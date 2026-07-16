@@ -112,12 +112,26 @@ def generate_image(prompt: str) -> bytes | None:
 def upload_image(image_bytes: bytes, filename: str) -> str | None:
     upload_url = f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{filename}"
     try:
-        resp = requests.post(upload_url, headers={"apikey": SUPABASE_SERVICE_KEY, "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}", "Content-Type": "image/png", "x-upsert": "true"}, data=image_bytes, timeout=60)
+        resp = requests.post(upload_url, headers={"apikey": SUPABASE_SERVICE_KEY, "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}", "Content-Type": "image/jpeg", "x-upsert": "true"}, data=image_bytes, timeout=60)
         resp.raise_for_status()
     except requests.RequestException as exc:
         log.error("Upload failed: %s", exc)
         return None
     return f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{filename}"
+
+
+def delete_from_storage(public_url: str | None) -> None:
+    if not public_url or f"/{STORAGE_BUCKET}/" not in public_url:
+        return
+    key = public_url.split(f"/{STORAGE_BUCKET}/", 1)[1]
+    try:
+        requests.delete(
+            f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{key}",
+            headers={"apikey": SUPABASE_SERVICE_KEY, "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}"},
+            timeout=30,
+        )
+    except Exception as exc:
+        log.warning("Old image delete failed (non-fatal): %s", exc)
 
 # ---------------------------------------------------------------------------
 # Category-specific objects (varied to prevent prompt caching)
@@ -177,9 +191,9 @@ def build_prompt(story: dict[str, Any], index: int) -> str:
 # ---------------------------------------------------------------------------
 def run() -> None:
     if TEST_STORY_ID:
-        stories = supabase_get("nureine_stories", {"id": f"eq.{TEST_STORY_ID}", "select": "id,title,category"})
+        stories = supabase_get("nureine_stories", {"id": f"eq.{TEST_STORY_ID}", "select": "id,title,category,image_url"})
     else:
-        stories = supabase_get("nureine_stories", {"image_url": "is.null", "select": "id,title,category", "limit": "1"})
+        stories = supabase_get("nureine_stories", {"image_url": "is.null", "select": "id,title,category,image_url", "limit": "1"})
 
     if not stories:
         log.error("No story found.")
@@ -201,23 +215,23 @@ def run() -> None:
     log.info("Original size: %dx%d", img.width, img.height)
     img = replace_white_background(img)
 
-    # Save as optimized PNG
-    output = BytesIO()
-    img.save(output, format="PNG", optimize=True)
-    final_bytes = output.getvalue()
+    from image_utils import encode_story_image
+    final_bytes = encode_story_image(img)
     log.info("White background replaced with #FBF6EE, final size: %d bytes", len(final_bytes))
 
     short_id = uuid.uuid4().hex[:12]
     safe = story.get("title","test").lower().replace("ä","ae").replace("ö","oe").replace("ü","ue").replace("ß","ss")
     safe = "".join(c for c in safe if c.isalnum() or c == "-")[:30]
-    filename = f"story-images/test-{safe}-{short_id}.png"
+    filename = f"story-images/test-{safe}-{short_id}.jpg"
 
     public_url = upload_image(final_bytes, filename)
     if not public_url:
         log.error("Upload failed.")
         sys.exit(1)
 
+    old_url = story.get("image_url")
     supabase_patch("nureine_stories", {"image_url": public_url}, story["id"])
+    delete_from_storage(old_url)
     log.info("DONE — %s", public_url)
 
 

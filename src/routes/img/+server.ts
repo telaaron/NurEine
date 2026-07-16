@@ -1,8 +1,8 @@
 /**
- * Bild-Proxy + Optimierung. Holt ein (großes PNG-)Story-Bild, skaliert es auf die
- * angefragte Breite und liefert WebP — typ. 1 MB PNG → ~40-120 KB WebP.
+ * Bild-Proxy + Optimierung. Holt ein Story-Bild aus Supabase Storage (JPEG
+ * oder PNG), skaliert es auf die angefragte Breite und liefert WebP.
  *
- *   /img?url=<supabase-png-url>&w=600
+ *   /img?url=<supabase-image-url>&w=600
  *
  * CDN-cached 1 Jahr (Bilder ändern sich nie pro URL). Massiver Performance-Gewinn
  * auf Startseite + Archiv, wo dutzende Story-Bilder geladen werden.

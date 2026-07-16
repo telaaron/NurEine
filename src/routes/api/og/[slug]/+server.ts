@@ -87,22 +87,28 @@ export const GET: RequestHandler = async ({ params, setHeaders, url }) => {
 		tailwindConfig: undefined
 	});
 
-	// --- 6) Render SVG → PNG ---
+	// --- 6) Render SVG → PNG → WebP ---
+	// EGRESS-FIX (2026-07-16, Supabase-Sperre wegen exceed_egress_quota): Diese
+	// Route lieferte das rohe Resvg-PNG aus — ~800 kB–1,5 MB PRO Link-Vorschau
+	// (WhatsApp/Twitter/IG ziehen die Karte teils mehrfach). Als WebP q82 sind es
+	// ~60 kB: >90% weniger Egress bei identischer Optik. Alle Plattformen, die OG
+	// lesen, unterstützen WebP.
 	const { Resvg } = await import('@resvg/resvg-js');
 	const resvg = new Resvg(svg, {
 		fitTo: { mode: 'width', value: 1200 }
 	});
-	const pngData = resvg.render();
-	const pngBuffer = new Uint8Array(pngData.asPng());
+	const pngBuffer = resvg.render().asPng();
+	const sharp = (await import('sharp')).default;
+	const webp = await sharp(pngBuffer).webp({ quality: 82 }).toBuffer();
 
 	// --- 7) Return with long-lived cache ---
 	setHeaders({
-		'Content-Type': 'image/png',
+		'Content-Type': 'image/webp',
 		'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
 		'CDN-Cache-Control': 'public, max-age=86400'
 	});
 
-	return new Response(pngBuffer, {
-		headers: { 'Content-Type': 'image/png' }
+	return new Response(new Uint8Array(webp), {
+		headers: { 'Content-Type': 'image/webp' }
 	});
 };

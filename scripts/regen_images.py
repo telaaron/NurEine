@@ -156,11 +156,13 @@ def generate_image_fal(prompt: str) -> bytes | None:
 
 
 def composite_on_canvas(image_bytes: bytes) -> bytes:
-    """Soft-composite onto exact brand canvas #F5F1EA."""
+    """Soft-composite onto exact brand canvas #F5F1EA, then downscale +
+    encode as JPEG for upload (see image_utils.encode_story_image)."""
     try:
         from PIL import Image
     except ImportError:
         return image_bytes
+    from image_utils import encode_story_image
     try:
         img = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
         w, h = img.size
@@ -177,11 +179,28 @@ def composite_on_canvas(image_bytes: bytes) -> bytes:
                     ng = int(CANVAS[1] * blend + g * (1 - blend))
                     nb = int(CANVAS[2] * blend + b * (1 - blend))
                     pixels[x, y] = (nr, ng, nb, a)
-        buf = io.BytesIO()
-        img.save(buf, format="PNG", optimize=True)
-        return buf.getvalue()
+        return encode_story_image(img)
     except Exception:
         return image_bytes
+
+
+def delete_from_storage(public_url: str | None) -> None:
+    """Best-effort delete of a previous story image so regenerating never
+    leaves an orphaned object behind in the bucket."""
+    if not public_url or f"/{STORAGE_BUCKET}/" not in public_url:
+        return
+    key = public_url.split(f"/{STORAGE_BUCKET}/", 1)[1]
+    try:
+        requests.delete(
+            f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{key}",
+            headers={
+                "apikey": SUPABASE_SERVICE_KEY,
+                "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+            },
+            timeout=30,
+        )
+    except Exception as exc:
+        log.warning("  Old image delete failed (non-fatal): %s", exc)
 
 
 def upload_to_storage(image_bytes: bytes, filename: str) -> str | None:
@@ -189,7 +208,7 @@ def upload_to_storage(image_bytes: bytes, filename: str) -> str | None:
     headers = {
         "apikey": SUPABASE_SERVICE_KEY,
         "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-        "Content-Type": "image/png",
+        "Content-Type": "image/jpeg",
         "x-upsert": "true",
     }
     try:
@@ -206,7 +225,7 @@ def run() -> None:
     # 1. Fetch 3 most recent stories
     log.info("Fetching 3 most recent stories...")
     stories = supabase_get("nureine_stories", {
-        "select": "id,title,category,region",
+        "select": "id,title,category,region,image_url",
         "order": "created_at.desc",
         "limit": "3",
     })
@@ -258,7 +277,7 @@ def run() -> None:
         for umlaut in [("ä","ae"),("ö","oe"),("ü","ue"),("ß","ss")]:
             safe = safe.replace(*umlaut)
         safe = "".join(c for c in safe if c.isalnum() or c == "-")[:40]
-        filename = f"story-images/{safe}-{short_id}.png"
+        filename = f"story-images/{safe}-{short_id}.jpg"
 
         public_url = upload_to_storage(processed, filename)
         if not public_url:
@@ -266,9 +285,12 @@ def run() -> None:
             continue
         log.info("  Uploaded: %s", public_url)
 
-        # 7. Update database
+        # 7. Update database (delete the old image afterward so a failed
+        # DB write never leaves the story pointing at a deleted object)
+        old_url = story.get("image_url")
         supabase_patch("nureine_stories", {"image_url": public_url}, story["id"])
         log.info("  DB updated. ✓")
+        delete_from_storage(old_url)
 
     log.info("\nDONE — 3 stories processed.")
 

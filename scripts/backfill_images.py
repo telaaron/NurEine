@@ -105,12 +105,12 @@ def supabase_patch(table: str, data: dict[str, Any], row_id: str) -> None:
     resp.raise_for_status()
 
 
-def supabase_upload_image(image_bytes: bytes, filename: str) -> str | None:
+def supabase_upload_image(image_bytes: bytes, filename: str, content_type: str = "image/jpeg") -> str | None:
     upload_url = f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{filename}"
     try:
         resp = requests.post(
             upload_url,
-            headers=supabase_storage_headers("image/png"),
+            headers=supabase_storage_headers(content_type),
             data=image_bytes,
             timeout=60,
         )
@@ -358,9 +358,11 @@ def run() -> None:
             failed += 1
             continue
 
-        # 3b. Composite onto brand canvas colour for consistency
+        # 3b. Composite onto brand canvas colour for consistency, then
+        # downscale + encode as JPEG for upload (image_utils.encode_story_image)
         try:
             from PIL import Image as PILImage
+            from image_utils import encode_story_image
             img = PILImage.open(BytesIO(image_bytes)).convert("RGBA")
             w, h = img.size
             pixels = img.load()
@@ -376,9 +378,7 @@ def run() -> None:
                         ng = int(CANVAS[1] * blend + g * (1 - blend))
                         nb = int(CANVAS[2] * blend + b * (1 - blend))
                         pixels[x, y] = (nr, ng, nb, a)
-            buf = BytesIO()
-            img.save(buf, format="PNG", optimize=True)
-            image_bytes = buf.getvalue()
+            image_bytes = encode_story_image(img)
             log.info("  Canvas composite applied")
         except (ImportError, SystemExit):
             log.info("  PIL not available — keeping original image.")
@@ -395,9 +395,9 @@ def run() -> None:
         # Nur ASCII: Unicode wie '₂' (CO₂) ist isalnum()==True, aber Supabase Storage
         # lehnt solche Object-Keys mit 400 ab.
         safe_title = "".join(c for c in safe_title if c.isascii() and (c.isalnum() or c == "-"))[:40]
-        filename = f"story-images/{safe_title}-{short_id}.png"
+        filename = f"story-images/{safe_title}-{short_id}.jpg"
 
-        public_url = supabase_upload_image(image_bytes, filename)
+        public_url = supabase_upload_image(image_bytes, filename, content_type="image/jpeg")
         if not public_url:
             failed += 1
             continue

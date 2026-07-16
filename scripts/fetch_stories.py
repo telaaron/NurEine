@@ -553,7 +553,7 @@ def supabase_post(table: str, data: dict[str, Any]) -> dict[str, Any]:
     return resp.json()
 
 
-def supabase_upload_image(image_bytes: bytes, filename: str) -> str | None:
+def supabase_upload_image(image_bytes: bytes, filename: str, content_type: str = "image/jpeg") -> str | None:
     """Upload an image to Supabase Storage and return the public URL.
 
     Returns None if upload fails.
@@ -563,7 +563,7 @@ def supabase_upload_image(image_bytes: bytes, filename: str) -> str | None:
     try:
         resp = requests.post(
             upload_url,
-            headers=supabase_storage_headers("image/png"),
+            headers=supabase_storage_headers(content_type),
             data=image_bytes,
             timeout=60,
         )
@@ -1635,14 +1635,15 @@ def generate_and_upload_image(image_prompt: str, story_title: str, category: str
     )
     # Limit filename length and remove unsafe chars
     safe_title = "".join(c for c in safe_title if c.isalnum() or c == "-")[:40]
-    filename = f"story-images/{safe_title}-{short_id}.png"
+    filename = f"story-images/{safe_title}-{short_id}.jpg"
 
-    public_url = supabase_upload_image(image_bytes, filename)
+    public_url = supabase_upload_image(image_bytes, filename, content_type="image/jpeg")
     return public_url
 
 
 def composite_on_canvas(image_bytes: bytes) -> bytes:
-    """Soft-composite the generated image onto the exact brand canvas #F5F1EA.
+    """Soft-composite the generated image onto the exact brand canvas #F5F1EA,
+    then downscale and encode as JPEG for upload (see image_utils.encode_story_image).
 
     Replaces near-white backgrounds with the brand canvas colour using
     a soft edge blend to avoid harsh transitions. For paper collage
@@ -1652,6 +1653,8 @@ def composite_on_canvas(image_bytes: bytes) -> bytes:
         from PIL import Image as PILImage
     except ImportError:
         return image_bytes
+
+    from image_utils import encode_story_image
 
     try:
         img = PILImage.open(BytesIO(image_bytes)).convert("RGBA")
@@ -1673,9 +1676,7 @@ def composite_on_canvas(image_bytes: bytes) -> bytes:
                     nb = int(CANVAS[2] * blend + b * (1 - blend))
                     pixels[x, y] = (nr, ng, nb, a)
 
-        buf = BytesIO()
-        img.save(buf, format="PNG", optimize=True)
-        return buf.getvalue()
+        return encode_story_image(img)
     except Exception:
         return image_bytes
 

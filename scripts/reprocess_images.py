@@ -70,12 +70,12 @@ def supabase_patch(table: str, data: dict, row_id: str) -> None:
     resp.raise_for_status()
 
 
-def supabase_upload(image_bytes: bytes, filename: str) -> str | None:
+def supabase_upload(image_bytes: bytes, filename: str, content_type: str = "image/png") -> str | None:
     url = f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{filename}"
     headers = {
         "apikey": SUPABASE_SERVICE_KEY,
         "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
-        "Content-Type": "image/png",
+        "Content-Type": content_type,
         "x-upsert": "true",
     }
     try:
@@ -85,6 +85,22 @@ def supabase_upload(image_bytes: bytes, filename: str) -> str | None:
         log.error("  Upload failed: %s", exc)
         return None
     return f"{SUPABASE_URL}/storage/v1/object/public/{STORAGE_BUCKET}/{filename}"
+
+
+def delete_from_storage(public_url: str | None) -> None:
+    """Best-effort delete of a previous story image so reprocessing never
+    leaves an orphaned object behind in the bucket."""
+    if not public_url or f"/{STORAGE_BUCKET}/" not in public_url:
+        return
+    key = public_url.split(f"/{STORAGE_BUCKET}/", 1)[1]
+    try:
+        requests.delete(
+            f"{SUPABASE_URL}/storage/v1/object/{STORAGE_BUCKET}/{key}",
+            headers={"apikey": SUPABASE_SERVICE_KEY, "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}"},
+            timeout=30,
+        )
+    except Exception as exc:
+        log.warning("  Old image delete failed (non-fatal): %s", exc)
 
 
 # ── Background removal (forked from fetch_stories.py) ──────────────────
@@ -164,31 +180,6 @@ def fit_object_in_frame(image_bytes: bytes) -> bytes | None:
     except Exception as exc:
         log.warning("  auto-fit failed: %s", exc)
         return None
-
-
-# ── OG image regeneration ──────────────────────────────────────────────
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
-from generate_og_images import compose_og_image  # noqa: E402
-
-
-def regenerate_og(story: dict, image_bytes: bytes) -> str | None:
-    title = story.get("title", "")
-    dek = story.get("subtitle") or story.get("summary", "")
-    category = story.get("category", "innovation")
-    label = story.get("category_label", category.capitalize())
-
-    og_bytes = compose_og_image(
-        story_title=title,
-        story_dek=dek,
-        category=category,
-        image_bytes=image_bytes,
-    )
-    if not og_bytes:
-        return None
-
-    short_id = uuid.uuid4().hex[:8]
-    filename = f"og-images/{story.get('id','story')[:12]}-{short_id}.png"
-    return supabase_upload(og_bytes, filename)
 
 
 # ── Main ───────────────────────────────────────────────────────────────
@@ -271,26 +262,29 @@ def run():
             image_bytes = image_bytes_nobg
             log.info("  Auto-fit skipped (object already ok)")
 
-        # (4) Upload new image
+        # (4) Downscale (stays PNG — transparency must survive for compositing)
+        try:
+            from PIL import Image as PILImage
+            resized_img = PILImage.open(io.BytesIO(image_bytes))
+            resized_img.thumbnail((1200, 1200), PILImage.LANCZOS)
+            buf = io.BytesIO()
+            resized_img.save(buf, format="PNG", optimize=True)
+            image_bytes = buf.getvalue()
+        except Exception as exc:
+            log.warning("  Downscale failed, uploading at original size: %s", exc)
+
+        # (5) Upload new image
         short_id = uuid.uuid4().hex[:8]
         filename = f"story-images/{slug[:40]}-reproc-{short_id}.png"
-        new_url = supabase_upload(image_bytes, filename)
+        new_url = supabase_upload(image_bytes, filename, content_type="image/png")
         if not new_url:
             failed += 1
             continue
 
-        # (5) Regenerate OG image
-        try:
-            new_og_url = regenerate_og(story, image_bytes)
-            if new_og_url:
-                supabase_patch("nureine_stories", {"image_url": new_url, "og_image_url": new_og_url}, story_id)
-                log.info("  ✓ Updated (image + OG)")
-            else:
-                supabase_patch("nureine_stories", {"image_url": new_url}, story_id)
-                log.info("  ✓ Updated (image only, OG skipped)")
-        except Exception:
-            supabase_patch("nureine_stories", {"image_url": new_url}, story_id)
-            log.info("  ✓ Updated (image only)")
+        old_url = story.get("image_url")
+        supabase_patch("nureine_stories", {"image_url": new_url}, story_id)
+        delete_from_storage(old_url)
+        log.info("  ✓ Updated")
 
         log.info("  → %s", new_url)
         success += 1

@@ -9,6 +9,11 @@
 
 	let { data } = $props();
 	const featured = $derived(data.featured);
+	// Ø Wirkungsindex nur zeigen, wenn es überhaupt Stories gibt — sonst wäre es
+	// eine Division durch 0 („NaN/100", sah nach Fehler aus).
+	const avgImpactLabel = $derived(
+		data.stats.storiesCount > 0 ? String(Math.round(data.totalImpact / data.stats.storiesCount)) : '—'
+	);
 	const tone = $derived(featured ? toneStyles[featured.tone] : toneStyles['amber']);
 	// Tages-Perlen der letzten Woche (jede mit Datum), statt der letzten N Stories.
 	const days = $derived(data.days ?? []);
@@ -193,9 +198,33 @@
 						<ShareBar url={featuredUrl} title={featured.title} text={featured.dek} showLabel={false} />
 					</div>
 				{:else}
-					<p class="mt-6 serif text-xl" style="color: var(--color-muted);">
-						Noch keine Geschichten geladen. Bitte versuche es später erneut.
+					<!-- Leerlauf-Zustand: ehrlich statt „irgendwas ist kaputt". Trägt auch
+					     die Wartungs-Info vom Juli 2026 (Kontingent gerissen, zurück am 20.). -->
+					<h1
+						class="display mt-4 sm:mt-5 leading-[0.95] text-4xl sm:text-5xl max-w-[16ch] rise rise-d2"
+						style="color: var(--color-ink); font-weight: 700; letter-spacing: -0.045em;"
+					>
+						Heute bleibt es hier still.
+					</h1>
+					<p class="mt-5 serif text-lg sm:text-xl max-w-[46ch] leading-relaxed rise rise-d2" style="color: var(--color-ink-soft);">
+						Wir haben unser Speicher-Kontingent überschritten — deshalb können wir die
+						Geschichten gerade nicht ausliefern. Kein Datenverlust, nichts kaputt:
+						am <strong style="color: var(--color-ink);">20. Juli</strong> sind wir automatisch
+						wieder da.
 					</p>
+					<p class="mt-4 serif text-base max-w-[46ch] leading-relaxed rise rise-d2" style="color: var(--color-muted);">
+						Wir schreiben das lieber hin, als so zu tun, als wäre nichts. Ehrlicher
+						Fortschritt heißt auch, Rückschritte zu benennen. Danke für deine Geduld.
+					</p>
+					<div class="mt-7 rise rise-d2">
+						<a
+							href={base + '/newsletter'}
+							class="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium transition-transform hover:-translate-y-0.5"
+							style="background: var(--color-ink); color: var(--color-paper);"
+						>
+							Newsletter abonnieren — wir melden uns, wenn's weitergeht →
+						</a>
+					</div>
 				{/if}
 			</div>
 
@@ -251,8 +280,10 @@
 				{#each [
 					{ l: 'Heute kuratiert', v: String(data.stats.storiesCount), s: '' },
 					{ l: 'Quellen geprüft', v: String(data.stats.sourcesCount), s: '' },
-					{ l: 'Ø Wirkungsindex', v: String(Math.round(data.totalImpact / data.stats.storiesCount)), s: '/100' },
-					{ l: 'Ø Lesezeit', v: String(data.avgRead), s: ' min' }
+					// Division durch 0 (keine Stories) ergab „NaN/100" — das sah kaputt aus.
+					// Ohne Datenbasis lieber ein ehrliches „—" als eine Fantasie-Zahl.
+					{ l: 'Ø Wirkungsindex', v: avgImpactLabel, s: avgImpactLabel === '—' ? '' : '/100' },
+					{ l: 'Ø Lesezeit', v: data.stats.storiesCount > 0 ? String(data.avgRead) : '—', s: data.stats.storiesCount > 0 ? ' min' : '' }
 				] as stat}
 					<div class="py-5 sm:py-6 px-1 sm:px-4" style="background: var(--color-canvas-soft);">
 						<p class="uppercase" style="font-family: var(--font-mono); font-size: 0.62rem; letter-spacing: 0.16em; color: var(--color-faint);">{stat.l}</p>

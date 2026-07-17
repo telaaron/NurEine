@@ -1683,16 +1683,25 @@ def composite_on_canvas(image_bytes: bytes) -> bytes:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+class SourceLoadError(RuntimeError):
+    """Die Quellen-Liste war nicht ladbar (Infrastruktur), nicht: sie ist leer."""
+
+
 def load_active_sources() -> list[dict[str, Any]]:
-    """Load all active RSS sources from Supabase."""
+    """Load all active RSS sources from Supabase.
+
+    Wirft SourceLoadError, wenn Supabase nicht antwortet. Verbesserung #30:
+    frueher wurde daraus ein leeres [] — ununterscheidbar von "keine Quellen
+    konfiguriert" — und der Lauf meldete sich als 'completed'. So stand der
+    Fetch vom 15.-17.07. still (REST 402/Quota), ohne eine einzige Fehlerzeile.
+    """
     params = {"active": "eq.true", "select": "*"}
     try:
         sources = supabase_get("nureine_rss_sources", params=params)
         log.info("Loaded %d active RSS source(s)", len(sources))
         return sources
     except requests.RequestException as exc:
-        log.error("Failed to load RSS sources from Supabase: %s", exc)
-        return []
+        raise SourceLoadError(f"Quellen nicht ladbar: {exc}") from exc
 
 
 def log_cron_run(
@@ -1714,7 +1723,16 @@ def log_cron_run(
         supabase_post("nureine_cron_runs", record)
         log.info("Cron run logged (status=%s, added=%d)", status, stories_added)
     except requests.RequestException as exc:
+        # Verbesserung #30: Wenn schon das Fehler-Logging nicht durchkommt, ist die
+        # DB selbst der Ausfall (z.B. 402/Quota). Dann bleibt NICHTS zurueck, worüber
+        # ein Kollege den Stillstand sehen koennte — darum hier maximal laut werden.
         log.error("Failed to log cron run: %s", exc)
+        log.error(
+            "ACHTUNG: Lauf (status=%s) konnte NICHT in nureine_cron_runs protokolliert "
+            "werden — Supabase antwortet nicht. Der Stillstand ist in der DB unsichtbar; "
+            "auf LUECKEN in cron_runs pruefen, nicht auf Fehlerzeilen.",
+            status,
+        )
 
 
 def ping_indexnow(recent: int) -> None:
@@ -1817,9 +1835,13 @@ def run() -> None:
     sources.sort(key=_source_priority)
 
     if not sources:
-        log.warning("No active RSS sources found — nothing to do.")
-        log_cron_run("completed", 0, 0, 0)
-        return
+        # Hierher kommt man jetzt nur noch, wenn Supabase ANTWORTET und wirklich
+        # 0 aktive Quellen liefert (echter Konfig-Zustand) — Ladefehler fliegen
+        # oben als SourceLoadError. Trotzdem kein Normalfall: ohne Quellen gibt es
+        # nie wieder Nachschub, das ist ein Alarm, kein ruhiges "completed".
+        log.error("Keine aktive RSS-Quelle in nureine_rss_sources — Pipeline haette keinen Nachschub.")
+        log_cron_run("failed", 0, 0, 1, error_message="Keine aktiven RSS-Quellen konfiguriert")
+        sys.exit(1)
 
     # Log source order for debugging
     log.info(

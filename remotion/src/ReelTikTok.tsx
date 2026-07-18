@@ -118,11 +118,27 @@ const FlashWipe: React.FC<{ color?: string }> = ({ color = AMBER }) => {
 const SceneVoice: React.FC<{ vo: SceneVo | null | undefined; dark?: boolean; captions?: boolean; align?: 'center' | 'left'; raise?: number }> = ({ vo, dark, captions = true, align = 'center', raise = 0 }) => {
 	const frame = useCurrentFrame();
 	if (!vo) return null;
+	// SATZZEICHEN-BEWUSSTE Segmentierung (Panel-Fix 2026-07-17): NICHT starr alle 4
+	// Wörter schneiden — das zerreißt Gedanken mitten im Satz („Gebärmutterhalskrebs
+	// Zum" | „Nächste Slide"). Stattdessen bricht ein Wort, das auf Satzzeichen endet
+	// (. , — ; : ! ?), den Chunk ab. Max 5 Wörter als Obergrenze, damit die Pille nie
+	// überläuft. So läuft die Caption wie gesprochene Sprache, nicht wie Datenbrei.
 	const chunks: CaptionWord[][] = [];
-	for (let i = 0; i < vo.words.length; i += 4) chunks.push(vo.words.slice(i, i + 4));
-	// Verwaiste Mini-Pills („nicht" allein) wirken wie ein Render-Bug → letzten
-	// Chunk mit <3 Wörtern in den vorigen mergen (Persona-Panel-Fix 2026-07-11).
-	if (chunks.length >= 2 && chunks[chunks.length - 1].length < 3) {
+	let cur: CaptionWord[] = [];
+	for (const w of vo.words) {
+		cur.push(w);
+		// brk kommt aus render.mjs (Wort schloss einen Satzteil ab, bevor die Zeichen
+		// gesäubert wurden). Fallback auf Rest-Interpunktion im Token + harte Obergrenze 5.
+		const endsClause = w.brk || /[.,;:!?–—]$/.test(w.t.trim());
+		if (endsClause || cur.length >= 5) {
+			chunks.push(cur);
+			cur = [];
+		}
+	}
+	if (cur.length) chunks.push(cur);
+	// Verwaiste Mini-Pills („nicht" allein) wirken wie ein Render-Bug → an den vorigen
+	// Chunk hängen, sofern der dadurch nicht über 6 Wörter läuft (Panel-Fix 2026-07-11).
+	if (chunks.length >= 2 && chunks[chunks.length - 1].length < 2 && chunks[chunks.length - 2].length <= 4) {
 		const orphan = chunks.pop() as CaptionWord[];
 		chunks[chunks.length - 1] = [...chunks[chunks.length - 1], ...orphan];
 	}
@@ -202,6 +218,12 @@ const HookScene: React.FC<Extract<DailyScene, { kind: 'hook' }>> = ({ text, punc
 };
 
 // ── Szene 2: ZAHL — steifere Count-up-Spring, schnellere Kontext-Zeile ──────
+// Bildquelle auflösen: volle URLs (Supabase-Storage) bleiben, wie sie sind;
+// relative Pfade zeigen auf remotion/public/ und brauchen staticFile() — sonst
+// löst der Browser sie gegen die Bundle-Origin auf und bekommt 404. Erlaubt es,
+// ohne erreichbaren Storage zu rendern (lokal generierte Bilder in public/story/).
+const imgSrc = (src: string) => (/^(https?:|data:|blob:)/.test(src) ? src : staticFile(src));
+
 // snap-Variante = Cold-Open (Rezept §C): Zahl steht ab Frame 0 und rastet mit
 // Overshoot ein — kein Count-up von 0 (bei Ø 3,75 s Wiedergabedauer zu langsam
 // als Opener). kicker trägt dort den Serien-Anker („TAG 217 · NUR EINE").
@@ -219,7 +241,7 @@ const NumberScene: React.FC<Extract<DailyScene, { kind: 'number' }> & { category
 			    worum es geht, die Typo bleibt der Star (Publikums-Feedback 2026-07-11) */}
 			{image ? (
 				<>
-					<Img src={image} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5, filter: 'saturate(0.85)', transform: `scale(${1.04 + frame * 0.0009})` }} />
+					<Img src={imgSrc(image)} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.5, filter: 'saturate(0.85)', transform: `scale(${1.04 + frame * 0.0009})` }} />
 					<AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(22,20,15,0.55) 0%, rgba(22,20,15,0.78) 55%, rgba(22,20,15,0.94) 100%)' }} />
 				</>
 			) : null}
@@ -330,7 +352,7 @@ const SnapValue: React.FC<{ value: string; unit: string | null }> = ({ value, un
 };
 
 // ── Szene 3: BEAT — schnellerer Panel-Einzug, Text-Pop mit Overshoot ────────
-const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: string; seed: string; person: Person }> = ({ text, image, pose, category, seed, person, vo }) => {
+const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: string; seed: string; person: Person }> = ({ text, image, pose, category, seed, person, vo, full }) => {
 	const frame = useCurrentFrame();
 	const accent = accentFor(category);
 	const punchScale = usePunch(0);
@@ -345,11 +367,25 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 	return (
 		<AbsoluteFill style={{ background: CANVAS }}>
 			<PaperTextureOverlay kind="halftone" opacity={0.06} />
-			{image ? (
+			{image && full ? (
+				// FULLSCREEN-Beat (Aaron 2026-07-17): Bild randlos statt Polaroid-Panel —
+				// das Motiv trägt die Szene, der Text sitzt darauf. Deutlich weniger
+				// Lesearbeit als Panel+Text untereinander (Panel-Befund „unübersichtlich").
+				<>
+					<Img src={imgSrc(image)} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${1.02 + frame * 0.0016})` }} />
+					{/* Verlauf nur unten: Motiv bleibt oben frei lesbar, Text unten sicher kontrastiert */}
+					<AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(22,20,15,0) 38%, rgba(22,20,15,0.72) 68%, rgba(22,20,15,0.93) 100%)' }} />
+					<div style={{ position: 'absolute', left: M, right: M, bottom: SAFE_BOTTOM + 170, transform: `scale(${textPop})`, transformOrigin: 'left bottom', opacity: interpolate(textS, [0, 0.35], [0, 1]) }}>
+						<div style={{ width: 110, height: 10, background: accent, marginBottom: 26, borderRadius: 5 }} />
+						<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 76, lineHeight: 1.08, letterSpacing: '-0.03em', color: '#fff', textShadow: '0 2px 24px rgba(0,0,0,0.5)', wordBreak: 'break-word' }}>{text}</div>
+					</div>
+					<div style={{ position: 'absolute', right: M, top: SAFE_TOP + 8, fontFamily: FF.inter, fontSize: 20, color: 'rgba(255,255,255,0.6)', textShadow: '0 1px 8px rgba(0,0,0,0.6)' }}>Illustration: KI · NurEine</div>
+				</>
+			) : image ? (
 				<>
 					<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 30, height: 720, transform: `translateY(${panelY}px) rotate(-1.6deg) scale(${panelScale})`, opacity: panelOp, background: PAPER, padding: 22, boxShadow: '0 34px 80px rgba(60,40,20,0.3)', borderRadius: 6 }}>
 						<div style={{ width: '100%', height: '100%', overflow: 'hidden', borderRadius: 3 }}>
-							<Img src={image} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${zoom})` }} />
+							<Img src={imgSrc(image)} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${zoom})` }} />
 						</div>
 						<div style={{ position: 'absolute', bottom: 30, left: 34, fontFamily: FF.inter, fontSize: 22, color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 8px rgba(0,0,0,0.5)' }}>Illustration: KI · NurEine</div>
 					</div>
@@ -370,7 +406,10 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 			)}
 			<div style={{ position: 'absolute', inset: 0, transform: `scale(${punchScale})`, transformOrigin: 'center', pointerEvents: 'none' }} />
 			<FlashWipe />
-			<SceneVoice vo={vo} captions={!!image} />
+			{/* Caption NUR im Polaroid-Modus: beim Fullscreen-Beat (full) trägt der große
+			    Text schon die Aussage — eine Karaoke-Caption darunter wäre dasselbe doppelt
+			    und kollidiert mit dem Screen-Text (Panel-Befund „unübersichtlich" 2026-07-17). */}
+			<SceneVoice vo={vo} captions={!!image && !full} />
 		</AbsoluteFill>
 	);
 };
@@ -701,7 +740,11 @@ const EngageIcons: React.FC<{ accent: string }> = ({ accent }) => {
 // er in die Wirkungsindex-Zeile und löst sich auf. Wer das Badge verstehen will,
 // schaut den Anfang nochmal — ohne dass Information vorenthalten wird (der
 // Beleg bleibt jederzeit voll lesbar, kein Dark Pattern).
-const BADGE_START = 60;
+// Panel-Befund 2026-07-17: In Sek 0–3 klaut das Badge dem Cold-Open die Aufmerksamkeit
+// („sieht aus wie eine iOS-Benachrichtigung, die ins Video gerutscht ist") — die Zahl ist
+// dort der Star. Start deshalb von Sek 2 auf Sek 8 verschoben: nach dem Cold-Open, noch
+// lange vor dem Stempel → das Rewatch-Rätsel bleibt, der Hook bekommt seinen Frame zurück.
+const BADGE_START = 240;
 const RewatchBadge: React.FC<{ value: number; proofStart: number; category: string; targetDX?: number; targetDY?: number; toArchive?: boolean }> = ({ value, proofStart, category, targetDX = -20, targetDY = 700, toArchive = false }) => {
 	const frame = useCurrentFrame();
 	// toArchive: das Badge fliegt in die Spiralen-Position des neuen Archiv-Punkts
@@ -788,7 +831,10 @@ export const ReelTikTok: React.FC<ReelDailyProps> = (p) => {
 				// duckt die Musik auf 35%, damit der Stempel-Sound das Video akustisch besiegelt
 				// (Panel-Fix 2026-07-12). Loop-Modus fadet am Ende nicht auf 0 (hörbare Naht).
 				volume={(f) => {
-					const base = interpolate(f, [0, 12, total - (loop ? 6 : 22), total], [0, musicVol, musicVol, loop ? musicVol * 0.55 : 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+					// Cold-Open-Stille (Panel-Fix 2026-07-17): die ersten ~0,45 s bleibt die Musik
+					// weg, damit die Kernzahl allein steht („bei der 0 absolute Stille — das zieht
+					// sofort Aufmerksamkeit"); danach fadet das Bett normal auf.
+					const base = interpolate(f, [0, 14, 26, total - (loop ? 6 : 22), total], [0, 0, musicVol, musicVol, loop ? musicVol * 0.55 : 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 					const duckStart = proofStart + 2;
 					const duck = interpolate(f, [duckStart, duckStart + 4, duckStart + 14, duckStart + 22], [1, 0.35, 0.35, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 					return base * duck;

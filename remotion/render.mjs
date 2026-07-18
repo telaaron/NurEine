@@ -352,10 +352,16 @@ function synthSegment(text, slug, name) {
 		// Caption-Tokens glätten: Pausen-Marker im voText (Gedankenstrich, Komma für
 		// Sprech-Pacing) dürfen nicht als „weniger,," / „—" in den Untertiteln landen.
 		const cleanTok = (t) => t.replace(/[—–]/g, '').replace(/([,.!?;:])\1+/g, '$1').replace(/\s+([,.!?;:])/g, '$1').replace(/^[,;:—–\s]+/, '').replace(/\s{2,}/g, ' ').trim();
-		words = words.map((w) => ({ ...w, t: cleanTok(w.t) })).filter((w) => w.t.length);
+		// brk = dieses Wort schließt einen Satzteil ab (endet auf . , — ; : ! ?). Wird
+		// VOR dem Säubern bestimmt, damit die Caption-Segmentierung (ReelTikTok) an
+		// Satzgrenzen brechen kann statt starr alle N Wörter (Panel-Fix 2026-07-17).
+		// brk kann schon aus tts.py kommen (Interpunktion aus dem Original-Text) — ODER
+		// aus dem rohen Token, falls es die Zeichen doch trägt. Beide Quellen verodern,
+		// DANN säubern (Panel-Fix 2026-07-17).
+		words = words.map((w) => ({ ...w, brk: !!w.brk || /[.,;:!?–—]\s*$/.test(w.t), t: cleanTok(w.t) })).filter((w) => w.t.length);
 		return {
 			file,
-			words: words.map((w) => ({ t: w.t, start: Math.round(w.start * FPS), end: Math.round(w.end * FPS) })),
+			words: words.map((w) => ({ t: w.t, brk: !!w.brk, start: Math.round(w.start * FPS), end: Math.round(w.end * FPS) })),
 			durFrames: Math.round((words[words.length - 1].end + VO_TAIL) * FPS)
 		};
 	} catch (e) {
@@ -612,6 +618,48 @@ async function main() {
 			if (miss.length) throw new Error(`seo.keyword "${plan.seo.keyword}" fehlt in: ${miss.join(' + ')} — Dreifach-Platzierung ist Pflicht (übersteuern: --no-seo-check)`);
 			console.log(`OK seo.keyword "${plan.seo.keyword}" dreifach platziert`);
 		}
+	}
+
+	// KOHÄRENZ-CHECK (Panel-Befund 2026-07-17): Auge und Ohr dürfen sich NIE
+	// widersprechen — sonst stolpert das Gehirn und der Daumen wischt („kognitive
+	// Dissonanz"). Zwei belegte Fälle, die live gingen und beide fatal waren:
+	//   (a) Screen „Erwartet: 6.452" ↔ VO „sechstausend"  → gerundet = Trust-Killer
+	//       bei der Daten-Persona, obwohl unser USP „belegt" heißt.
+	//   (b) Screen „auch Räder"      ↔ VO „auch Menschen"  → anderes Wort, andere
+	//       Bedeutung, zeitgleich = Dissonanz.
+	// Hard-Fail statt WARN: genau solche Fehler sind im Plan unsichtbar und fallen
+	// erst im fertigen Video auf. --no-coherence-check übersteuert bewusst.
+	if (plan && !arg('no-coherence-check')) {
+		const problems = [];
+		// Zahlen mit Tausenderpunkt/Komma aus dem Screen-Text ziehen (4.400, 6.452, 2.065, 47 %)
+		const numsIn = (s) => (String(s || '').match(/\d[\d.,]*/g) || []).map((x) => x.replace(/[.,]$/, ''));
+		for (const [i, sc] of (plan.scenes || []).entries()) {
+			const screen = [sc.text, sc.value, sc.unit, sc.context, sc.share].filter(Boolean).join(' ');
+			const vo = sc.voText || '';
+			if (!vo) continue;
+			for (const n of numsIn(screen)) {
+				const plain = n.replace(/\./g, '');
+				if (plain.length < 3) continue; // 0, 18, 47 … werden ohnehin ausgeschrieben
+				// Die Ziffer darf im voText stehen (wird automatisch ausgeschrieben) …
+				if (vo.includes(n) || vo.includes(plain)) continue;
+				// … sonst muss das deutsche Zahlwort exakt drinstehen.
+				// Zahlwort im voText suchen — Sprech-Trennzeichen (Leerzeichen/Bindestrich,
+				// die die Stimme sauberer trennen lassen) vor dem Vergleich entfernen, damit
+				// „zweitausend fünfundsechzig" weiterhin als 2065 zählt.
+				const word = intToGerman(parseInt(plain, 10));
+				const voSquished = vo.toLowerCase().replace(/[\s-]/g, '');
+				if (word && voSquished.includes(word.toLowerCase())) continue;
+				problems.push(`Szene ${i} (${sc.kind}): Bild zeigt "${n}", voText spricht sie nicht exakt → "${vo.slice(0, 70)}"`);
+			}
+		}
+		if (problems.length) {
+			throw new Error(
+				`Kohärenz-Check: Auge und Ohr widersprechen sich —\n  ${problems.join('\n  ')}\n` +
+					`  Zahlen im Bild MÜSSEN im voText exakt gesprochen werden (nie runden — der USP ist "belegt").\n` +
+					`  (übersteuern: --no-coherence-check)`
+			);
+		}
+		console.log('OK Kohärenz-Check: Bild-Zahlen = gesprochene Zahlen');
 	}
 
 	// Musik deterministisch variieren (per Slug), damit der Feed nicht monoton klingt.

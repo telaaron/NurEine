@@ -19,6 +19,7 @@ export interface CaptionWord {
 	t: string;
 	start: number; // Frame, relativ zum SZENEN-Start
 	end: number;
+	brk?: boolean; // Wort schloss einen Satzteil ab → Caption-Chunk hier brechen
 }
 
 export interface SceneVo {
@@ -39,7 +40,9 @@ export type DailyScene = SceneBase &
 		| { kind: 'hook'; text: string; punch: string; kicker: string }
 		// image auf number: Themen-Anker — Perlen-Bild dunkel HINTER der Zahl.
 		| { kind: 'number'; value: string; unit: string | null; context: string; snap?: boolean; kicker?: string | null; image?: string | null }
-		| { kind: 'beat'; text: string; image: string | null; pose: Pose }
+		// full: Bild randlos über den ganzen Frame statt im Polaroid-Panel (Aaron 2026-07-17
+		// — weniger Lesearbeit, das Motiv trägt die Szene). Nur mit image sinnvoll.
+		| { kind: 'beat'; text: string; image: string | null; pose: Pose; full?: boolean }
 		// progress: Wachstums-Archiv-Klimax („Fortschritt Nr. N" + Punkt-Spirale).
 		// snapshot: Quellen-Faksimile-Kärtchen (USP visuell — Titel/Journal/Jahr/Zitat).
 		| { kind: 'proof'; source: string; impact: number | null; progress?: number | null; snapshot?: { title: string; outlet: string; year: string; quote: string } | null }

@@ -1,8 +1,19 @@
 {
 	"_hinweis": "Aussprache-Lexikon gegen Vorlesefehler. Gehörten Fehler eintragen: 'Original wie im voText' -> 'aussprache-freundliche Schreibweise'. Captions zeigen weiter das Original. Keys mit _ werden ignoriert.",
 	"_beispiel": "\"Malaria\": \"Malaaria\" würde die Betonung strecken; \"WHO\": \"Weh Haa Oh\" buchstabiert.",
+	"_regel_komposita": "Die Multilingual-Stimme kippt bei langen deutschen Komposita ins Englische ('Notbremsassistent' -> 'Not Bram's Assistant', 'Gebärmutterhalskrebs' -> 'Gebbermutter Hall-Scribs'). Gegenmittel: mit Bindestrichen in Sprech-Silben zerlegen. Verifiziert per Whisper-Gegenprobe 2026-07-17.",
+	"_regel_abkuerzungen": "ABER: Buchstaben-Abkürzungen NICHT mit Bindestrichen als Silben schreiben ('Ha-Pe-Vau' -> 'HPEW', verschliffen). Einzelbuchstaben mit LEERZEICHEN buchstabieren ('H P V' -> sauber 'HPV'). Verifiziert per Whisper 2026-07-18.",
 	"WHO": "Weh Ha Oh",
 	"UNICEF": "Unizef",
 	"NASA": "Nassa",
-	"Weg.": "weck."
+	"Weg.": "weck.",
+	"Gebärmutterhalskrebs": "Gebär-mutter-hals-krebs",
+	"Notbremsassistent": "Not-brems-assistent",
+	"Notbremsassistenten": "Not-brems-assistenten",
+	"HPV-Impfung": "Ha-Pe-Vau-Impfung",
+	"Wirkungsindex": "Wirkungs-index",
+	"Hitzeschutz": "Hitze-schutz",
+	"Frühwarnung": "Früh-warnung",
+	"Kühlräume": "Kühl-räume",
+	"Klimaschutz": "Klima-schutz"
 }

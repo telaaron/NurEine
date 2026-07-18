@@ -19,6 +19,28 @@ import edge_tts
 
 DEFAULT_VOICE = "de-DE-SeraphinaMultilingualNeural"  # warm, klar; Fallback: de-DE-KatjaNeural
 
+CLAUSE_END = ".,;:!?–—"
+
+
+def _mark_clause_breaks(words, text):
+    """Setzt words[i]['brk']=True, wenn im Original-`text` direkt nach diesem Wort
+    ein Satzzeichen (. , ; : ! ? – —) steht. edge-tts liefert die WordBoundaries
+    ohne Interpunktion; so bekommt die Caption-Segmentierung die Satzgrenzen zurück.
+    Robust gegen Nicht-Übereinstimmungen: findet jedes Wort ab dem letzten Cursor."""
+    cursor = 0
+    low = text
+    for w in words:
+        tok = w.get("t", "")
+        idx = low.find(tok, cursor)
+        if idx < 0:
+            w["brk"] = False
+            continue
+        after = idx + len(tok)
+        cursor = after
+        # Whitespace überspringen ist NICHT gewollt — ein Satzzeichen klebt direkt am Wort.
+        nxt = low[after] if after < len(low) else ""
+        w["brk"] = nxt in CLAUSE_END
+
 
 async def synth(text: str, voice: str, rate: str, out_mp3: str, out_words: str) -> None:
     # boundary explizit auf WordBoundary (edge-tts >= 7 default: SentenceBoundary)
@@ -33,6 +55,11 @@ async def synth(text: str, voice: str, rate: str, out_mp3: str, out_words: str) 
                 start = chunk["offset"] / 10_000_000
                 end = start + chunk["duration"] / 10_000_000
                 words.append({"t": chunk["text"], "start": round(start, 3), "end": round(end, 3)})
+    # WordBoundary liefert die Wörter OHNE Interpunktion. Für die satzzeichen-bewusste
+    # Caption-Segmentierung (ReelTikTok) das im Original-text folgende Satzzeichen
+    # zurückmappen: sequenziell durch den text laufen, je Wort das direkt danach
+    # stehende [.,;:!?–—] als brk markieren (Panel-Fix 2026-07-17).
+    _mark_clause_breaks(words, text)
     with open(out_words, "w", encoding="utf-8") as f:
         json.dump(words, f, ensure_ascii=False)
     if not words:
@@ -57,7 +84,7 @@ def synth_eleven(text: str, rate: str, out_mp3: str, out_words: str) -> None:
         speed = 1.0
     body = {
         "text": text,
-        "model_id": os.environ.get("ELEVEN_MODEL", "eleven_multilingual_v2"),
+        "model_id": os.environ.get("ELEVEN_MODEL", "eleven_v3"),  # Aaron 2026-07-17: v3 = bestes Deutsch/Betonung (Panel-Fix); via ELEVEN_MODEL übersteuerbar
         "voice_settings": {"stability": 0.5, "similarity_boost": 0.75, "speed": speed},
     }
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps?output_format=mp3_44100_128"

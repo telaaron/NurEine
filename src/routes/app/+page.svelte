@@ -1,24 +1,57 @@
 <script lang="ts">
 	// Screen 1 — Aufdecken/Heute. Öffnet morgens direkt ins Ritual (Habit-Forschung,
-	// Aarons bestätigter Default). Nach dem Lesen fliegt das Licht in den Himmel (Schritt 3).
+	// Aarons bestätigter Default). Nach dem Lesen fliegt das Licht in den Himmel —
+	// und DER Himmel ist dann das Zuhause (Home-Logik aus dem Bauplan, Konzept B).
+	import { onMount } from 'svelte';
 	import RitualReader from '$lib/app-v2/RitualReader.svelte';
+	import SkyView from '$lib/app-v2/SkyView.svelte';
+	import { collection } from '$lib/app-v2/collection.svelte';
 	import { track } from '$lib/track';
+	import { base } from '$app/paths';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	let finished = $state(false);
+	// „sky“ = Ritual dieser Ausgabe abgeschlossen → Himmel-Ansicht mit Fly-In.
+	let phase = $state<'ritual' | 'sky'>('ritual');
+	let hydrated = $state(false);
+	let alreadyRead = $state(false);
+
+	onMount(() => {
+		collection.hydrate();
+		hydrated = true;
+		// Schon heute gelesen? Dann direkt in den Himmel (kein zweites Ritual erzwingen).
+		if (data.story && collection.has(data.story.id)) {
+			alreadyRead = true;
+			phase = 'sky';
+		}
+	});
+
+	function nowIso(): string {
+		return new Date().toISOString();
+	}
+	function todayDay(story: { publishedAt?: string }): string {
+		const d = story.publishedAt ? new Date(story.publishedAt) : new Date();
+		return d.toISOString().slice(0, 10);
+	}
 
 	function onRitualDone() {
-		finished = true;
-		// First-Party-Event (owned funnel): eine Ausgabe zu Ende gelesen.
-		track('story_read', { surface: 'app', storyId: data.story?.id });
+		if (data.story) {
+			collection.add(
+				{ id: data.story.id, title: data.story.title, category: data.story.category },
+				'story',
+				nowIso(),
+				todayDay(data.story)
+			);
+			track('story_read', { surface: 'app', storyId: data.story.id });
+		}
+		phase = 'sky';
 	}
 </script>
 
 <svelte:head>
 	<title>Heute · NurEine</title>
-	<meta name="theme-color" content="#14110d" />
+	<meta name="theme-color" content={phase === 'sky' ? '#0e0d12' : '#14110d'} />
 </svelte:head>
 
 {#if !data.story}
@@ -28,14 +61,17 @@
 			<p>Die heutige Ausgabe wird gerade vorbereitet.<br />Schau in ein paar Minuten wieder rein.</p>
 		</div>
 	</div>
-{:else if finished}
-	<!-- Übergangs-Platzhalter bis Screen 3 (Himmel) gebaut ist -->
-	<div class="done surface-ink tex">
-		<div class="done-inner">
-			<div class="done-check" aria-hidden="true">✓</div>
-			<div class="done-line sf">Gelesen.</div>
-			<div class="done-sub">Dein Licht ist geflogen. (Der Himmel entsteht im nächsten Schritt.)</div>
-			<button class="pill" type="button" onclick={() => (finished = false)}>Nochmal ansehen</button>
+{:else if phase === 'sky' && hydrated}
+	<div class="sky-screen">
+		<SkyView
+			lights={collection.all}
+			total={collection.total}
+			sinceDay={collection.since}
+			flyIn={!alreadyRead}
+			flyKind="story"
+		/>
+		<div class="sky-foot">
+			<a class="pill ghost" href={base + '/app/himmel'}>Ganzen Himmel ansehen</a>
 		</div>
 	</div>
 {:else}
@@ -45,8 +81,7 @@
 {/if}
 
 <style>
-	.empty,
-	.done {
+	.empty {
 		min-height: 100dvh;
 		display: flex;
 		align-items: center;
@@ -54,48 +89,41 @@
 		padding: 32px;
 		text-align: center;
 	}
-	.empty-inner,
-	.done-inner {
+	.empty-inner {
 		max-width: 30ch;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 14px;
 	}
-	.empty-glyph,
-	.done-line {
-		color: var(--ink-text);
-	}
 	.empty-glyph {
 		font-size: 13px;
 		letter-spacing: 0.28em;
 		color: var(--amber-hi);
 	}
-	.empty p,
-	.done-sub {
+	.empty p {
 		color: var(--ink-muted);
 		font-size: 15px;
 		line-height: 1.55;
 		margin: 0;
 	}
-	.done-check {
-		width: 76px;
-		height: 76px;
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-size: 38px;
-		color: #fff;
-		background: radial-gradient(circle at 42% 38%, rgba(232, 166, 104, 0.98), rgba(156, 85, 39, 0.9));
-		box-shadow: 0 0 44px rgba(208, 128, 72, 0.5);
+
+	.sky-screen {
+		position: relative;
+		min-height: 100dvh;
 	}
-	.done-line {
-		font-size: 25px;
-		letter-spacing: -0.02em;
+	.sky-foot {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 6;
+		padding: 0 26px max(34px, env(safe-area-inset-bottom));
 	}
-	.pill {
-		margin-top: 8px;
+	.pill.ghost {
+		display: block;
+		width: 100%;
+		text-align: center;
 		font-family: var(--ff-display);
 		font-weight: 700;
 		font-size: 14px;
@@ -103,7 +131,7 @@
 		border: 1px solid rgba(244, 239, 230, 0.28);
 		color: var(--ink-text);
 		border-radius: 999px;
-		padding: 12px 22px;
-		cursor: pointer;
+		padding: 14px;
+		text-decoration: none;
 	}
 </style>

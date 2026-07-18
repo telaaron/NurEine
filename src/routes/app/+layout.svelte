@@ -2,6 +2,9 @@
 	import '../../app.css';
 	import '$lib/app-v2/app-v2.css';
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { prefs } from '$lib/app-v2/prefs.svelte';
 	import { tick as tickSound } from '$lib/app-v2/audio';
 
@@ -10,8 +13,18 @@
 	// data-theme spiegelt die Präferenz auf die Root-Klasse (überschreibt die Media-Query).
 	const themeAttr = $derived(prefs.theme === 'system' ? undefined : prefs.theme);
 
+	// Der Klang-Toggle stört beim Onboarding (eigener Flow) — dort ausblenden.
+	const path = $derived(page.url.pathname.replace(base, ''));
+	const onStart = $derived(path.startsWith('/app/start'));
+
 	onMount(() => {
 		prefs.hydrate();
+		// Onboarding-Gate: beim ersten Besuch der App zuerst Tag 1 zeigen.
+		// /app/start und /app/himmel sind ausgenommen (Start ist der Flow selbst;
+		// den Himmel darf man auch ohne Onboarding ansehen).
+		if (!prefs.onboarded && !onStart && !path.startsWith('/app/himmel')) {
+			goto(base + '/app/start', { replaceState: true });
+		}
 	});
 
 	function onToggleSound() {
@@ -21,6 +34,7 @@
 </script>
 
 <div class="appv2" data-theme={themeAttr}>
+	{#if !onStart}
 	<button
 		class="sound-toggle sf"
 		type="button"
@@ -41,6 +55,8 @@
 			</svg>
 		{/if}
 	</button>
+
+	{/if}
 
 	{@render children?.()}
 </div>

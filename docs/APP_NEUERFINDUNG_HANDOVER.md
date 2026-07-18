@@ -357,16 +357,39 @@ Baureihenfolge (nach Abhängigkeit): (1) Basis ✅ → (2) Kern-Ritual ✅ → (
   Reader-Route noch nicht gebaut) — in Schritt 3/4 als `/app/ausgabe/[datum]` bzw.
   `/app/geschichte/[id]` wiederherstellen (native.ts + Legacy-Push zeigen dorthin).
 
-**NÄCHSTER SCHRITT — Schritt 3: Screen 3 „Himmel" (der Rahmen).** localStorage-Sammlung
-(jede gelesene Ausgabe = ein Licht, nichts verfällt). Das „Licht fliegt in den Himmel"
-aus Exp2/Exp3 (buildSky/flyLight) übernehmen. Danach den `onDone`-Platzhalter in
-`/app/+page.svelte` (aktuell simpler „Gelesen"-Screen) durch den echten Himmel-Übergang
-ersetzen. `RitualReader.svelte` ist bewusst wiederverwendbar (nimmt `story` + `onDone`) —
-der `/app/ausgabe/[datum]`-Reader (Schritt 3/4) nutzt dieselbe Komponente.
+**PHASE-3-FORTSCHRITT (Stand 2026-07-19, Branch `feat/app-neuerfindung-phase3`):
+Schritt 1–5 FERTIG & verifiziert, nur Schritt 6 offen.** Commits: b7f0e6b (1+2),
+dd32091 (3 Himmel), de74848 (4 Reader), 10330e1 (5 Onboarding).
+- **Schritt 3 Himmel ✅** — `collection.svelte.ts` (localStorage-Sammlung, 3 geschenkte
+  Lichter=Endowed Progress, idempotent), `SkyView.svelte` (Nachthimmel+Fly-In), `/app/himmel`.
+  Ritual→Himmel-Fly-In verifiziert (3→4 Lichter, persistiert).
+- **Schritt 4 Reader ✅** — `RitualScreen.svelte` (geteilte Ritual→Himmel-Logik),
+  `/app/geschichte/[id]` (Push-Deep-Link WIEDERHERGESTELLT) + `/app/ausgabe/[datum]`.
+  Beide 404-sauber (auch bei DB-402). `/app/+page.svelte` nutzt jetzt RitualScreen.
+- **Schritt 5 Onboarding ✅** — `/app/start` (6-Beat-Tag-1-Flow aus Exp 3), verifiziert
+  end-to-end: Frage→Magic Moment (−63%+Stempel)→Arbeit→Anker (in prefs gespeichert)→
+  geschenkte Lichter→Push (Anker durchgetragen „morgen, beim ersten Kaffee")→onboarded→/app.
+  `prefs.svelte.ts` um onboarded+anchor erweitert. Onboarding-Gate im `+layout.svelte`
+  (erster Besuch→/app/start; /app/start & /app/himmel ausgenommen).
 
-Referenz-Implementierung für alle weiteren Beats: `src/lib/app-v2/` + die 3 Roh-Quellen
-(docs/app-prototypes/ für Exp2+Exp3; Exp1 in Session-Historie). Prototyp-Copy ist
-produktionsreif formuliert und kann übernommen werden.
+**NÄCHSTER SCHRITT — Schritt 6: Kurven-Tag (Typ 2) + Stand der Welt (Screen 5).**
+Aus Exp 2 (`docs/app-prototypes/exp2-kurve.raw.html`): Kurve läuft, Zahl fällt mit.
+Nutzt `nureine_world_metrics.series` (JSONB-Zeitreihe; **public-read RLS** → Client-Zugriff
+via `src/lib/supabase.ts` möglich, ODER neuen `/api/world-metrics`-Endpoint). Chefredakteur
+markiert Kurven-Tag (source_type=official_stats). Kurven-Licht landet im selben Himmel
+(collection kennt kind='curve' schon). RitualReader ggf. um Typ-2-Beats erweitern oder
+eigene KurveReader-Komponente.
+
+⚠️ **UMGEBUNGS-FALLE (19.07.):** Systemplatte `/System/Volumes/Data` ist 89% voll (nur
+~23 GB frei) → `ENOSPC: no space left on device` blockiert sporadisch temp-lastige Tools
+(svelte-check, Vite-Neustart, manche Bash-Outputs). Das PROJEKT-Volume `/Volumes/SSD 500G`
+hat 388 GB frei — Projektdateien+git sind sicher, nur /private/tmp läuft über. Nur Aaron
+kann die Systemplatte freiräumen. Bis dahin: häufig committen (schreibt aufs SSD-Volume),
+nach jedem Write per `ls`+`sync` Persistenz prüfen. (Der frühere Dateiverlust von
+SkyView/collection war vermutlich genau dieses ENOSPC beim Flush.)
+
+Referenz-Implementierung: `src/lib/app-v2/` + die 3 Roh-Quellen (docs/app-prototypes/
+für Exp2+Exp3). Prototyp-Copy ist produktionsreif formuliert.
 
 ---
 

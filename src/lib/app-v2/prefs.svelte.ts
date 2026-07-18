@@ -8,9 +8,11 @@ const LS_KEY = 'nureine.app.prefs.v1';
 type Prefs = {
 	sound: boolean; // Klang opt-in (v1-Default: aus)
 	theme: 'system' | 'light' | 'dark';
+	onboarded: boolean; // Tag-1-Flow gesehen? (Gate)
+	anchor: string | null; // Implementation-Intention-Auslöser (z. B. "Kaffee")
 };
 
-const DEFAULTS: Prefs = { sound: false, theme: 'system' };
+const DEFAULTS: Prefs = { sound: false, theme: 'system', onboarded: false, anchor: null };
 
 function load(): Prefs {
 	if (typeof localStorage === 'undefined') return { ...DEFAULTS };
@@ -26,6 +28,8 @@ function load(): Prefs {
 class PrefsStore {
 	sound = $state(false);
 	theme = $state<'system' | 'light' | 'dark'>('system');
+	onboarded = $state(false);
+	anchor = $state<string | null>(null);
 	private hydrated = false;
 
 	/** Aus localStorage laden (im onMount des Layouts aufrufen). */
@@ -34,6 +38,8 @@ class PrefsStore {
 		const p = load();
 		this.sound = p.sound;
 		this.theme = p.theme;
+		this.onboarded = p.onboarded;
+		this.anchor = p.anchor;
 		this.hydrated = true;
 		setSoundEnabled(p.sound);
 	}
@@ -41,10 +47,23 @@ class PrefsStore {
 	private persist(): void {
 		if (typeof localStorage === 'undefined') return;
 		try {
-			localStorage.setItem(LS_KEY, JSON.stringify({ sound: this.sound, theme: this.theme }));
+			localStorage.setItem(
+				LS_KEY,
+				JSON.stringify({ sound: this.sound, theme: this.theme, onboarded: this.onboarded, anchor: this.anchor })
+			);
 		} catch {
 			// Speicher voll / privat — Präferenz bleibt nur für die Session.
 		}
+	}
+
+	setAnchor(a: string | null): void {
+		this.anchor = a;
+		this.persist();
+	}
+
+	completeOnboarding(): void {
+		this.onboarded = true;
+		this.persist();
 	}
 
 	setSound(on: boolean): void {

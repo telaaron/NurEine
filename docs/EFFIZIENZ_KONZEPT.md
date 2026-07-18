@@ -54,11 +54,16 @@ nicht archiviert.
 
 ## 4. Was noch offen ist (nach dem 20.07., wenn der Storage wieder erreichbar ist)
 
-1. **Aufräumen** (der große Gewinn, ~400 MB+):
+1. **Aufräumen** (der große Gewinn, ~400 MB+) — **Werkzeug:** `scripts/purge_storage.py`
+   (Trockenlauf per Default, `--apply` zum Löschen; setzt beim Bild-Purge die
+   referenzierende `image_url` auf NULL → Typo-Karte statt 404):
    - `story_reels` leeren (152 MB) — MP4s liegen längst auf IG/TikTok
+     → `python scripts/purge_storage.py --only reels --apply`
    - `story_audio` leeren (12 MB) — Feature ungenutzt
-   - alte >1 MB PNGs in `story_images` löschen (bis ~700 MB) — betroffene Stories
+     → `python scripts/purge_storage.py --only audio --apply`
+   - >1 MB PNGs in `story_images` löschen (~484 MB) — betroffene Stories
      zeigen dann die Typo-Karte, das ist gewollt und sieht gut aus
+     → `python scripts/purge_storage.py --only images --apply`
    - `og_images` prüfen: Bucket auflösen, `og_image_url` auf `/api/og/<slug>`
      umbiegen (R3) → ~200 MB
 2. **Egress-Wächter**: wöchentlicher Check gegen das Kontingent, warnt VOR der

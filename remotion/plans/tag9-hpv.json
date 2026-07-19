@@ -1,0 +1,85 @@
+{
+  "story": {
+    "id": "e53f2669-5f49-4c18-a415-44dcc3e66f6e",
+    "slug": "tag9-hpv",
+    "category": "gesundheit",
+    "image": "story/tag9-hpv.jpg",
+    "source": "The Lancet",
+    "impactScore": 95,
+    "shareHook": "Fünf Jahre, kein einziger Todesfall."
+  },
+  "seo": {
+    "keyword": "HPV-Impfung"
+  },
+  "loop": true,
+  "caption": "HPV-Impfung: In England ist zwischen 2020 und 2024 keine einzige Frau zwischen 20 und 24 an Gebärmutterhalskrebs gestorben — zum ersten Mal seit Beginn der Aufzeichnungen. Schick das jemandem, der eine Tochter hat.\n\nQuelle: The Lancet — von uns nachgeprüft.",
+  "hashtags": [
+    "#gutenachrichten",
+    "#gesundheit",
+    "#impfung",
+    "#krebs"
+  ],
+  "tiktok": {
+    "caption": "HPV-Impfung: fünf Jahre lang keine einzige Tote. In England starb zwischen 2020 und 2024 keine Frau zwischen 20 und 24 an Gebärmutterhalskrebs — zum ersten Mal seit Beginn der Aufzeichnungen. Der Grund ist eine Impfung, die mit 12 bis 13 gegeben wird. Speichern für später. Was denkst du? Schreib's in die Kommentare.\n\nQuelle: The Lancet — von uns nachgeprüft.",
+    "hashtags": [
+      "#gutenachrichten",
+      "#gesundheit",
+      "#impfung",
+      "#krebsvorsorge"
+    ],
+    "location": "Berlin"
+  },
+  "music": "audio/warm-3.mp3",
+  "scenes": [
+    {
+      "kind": "number",
+      "snap": true,
+      "kicker": "TAG 9 · NUR EINE",
+      "value": "0",
+      "unit": "Todesfälle",
+      "context": "HPV-Impfung — fünf Jahre lang",
+      "image": "story/tag9-hpv.jpg",
+      "voText": "Null. — Fünf Jahre HPV-Impfung, kein einziger."
+    },
+    {
+      "kind": "hook",
+      "text": "Eine ganze Altersgruppe. Verschont.",
+      "punch": "Verschont",
+      "kicker": "GUTE NACHRICHT · GESUNDHEIT",
+      "voText": "Eine ganze Altersgruppe junger Frauen — verschont."
+    },
+    {
+      "kind": "map",
+      "lat": 52.3555,
+      "lng": -1.1743,
+      "label": "England",
+      "voText": "In England — bei den Zwanzig- bis Vierundzwanzigjährigen."
+    },
+    {
+      "kind": "beat",
+      "text": "Erstmals seit Beginn der Aufzeichnungen.",
+      "image": "story/tag9-hpv.jpg",
+      "full": true,
+      "voText": "Keine Einzige gestorben an Gebärmutterhalskrebs — erstmals."
+    },
+    {
+      "kind": "proof",
+      "source": "The Lancet",
+      "impact": 95,
+      "progress": 1092,
+      "snapshot": {
+        "outlet": "The Lancet",
+        "year": "2026",
+        "title": "HPV-Impfung und Gebärmutterhalskrebs in England",
+        "quote": "2020–2024: kein Todesfall (Alter 20–24)"
+      },
+      "voText": "Geprüft und echt — Fortschritt Nummer 1092."
+    },
+    {
+      "kind": "end",
+      "share": "Fünf Jahre, kein einziger Todesfall.",
+      "cta": "",
+      "voText": "Und die nächste gute Nachricht ist schon nachgeprüft. Nämlich:"
+    }
+  ]
+}

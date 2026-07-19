@@ -1,48 +1,59 @@
 {
   "story": {
-    "id": "20ff7130-730a-4fbb-8682-c62c335bd3c6",
-    "slug": "jugendtanzkompanie-oeffnet-buehnen-fuer-alle-20ff7130",
-    "category": "kultur",
-    "image": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/story-images/jugendtanzkompanie-oeffnet-buehnen-fuer--02d4d69cf6a5.png",
-    "source": "Positive.News",
-    "impactScore": 55,
-    "shareHook": "Eine Tanzkompanie in England holt Jugendliche ohne Ausbildung auf große Bühnen."
+    "id": "1db20366-4e57-449a-b3a6-4874dc4c1555",
+    "slug": "neun-jahre-bis-zur-diagnose-ein-speicheltest-schafft-es-jetzt-in-stunden-1db20366",
+    "category": "gesundheit",
+    "image": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/story-images/neun-jahre-bis-zur-diagnose-ein-speiche-1db203664e57.png",
+    "source": "Good News Network",
+    "impactScore": 82,
+    "shareHook": "Bis zu neun Jahre warten Frauen im Schnitt auf die Diagnose Endometriose. Ein neuer Speicheltest liefert das Ergebnis jetzt in unter einer Stunde – ganz ohne Operation."
   },
-  "caption": "Tanz-Talent ohne Ausbildung: Eine Jugend-Tanzkompanie in England holt gezielt 16- bis 24-Jährige ohne formalen Unterricht auf große Bühnen – und 90% von ihnen landen später im Job. 32 Jugendliche aus 25 Orten sind dabei. 👇\nSchick's jemandem, der ans eigene Talent glauben soll.\nQuelle: Positive.News",
-  "hashtags": ["#gutenachrichten", "#tanz", "#kultur", "#bildung", "#chancengleichheit"],
+  "caption": "Endometriose-Diagnose: Bisher warteten Frauen im Schnitt über neun Jahre – und viele hörten jahrelang nur „Stellen Sie sich nicht so an.“\n\nJede zehnte Frau ist betroffen. Sicherheit gab es bisher meist erst nach einer Operation unter Vollnarkose.\n\nJetzt hat der britische Gesundheitsdienst zwei schmerzfreie Schnelltests zugelassen – einer braucht nur eine Speichelprobe und liefert das Ergebnis in unter einer Stunde. 👇\n\nSchick's einer Frau, die viel zu lange auf Antworten wartet.\n\nQuelle: Good News Network – von uns nachgeprüft.",
+  "hashtags": ["#gutenachrichten", "#endometriose", "#gesundheit", "#frauengesundheit", "#medizin"],
+  "tiktok": {
+    "caption": "Endometriose-Diagnose in unter 1 Stunde statt 9 Jahren Warten.\n\nJede zehnte Frau ist betroffen – und wartet im Schnitt über neun Jahre auf Gewissheit, oft erst nach einer Operation. Ein neuer Speicheltest liefert das Ergebnis jetzt schmerzfrei in unter einer Stunde.\n\nSpeichern für später – falls du jemanden kennst, der ewig auf Antworten wartet.\n\nQuelle: Good News Network – von uns nachgeprüft.\n\n#gutenachrichten #endometriose #frauengesundheit #medizin",
+    "hashtags": ["#gutenachrichten", "#endometriose", "#frauengesundheit", "#medizin"]
+  },
   "music": "audio/uplift-1.mp3",
   "person": "frau",
   "scenes": [
     {
       "kind": "hook",
-      "text": "Kein Tanzunterricht – trotzdem auf die größte Bühne.",
-      "punch": "größte",
-      "kicker": "GUTE NACHRICHT · KULTUR",
-      "voText": "Kein Tanzunterricht – und trotzdem auf die größte Bühne."
-    },
-    {
-      "kind": "beat",
-      "text": "Eine Kompanie in England sucht 16- bis 24-Jährige ganz ohne Ausbildung.",
-      "image": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/story-images/jugendtanzkompanie-oeffnet-buehnen-fuer--02d4d69cf6a5.png",
-      "pose": "point-side",
-      "voText": "Eine Jugend-Tanzkompanie in England sucht Talente zwischen sechzehn und vierundzwanzig – ganz ohne formale Ausbildung."
+      "text": "Neun Jahre auf die Diagnose. Jetzt: unter einer Stunde.",
+      "punch": "Stunde",
+      "kicker": "GUTE NACHRICHT · GESUNDHEIT",
+      "voText": "Neun Jahre bis zur Diagnose – und jetzt reicht dafür unter eine Stunde."
     },
     {
       "kind": "number",
-      "value": "90%",
+      "value": "9 Jahre",
       "unit": null,
-      "context": "der aufgenommenen Jugendlichen finden später einen Job im Tanz.",
-      "voText": "Neunzig Prozent von ihnen finden später einen Job im Tanz."
+      "context": "warteten Frauen im Schnitt auf die Diagnose Endometriose.",
+      "voText": "Bisher warteten Frauen im Schnitt über neun Jahre auf die Diagnose."
+    },
+    {
+      "kind": "beat",
+      "text": "Jede zehnte Frau ist betroffen. Sicherheit gab es oft erst nach einer Operation.",
+      "image": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/story-images/neun-jahre-bis-zur-diagnose-ein-speiche-1db203664e57.png",
+      "pose": "reading",
+      "voText": "Jede zehnte Frau ist betroffen. Gewissheit gab es bisher meist erst nach einer Operation."
+    },
+    {
+      "kind": "number",
+      "value": "< 1 Stunde",
+      "unit": null,
+      "context": "liefert ein neuer Speicheltest jetzt das Ergebnis – schmerzfrei.",
+      "voText": "Ein neuer Speicheltest liefert das Ergebnis jetzt in unter einer Stunde – schmerzfrei, ohne Eingriff."
     },
     {
       "kind": "proof",
-      "source": "Positive.News",
-      "impact": 55,
+      "source": "Good News Network",
+      "impact": 82,
       "voText": "Belegt — von uns nachgeprüft."
     },
     {
       "kind": "end",
-      "share": "Talent braucht keine Startlinie – nur eine Bühne.",
+      "share": "Endometriose: 9 Jahre Warten – jetzt ein Test in unter einer Stunde.",
       "cta": "Schick’s jemandem, der das heute braucht",
       "hasVo": true,
       "voText": "Schick das jemandem, der heute eine gute Nachricht braucht."

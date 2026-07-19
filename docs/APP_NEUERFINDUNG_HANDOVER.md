@@ -372,13 +372,29 @@ dd32091 (3 Himmel), de74848 (4 Reader), 10330e1 (5 Onboarding).
   `prefs.svelte.ts` um onboarded+anchor erweitert. Onboarding-Gate im `+layout.svelte`
   (erster Besuch→/app/start; /app/start & /app/himmel ausgenommen).
 
-**NÄCHSTER SCHRITT — Schritt 6: Kurven-Tag (Typ 2) + Stand der Welt (Screen 5).**
-Aus Exp 2 (`docs/app-prototypes/exp2-kurve.raw.html`): Kurve läuft, Zahl fällt mit.
-Nutzt `nureine_world_metrics.series` (JSONB-Zeitreihe; **public-read RLS** → Client-Zugriff
-via `src/lib/supabase.ts` möglich, ODER neuen `/api/world-metrics`-Endpoint). Chefredakteur
-markiert Kurven-Tag (source_type=official_stats). Kurven-Licht landet im selben Himmel
-(collection kennt kind='curve' schon). RitualReader ggf. um Typ-2-Beats erweitern oder
-eigene KurveReader-Komponente.
+**Schritt 6 FERTIG ✅ — Kurven-Tag (Typ 2) + Stand der Welt (Commit 0a297d1).**
+`queries.ts`: `getWorldMetrics()`/`getWorldMetric(key)` + `WorldMetric`-Typ (Service-Client,
+kein Schema-Touch). `CurveReader.svelte`: datengetriebener Typ-2 aus Exp 2 — Anker→Lauf
+(SVG-Kurve läuft aus echter `series`, Zahl+Jahr mit, `animate()`)→Warum→Beweis (Stempel),
+fällt/steigt je `direction`. `/app/kurve/[key]`: Kurven-Tag→Kurven-Licht in denselben
+Himmel (`kind='curve'`). `/app/welt`: Wand aller Metriken nach Rubrik + Mini-Sparklines.
+**Verifiziert** mit echten World-Bank-Daten (Extreme Armut 43,4%→10,4%, via temporärer
+Test-Route, danach gelöscht): Kurve läuft sauber auf 10,4%/2024, Verdict „fällt", Stempel
+„Belegt.", Quelle „World Bank · 1981–2024". `/app/welt` rendert (leerer Zustand bei
+DB-402, echte Daten sobald Sperre weg). svelte-check: 0 Errors über alle 693 Dateien.
+
+**🎉 PHASE 3 KOMPLETT — alle 6 Screens der Prototyp-Reihe sind live gebaut & verifiziert.**
+Commits auf `feat/app-neuerfindung-phase3`: b7f0e6b(1+2) dd32091(3) de74848(4) 10330e1(5)
+0a297d1(6) + aa4d26a(docs). Die neu erfundene App läuft: Onboarding → Kern-Ritual (Typ 1)
+→ Himmel (Sammlung) → Reader (+Deep-Link) → Kurven-Tag (Typ 2) → Stand der Welt. Alles in
+der abgenommenen DNA, echte Daten wo verfügbar, würdevoller Fallback bei DB-Ausfall.
+
+**Was für v1-Reife noch offen ist (nach Aarons Priorität):** (a) Live gegen frische
+DB testen, sobald 402 weg (bisher nur Featured-Ritual + Kurve mit echten Daten gesehen;
+Reader/Welt liefen nur im Fallback). (b) Push echt anschließen (`/api/app/register-token`
+existiert; Onboarding zeigt die Bitte nur). (c) Deploy-Weiche (Domain: nureine.de ersetzen
+vs. app.nureine.de). (d) Feinschliff: Himmel-Sterne bei wenig Lichtern besser verteilen;
+`/app/welt`-Kurven-Tag-Verlinkung (welche Metrik ist „heute" Kurven-Ausgabe → source_type).
 
 ⚠️ **UMGEBUNGS-FALLE (19.07.):** Systemplatte `/System/Volumes/Data` ist 89% voll (nur
 ~23 GB frei) → `ENOSPC: no space left on device` blockiert sporadisch temp-lastige Tools

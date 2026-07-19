@@ -1686,3 +1686,49 @@ export async function getFunnelStats(): Promise<FunnelStats> {
     byDay
   };
 }
+
+// ---- Stand der Welt / Kurven-Tag (Migration 00021) ----
+
+export type WorldMetric = {
+  metric_key: string;
+  label: string;
+  category: 'ueberleben' | 'planet' | 'wissen' | 'frieden' | string;
+  unit: string;
+  direction: 'up' | 'down';
+  baseline_value: number;
+  baseline_year: number;
+  latest_value: number;
+  latest_year: number;
+  series: { year: number; value: number }[];
+  blurb: string | null;
+  source: string | null;
+  source_url: string | null;
+  sort_order: number;
+};
+
+/** Alle Langzeit-Metriken (Stand der Welt). Direkt-Query über den Service-Client. */
+export async function getWorldMetrics(): Promise<WorldMetric[]> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_world_metrics')
+    .select('*')
+    .order('sort_order', { ascending: true });
+  if (error || !data) {
+    console.error('getWorldMetrics error:', error);
+    return [];
+  }
+  return data as WorldMetric[];
+}
+
+/** Eine einzelne Metrik per Key (für den Kurven-Tag). */
+export async function getWorldMetric(key: string): Promise<WorldMetric | null> {
+  const { data, error } = await supabaseAdmin
+    .from('nureine_world_metrics')
+    .select('*')
+    .eq('metric_key', key)
+    .maybeSingle();
+  if (error || !data) {
+    console.error('getWorldMetric error:', error);
+    return null;
+  }
+  return data as WorldMetric;
+}

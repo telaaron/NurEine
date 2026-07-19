@@ -2,6 +2,7 @@ import { supabaseAdmin } from './supabase/client';
 import { ADMIN_USERNAME, ADMIN_PASSWORD, BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME, BREVO_REPLY_TO_EMAIL } from '$env/static/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 import { buildB2CHtml, type HeroStory } from './newsletter';
+import { APP_FIXTURE_STORIES } from './fixtures/app-stories';
 
 // ---- Types ----
 
@@ -198,6 +199,31 @@ function mapStory(row: SupabaseStory): StoryResult {
   };
 }
 
+// ---- Beispiel-Daten-Fallback (nur wenn die Live-DB nichts liefert) ----
+//
+// Wenn die Supabase-REST-API gesperrt ist (402) oder die DB leer, liefern die
+// App-Queries sonst nichts und die App wäre leer. Diese Helfer springen NUR in
+// genau diesem Fall ein — die echte DB hat immer Vorrang. Sobald die Sperre weg
+// ist, greift der Fallback nicht mehr (selbstheilend, s. fixtures/app-stories.ts).
+//
+// Bewusst NICHT an einem Flag/Env hängen: Der Auslöser ist „echte DB gab nichts",
+// nicht ein Schalter, der in Produktion vergessen werden könnte.
+
+/** Die Beispiel-Stories als fertige StoryResult-Objekte (durch denselben mapStory-Pfad). */
+function fixtureStories(): StoryResult[] {
+  return APP_FIXTURE_STORIES.map(mapStory);
+}
+
+/** Beispiel-Hero (stärkste Story) — für getLatestFeatured, wenn die DB nichts hat. */
+function fixtureFeatured(): StoryResult {
+  return fixtureStories()[0];
+}
+
+/** Eine Beispiel-Story per id — für getStoryById, wenn die DB nichts hat. */
+function fixtureById(id: string): StoryResult | undefined {
+  return fixtureStories().find((s) => s.id === id);
+}
+
 // Columns needed for LIST/card views (homepage grid, archive, map, /api/stories).
 // Deliberately omits the heavy fields that only the single-story detail view uses:
 //   body_markdown (~2 kB/row), slides (JSON), ig_caption, wa_opener, ig_hook,
@@ -290,6 +316,7 @@ async function fetchAllRows<T>(columns: string): Promise<T[]> {
 
 export async function getAllStories(): Promise<StoryResult[]> {
   const rows = await fetchAllRows<SupabaseStory>('*');
+  if (rows.length === 0) return fixtureStories(); // DB gesperrt/leer → Beispiel-Stories
   return rows.map(mapStory);
 }
 
@@ -343,12 +370,9 @@ export async function getDailyMainStories(days = 7): Promise<{ day: string; stor
     .order('published_at', { ascending: false })
     .limit(300);
 
-  if (error || !data) {
-    console.error('getDailyMainStories error:', error);
-    return [];
-  }
-
-  const rows = (data as Partial<SupabaseStory>[]).map(mapListRow);
+  // DB gesperrt/leer → Beispiel-Stories nach Tag gruppieren (statt leerer Liste).
+  const rows =
+    error || !data ? fixtureStories() : (data as Partial<SupabaseStory>[]).map(mapListRow);
   // Pro Kalendertag die stärkste Story wählen (nach Wirkungsindex).
   const bestByDay = new Map<string, StoryResult>();
   for (const s of rows) {
@@ -442,7 +466,7 @@ export async function getStoryById(id: string): Promise<StoryResult | undefined>
     .eq('id', id)
     .single();
 
-  if (error || !data) return undefined;
+  if (error || !data) return fixtureById(id); // DB gesperrt/leer → Beispiel-Story
   return mapStory(data as SupabaseStory);
 }
 
@@ -539,9 +563,10 @@ export async function getLatestFeatured(): Promise<StoryResult | undefined> {
 
   if (sent) return mapStory(sent as SupabaseStory);
 
-  // Letzter Ausweg: stärkste Story overall.
+  // Letzter Ausweg: stärkste Story overall. getAllStories() liefert bei gesperrter
+  // DB die Beispiel-Stories, daher ist die App auch im 402-Fall nie leer.
   const all = await getAllStories();
-  return [...all].sort((a, b) => b.impactScore - a.impactScore)[0];
+  return [...all].sort((a, b) => b.impactScore - a.impactScore)[0] ?? fixtureFeatured();
 }
 
 // ---------------------------------------------------------------------------

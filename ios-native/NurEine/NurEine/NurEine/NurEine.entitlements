@@ -2,18 +2,31 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Remote-Push für das Morgen-Ritual. Der Client-Code (Services/Push.swift)
-	     stand schon, aber ohne dieses Entitlement schlug die APNs-Registrierung
-	     still fehl. "development" gilt für Debug-Builds; beim App-Store-/TestFlight-
-	     Upload ersetzt Xcode den Wert automatisch durch "production". -->
+	<!-- ABSICHTLICH LEER, solange kein bezahlter Apple-Developer-Account da ist.
+	     Stand 2026-07-20: Aaron nutzt ein Personal Team (kostenlos).
+
+	     PUSH SPÄTER SCHARF SCHALTEN (ein Handgriff, sobald der Account läuft):
+	     Die beiden Blöcke unten einkommentieren — fertig. Der Client-Code steht
+	     bereits vollständig (Services/Push.swift + PushAppDelegate), er wartet
+	     nur auf dieses Entitlement.
+
+	     WARUM NICHT JETZT: Personal Teams unterstützen die Push-Berechtigung
+	     nicht ("Personal development teams do not support the Push Notifications
+	     capability"). Xcode kann dann gar kein Profil erstellen → die App baut
+	     nicht mehr. Ohne den Eintrag läuft alles, nur Remote-Push schweigt.
+	     Die lokale Test-Benachrichtigung in MoreView funktioniert weiterhin.
+
 	<key>aps-environment</key>
 	<string>development</string>
 
-	<!-- Geteilter Speicher für das Homescreen-Widget: Es liest dieselbe Ausgabe
-	     wie die App, statt sie ein zweites Mal zu laden. -->
+	     App Group — erst nötig, wenn das Widget Daten mit der App teilen soll.
+	     Aktuell lädt es seine Ausgabe selbst, braucht die Gruppe also nicht.
+	     (Personal Teams können App Groups ebenfalls nicht anlegen.)
+
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.de.nureine.app</string>
 	</array>
+	-->
 </dict>
 </plist>

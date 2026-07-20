@@ -100,7 +100,7 @@
 			{#each PLATFORMS as p}
 				<button type="button" onclick={() => (platform = p.id)}
 					class="px-4 py-2.5 rounded-full text-sm font-medium transition-all"
-					style={platform === p.id ? 'background: var(--color-ink); color: var(--color-paper);' : 'background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);'}>
+					style={platform === p.id ? 'background: var(--color-surface-ink); color: var(--color-on-ink);' : 'background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);'}>
 					<span style="margin-right:6px;">{p.icon}</span>{p.label}
 				</button>
 			{/each}
@@ -114,7 +114,7 @@
 			{#each AUDIENCES as a}
 				<button type="button" onclick={() => (audience = a.id)}
 					class="px-4 py-2.5 rounded-full text-sm font-medium transition-all"
-					style={audience === a.id ? 'background: var(--color-amber); color: var(--color-paper);' : 'background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);'}
+					style={audience === a.id ? 'background: var(--color-amber); color: var(--color-on-accent);' : 'background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);'}
 					title={a.hint}>
 					{a.label}
 				</button>
@@ -150,7 +150,7 @@
 					<img src={cardUrl} alt="Empfehlungs-Karte" loading="eager" style="display:block;width:100%;aspect-ratio:9/16;object-fit:cover;" />
 				</div>
 				<a href={cardUrl} download={`nureine-empfehlung-${audience}.jpg`} onclick={() => track('story_shared', { format: platform, via: 'card-download' })}
-					class="mt-2 block text-center px-4 py-2.5 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">
+					class="mt-2 block text-center px-4 py-2.5 rounded-full text-sm font-medium" style="background: var(--color-surface-ink); color: var(--color-on-ink);">
 					Karte herunterladen ↓
 				</a>
 			</div>
@@ -160,7 +160,7 @@
 			<p class="text-xs uppercase tracking-[0.16em] mb-2" style="color: var(--color-muted); font-family: var(--font-mono);">Dein Text für {PLATFORMS.find((p) => p.id === platform)?.label}</p>
 			<div class="p-4 rounded-[10px] whitespace-pre-line text-sm leading-relaxed" style="background: var(--color-paper); border: 1px solid var(--color-rule); color: var(--color-ink-soft); font-family: var(--font-serif);">{captions[platform]()}</div>
 			<button type="button" onclick={() => copy(captions[platform](), 'cap')}
-				class="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium" style="background: {copied === 'cap' ? 'var(--color-sage)' : 'var(--color-amber)'}; color: var(--color-paper);">
+				class="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium" style="background: {copied === 'cap' ? 'var(--color-sage)' : 'var(--color-amber)'}; color: var(--color-on-ink);">
 				{copied === 'cap' ? 'Kopiert ✓' : 'Text kopieren'}
 			</button>
 
@@ -168,7 +168,7 @@
 			<div class="flex items-center gap-2">
 				<code class="flex-1 px-3 py-2 rounded-[10px] text-sm truncate" style="background: var(--color-paper); border: 1px solid var(--color-rule); color: var(--color-ink); font-family: var(--font-mono);">{link}</code>
 				<button type="button" onclick={() => copy(link, 'link')}
-					class="px-4 py-2 rounded-full text-sm font-medium shrink-0" style="background: {copied === 'link' ? 'var(--color-sage)' : 'var(--color-ink)'}; color: var(--color-paper);">
+					class="px-4 py-2 rounded-full text-sm font-medium shrink-0" style="background: {copied === 'link' ? 'var(--color-sage)' : 'var(--color-surface-ink)'}; color: var(--color-on-ink);">
 					{copied === 'link' ? '✓' : 'Kopieren'}
 				</button>
 			</div>

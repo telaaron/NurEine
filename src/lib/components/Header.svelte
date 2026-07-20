@@ -27,7 +27,7 @@
 	class="border-b sticky top-0 z-30 backdrop-blur-[12px]"
 	style="
 		border-color: var(--color-rule);
-		background: rgba(245, 241, 234, 0.85);
+		background: var(--color-veil);
 	"
 >
 	<div class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10">
@@ -63,7 +63,7 @@
 				<a
 					href={base + '/newsletter'}
 					class="hidden sm:inline-flex items-center gap-1.5 px-3.5 lg:px-4 py-2 lg:py-2.5 rounded-full text-xs lg:text-sm font-medium transition-all active:scale-[0.97]"
-					style="background: var(--color-ink); color: var(--color-paper);"
+					style="background: var(--color-surface-ink); color: var(--color-on-ink);"
 				>
 					Newsletter
 					<span aria-hidden="true" class="hidden lg:inline">→</span>
@@ -143,7 +143,7 @@
 				href={base + '/newsletter'}
 				onclick={closeMenu}
 				class="flex items-center justify-center gap-2 w-full py-3 rounded-full text-base font-medium transition-all active:scale-[0.98]"
-				style="background: var(--color-ink); color: var(--color-paper);"
+				style="background: var(--color-surface-ink); color: var(--color-on-ink);"
 			>
 				Newsletter abonnieren
 				<span aria-hidden="true">→</span>

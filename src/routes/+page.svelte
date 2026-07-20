@@ -182,7 +182,7 @@
 							href={base + '/geschichte/' + featured.slug}
 							onclick={() => track('cta_click', { cta: 'hero_read', slug: featured.slug })}
 							class="group inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium transition-all active:scale-[0.97]"
-							style="background: var(--color-ink); color: var(--color-paper); box-shadow: var(--shadow-sm);"
+							style="background: var(--color-surface-ink); color: var(--color-on-ink); box-shadow: var(--shadow-sm);"
 						>
 							Geschichte lesen
 							<span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
@@ -220,7 +220,7 @@
 						<a
 							href={base + '/newsletter'}
 							class="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium transition-transform hover:-translate-y-0.5"
-							style="background: var(--color-ink); color: var(--color-paper);"
+							style="background: var(--color-surface-ink); color: var(--color-on-ink);"
 						>
 							Newsletter abonnieren — wir melden uns, wenn's weitergeht →
 						</a>
@@ -396,7 +396,7 @@
 	<a
 		href={base + '/archiv'}
 		class="md:hidden mt-8 inline-flex items-center justify-center gap-2 w-full px-5 py-3 rounded-full text-sm transition-all"
-		style="background: var(--color-ink); color: var(--color-paper);"
+		style="background: var(--color-surface-ink); color: var(--color-on-ink);"
 	>
 		Ganzes Archiv
 		<span aria-hidden="true">→</span>
@@ -410,7 +410,7 @@
 >
 	<div
 		class="relative overflow-hidden rounded-[20px] p-7 sm:p-10 lg:p-16 grid lg:grid-cols-12 gap-7 sm:gap-8 items-center"
-		style="background: var(--color-ink); box-shadow: var(--shadow-lg);"
+		style="background: var(--color-surface-ink); box-shadow: var(--shadow-lg);"
 	>
 		<!-- amber radial glow -->
 		<div
@@ -429,7 +429,7 @@
 			<h2
 				id="newsletter-heading"
 				class="display text-2xl sm:text-3xl lg:text-[2.6rem] mt-3 leading-[1.1]"
-				style="color: var(--color-paper); font-weight: 600;"
+				style="color: var(--color-on-ink); font-weight: 600;"
 			>
 				Eine gute Nachricht. Jeden Morgen. Werbefrei.
 			</h2>
@@ -452,7 +452,7 @@
 					</svg>
 				</div>
 				<div>
-					<p class="display text-xl sm:text-2xl" style="color: var(--color-paper); font-weight: 600;">Fast geschafft!</p>
+					<p class="display text-xl sm:text-2xl" style="color: var(--color-on-ink); font-weight: 600;">Fast geschafft!</p>
 					<p class="mt-2 text-sm sm:text-base leading-relaxed" style="color: rgba(251,248,241,0.88); font-family: var(--font-serif);">
 						Wir haben dir eine <strong>Bestätigungs-Mail</strong> geschickt.<br />
 						Öffne dein Postfach und klick auf den Link darin — dann bist du dabei.
@@ -481,14 +481,14 @@
 						bind:value={newsletterEmail}
 						disabled={newsletterLoading}
 						class="w-full px-4 py-3 rounded-full text-sm transition-all"
-						style="background: rgba(251,248,241,0.06); border: 1px solid rgba(251,248,241,0.22); color: var(--color-paper);"
+						style="background: rgba(251,248,241,0.06); border: 1px solid rgba(251,248,241,0.22); color: var(--color-on-ink);"
 					/>
 				</label>
 				<button
 					type="submit"
 					disabled={newsletterLoading}
 					class="px-6 py-3 rounded-full text-sm font-medium transition-all whitespace-nowrap disabled:opacity-60 active:scale-[0.97]"
-					style="background: var(--color-amber); color: var(--color-paper); box-shadow: var(--shadow-sm);"
+					style="background: var(--color-amber); color: var(--color-on-accent); box-shadow: var(--shadow-sm);"
 				>
 					{newsletterLoading ? 'Wird gesendet...' : 'Abonnieren'}
 				</button>

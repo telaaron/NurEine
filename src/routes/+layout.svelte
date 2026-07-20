@@ -97,9 +97,12 @@
         <link rel="icon" type="image/png" sizes="512x512" href="{base}/icon-512.png" />
         <link rel="apple-touch-icon" sizes="180x180" href="{base}/icon-180.png" />
 
-        <meta name="theme-color" content="#f5f1ea" />
+        <!-- Browser-Leiste mitfärben: hell = Papier-Creme, dunkel = App-Anthrazit.
+             Ohne das bliebe die Leiste am Handy hell über dunkler Seite. -->
+        <meta name="theme-color" content="#f5f1ea" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0e0e0f" media="(prefers-color-scheme: dark)" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
         {@html `<script type="application/ld+json">${JSON.stringify({
                 '@context': 'https://schema.org',

@@ -129,7 +129,7 @@
 					type="submit"
 					disabled={loading}
 					class="px-6 py-3.5 rounded-full text-base font-medium transition-all active:scale-[0.98]"
-					style="background: var(--color-amber); color: var(--color-paper);"
+					style="background: var(--color-amber); color: var(--color-on-accent);"
 				>
 					{loading ? 'Einen Moment …' : 'Ja, schick mir jeden Morgen einen Lichtblick'}
 				</button>

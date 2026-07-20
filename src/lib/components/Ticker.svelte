@@ -31,7 +31,7 @@
 {#if story && !dismissed}
 	<div
 		class="relative w-full"
-		style="background: var(--color-amber); color: var(--color-paper);"
+		style="background: var(--color-amber); color: var(--color-on-accent);"
 	>
 		<div class="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-10">
 			<div class="flex items-center gap-3 h-9 sm:h-10 text-xs sm:text-sm">

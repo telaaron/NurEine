@@ -95,7 +95,7 @@
 				<button
 					type="submit"
 					class="sm:col-span-2 px-6 py-3 rounded-full text-sm font-medium justify-self-start"
-					style="background: var(--color-amber); color: var(--color-paper);"
+					style="background: var(--color-amber); color: var(--color-on-accent);"
 				>
 					Einsenden
 				</button>

@@ -87,7 +87,7 @@
 		return highlight ? 'rgba(250, 246, 238, 0.2)' : 'var(--color-rule)';
 	}
 	function inputColor(highlight: boolean): string {
-		return highlight ? 'var(--color-paper)' : 'var(--color-ink)';
+		return highlight ? 'var(--color-on-ink)' : 'var(--color-ink)';
 	}
 	function placeholderColor(highlight: boolean): string {
 		return highlight ? 'rgba(250, 246, 238, 0.4)' : 'var(--color-muted)';
@@ -98,7 +98,7 @@
 	<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-14">
 		<div
 			class="rounded-[14px] p-6 sm:p-8 flex items-start gap-4"
-			style="background: var(--color-ink); box-shadow: var(--shadow-md);"
+			style="background: var(--color-surface-ink); box-shadow: var(--shadow-md);"
 		>
 			<div
 				class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
@@ -110,7 +110,7 @@
 				</svg>
 			</div>
 			<div>
-				<h2 class="display text-xl sm:text-2xl leading-tight" style="color: var(--color-paper); font-weight: 600;">
+				<h2 class="display text-xl sm:text-2xl leading-tight" style="color: var(--color-on-ink); font-weight: 600;">
 					Geschafft — du bist dabei! 🎉
 				</h2>
 				<p class="mt-2 text-sm sm:text-base leading-relaxed max-w-[52ch]" style="color: rgba(251,248,241,0.78); font-family: var(--font-serif);">
@@ -119,7 +119,7 @@
 				<a
 					href={base + '/'}
 					class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all hover:gap-3"
-					style="background: var(--color-amber); color: var(--color-paper);"
+					style="background: var(--color-amber); color: var(--color-on-accent);"
 				>
 					Heutige Geschichte lesen
 					<svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3l5 5-5 5" /></svg>
@@ -166,9 +166,9 @@
 			<div
 				class="p-6 sm:p-8 rounded-[8px] flex flex-col"
 				style="
-          background: {tier.highlight ? 'var(--color-ink)' : 'var(--color-paper)'};
-          color: {tier.highlight ? 'var(--color-paper)' : 'var(--color-ink)'};
-          border: 1px solid {tier.highlight ? 'var(--color-ink)' : 'var(--color-rule)'};
+          background: {tier.highlight ? 'var(--color-surface-ink)' : 'var(--color-paper)'};
+          color: {tier.highlight ? 'var(--color-on-ink)' : 'var(--color-ink)'};
+          border: 1px solid {tier.highlight ? 'var(--color-surface-ink)' : 'var(--color-rule)'};
         "
 			>
 				<p
@@ -212,8 +212,8 @@
 						href={base + '/preise#b2b-form'}
 						class="mt-8 block w-full px-5 py-3 rounded-full text-sm font-medium text-center transition-all"
 						style="
-              background: {tier.highlight ? 'var(--color-amber)' : 'var(--color-ink)'};
-              color: var(--color-paper);
+              background: {tier.highlight ? 'var(--color-amber)' : 'var(--color-surface-ink)'};
+              color: var(--color-on-ink);
             "
 					>
 						{tier.cta}
@@ -248,8 +248,8 @@
 							disabled={loading}
 							class="w-full px-5 py-3 rounded-full text-sm font-medium transition-all disabled:opacity-60"
 							style="
-                background: {tier.highlight ? 'var(--color-amber)' : 'var(--color-ink)'};
-                color: var(--color-paper);
+                background: {tier.highlight ? 'var(--color-amber)' : 'var(--color-surface-ink)'};
+                color: var(--color-on-ink);
               "
 						>
 							{#if loading}

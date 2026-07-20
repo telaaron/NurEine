@@ -43,6 +43,93 @@
 	--shadow-sm: 0 1px 2px rgba(60, 40, 20, 0.04), 0 2px 6px rgba(60, 40, 20, 0.06);
 	--shadow-md: 0 2px 4px rgba(60, 40, 20, 0.05), 0 8px 20px rgba(60, 40, 20, 0.09);
 	--shadow-lg: 0 4px 8px rgba(60, 40, 20, 0.06), 0 18px 44px rgba(60, 40, 20, 0.13);
+
+	/* Durchscheinende Kopfleiste (backdrop-blur) — muss im Dark mitkippen,
+	   sonst steht ein heller Balken über dunkler Seite. */
+	--color-veil: rgba(245, 241, 234, 0.85);
+
+	/* Bewusst dunkle Flächen (Newsletter-CTA, Zitat-Karten) mit hellem Text.
+	   Diese Paare kippen NICHT im Dark Mode — eine dunkle Karte bleibt dunkel,
+	   sonst würde sie im Dark weiß und der helle Text darauf unsichtbar.
+	   Entspricht der `surface-ink` der App. */
+	--color-surface-ink: #18181a;
+	--color-on-ink: #f2f1ef;
+	--color-on-ink-soft: rgba(242, 241, 239, 0.72);
+	--color-on-ink-faint: rgba(242, 241, 239, 0.45);
+
+	/* Text auf farbigen Akzentflächen (Amber-Knöpfe, Sage-Badges).
+	   Light: Akzent ist satt → heller Text. Dark: Akzent ist aufgehellt →
+	   dunkler Text, sonst hell-auf-hell. Kippt also GEGENLÄUFIG zu --color-ink. */
+	--color-on-accent: #faf6ee;
+}
+
+/* ── Dark Mode ─────────────────────────────────────────
+ *
+ * Folgt still der System-Einstellung (kein Umschalter — Aaron 2026-07-20).
+ * WARUM ÜBERHAUPT: Ohne eigenen Dark Mode dunkeln Handy-Browser (Chrome
+ * „Force Dark", Android-Auto-Dark) die helle Seite selbst ab — invertierte
+ * Farben, kaputte Kontraste, hässlich. Ein eigener Dark Mode nimmt ihnen
+ * das Ruder aus der Hand.
+ *
+ * LOOK: exakt die native iOS-App (ios-native/.../Theme/Theme.swift) —
+ * „deep neutral anthracite (premium, lets story images glow), not warm brown."
+ * Damit sehen Website und App identisch aus.
+ *
+ * TECHNIK: Tailwind-v4-@theme-Tokens lassen sich nicht in einer Media-Query
+ * überschreiben, wohl aber dieselben Custom Properties auf :root — und alle
+ * Utilities (bg-canvas, text-ink …) lesen genau diese. Darum hier :root.
+ */
+@media (prefers-color-scheme: dark) {
+	:root {
+		/* Surfaces — tiefes neutrales Anthrazit, nie reines Schwarz */
+		--color-canvas: #0e0e0f;
+		--color-canvas-soft: #1a1a1c;
+		--color-paper: #18181a;
+		--color-elevated: #212124;
+
+		/* Ink — neutrales Off-White, kein Creme-Stich */
+		--color-ink: #f2f1ef;
+		--color-ink-soft: #c8c6c2;
+		--color-muted: #908e8a;
+		--color-faint: #66645f;
+
+		/* Rules — helle Kanten mit niedrigem Alpha */
+		--color-rule: rgba(255, 255, 255, 0.1);
+		--color-rule-strong: rgba(255, 255, 255, 0.18);
+
+		/* Brand — auf dunklem Grund aufgehellt, sonst matschig */
+		--color-amber: #e9a972;
+		--color-amber-soft: #f0c39a;
+		--color-amber-tint: rgba(233, 169, 114, 0.14);
+		--color-amber-deep: #d98e50;
+		--color-sage: #86a87c;
+		--color-sage-soft: #a8c4a0;
+		--color-sage-tint: rgba(134, 168, 124, 0.14);
+		--color-rose: #cf9a9a;
+		--color-rose-tint: rgba(207, 154, 154, 0.14);
+		--color-sky: #93b0ce;
+		--color-sky-tint: rgba(147, 176, 206, 0.14);
+
+		/* Schatten — auf Dunkel trägt Tiefe schwarz, nicht warm-braun */
+		--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+		--shadow-md: 0 2px 4px rgba(0, 0, 0, 0.45), 0 8px 20px rgba(0, 0, 0, 0.4);
+		--shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.5), 0 18px 44px rgba(0, 0, 0, 0.5);
+
+		/* Durchscheinende Kopfleiste — dunkel, sonst heller Balken über dunkler Seite */
+		--color-veil: rgba(14, 14, 15, 0.85);
+
+		/* Akzente sind im Dark aufgehellt → Text darauf muss dunkel sein */
+		--color-on-accent: #0e0e0f;
+
+		/* Bilder eine Spur ruhiger, damit sie nicht aus dem Dunkel schreien */
+		color-scheme: dark;
+	}
+
+	/* Auswahl bleibt Amber, aber Text darauf muss dunkel sein (Amber ist hell) */
+	::selection {
+		background: var(--color-amber);
+		color: #0e0e0f;
+	}
 }
 
 /* ── Base ──────────────────────────────────────────── */

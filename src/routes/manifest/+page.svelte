@@ -192,7 +192,7 @@
 		<a
 			href={base + '/warum'}
 			class="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium transition-all active:scale-[0.97]"
-			style="background: var(--color-ink); color: var(--color-paper); box-shadow: var(--shadow-sm);"
+			style="background: var(--color-surface-ink); color: var(--color-on-ink); box-shadow: var(--shadow-sm);"
 		>
 			Täglich eine gute Nachricht <span aria-hidden="true">→</span>
 		</a>

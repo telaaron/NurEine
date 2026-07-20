@@ -106,7 +106,7 @@
 			<a
 				href="#newsletter"
 				class="group inline-flex items-center gap-2 px-6 py-3.5 rounded-full text-sm font-medium transition-all active:scale-[0.97] w-full sm:w-auto justify-center"
-				style="background: var(--color-amber); color: var(--color-paper); box-shadow: var(--shadow-md);"
+				style="background: var(--color-amber); color: var(--color-on-accent); box-shadow: var(--shadow-md);"
 			>
 				Täglich eine gute Nachricht
 				<span aria-hidden="true" class="transition-transform group-hover:translate-x-0.5">→</span>
@@ -257,12 +257,12 @@
 <section id="newsletter" class="mx-auto max-w-[1000px] px-4 sm:px-6 lg:px-10 pb-20 sm:pb-28 scroll-mt-24">
 	<div
 		class="relative overflow-hidden rounded-[20px] p-8 sm:p-12 lg:p-16 text-center"
-		style="background: var(--color-ink); box-shadow: var(--shadow-lg);"
+		style="background: var(--color-surface-ink); box-shadow: var(--shadow-lg);"
 	>
 		<div class="absolute inset-0 pointer-events-none" aria-hidden="true" style="background: radial-gradient(ellipse 60% 90% at 50% 0%, rgba(200,115,64,0.32), transparent 62%);"></div>
 		<div class="relative">
 			<span class="eyebrow" style="color: var(--color-amber-soft); font-family: var(--font-mono);">Der tägliche Lichtblick</span>
-			<h2 class="display mt-4 mx-auto text-2xl sm:text-3xl lg:text-[2.8rem] leading-[1.08] max-w-[20ch]" style="color: var(--color-paper); font-weight: 600;">
+			<h2 class="display mt-4 mx-auto text-2xl sm:text-3xl lg:text-[2.8rem] leading-[1.08] max-w-[20ch]" style="color: var(--color-on-ink); font-weight: 600;">
 				Starte morgen mit einer guten Nachricht.
 			</h2>
 			<p class="mt-4 mx-auto text-base sm:text-lg leading-relaxed max-w-[46ch]" style="color: rgba(251,248,241,0.72); font-family: var(--font-serif);">
@@ -281,14 +281,14 @@
 							bind:value={email}
 							disabled={loading}
 							class="w-full px-5 py-3.5 rounded-full text-sm transition-all"
-							style="background: rgba(251,248,241,0.06); border: 1px solid rgba(251,248,241,0.22); color: var(--color-paper);"
+							style="background: rgba(251,248,241,0.06); border: 1px solid rgba(251,248,241,0.22); color: var(--color-on-ink);"
 						/>
 					</label>
 					<button
 						type="submit"
 						disabled={loading}
 						class="px-7 py-3.5 rounded-full text-sm font-medium transition-all whitespace-nowrap disabled:opacity-60 active:scale-[0.97]"
-						style="background: var(--color-amber); color: var(--color-paper);"
+						style="background: var(--color-amber); color: var(--color-on-accent);"
 					>
 						{loading ? 'Wird gesendet...' : 'Kostenlos abonnieren'}
 					</button>

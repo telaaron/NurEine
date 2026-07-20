@@ -41,12 +41,12 @@
 
 <div
 	class="relative overflow-hidden rounded-[16px] {compact ? 'p-6 sm:p-7' : 'p-7 sm:p-10'}"
-	style="background: var(--color-ink); box-shadow: var(--shadow-md);"
+	style="background: var(--color-surface-ink); box-shadow: var(--shadow-md);"
 >
 	<div class="absolute inset-0 pointer-events-none" aria-hidden="true" style="background: radial-gradient(ellipse 60% 90% at 100% 0%, rgba(200,115,64,0.30), transparent 60%);"></div>
 	<div class="relative">
 		<span class="eyebrow" style="color: var(--color-amber-soft); font-family: var(--font-mono);">Der tägliche Lichtblick</span>
-		<h3 class="display mt-3 {compact ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'} leading-[1.12]" style="color: var(--color-paper); font-weight: 600;">
+		<h3 class="display mt-3 {compact ? 'text-xl sm:text-2xl' : 'text-2xl sm:text-3xl'} leading-[1.12]" style="color: var(--color-on-ink); font-weight: 600;">
 			Magst du solche Geschichten?
 		</h3>
 		<p class="mt-3 text-sm sm:text-base leading-relaxed max-w-[44ch]" style="color: rgba(251,248,241,0.72); font-family: var(--font-serif);">
@@ -67,7 +67,7 @@
 					</svg>
 				</div>
 				<div>
-					<p class="text-base sm:text-lg font-semibold" style="color: var(--color-paper);">
+					<p class="text-base sm:text-lg font-semibold" style="color: var(--color-on-ink);">
 						Fast geschafft — jetzt nur noch bestätigen.
 					</p>
 					<p class="mt-1.5 text-sm leading-relaxed" style="color: rgba(251,248,241,0.78); font-family: var(--font-serif);">
@@ -86,14 +86,14 @@
 						bind:value={email}
 						disabled={loading}
 						class="w-full px-4 py-3 rounded-full text-sm transition-all"
-						style="background: rgba(251,248,241,0.06); border: 1px solid rgba(251,248,241,0.22); color: var(--color-paper);"
+						style="background: rgba(251,248,241,0.06); border: 1px solid rgba(251,248,241,0.22); color: var(--color-on-ink);"
 					/>
 				</label>
 				<button
 					type="submit"
 					disabled={loading}
 					class="px-6 py-3 rounded-full text-sm font-medium transition-all whitespace-nowrap disabled:opacity-60 active:scale-[0.97]"
-					style="background: var(--color-amber); color: var(--color-paper);"
+					style="background: var(--color-amber); color: var(--color-on-accent);"
 				>
 					{loading ? '…' : 'Abonnieren'}
 				</button>

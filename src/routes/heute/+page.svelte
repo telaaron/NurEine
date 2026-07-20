@@ -58,14 +58,14 @@
 			<div class="rounded-xl overflow-hidden" style="box-shadow: var(--shadow-md); border:1px solid var(--color-rule);">
 				<img src={cardUrl} alt="Hochformat-Karte" width="100%" loading="eager" style="display:block;width:100%;aspect-ratio:9/16;object-fit:cover;" />
 			</div>
-			<a href={cardUrl} download={`nureine-${data.slug}-story.jpg`} onclick={() => shared('whatsapp', 'download')} class="mt-2 block text-center px-4 py-2.5 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Herunterladen ↓</a>
+			<a href={cardUrl} download={`nureine-${data.slug}-story.jpg`} onclick={() => shared('whatsapp', 'download')} class="mt-2 block text-center px-4 py-2.5 rounded-full text-sm font-medium" style="background: var(--color-surface-ink); color: var(--color-on-ink);">Herunterladen ↓</a>
 		</div>
 		<div>
 			<p class="text-xs uppercase tracking-wider mb-2" style="color: var(--color-muted); font-family: var(--font-mono);">Feed / Link (1.91:1)</p>
 			<div class="rounded-xl overflow-hidden" style="box-shadow: var(--shadow-md); border:1px solid var(--color-rule);">
 				<img src={ogUrl} alt="Querformat-Karte" width="100%" loading="lazy" style="display:block;width:100%;aspect-ratio:1200/630;object-fit:cover;" />
 			</div>
-			<a href={ogUrl} download={`nureine-${data.slug}-feed.png`} onclick={() => shared('og', 'download')} class="mt-2 block text-center px-4 py-2.5 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Herunterladen ↓</a>
+			<a href={ogUrl} download={`nureine-${data.slug}-feed.png`} onclick={() => shared('og', 'download')} class="mt-2 block text-center px-4 py-2.5 rounded-full text-sm font-medium" style="background: var(--color-surface-ink); color: var(--color-on-ink);">Herunterladen ↓</a>
 		</div>
 	</div>
 
@@ -98,7 +98,7 @@
 		<div class="mt-8">
 			<div class="flex items-center justify-between mb-2">
 				<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">{block.label}</span>
-				<button type="button" onclick={() => copy(block.text, block.key, block.fmt)} class="text-xs font-medium px-3 py-1.5 rounded-full" style="background: var(--color-amber); color: var(--color-paper);">
+				<button type="button" onclick={() => copy(block.text, block.key, block.fmt)} class="text-xs font-medium px-3 py-1.5 rounded-full" style="background: var(--color-amber); color: var(--color-on-accent);">
 					{copied === block.key ? 'Kopiert ✓' : 'Kopieren'}
 				</button>
 			</div>

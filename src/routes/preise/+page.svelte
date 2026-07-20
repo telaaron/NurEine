@@ -103,9 +103,9 @@
 			<div
 				class="p-6 sm:p-8 rounded-[8px] flex flex-col"
 				style="
-          background: {tier.highlight ? 'var(--color-ink)' : 'var(--color-paper)'};
-          color: {tier.highlight ? 'var(--color-paper)' : 'var(--color-ink)'};
-          border: 1px solid {tier.highlight ? 'var(--color-ink)' : 'var(--color-rule)'};
+          background: {tier.highlight ? 'var(--color-surface-ink)' : 'var(--color-paper)'};
+          color: {tier.highlight ? 'var(--color-on-ink)' : 'var(--color-ink)'};
+          border: 1px solid {tier.highlight ? 'var(--color-surface-ink)' : 'var(--color-rule)'};
           {tier.highlight ? 'transform: scale(1.02); position: relative; z-index: 1;' : ''}
         "
 			>
@@ -180,8 +180,8 @@
 					href={tier.url}
 					class="mt-8 block w-full px-5 py-3 rounded-full text-sm font-medium text-center transition-all"
 					style="
-            background: {tier.highlight ? 'var(--color-amber)' : 'var(--color-ink)'};
-            color: var(--color-paper);
+            background: {tier.highlight ? 'var(--color-amber)' : 'var(--color-surface-ink)'};
+            color: var(--color-on-ink);
           "
 				>
 					{tier.cta}
@@ -211,7 +211,7 @@
 					</th>
 					<th
 						class="py-3 px-4 text-center text-xs uppercase tracking-[0.16em] rounded-t-[6px]"
-						style="background: var(--color-ink); color: var(--color-paper); font-weight: 600;"
+						style="background: var(--color-surface-ink); color: var(--color-on-ink); font-weight: 600;"
 					>
 						Browser
 					</th>
@@ -279,7 +279,7 @@
 		{#if b2bSent}
 			<div
 				class="mt-8 p-4 rounded-[4px] text-sm"
-				style="background: var(--color-sage); color: var(--color-paper);"
+				style="background: var(--color-sage); color: var(--color-on-accent);"
 			>
 				Danke für deine Anfrage. Wir melden uns innerhalb von 48 Stunden.
 			</div>
@@ -336,7 +336,7 @@
 					<button
 						type="submit"
 						class="px-6 py-3 rounded-full text-sm font-medium transition-all"
-						style="background: var(--color-ink); color: var(--color-paper);"
+						style="background: var(--color-surface-ink); color: var(--color-on-ink);"
 					>
 						Anfrage senden
 					</button>

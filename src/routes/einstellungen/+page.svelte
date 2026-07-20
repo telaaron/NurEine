@@ -151,7 +151,7 @@
 				onclick={save}
 				disabled={saving}
 				class="px-6 py-3 rounded-full text-sm font-medium transition-all active:scale-[0.97] disabled:opacity-60"
-				style="background: var(--color-ink); color: var(--color-paper); box-shadow: var(--shadow-sm);"
+				style="background: var(--color-surface-ink); color: var(--color-on-ink); box-shadow: var(--shadow-sm);"
 			>
 				{saving ? 'Speichern…' : 'Einstellungen speichern'}
 			</button>
@@ -207,7 +207,7 @@
 						type="button"
 						onclick={copyRef}
 						class="px-6 py-3 rounded-full text-sm font-medium transition-all active:scale-[0.97] whitespace-nowrap"
-						style="background: var(--color-amber); color: var(--color-paper);"
+						style="background: var(--color-amber); color: var(--color-on-accent);"
 					>
 						{refCopied ? 'Kopiert ✓' : 'Link kopieren'}
 					</button>

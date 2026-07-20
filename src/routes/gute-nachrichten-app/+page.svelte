@@ -109,11 +109,11 @@
 	</section>
 
 	<!-- Conversion: newsletter signup -->
-	<section class="mt-12 rounded-[20px] p-7 sm:p-9" style="background: var(--color-ink);">
+	<section class="mt-12 rounded-[20px] p-7 sm:p-9" style="background: var(--color-surface-ink);">
 		{#if done}
-			<p class="serif text-lg" style="color: var(--color-paper);">Fast geschafft — bitte bestätige die E-Mail in deinem Postfach.</p>
+			<p class="serif text-lg" style="color: var(--color-on-ink);">Fast geschafft — bitte bestätige die E-Mail in deinem Postfach.</p>
 		{:else}
-			<h2 class="display text-xl sm:text-2xl" style="color: var(--color-paper); font-weight:600;">
+			<h2 class="display text-xl sm:text-2xl" style="color: var(--color-on-ink); font-weight:600;">
 				Eine gute Nachricht. Jeden Morgen.
 			</h2>
 			<form class="mt-4 flex flex-col sm:flex-row gap-3" onsubmit={subscribe}>
@@ -123,9 +123,9 @@
 					placeholder="Deine beste E-Mail"
 					bind:value={email}
 					class="flex-1 px-4 py-3 rounded-full text-sm"
-					style="background: rgba(251,248,241,0.06); border: 1px solid rgba(251,248,241,0.22); color: var(--color-paper);"
+					style="background: rgba(251,248,241,0.06); border: 1px solid rgba(251,248,241,0.22); color: var(--color-on-ink);"
 				/>
-				<button type="submit" disabled={loading} class="px-6 py-3 rounded-full text-sm font-medium" style="background: var(--color-amber); color: var(--color-paper);">
+				<button type="submit" disabled={loading} class="px-6 py-3 rounded-full text-sm font-medium" style="background: var(--color-amber); color: var(--color-on-accent);">
 					{loading ? '…' : 'Abonnieren'}
 				</button>
 			</form>

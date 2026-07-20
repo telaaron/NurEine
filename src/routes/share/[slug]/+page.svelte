@@ -41,7 +41,7 @@
 		<a href={cardUrl} download={`nureine-${data.slug}.png`}
 			onclick={() => track('story_shared', { slug: data.slug, format: 'whatsapp', via: 'download' })}
 			class="px-6 py-3.5 rounded-full text-sm font-medium text-center transition-all active:scale-[0.97]"
-			style="background: var(--color-ink); color: var(--color-paper); box-shadow: var(--shadow-sm);">
+			style="background: var(--color-surface-ink); color: var(--color-on-ink); box-shadow: var(--shadow-sm);">
 			Karte herunterladen ↓
 		</a>
 		<a href={cardUrl} target="_blank" rel="noreferrer"
@@ -55,7 +55,7 @@
 	<div class="mt-10">
 		<div class="flex items-center justify-between mb-2">
 			<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">Begleittext</span>
-			<button type="button" onclick={copyCaption} class="text-xs font-medium px-3 py-1.5 rounded-full" style="background: var(--color-amber); color: var(--color-paper);">
+			<button type="button" onclick={copyCaption} class="text-xs font-medium px-3 py-1.5 rounded-full" style="background: var(--color-amber); color: var(--color-on-accent);">
 				{copied ? 'Kopiert ✓' : 'Text kopieren'}
 			</button>
 		</div>

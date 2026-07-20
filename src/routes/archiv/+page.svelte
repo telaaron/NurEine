@@ -73,7 +73,7 @@
 <!-- Filter strip -->
 <section
 	class="border-t border-b sticky top-0 z-10 backdrop-blur-md"
-	style="border-color: var(--color-rule); background: rgba(245, 241, 234, 0.85);"
+	style="border-color: var(--color-rule); background: var(--color-veil);"
 >
 	<div class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 py-3 sm:py-4 flex items-center gap-4">
 		<!-- Category dropdown -->
@@ -143,8 +143,8 @@
 						type="button"
 						onclick={() => (view = v.id)}
 						class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all"
-						style="background: {view === v.id ? 'var(--color-ink)' : 'transparent'};
-							color: {view === v.id ? 'var(--color-paper)' : 'var(--color-muted)'};"
+						style="background: {view === v.id ? 'var(--color-surface-ink)' : 'transparent'};
+							color: {view === v.id ? 'var(--color-on-ink)' : 'var(--color-muted)'};"
 					>
 						{v.label}
 					</button>
@@ -155,8 +155,8 @@
 		<!-- Qualitaets-Filter: nur starke Stories (Wirkung >=65) oder alle -->
 		<div class="flex items-center gap-2 text-xs mt-3 lg:mt-0" style="color: var(--color-muted);">
 			<div class="flex items-center rounded-full p-0.5" style="background: var(--color-canvas-soft); border: 1px solid var(--color-rule);">
-				<button type="button" onclick={() => (minImpact = MIN_IMPACT_DEFAULT)} class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all" style="background: {minImpact > 0 ? 'var(--color-ink)' : 'transparent'}; color: {minImpact > 0 ? 'var(--color-paper)' : 'var(--color-muted)'};">Nur starke</button>
-				<button type="button" onclick={() => (minImpact = 0)} class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all" style="background: {minImpact === 0 ? 'var(--color-ink)' : 'transparent'}; color: {minImpact === 0 ? 'var(--color-paper)' : 'var(--color-muted)'};">Alle</button>
+				<button type="button" onclick={() => (minImpact = MIN_IMPACT_DEFAULT)} class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all" style="background: {minImpact > 0 ? 'var(--color-surface-ink)' : 'transparent'}; color: {minImpact > 0 ? 'var(--color-on-ink)' : 'var(--color-muted)'};">Nur starke</button>
+				<button type="button" onclick={() => (minImpact = 0)} class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium transition-all" style="background: {minImpact === 0 ? 'var(--color-surface-ink)' : 'transparent'}; color: {minImpact === 0 ? 'var(--color-on-ink)' : 'var(--color-muted)'};">Alle</button>
 			</div>
 		</div>
 	</div>
@@ -181,7 +181,7 @@
 				<p class="serif text-lg" style="color: var(--color-ink-soft);">Nichts gefunden{#if query}{' '}für „{query}"{/if}.</p>
 				<p class="mt-2 text-sm" style="color: var(--color-muted);">Versuch ein anderes Stichwort, einen Ort oder eine Kategorie.</p>
 				{#if query}
-					<button type="button" onclick={() => (query = '')} class="mt-4 px-4 py-2 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Suche zurücksetzen</button>
+					<button type="button" onclick={() => (query = '')} class="mt-4 px-4 py-2 rounded-full text-sm font-medium" style="background: var(--color-surface-ink); color: var(--color-on-ink);">Suche zurücksetzen</button>
 				{/if}
 			{/if}
 		</div>

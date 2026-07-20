@@ -37,7 +37,7 @@
 				Hier ist noch Platz für den ersten Namen. Wird es deiner?
 			</p>
 			<a href={base + '/teilen'} class="mt-4 inline-block px-6 py-3 rounded-full text-sm font-medium"
-				style="background: var(--color-amber); color: var(--color-paper);">
+				style="background: var(--color-amber); color: var(--color-on-accent);">
 				NurEine weitergeben
 			</a>
 		</div>

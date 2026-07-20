@@ -92,7 +92,7 @@
 					{#each [['idea', 'Idee'], ['bug', 'Problem'], ['praise', 'Lob'], ['other', 'Sonstiges']] as [k, label]}
 						<button type="button" onclick={() => (kind = k as typeof kind)}
 							class="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-							style={kind === k ? 'background: var(--color-ink); color: var(--color-paper);' : 'background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);'}>
+							style={kind === k ? 'background: var(--color-surface-ink); color: var(--color-on-ink);' : 'background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);'}>
 							{label}
 						</button>
 					{/each}
@@ -103,7 +103,7 @@
 					<input type="email" bind:value={email} placeholder="E-Mail (optional, für Rückfragen)"
 						class="flex-1 px-3 py-2 rounded-full text-sm" style="background: var(--color-paper); border: 1px solid var(--color-rule); color: var(--color-ink);" />
 					<button type="submit" disabled={sending || message.trim().length < 3}
-						class="px-5 py-2 rounded-full text-sm font-medium disabled:opacity-50" style="background: var(--color-amber); color: var(--color-paper);">
+						class="px-5 py-2 rounded-full text-sm font-medium disabled:opacity-50" style="background: var(--color-amber); color: var(--color-on-accent);">
 						{sending ? 'Sende…' : 'Absenden'}
 					</button>
 				</div>

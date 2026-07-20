@@ -235,7 +235,7 @@
 						<a
 							href={base + '/geschichte/' + activeStory.slug}
 							class="mt-5 group flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm transition-all duration-200 hover:gap-3"
-							style="background: var(--color-ink); color: var(--color-paper);"
+							style="background: var(--color-surface-ink); color: var(--color-on-ink);"
 						>
 							Geschichte lesen
 							<svg class="w-3.5 h-3.5 transition-transform duration-200" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -269,6 +269,6 @@
 	:global(.leaflet-control-attribution) {
 		font-size: 10px !important;
 		color: var(--color-faint) !important;
-		background: rgba(250, 246, 238, 0.85) !important;
+		background: var(--color-veil) !important;
 	}
 </style>

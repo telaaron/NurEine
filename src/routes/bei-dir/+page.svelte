@@ -347,7 +347,7 @@
 			<button type="button"
 				onclick={() => { geoAttempted = false; _mapInitialized = false; detectLocation(); }}
 				class="mt-6 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 hover:opacity-85 active:scale-[0.97]"
-				style="background: var(--color-amber); color: var(--color-paper);">
+				style="background: var(--color-amber); color: var(--color-on-accent);">
 				Erneut versuchen
 			</button>
 		</div>
@@ -419,7 +419,7 @@
 					Wir arbeiten daran, unser Netzwerk auszubauen. Bald gibt es hoffentlich auch in deiner Region gute Nachrichten zu entdecken.
 				</p>
 				<div class="mt-8">
-					<a href={base + '/archiv'} class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 hover:gap-3" style="background: var(--color-ink); color: var(--color-paper);">
+					<a href={base + '/archiv'} class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 hover:gap-3" style="background: var(--color-surface-ink); color: var(--color-on-ink);">
 						Alle Geschichten entdecken
 						<svg class="w-3.5 h-3.5 transition-transform duration-200" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M6 3l5 5-5 5" />
@@ -472,7 +472,7 @@
 							</div>
 							{#if story.distance > 0}
 								<div class="absolute top-3 right-3">
-									<span class="badge px-2.5 py-1 rounded-full backdrop-blur-sm tnum" style="background: rgba(26, 24, 21, 0.7); color: var(--color-paper);">
+									<span class="badge px-2.5 py-1 rounded-full backdrop-blur-sm tnum" style="background: rgba(26, 24, 21, 0.7); color: var(--color-on-ink);">
 										{story.distance}&thinsp;km
 									</span>
 								</div>
@@ -510,7 +510,7 @@
 <style>
 	:global(.user-tooltip) {
 		background: var(--color-amber) !important;
-		color: var(--color-paper) !important;
+		color: var(--color-on-ink) !important;
 		border: none !important;
 		border-radius: 8px !important;
 		padding: 8px 12px !important;

@@ -120,7 +120,7 @@
 			</label>
 
 			<div class="mt-2 flex items-center gap-4 flex-wrap">
-				<button type="submit" disabled={loading} class="px-7 py-3.5 rounded-full text-sm font-medium transition-all active:scale-[0.97] disabled:opacity-60" style="background: var(--color-ink); color: var(--color-paper); box-shadow: var(--shadow-sm);">
+				<button type="submit" disabled={loading} class="px-7 py-3.5 rounded-full text-sm font-medium transition-all active:scale-[0.97] disabled:opacity-60" style="background: var(--color-surface-ink); color: var(--color-on-ink); box-shadow: var(--shadow-sm);">
 					{loading ? 'Wird gesendet…' : 'Geschichte einreichen'}
 				</button>
 				{#if errorMsg}<span class="text-sm" style="color: var(--color-rose); font-family: var(--font-serif);">{errorMsg}</span>{/if}

@@ -114,7 +114,7 @@
 		<a
 			href={storyUrl}
 			class="inline-block px-5 py-2.5 rounded-full text-sm font-medium transition-all"
-			style="background: var(--color-ink); color: var(--color-paper);"
+			style="background: var(--color-surface-ink); color: var(--color-on-ink);"
 		>
 			Geschichte lesen &rarr;
 		</a>

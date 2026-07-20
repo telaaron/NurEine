@@ -1,6 +1,10 @@
 import WidgetKit
 import SwiftUI
 
+/// Marken-Amber. Das Widget ist ein eigenes Target und sieht Theme.swift der App
+/// nicht — die eine Farbe, die es braucht, steht deshalb hier.
+private let brandAmber = Color(red: 0xC8 / 255, green: 0x73 / 255, blue: 0x40 / 255)
+
 // MARK: - Data
 
 /// Minimal story shape the widget needs (decoded from /api/stories?featured=true).
@@ -77,20 +81,25 @@ struct NurEineWidgetEntryView: View {
         }
     }
 
-    // Home screen small: image background + impact chip + title.
+    // Home screen small: die ZAHL ist der Held (Ritual-DNA), Titel darunter.
+    // Kein Bild — der Beleg trägt, nicht die Illustration.
     private var small: some View {
-        ZStack(alignment: .bottomLeading) {
-            (entry.image ?? Image(systemName: "sun.max")).resizable().scaledToFill()
-            LinearGradient(colors: [.clear, .black.opacity(0.75)], startPoint: .center, endPoint: .bottom)
-            VStack(alignment: .leading, spacing: 4) {
-                Spacer()
-                Text(entry.story?.title ?? "Dein Lichtblick für heute")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(3)
-            }
-            .padding(10)
+        VStack(alignment: .leading, spacing: 3) {
+            Text("EIN BELEG VON HEUTE")
+                .font(.system(size: 7, weight: .semibold, design: .monospaced))
+                .tracking(1.1)
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 2)
+            Text(entry.story.map { "\($0.impactScore)" } ?? "—")
+                .font(.system(size: 46, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(brandAmber)
+            Text(entry.story?.title ?? "Dein Lichtblick für heute")
+                .font(.system(size: 11, weight: .medium))
+                .lineLimit(3)
+            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // Home screen medium: image left, text right with impact.

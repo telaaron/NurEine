@@ -3,6 +3,7 @@ import UserNotifications
 
 struct OnboardingView: View {
     @Environment(Prefs.self) private var prefs
+    @Environment(Collection.self) private var collection
     @Environment(\.dismiss) private var dismiss
     @State private var step = 0
 
@@ -103,6 +104,9 @@ struct OnboardingView: View {
 
     private func finish() {
         prefs.onboarded = true
+        // Drei geschenkte Lichter: Der Himmel ist nie ganz leer, und eine
+        // angefangene Sammlung führt man eher fort (Endowed Progress).
+        collection.gift()
         dismiss()
     }
 }

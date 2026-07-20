@@ -6,11 +6,21 @@
 	objectVersion = 110;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		7BF399142FE53AD5002F4D2E /* NurEineWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7BF3990C2FE53AD5002F4D2E /* NurEineWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		7BF3990C2FE53AD5002F4D2E /* NurEineWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = NurEineWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		7BF398DB2FE53AD5002F4D2E /* NurEine.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NurEine.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		7BF3990A2FE53AD5002F4D2E /* NurEineWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = NurEineWidget;
+			sourceTree = "<group>";
+		};
 		7BF398DD2FE53AD5002F4D2E /* NurEine */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = NurEine;
@@ -18,7 +28,28 @@
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		7BF399132FE53AD5002F4D2E /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				7BF399142FE53AD5002F4D2E /* NurEineWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		7BF3990E2FE53AD5002F4D2E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7BF398D82FE53AD5002F4D2E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
@@ -39,6 +70,7 @@
 			isa = PBXGroup;
 			children = (
 				7BF398DB2FE53AD5002F4D2E /* NurEine.app */,
+				7BF3990C2FE53AD5002F4D2E /* NurEineWidgetExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -53,18 +85,52 @@
 				7BF398D72FE53AD5002F4D2E /* Sources */,
 				7BF398D82FE53AD5002F4D2E /* Frameworks */,
 				7BF398D92FE53AD5002F4D2E /* Resources */,
+				7BF399132FE53AD5002F4D2E /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			fileSystemSynchronizedGroups = (
 				7BF398DD2FE53AD5002F4D2E /* NurEine */,
 			);
+			dependencies = (
+				7BF399152FE53AD5002F4D2E /* PBXTargetDependency */,
+			);
 			name = NurEine;
 			productName = NurEine;
 			productReference = 7BF398DB2FE53AD5002F4D2E /* NurEine.app */;
 			productType = "com.apple.product-type.application";
 		};
+		7BF3990B2FE53AD5002F4D2E /* NurEineWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7BF399102FE53AD5002F4D2E /* Build configuration list for PBXNativeTarget "NurEineWidgetExtension" */;
+			buildPhases = (
+				7BF3990D2FE53AD5002F4D2E /* Sources */,
+				7BF3990E2FE53AD5002F4D2E /* Frameworks */,
+				7BF3990F2FE53AD5002F4D2E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7BF3990A2FE53AD5002F4D2E /* NurEineWidget */,
+			);
+			name = NurEineWidgetExtension;
+			productName = NurEineWidgetExtension;
+			productReference = 7BF3990C2FE53AD5002F4D2E /* NurEineWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXContainerItemProxy section */
+		7BF399162FE53AD5002F4D2E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7BF398D32FE53AD5002F4D2E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7BF3990B2FE53AD5002F4D2E;
+			remoteInfo = NurEineWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXProject section */
 		7BF398D32FE53AD5002F4D2E /* Project object */ = {
@@ -75,6 +141,9 @@
 				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					7BF398DA2FE53AD5002F4D2E = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					7BF3990B2FE53AD5002F4D2E = {
 						CreatedOnToolsVersion = 27.0;
 					};
 				};
@@ -94,11 +163,27 @@
 			projectRoot = "";
 			targets = (
 				7BF398DA2FE53AD5002F4D2E /* NurEine */,
+				7BF3990B2FE53AD5002F4D2E /* NurEineWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXTargetDependency section */
+		7BF399152FE53AD5002F4D2E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7BF3990B2FE53AD5002F4D2E /* NurEineWidgetExtension */;
+			targetProxy = 7BF399162FE53AD5002F4D2E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin PBXResourcesBuildPhase section */
+		7BF3990F2FE53AD5002F4D2E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7BF398D92FE53AD5002F4D2E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
@@ -107,6 +192,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		7BF3990D2FE53AD5002F4D2E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7BF398D72FE53AD5002F4D2E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			files = (
@@ -242,6 +334,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = NurEine/NurEine.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3YB2KJCCHV;
 				ENABLE_PREVIEWS = YES;
@@ -256,7 +349,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = de.nureine.app.NurEine;
+				PRODUCT_BUNDLE_IDENTIFIER = de.nureine.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -274,6 +367,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = NurEine/NurEine.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3YB2KJCCHV;
 				ENABLE_PREVIEWS = YES;
@@ -288,13 +382,65 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = de.nureine.app.NurEine;
+				PRODUCT_BUNDLE_IDENTIFIER = de.nureine.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		7BF399112FE53AD5002F4D2E /* Debug configuration for PBXNativeTarget "NurEineWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3YB2KJCCHV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dein Lichtblick";
+				INFOPLIST_KEY_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.nureine.app.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7BF399122FE53AD5002F4D2E /* Release configuration for PBXNativeTarget "NurEineWidgetExtension" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3YB2KJCCHV;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Dein Lichtblick";
+				INFOPLIST_KEY_NSExtensionPointIdentifier = "com.apple.widgetkit-extension";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = de.nureine.app.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -317,6 +463,15 @@
 				7BF398E72FE53AD6002F4D2E /* Debug configuration for PBXNativeTarget "NurEine" */,
 				7BF398E82FE53AD6002F4D2E /* Release configuration for PBXNativeTarget "NurEine" */,
 			);
+			defaultConfigurationName = Release;
+		};
+		7BF399102FE53AD5002F4D2E /* Build configuration list for PBXNativeTarget "NurEineWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7BF399112FE53AD5002F4D2E /* Debug configuration for PBXNativeTarget "NurEineWidgetExtension" */,
+				7BF399122FE53AD5002F4D2E /* Release configuration for PBXNativeTarget "NurEineWidgetExtension" */,
+			);
+			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */

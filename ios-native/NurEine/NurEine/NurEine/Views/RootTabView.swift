@@ -1,9 +1,13 @@
 import SwiftUI
 import CoreSpotlight
 
-/// The app's root. A native TabView (adopts Liquid Glass on iOS 26) over four
-/// sections. Onboarding is presented as a full-screen cover on first launch.
-/// A morning-push tap deep-links into the story on the Heute tab.
+/// The app's root. A native TabView (adopts Liquid Glass on iOS 26).
+///
+/// Der erste Tab ist das RITUAL (Aufdecken → Lesen in Schlägen → Licht in den
+/// Himmel) — die neu erfundene Erfahrung, identisch zur Web-App unter /app.
+/// Archiv und Karte bleiben für Stöberer erhalten (Aaron 2026-07-20), sind aber
+/// bewusst NACHgeordnet: Der Einstieg ist die eine Ausgabe, nicht ein Feed.
+/// Onboarding erscheint beim ersten Start, ein Push-Tap springt direkt ins Ritual.
 struct RootTabView: View {
     @Environment(Prefs.self) private var prefs
     @Environment(StoryStore.self) private var store
@@ -14,15 +18,18 @@ struct RootTabView: View {
     var body: some View {
         TabView(selection: $selection) {
             Tab("Heute", systemImage: "sun.max", value: 0) {
-                TodayView(deepLink: $deepLink)
+                RitualView(deepLink: $deepLink)
             }
-            Tab("Archiv", systemImage: "archivebox", value: 1) {
+            Tab("Himmel", systemImage: "sparkles", value: 1) {
+                SkyTab()
+            }
+            Tab("Archiv", systemImage: "archivebox", value: 2) {
                 ArchiveView()
             }
-            Tab("Karte", systemImage: "map", value: 2) {
+            Tab("Karte", systemImage: "map", value: 3) {
                 MapTabView()
             }
-            Tab("Mehr", systemImage: "ellipsis", value: 3) {
+            Tab("Mehr", systemImage: "ellipsis", value: 4) {
                 MoreView()
             }
         }
@@ -49,9 +56,39 @@ struct RootTabView: View {
         Task {
             await store.ensure()
             if let s = store.stories.first(where: { $0.id == id }) {
-                selection = 0
+                selection = 0  // Ritual-Tab — der Push führt ins Lesen, nicht in einen Feed.
                 deepLink = s
             }
+        }
+    }
+}
+
+/// Der Himmel als eigener Tab — die stille Sammlung, jederzeit erreichbar.
+private struct SkyTab: View {
+    @Environment(Collection.self) private var collection
+
+    var body: some View {
+        ZStack {
+            SkyView()
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Dein Himmel")
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .tracking(2)
+                    .foregroundStyle(Theme.amberDeep)
+                HStack(spacing: 8) {
+                    Text("\(collection.readCount)")
+                        .font(.display(34, weight: .bold))
+                        .monospacedDigit()
+                        .foregroundStyle(Theme.amber)
+                    Text(collection.readCount == 1 ? "Licht" : "Lichter")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Theme.muted)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .padding(.horizontal, 24)
+            .padding(.top, 16)
         }
     }
 }

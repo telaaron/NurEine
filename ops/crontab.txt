@@ -1,56 +1,48 @@
 # ============================================================================
-# NurEine Mac-Mini-Runner — crontab (ALLE ZEITEN UTC)
+# NurEine Mac-Mini-Runner — crontab
 # ----------------------------------------------------------------------------
-# Installieren:  bash ops/install-cron.sh
-# Ansehen:       crontab -l
-# Voraussetzung: cron läuft in UTC. Prüfen: `timedatectl` (RTC/zeitzone).
-#   Wir halten die Job-Zeiten in UTC (wie die bisherigen GitHub-Workflows).
-#   Falls die Mini-Systemzeit auf Europe/Berlin steht, sind cron-Zeiten LOKAL —
-#   dann install-cron.sh nutzt `CRON_TZ=UTC` (unten gesetzt), damit es UTC bleibt.
+# Der Mini läuft in Europe/Berlin. Alle Zeiten hier sind LOKALE Zeit, 1:1 aus
+# den Claude-Scheduled-Tasks des MacBooks (SKILL.md description-Feld).
+#   -> KEIN CRON_TZ nötig; cron nutzt die Systemzeitzone (Europe/Berlin).
 #
-# Prinzip: gestaffelt, KEIN Overlap schwerer Jobs (der Mini fährt nie zwei
-# schwere Sachen gleichzeitig). Kette fixt die Timing-Bugs aus
-# docs/NACHT_ROUTINEN_PROBLEME.md (strikt, alles nach 03:00, mit Abstand).
+# Installieren:  bash ops/install-cron.sh   |   Ansehen: crontab -l
+#
+# KETTE (Stand 2026-07-19, nach Aarons Konsolidierung):
+#   Fetch 03:10 → Chefredakteur 03:40 → Redaktion 04:10 → Analyst 05:10
+#   (+ Reel-Regie 08:00, Verbesserer 10:17)
+# „Redaktion" ersetzt seit 2026-07-16 die getrennten Veredler + Bild-Regie.
+# Gestaffelt, kein Overlap schwerer Jobs.
 # ============================================================================
-CRON_TZ=UTC
 SHELL=/bin/bash
 
-# --- NACHT-KETTE (Claude-Agenten, gestaffelt, kein Overlap) -----------------
-# Analyst zuerst (leicht) — wertet Vortag aus, bevor neu gefetcht wird.
-30 1 * * *   $HOME/NurEine/ops/run/agent.sh analyst
-# Fetch: RSS + Vorfilter + Claude-Analyse (--export/--import). Schwer.
-30 2 * * *   $HOME/NurEine/ops/run/agent.sh fetch
-# Chefredakteur: bewertet neu, wählt Tages-Perlen. NACH Fetch.
-15 3 * * *   $HOME/NurEine/ops/run/agent.sh chefredakteur
-# Veredler: schreibt die Perlen-Felder aus. NACH Chefredakteur.
-50 3 * * *   $HOME/NurEine/ops/run/agent.sh veredler
-# Bild-Regie: fal.ai für die Perlen. NACH Veredler. Schwer (Bildgen + QA).
-20 4 * * *   $HOME/NurEine/ops/run/agent.sh bildregie
-# Verbesserer: Code-Verbesserungen (PRs/Commits). Allein, kein Overlap.
-0 5 * * *    $HOME/NurEine/ops/run/agent.sh verbesserer
-# Reel-/TikTok-Regie: Remotion-Render (schwer, Chromium). Mo/Di/Mi/Fr/Sa, allein.
-30 6 * * 1,2,3,5,6   $HOME/NurEine/ops/run/reel.sh
+# ── NACHT-KETTE (Claude-Agenten, lokale Berlin-Zeit) ────────────────────────
+# 03:10 Fetch — erster nach Kontingent-Reset. RSS + Claude-Analyse (kein API-Key).
+10 3 * * *   $HOME/NurEine/ops/run/agent.sh fetch
+# 03:40 Chefredakteur — bewertet neu, GENEHMIGT Tages-Perlen. MUSS vor Redaktion.
+40 3 * * *   $HOME/NurEine/ops/run/agent.sh chefredakteur
+# 04:10 Redaktion — veredelt Perlen sprachlich UND bebildert sie (Seedream).
+10 4 * * *   $HOME/NurEine/ops/run/agent.sh redaktion
+# 05:10 Analyst — letzter der Kette: misst Performance, schreibt Verbesserungs-Ideen.
+10 5 * * *   $HOME/NurEine/ops/run/agent.sh analyst
+# 08:00 Reel-Regie — täglich TikTok-Master (Mo/Mi/Fr zusätzlich IG-Reel).
+0 8 * * *    $HOME/NurEine/ops/run/agent.sh reel-regie
+# 10:17 Verbesserer — setzt getrackte Verbesserungs-Ideen im Code um (Branch+Commit).
+17 10 * * *  $HOME/NurEine/ops/run/agent.sh verbesserer
 
-# --- THIN-TRIGGER (curl auf /api/cron/*, leicht) ----------------------------
-30 5 * * *   $HOME/NurEine/ops/run/trigger.sh social-publish
-15 6 * * *   $HOME/NurEine/ops/run/trigger.sh social-generate
-30 6 * * *   $HOME/NurEine/ops/run/trigger.sh highlight
-15 7 * * *   $HOME/NurEine/ops/run/trigger.sh indexnow '{"recent":50}'
-15 8 * * *   $HOME/NurEine/ops/run/trigger.sh social-threads
-0 22 * * *   $HOME/NurEine/ops/run/trigger.sh social-insights
-# social-comments 4×/Tag
-30 7,11,15,19 * * *   $HOME/NurEine/ops/run/trigger.sh social-comments
-# social-story stündlich 07–21 UTC
-0 7-21 * * *   $HOME/NurEine/ops/run/trigger.sh social-story
-# social-digest sonntags
-30 15 * * 0   $HOME/NurEine/ops/run/trigger.sh social-digest
+# ── THIN-TRIGGER (curl auf /api/cron/*, Arbeit passiert auf Vercel) ─────────
+# Ursprüngliche Workflow-Zeiten waren UTC -> hier +2h auf CEST umgerechnet.
+30 7 * * *    $HOME/NurEine/ops/run/trigger.sh social-publish     # war 05:30 UTC
+15 8 * * *    $HOME/NurEine/ops/run/trigger.sh social-generate    # war 06:15 UTC
+30 8 * * *    $HOME/NurEine/ops/run/trigger.sh highlight          # war 06:30 UTC
+15 9 * * *    $HOME/NurEine/ops/run/trigger.sh indexnow '{"recent":50}'  # 07:15 UTC
+15 10 * * *   $HOME/NurEine/ops/run/trigger.sh social-threads     # war 08:15 UTC
+0 0 * * *     $HOME/NurEine/ops/run/trigger.sh social-insights    # war 22:00 UTC
+30 9,13,17,21 * * *   $HOME/NurEine/ops/run/trigger.sh social-comments  # 4×/Tag
+0 9-23 * * *  $HOME/NurEine/ops/run/trigger.sh social-story       # stündlich 09-23
+30 17 * * 0   $HOME/NurEine/ops/run/trigger.sh social-digest      # So, war 15:30 UTC
 
-# --- COMPUTE-JOBS (Python, selten) ------------------------------------------
-# World-Metrics am 1. des Monats
-0 5 1 * *    $HOME/NurEine/ops/run/pyjob.sh scripts/fetch_world_metrics.py
-# Worldbank montags (läuft aus scripts/)
-30 5 * * 1   $HOME/NurEine/ops/run/pyjob.sh fetch_worldbank.py --cwd scripts
-# World-Newsletter am 1. des Monats (Thin-Trigger nach Metrik-Fetch)
-20 6 1 * *   $HOME/NurEine/ops/run/trigger.sh world-newsletter
-# generate-og-images ist DEPRECATED (kein Cron) — bei Bedarf manuell:
-#   ops/run/pyjob.sh scripts/generate_og_images.py --all
+# ── COMPUTE-JOBS (Python, selten) ───────────────────────────────────────────
+0 7 1 * *    $HOME/NurEine/ops/run/pyjob.sh scripts/fetch_world_metrics.py   # 1. d. Monats
+30 7 * * 1   $HOME/NurEine/ops/run/pyjob.sh fetch_worldbank.py --cwd scripts # montags
+20 8 1 * *   $HOME/NurEine/ops/run/trigger.sh world-newsletter               # 1. d. Monats
+# generate-og-images: DEPRECATED (kein Cron). Manuell: pyjob.sh scripts/generate_og_images.py --all

@@ -6,6 +6,10 @@ NurEine-Routinen, damit Aarons MacBook frei ist. Claude-Routinen laufen über da
 
 > **Erst-Einrichtung des Mini:** siehe [`MAC_MINI_SETUP.md`](MAC_MINI_SETUP.md) (Ubuntu
 > installieren, WLAN, SSH). Diese README beginnt, sobald der Mini per SSH erreichbar ist.
+>
+> **➡️ Laufender Betrieb: [`RUNBOOK.md`](RUNBOOK.md)** — Zugriff, wo die Routinen liegen,
+> wie man sie ändert, Logs lesen, Token erneuern, Fehlersuche. **Das ist die Datei, die
+> man im Alltag braucht.**
 
 ---
 

@@ -1,26 +1,27 @@
 # ============================================================================
 # NurEine Mac-Mini-Runner — crontab
 # ----------------------------------------------------------------------------
-# Der Mini läuft in Europe/Berlin (CEST/CET). Alle Zeiten hier sind LOKALE Zeit,
-# 1:1 aus den bisherigen Claude-Scheduled-Tasks (SKILL.md description-Feld).
+# Der Mini läuft in Europe/Berlin. Alle Zeiten hier sind LOKALE Zeit, 1:1 aus
+# den Claude-Scheduled-Tasks des MacBooks (SKILL.md description-Feld).
 #   -> KEIN CRON_TZ nötig; cron nutzt die Systemzeitzone (Europe/Berlin).
 #
 # Installieren:  bash ops/install-cron.sh   |   Ansehen: crontab -l
 #
-# Prinzip: gestaffelte Nacht-Kette, kein Overlap schwerer Jobs. Reihenfolge fixt
-# die Timing-Bugs aus docs/NACHT_ROUTINEN_PROBLEME.md (Fetch->Chef->Veredler->Bild).
+# KETTE (Stand 2026-07-19, nach Aarons Konsolidierung):
+#   Fetch 03:10 → Chefredakteur 03:40 → Redaktion 04:10 → Analyst 05:10
+#   (+ Reel-Regie 08:00, Verbesserer 10:17)
+# „Redaktion" ersetzt seit 2026-07-16 die getrennten Veredler + Bild-Regie.
+# Gestaffelt, kein Overlap schwerer Jobs.
 # ============================================================================
 SHELL=/bin/bash
 
-# ── NACHT-KETTE (Claude-Agenten, lokale Berlin-Zeit, gestaffelt) ────────────
+# ── NACHT-KETTE (Claude-Agenten, lokale Berlin-Zeit) ────────────────────────
 # 03:10 Fetch — erster nach Kontingent-Reset. RSS + Claude-Analyse (kein API-Key).
 10 3 * * *   $HOME/NurEine/ops/run/agent.sh fetch
-# 03:40 Chefredakteur — bewertet neu, GENEHMIGT Tages-Perlen. Vor Veredler/Bild.
+# 03:40 Chefredakteur — bewertet neu, GENEHMIGT Tages-Perlen. MUSS vor Redaktion.
 40 3 * * *   $HOME/NurEine/ops/run/agent.sh chefredakteur
-# 04:10 Veredler — formuliert genehmigte Perlen aus (summary, hooks, slides, Betreff).
-10 4 * * *   $HOME/NurEine/ops/run/agent.sh veredler
-# 04:40 Bild-Regie — Seedream-Bilder für die Perlen, Vision-QA, image_url setzen.
-40 4 * * *   $HOME/NurEine/ops/run/agent.sh bildregie
+# 04:10 Redaktion — veredelt Perlen sprachlich UND bebildert sie (Seedream).
+10 4 * * *   $HOME/NurEine/ops/run/agent.sh redaktion
 # 05:10 Analyst — letzter der Kette: misst Performance, schreibt Verbesserungs-Ideen.
 10 5 * * *   $HOME/NurEine/ops/run/agent.sh analyst
 # 08:00 Reel-Regie — täglich TikTok-Master (Mo/Mi/Fr zusätzlich IG-Reel).

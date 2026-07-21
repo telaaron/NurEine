@@ -1034,6 +1034,12 @@ impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
     ⚠️ HIERHIN gehören reine „Aha"-Studien: „Hauskatzen wurden früher domestiziert als gedacht",
     „Sex beschleunigte die Evolution", „Ältester Baum entdeckt" — faszinierend fürs Archiv, aber KEINE
     Wirkung auf das Leben von heute. NIEMALS 90+ nur weil peer-reviewed und das Thema groß ist.
+    ⚠️ EBENFALLS HIERHIN (max 44) — Astrophysik/Kosmologie, Quantenphysik und reine Taxonomie/Evolution
+    OHNE unmittelbaren menschlichen Nutzen: „Neuer Exoplanet mit ewiger Nacht entdeckt", „Physiker messen
+    Quantenverschränkung genauer", „Neue Kolibri-Art beschrieben", „Modell simuliert Mini-Universum".
+    Das ist Grundlagenforschung ohne benannte Nutznießer → interessant, aber verbessert das Leben von
+    niemandem morgen. Kein hoher Score nur weil „großes Thema" oder „harte Physik". (improvement #13/#14,
+    Verbesserer-Agent — wiederholt vom Chefredaktion nach unten korrigiert)
   • 1-24: Minimaler Impact, Grenzfall der gerade noch reinkommt.
 
   Merksatz: Frag „Wird das Leben von irgendwem morgen messbar besser?" Wenn nein → max 44, egal wie gut belegt.

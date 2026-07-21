@@ -68,6 +68,16 @@ private struct SkyTab: View {
     @Environment(Collection.self) private var collection
 
     var body: some View {
+        // NavigationStack, damit „Nochmal lesen" aus einem angetippten Licht
+        // die Ausgabe öffnen kann.
+        NavigationStack {
+            content
+                .navigationDestination(for: Story.self) { StoryDetailView(story: $0) }
+                .toolbar(.hidden, for: .navigationBar)
+        }
+    }
+
+    private var content: some View {
         ZStack {
             SkyView()
 

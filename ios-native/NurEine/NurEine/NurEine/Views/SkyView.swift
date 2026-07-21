@@ -12,6 +12,8 @@ struct SkyView: View {
     var flyIn: Light?
 
     @State private var arrived = false
+    /// Angetipptes Licht — zeigt, welche Ausgabe dahintersteckt.
+    @State private var selected: Light?
 
     var body: some View {
         GeometryReader { geo in
@@ -27,6 +29,11 @@ struct SkyView: View {
                         arrived: arrived
                     )
                     .position(x: p.x, y: p.y)
+                    // Antippbar: Der Himmel ist die Sammlung, nicht nur ein Bild —
+                    // „was habe ich am 14. Juli gelesen?" muss beantwortbar sein.
+                    .contentShape(.circle)
+                    .onTapGesture { selected = light }
+                    .accessibilityLabel(light.gifted ? "Geschenktes Licht" : light.title)
                 }
 
                 if collection.lights.isEmpty {
@@ -37,6 +44,11 @@ struct SkyView: View {
         .onAppear {
             // Das neue Licht fliegt nach kurzem Moment an seinen Platz.
             withAnimation(.easeOut(duration: 1.4).delay(0.25)) { arrived = true }
+        }
+        .sheet(item: $selected) { light in
+            LightDetailSheet(light: light)
+                .presentationDetents([.height(light.gifted ? 210 : 280)])
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -85,6 +97,78 @@ struct SkyView: View {
         // Seitliche Streuung aus dem Seed, Ränder freilassen.
         let x = size.width * (0.12 + light.seed * 0.76)
         return CGPoint(x: x, y: y)
+    }
+}
+
+/// Was hinter einem angetippten Licht steckt — und der Weg zurück in die Ausgabe.
+private struct LightDetailSheet: View {
+    let light: Light
+
+    @Environment(StoryStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+
+    /// Die Story zum Licht, falls sie noch geladen ist.
+    private var story: Story? {
+        store.stories.first { $0.id == light.id }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            if light.gifted {
+                // Die drei geschenkten Lichter stehen für Fortschritt, der schon
+                // lief, bevor man dazukam — sie führen nirgendwohin.
+                Text("Geschenktes Licht")
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .tracking(2)
+                    .foregroundStyle(Theme.amberDeep)
+                Text("Fortschritt, der schon läuft")
+                    .font(.display(22, weight: .semibold))
+                    .foregroundStyle(Theme.ink)
+                Text("Drei Lichter, die schon brannten, bevor du dazugekommen bist.")
+                    .font(.serif(16))
+                    .foregroundStyle(Theme.muted)
+            } else {
+                Text(dayLabel)
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .tracking(2)
+                    .foregroundStyle(Theme.amberDeep)
+                Text(light.title)
+                    .font(.display(21, weight: .semibold))
+                    .foregroundStyle(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let s = story {
+                    NavigationLink(value: s) {
+                        HStack(spacing: 6) {
+                            Text("Nochmal lesen")
+                            Image(systemName: "arrow.right")
+                        }
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Theme.amber)
+                    }
+                    .buttonStyle(.plain)
+                    .simultaneousGesture(TapGesture().onEnded { dismiss() })
+                } else {
+                    // Ältere Ausgaben sind evtl. nicht mehr in der Liste — dann
+                    // ehrlich sagen statt einen toten Knopf zeigen.
+                    Text("Diese Ausgabe ist gerade nicht geladen.")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.faint)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(24)
+        .background(Theme.canvas)
+    }
+
+    private var dayLabel: String {
+        guard let d = ArchiveTimeline.date(fromISO: light.day) else { return "Gelesen" }
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "de_DE")
+        f.dateFormat = "d. MMMM yyyy"
+        return "Gelesen · \(f.string(from: d))"
     }
 }
 

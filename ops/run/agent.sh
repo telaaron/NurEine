@@ -42,12 +42,21 @@ LOG="$LOGDIR/agent-${AGENT}.log"
 
 echo "[$STAMP] agent=$AGENT start" >>"$LOG"
 
-# Wichtig: OHNE --bare (Token nicht bare-kompatibel). MCP kommt aus projektlokaler .mcp.json.
-# --permission-mode bypassPermissions: non-interaktiv, keine Prompts im cron-Kontext.
-( cd "$ROOT" && "$CLAUDE_BIN" -p "$(cat "$PROMPT_FILE")" \
+# YAML-Frontmatter (--- … ---) am Dateianfang entfernen: sonst interpretiert
+# claude die führenden "---" als CLI-Option ("error: unknown option '---").
+# awk lässt alles ab der ersten Nicht-Frontmatter-Zeile durch.
+PROMPT="$(awk 'BEGIN{fm=0} NR==1 && $0=="---"{fm=1; next} fm==1 && $0=="---"{fm=0; next} fm==0{print}' "$PROMPT_FILE")"
+
+# Prompt über STDIN übergeben (nicht als Argument) — so kann kein führendes
+# Sonderzeichen im Prompt je als Flag missverstanden werden.
+# OHNE --bare (Abo-Token nicht bare-kompatibel). MCP aus projektlokaler .mcp.json.
+# bypassPermissions: non-interaktiv, keine Prompts im cron-Kontext.
+set +e
+( cd "$ROOT" && printf '%s' "$PROMPT" | "$CLAUDE_BIN" -p \
     --permission-mode bypassPermissions \
     --output-format json \
 ) >>"$LOG" 2>&1
 RC=$?
+set -e
 echo "[$STAMP] agent=$AGENT exit=$RC" >>"$LOG"
 exit $RC

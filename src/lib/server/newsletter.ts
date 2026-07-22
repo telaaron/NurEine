@@ -588,17 +588,28 @@ export async function selectApprovedOrBestHero(): Promise<string | null> {
   // per SQL-.gte(7.0) filtern (das ließe jede neue 0–100-Story durch), sondern auf
   // kanonische 0–100 normalisieren und in JS gegen die Schwelle vergleichen/sortieren.
   // (improvement #1, Verbesserer-Agent)
+  //
+  // FRISCHE-GATE (Fix 2026-07-22): Der Fallback zog eine 15 Tage alte, nur
+  // „proposed" (nicht approved) Story mit Alt-Skala-Score (8.80→88/100) — sie
+  // ging als Newsletter raus, obwohl sie längst gesendet-würdig-veraltet war.
+  // Deshalb: Kandidat muss (a) eine Story sein, die noch NIE als Newsletter
+  // rausging (newsletter_sent_at IS NULL) und (b) frisch ist (created_at ≤ N Tage).
+  // Der Tier-0-Fallback darf keine Altstory an den 7-Tage-Tiers 1–3 vorbeischleusen.
+  const HERO_FALLBACK_MAX_AGE_DAYS = 3;
+  const freshSince = new Date(Date.now() - HERO_FALLBACK_MAX_AGE_DAYS * 24 * 60 * 60 * 1000).toISOString();
   const { data: candidates } = await supabaseAdmin
     .from('nureine_curation_queue')
-    .select('story_id, resonance_score')
+    .select('story_id, resonance_score, nureine_stories!inner(created_at, newsletter_sent_at)')
     .eq('for_date', today)
-    .not('story_id', 'is', null);
+    .not('story_id', 'is', null)
+    .is('nureine_stories.newsletter_sent_at', null)
+    .gte('nureine_stories.created_at', freshSince);
   const bestId = ((candidates as { story_id: string | null; resonance_score: number | null }[] ?? [])
     .map((c) => ({ story_id: c.story_id, r: normalizeResonance(c.resonance_score) }))
     .filter((c) => c.story_id != null && c.r != null && c.r >= RESONANCE_HERO_THRESHOLD)
     .sort((a, b) => (b.r ?? 0) - (a.r ?? 0))[0])?.story_id;
   if (bestId) {
-    console.log('[newsletter] Hero-Fallback: beste kuratierte ≥70/100 (keine Freigabe vorhanden)');
+    console.log('[newsletter] Hero-Fallback: beste FRISCHE kuratierte ≥70/100 (keine Freigabe vorhanden)');
     return bestId;
   }
 

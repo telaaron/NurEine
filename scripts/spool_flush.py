@@ -58,15 +58,35 @@ def public_url(bucket: str, path: str) -> str:
     return f"{SUPABASE_URL}/storage/v1/object/public/{bucket}/{path}"
 
 
+def _key(meta: dict, *namen: str, default=None):
+    """Holt den ersten vorhandenen Schlüssel. Die Agenten schreiben teils
+    englisch (path/local_file/table/column), teils deutsch (pfad/datei/
+    tabelle/spalte) — beides muss der Nachtrag verstehen, sonst bleibt fertige
+    Arbeit liegen (genau das ist am 20.07. passiert)."""
+    for n in namen:
+        if n in meta and meta[n] is not None:
+            return meta[n]
+    return default
+
+
 def flush_binary(meta_path: Path, meta: dict) -> bool:
     """Lädt eine geparkte Datei hoch und setzt das DB-Feld. True = erledigt."""
-    data_file = meta_path.parent / meta["datei"]
+    roh = _key(meta, "datei", "local_file", "file")
+    if not roh:
+        print(f"  ! {meta_path.name}: kein Dateiname im JSON — übersprungen")
+        return False
+    # local_file ist repo-relativ, datei nur der Name — beides zulassen.
+    kandidat = Path(roh)
+    data_file = kandidat if kandidat.is_absolute() else (ROOT / kandidat)
     if not data_file.exists():
-        print(f"  ! Datei fehlt: {data_file.name} — übersprungen")
+        data_file = meta_path.parent / kandidat.name
+    if not data_file.exists():
+        print(f"  ! Datei fehlt: {roh} — übersprungen")
         return False
 
+    pfad = _key(meta, "pfad", "path")
     size_kb = data_file.stat().st_size / 1024
-    dest = f"{meta['bucket']}/{meta['pfad']}"
+    dest = f"{meta['bucket']}/{pfad}"
     print(f"  → {data_file.name} ({size_kb:.0f} KB) → {dest}")
     if not APPLY:
         return False
@@ -84,16 +104,18 @@ def flush_binary(meta_path: Path, meta: dict) -> bool:
 
     db = meta.get("db")
     if db:
-        url = public_url(meta["bucket"], meta["pfad"])
+        tabelle = _key(db, "tabelle", "table")
+        spalte = _key(db, "spalte", "column")
+        url = _key(meta, "public_url") or public_url(meta["bucket"], pfad)
         r2 = requests.patch(
-            f"{SUPABASE_URL}/rest/v1/{db['tabelle']}?id=eq.{db['id']}",
+            f"{SUPABASE_URL}/rest/v1/{tabelle}?id=eq.{db['id']}",
             headers={**_headers("application/json"), "Prefer": "return=minimal"},
-            json={db["spalte"]: url}, timeout=30,
+            json={spalte: url}, timeout=30,
         )
         if not r2.ok:
             print(f"  ! DB-Update fehlgeschlagen ({r2.status_code}): {r2.text[:160]}")
             return False
-        print(f"  ✓ hochgeladen + {db['tabelle']}.{db['spalte']} gesetzt")
+        print(f"  ✓ hochgeladen + {tabelle}.{spalte} gesetzt")
     else:
         print("  ✓ hochgeladen (kein DB-Feld zu setzen)")
     return True
@@ -134,10 +156,14 @@ def main() -> None:
     done = 0
     for meta_path in metas:
         meta = json.loads(meta_path.read_text())
-        print(f"{meta_path.parent.name}/{meta_path.stem}  (von {meta.get('agent','?')},"
+        print(f"{meta_path.parent.name}/{meta_path.stem}  (von {_key(meta,'agent','created_by',default='?')},"
               f" Grund: {meta.get('grund','?')})")
         if flush_binary(meta_path, meta):
-            for f in (meta_path, meta_path.parent / meta["datei"]):
+            roh = Path(_key(meta, "datei", "local_file", "file"))
+            nutzdatei = roh if roh.is_absolute() else (ROOT / roh)
+            if not nutzdatei.exists():
+                nutzdatei = meta_path.parent / roh.name
+            for f in (meta_path, nutzdatei):
                 shutil.move(str(f), str(DONE / f.name))
             done += 1
 

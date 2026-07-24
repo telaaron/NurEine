@@ -242,7 +242,8 @@
 				{#if heroStory}
 					<div class="mt-3 flex items-start gap-4">
 						{#if heroStory.imageUrl}
-							<img src={heroStory.imageUrl} alt="" class="w-16 h-16 rounded-[10px] object-cover shrink-0" style="border: 1px solid var(--color-rule);" />
+							<!-- 64px-Thumb über den /img-Proxy statt Supabase-Original (Egress). -->
+							<img src={`${base}/img?url=${encodeURIComponent(heroStory.imageUrl)}&w=128`} alt="" class="w-16 h-16 rounded-[10px] object-cover shrink-0" style="border: 1px solid var(--color-rule);" />
 						{/if}
 						<div class="min-w-0">
 							<p class="display text-base" style="color: var(--color-ink);">{heroStory.title}</p>

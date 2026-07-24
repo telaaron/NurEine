@@ -37,13 +37,6 @@ def _mark_clause_breaks(words, text):
         if idx < 0:
             w["brk"] = False
             w["sbrk"] = False
-            continue
-        after = idx + len(tok)
-        cursor = after
-        # Whitespace überspringen ist NICHT gewollt — ein Satzzeichen klebt direkt am Wort.
-        nxt = low[after] if after < len(low) else ""
-        w["brk"] = nxt in CLAUSE_END
-        w["sbrk"] = nxt in SENTENCE_END
 
 
 async def synth(text: str, voice: str, rate: str, out_mp3: str, out_words: str) -> None:

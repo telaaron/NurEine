@@ -33,8 +33,8 @@
 	   gedeckter. Nicht wegklickbar — die Info ist relevant, solange sie stimmt. */
 	.wrap {
 		width: 100%;
-		background: var(--color-surface-ink);
-		color: var(--color-on-ink);
+		background: var(--color-ink);
+		color: var(--color-paper);
 	}
 	.inner {
 		margin: 0 auto;

@@ -185,7 +185,7 @@
 				<p class="serif text-lg" style="color: var(--color-ink-soft);">Nichts gefunden{#if query}{' '}für „{query}"{/if}.</p>
 				<p class="mt-2 text-sm" style="color: var(--color-muted);">Versuch ein anderes Stichwort, einen Ort oder eine Kategorie.</p>
 				{#if query}
-					<button type="button" onclick={() => (query = '')} class="mt-4 px-4 py-2 rounded-full text-sm font-medium" style="background: var(--color-surface-ink); color: var(--color-on-ink);">Suche zurücksetzen</button>
+					<button type="button" onclick={() => (query = '')} class="mt-4 px-4 py-2 rounded-full text-sm font-medium" style="background: var(--color-ink); color: var(--color-paper);">Suche zurücksetzen</button>
 				{/if}
 			{/if}
 		</div>

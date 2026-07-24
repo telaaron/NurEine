@@ -51,3 +51,11 @@ build-app/
 ios-native/**/xcuserdata/
 ios-native/**/*.xcuserstate
 ios-native/**/DerivedData/
+
+# Agenten-Spool: lokale Zwischenablage, wenn Supabase/Storage hakt (Quota, Sperre,
+# Offline). Die Agenten arbeiten weiter und parken ihr Ergebnis hier; der
+# Nachtrag-Lauf lädt es später hoch. Gehört NIE ins Repo (Binärdaten, flüchtig).
+.agent-spool/*
+# ...aber README + Ordner-Gerüst gehören ins Repo (sonst kennt kein Agent das Schema)
+!.agent-spool/README.md
+!.agent-spool/.gitkeep

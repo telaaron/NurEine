@@ -222,7 +222,7 @@
 						<a
 							href={base + '/newsletter'}
 							class="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium transition-transform hover:-translate-y-0.5"
-							style="background: var(--color-surface-ink); color: var(--color-on-ink);"
+							style="background: var(--color-ink); color: var(--color-paper);"
 						>
 							Newsletter abonnieren — wir melden uns, wenn's weitergeht →
 						</a>

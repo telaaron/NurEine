@@ -47,6 +47,7 @@
 		"@resvg/resvg-js": "^2.6.2",
 		"@supabase/supabase-js": "^2.105.3",
 		"@vercel/analytics": "^2.0.1",
+		"heroicons-svelte": "^2.0.2",
 		"leaflet": "^1.9.4",
 		"satori": "^0.26.0",
 		"satori-html": "^0.3.2",

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { TIERS, STEPS, PILOT_LINE } from '$lib/b2b-content';
 	import B2BForm from '$lib/components/B2BForm.svelte';
+	import Icon from '$lib/components/Icon.svelte';
+	import { ComputerDesktopIcon, EnvelopeIcon, HomeModernIcon, SwatchIcon } from 'heroicons-svelte/24/outline';
 </script>
 
 <svelte:head>
@@ -61,10 +63,10 @@
 	<section class="formate">
 		<h2>Ein Feed, überall wo eure Leute hinschauen.</h2>
 		<div class="format-grid">
-			<div class="format"><span class="f-icon">▢</span><h4>Office-Screens</h4><p>Kantine, Empfang, Flur.</p></div>
-			<div class="format"><span class="f-icon">✉</span><h4>Newsletter</h4><p>Als Baustein in eurem internen Brief.</p></div>
-			<div class="format"><span class="f-icon">⌂</span><h4>Intranet</h4><p>Widget auf der Startseite.</p></div>
-			<div class="format"><span class="f-icon">◈</span><h4>Whitelabel</h4><p>Euer Branding, eure Farben.</p></div>
+			<div class="format"><span class="f-icon"><Icon icon={ComputerDesktopIcon} size="1.6rem" /></span><h4>Office-Screens</h4><p>Kantine, Empfang, Flur.</p></div>
+			<div class="format"><span class="f-icon"><Icon icon={EnvelopeIcon} size="1.6rem" /></span><h4>Newsletter</h4><p>Als Baustein in eurem internen Brief.</p></div>
+			<div class="format"><span class="f-icon"><Icon icon={HomeModernIcon} size="1.6rem" /></span><h4>Intranet</h4><p>Widget auf der Startseite.</p></div>
+			<div class="format"><span class="f-icon"><Icon icon={SwatchIcon} size="1.6rem" /></span><h4>Whitelabel</h4><p>Euer Branding, eure Farben.</p></div>
 		</div>
 	</section>
 

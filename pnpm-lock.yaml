@@ -47,6 +47,9 @@ importers:
       '@vercel/analytics':
         specifier: ^2.0.1
         version: 2.0.1(@sveltejs/kit@2.59.1(@sveltejs/vite-plugin-svelte@7.1.0(svelte@5.55.5)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)))(svelte@5.55.5)(typescript@6.0.3)(vite@8.0.10(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.21.0)))(svelte@5.55.5)
+      heroicons-svelte:
+        specifier: ^2.0.2
+        version: 2.0.2(svelte@5.55.5)
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4
@@ -1482,6 +1485,11 @@ packages:
 
   graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
+
+  heroicons-svelte@2.0.2:
+    resolution: {integrity: sha512-F0eMj7qQbEAd9NsTf/q6Hgn89zBT7Apf1XDOQkSHApK2A35Q/46WDiTR9ofTECUvVfSqb+XzfLDKmXDllasJ9A==}
+    peerDependencies:
+      svelte: ^4.0.0 || ^5.0.0-next || ^5.0.0
 
   hex-rgb@4.3.0:
     resolution: {integrity: sha512-Ox1pJVrDCyGHMG9CFg1tmrRUMRPRsAWYc/PinY0XzJU4K7y7vjNoLKIQ7BR5UJMCxNN8EM1MNDmHWA/B3aZUuw==}
@@ -3121,6 +3129,10 @@ snapshots:
       path-scurry: 2.0.2
 
   graceful-fs@4.2.11: {}
+
+  heroicons-svelte@2.0.2(svelte@5.55.5):
+    dependencies:
+      svelte: 5.55.5
 
   hex-rgb@4.3.0: {}
 

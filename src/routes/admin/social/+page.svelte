@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CameraIcon, ChatBubbleLeftRightIcon, CheckIcon, DevicePhoneMobileIcon } from 'heroicons-svelte/24/outline';
 	let { data } = $props();
 	// UI-Felder (_dirty, _hashtagsStr) sind clientseitig — erweiterter Typ.
 	type UiPost = Omit<(typeof data.posts)[number], 'status'> & { status: string; _dirty?: boolean; _hashtagsStr?: string };
@@ -152,7 +154,7 @@
 
 <!-- IG-Stories: automatisch, kurze Eilmeldung (1 Bild, keine Slides, kein Approval) -->
 <div class="mt-6 paper rounded-[10px] p-4" style="border: 1px solid var(--color-rule);">
-	<p class="text-xs uppercase tracking-wider mb-1" style="color: var(--color-amber); font-family: var(--font-mono);">📱 IG-Stories — automatisch</p>
+	<p class="text-xs uppercase tracking-wider mb-1" style="color: var(--color-amber); font-family: var(--font-mono);"><Icon icon={DevicePhoneMobileIcon} size="1rem" class="inline mr-1" /> IG-Stories — automatisch</p>
 	<p class="text-xs mb-3" style="color: var(--color-muted);">Jede frische Story läuft über den Tag verteilt als 9:16-Story (1 Bild, kurze Zusammenfassung). Keine Slides, kein Freigeben nötig.</p>
 	<div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
 		<div><div class="text-2xl font-semibold" style="color: var(--color-ink);">{data.storyStats.today}</div><div class="text-xs" style="color: var(--color-muted);">heute gepostet</div></div>
@@ -180,7 +182,7 @@
 		<div class="flex flex-col gap-2">
 			{#each replies as rep (rep.id)}
 				<div class="text-sm p-3 rounded" style="background: var(--color-paper); border: 1px solid var(--color-rule);">
-					<div style="color: var(--color-ink-soft);">💬 {rep.comment_text}</div>
+					<div style="color: var(--color-ink-soft);"><Icon icon={ChatBubbleLeftRightIcon} size="1rem" class="inline mr-1" /> {rep.comment_text}</div>
 					{#if rep.reply_text}
 						<div class="mt-1" style="color: var(--color-sage);">↳ {rep.reply_text}</div>
 						{#if rep.status === 'pending'}
@@ -191,7 +193,15 @@
 									disabled={busy === rep.id} onclick={() => replyAction(rep.id, 'reply-reject')}>Verwerfen</button>
 							</div>
 						{:else}
-							<div class="mt-1 text-xs" style="color: var(--color-faint);">{rep.status === 'posted' ? '✓ gepostet' : rep.status === 'rejected' ? 'verworfen' : rep.status}</div>
+							<div class="mt-1 text-xs" style="color: var(--color-faint);">
+								{#if rep.status === 'posted'}
+									<Icon icon={CheckIcon} size="0.75rem" class="inline mr-0.5" /> gepostet
+								{:else if rep.status === 'rejected'}
+									verworfen
+								{:else}
+									{rep.status}
+								{/if}
+							</div>
 						{/if}
 					{:else}
 						<div class="mt-1" style="color: var(--color-faint);">↳ übersprungen: {rep.skipped_reason}</div>
@@ -204,7 +214,7 @@
 	{/if}
 </div>
 
-<h2 class="mt-8 text-xs uppercase tracking-wider" style="color: var(--color-amber); font-family: var(--font-mono);">📷 Feed-Posts (Carousel) — Freigabe-Queue</h2>
+<h2 class="mt-8 text-xs uppercase tracking-wider" style="color: var(--color-amber); font-family: var(--font-mono);"><Icon icon={CameraIcon} size="1rem" class="inline mr-1" /> Feed-Posts (Carousel) — Freigabe-Queue</h2>
 <div class="mt-3 flex flex-col gap-4">
 	{#each items as p (p.id)}
 		<div class="paper rounded-[10px] p-5" style="border: 1px solid var(--color-rule); box-shadow: var(--shadow-sm);">

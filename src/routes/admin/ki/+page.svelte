@@ -1,4 +1,7 @@
 <script lang="ts">
+	import Icon from '$lib/components/Icon.svelte';
+	import { CloudIcon, ComputerDesktopIcon } from 'heroicons-svelte/24/outline';
+
 	let { data } = $props();
 
 	const AGENT_LABELS: Record<string, string> = {
@@ -76,8 +79,15 @@
 					<span class="font-semibold text-sm" style="color: var(--color-ink);">{agentLabel(r.agent)}</span>
 					<span class="text-xs px-2 py-0.5 rounded-full" style="background: {statusColor(r.status)}22; color: {statusColor(r.status)};">{r.status}</span>
 				</div>
-				<div class="mt-1 text-xs" style="color: var(--color-muted);">
-					{r.layer === 'local' ? '🖥 lokal' : '☁ cloud'} · {fmtTime(r.started_at)} {dur(r.started_at, r.finished_at)}
+				<div class="mt-1 text-xs flex items-center gap-1" style="color: var(--color-muted);">
+					{#if r.layer === 'local'}
+						<Icon icon={ComputerDesktopIcon} size="1rem" label="lokal" />
+						<span>lokal</span>
+					{:else}
+						<Icon icon={CloudIcon} size="1rem" label="cloud" />
+						<span>cloud</span>
+					{/if}
+					<span>· {fmtTime(r.started_at)} {dur(r.started_at, r.finished_at)}</span>
 				</div>
 				{#if r.summary}<div class="mt-2 text-xs leading-snug" style="color: var(--color-ink-soft);">{r.summary}</div>{/if}
 				{#if r.error}<div class="mt-2 text-xs" style="color: var(--color-rose);">{r.error}</div>{/if}

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CheckIcon, XMarkIcon } from 'heroicons-svelte/24/outline';
 
 	let { data } = $props();
 	const { subscribers, stats } = $derived(data);
@@ -224,7 +226,11 @@
 						</td>
 						<td class="p-3 text-center">
 							<span style="color: {sub.confirmed ? 'var(--color-sage)' : 'var(--color-muted)'};">
-								{sub.confirmed ? '✓' : '–'}
+								{#if sub.confirmed}
+									<Icon icon={CheckIcon} size="1rem" />
+								{:else}
+									–
+								{/if}
 							</span>
 						</td>
 						<td class="p-3 text-xs" style="color: var(--color-muted);">{sub.region || '–'}</td>
@@ -240,7 +246,11 @@
 								style="color: #dc2626; opacity: {deleting.has(sub.id) ? 0.5 : 0.6};"
 								title="Löschen"
 							>
-								{deleting.has(sub.id) ? '…' : '✕'}
+								{#if deleting.has(sub.id)}
+									…
+								{:else}
+									<Icon icon={XMarkIcon} size="1rem" />
+								{/if}
 							</button>
 						</td>
 					</tr>

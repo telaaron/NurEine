@@ -1,0 +1,15 @@
+{
+  "bucket": "story_images",
+  "path": "story-images/kindergeld-automatisch-aufs-konto-b302f8171ca2.jpg",
+  "content_type": "image/jpeg",
+  "public_url": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/story-images/kindergeld-automatisch-aufs-konto-b302f8171ca2.jpg",
+  "local_file": ".agent-spool/bilder/20260719_kindergeld.jpg",
+  "db": {
+    "table": "nureine_stories",
+    "id": "88728a17-47e6-4dff-98ce-12eb41b70a56",
+    "column": "image_url"
+  },
+  "created_by": "redaktion",
+  "created_at": "2026-07-19T02:26:09.483673Z",
+  "note": "Perle 19.07 — anatomie-sicher (kein Gesicht/Hand), best-of-4, <150KB JPEG"
+}

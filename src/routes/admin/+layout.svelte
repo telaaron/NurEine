@@ -1,6 +1,23 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { page } from '$app/stores';
+	import Icon from '$lib/components/Icon.svelte';
+	import {
+		ArrowLeftIcon,
+		ArrowRightOnRectangleIcon,
+		Bars3Icon,
+		BriefcaseIcon,
+		CurrencyEuroIcon,
+		DocumentTextIcon,
+		HeartIcon,
+		InboxIcon,
+		MagnifyingGlassIcon,
+		PaperAirplaneIcon,
+		ShareIcon,
+		SpeakerWaveIcon,
+		Squares2x2Icon,
+		UsersIcon
+	} from 'heroicons-svelte/24/outline';
 
 	let { children, data } = $props();
 
@@ -39,20 +56,29 @@
 </script>
 
 {#snippet icon(name: string)}
-	<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-		{#if name === 'grid'}<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-		{:else if name === 'doc'}<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-		{:else if name === 'search'}<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-		{:else if name === 'inbox'}<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
-		{:else if name === 'share'}<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-		{:else if name === 'users'}<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-		{:else if name === 'briefcase'}<rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-		{:else if name === 'send'}<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-		{:else if name === 'volume'}<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-		{:else if name === 'coins'}<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/>
-			{:else if name === 'heart'}<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.51 4.04 3 5.5l7 7Z"/>
-		{/if}
-	</svg>
+	{#if name === 'grid'}
+		<Icon icon={Squares2x2Icon} size="1rem" />
+	{:else if name === 'doc'}
+		<Icon icon={DocumentTextIcon} size="1rem" />
+	{:else if name === 'search'}
+		<Icon icon={MagnifyingGlassIcon} size="1rem" />
+	{:else if name === 'inbox'}
+		<Icon icon={InboxIcon} size="1rem" />
+	{:else if name === 'share'}
+		<Icon icon={ShareIcon} size="1rem" />
+	{:else if name === 'users'}
+		<Icon icon={UsersIcon} size="1rem" />
+	{:else if name === 'briefcase'}
+		<Icon icon={BriefcaseIcon} size="1rem" />
+	{:else if name === 'send'}
+		<Icon icon={PaperAirplaneIcon} size="1rem" />
+	{:else if name === 'volume'}
+		<Icon icon={SpeakerWaveIcon} size="1rem" />
+	{:else if name === 'coins'}
+		<Icon icon={CurrencyEuroIcon} size="1rem" />
+	{:else if name === 'heart'}
+		<Icon icon={HeartIcon} size="1rem" />
+	{/if}
 {/snippet}
 
 {#snippet navContent()}
@@ -134,7 +160,7 @@
 		<a href={base + '/'} class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors" style="color: var(--color-ink-soft);"
 			onmouseenter={(e) => { e.currentTarget.style.background = 'var(--color-canvas-soft)'; }}
 			onmouseleave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
-			<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+			<Icon icon={ArrowLeftIcon} size="1rem" />
 			Zur Website
 		</a>
 		<button type="button"
@@ -142,7 +168,7 @@
 			class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors" style="color: var(--color-rose);"
 			onmouseenter={(e) => { e.currentTarget.style.background = 'var(--color-rose-tint)'; }}
 			onmouseleave={(e) => { e.currentTarget.style.background = 'transparent'; }}>
-			<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+			<Icon icon={ArrowRightOnRectangleIcon} size="1rem" />
 			Abmelden
 		</button>
 	</div>
@@ -167,7 +193,7 @@
 		<!-- Mobile top bar -->
 		<div class="lg:hidden flex items-center gap-3 px-4 py-3 border-b sticky top-0 z-30" style="background: var(--color-paper); border-color: var(--color-rule);">
 			<button type="button" onclick={() => (mobileOpen = true)} aria-label="Menü" style="color: var(--color-ink);">
-				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+				<Icon icon={Bars3Icon} size="1.375rem" label="Menü" />
 			</button>
 			<span class="display text-base" style="color: var(--color-ink); font-weight: 600;">NurEine Cockpit</span>
 		</div>

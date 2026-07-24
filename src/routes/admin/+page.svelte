@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { formatDate, relTime } from '$lib/utils';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CheckIcon, SpeakerWaveIcon, XMarkIcon } from 'heroicons-svelte/24/outline';
 
 	let { data } = $props();
 	const { totalStories, categories, subscribers, heroStory, b2bStats, deliveryLog, funnel } = $derived(data);
@@ -450,8 +452,13 @@
 	</div>
 	<div class="mt-4 flex items-center gap-3 flex-wrap">
 		<button type="button" disabled={audioLoading || !heroStory} onclick={testAudio}
-			class="px-5 py-2.5 rounded-full text-sm font-medium disabled:opacity-50" style="background: var(--color-amber); color: var(--color-paper);">
-			{audioLoading ? 'Generiere…' : '🔊 Audio generieren'}
+			class="px-5 py-2.5 rounded-full text-sm font-medium disabled:opacity-50 flex items-center gap-2" style="background: var(--color-amber); color: var(--color-paper);">
+			{#if audioLoading}
+				<span>Generiere…</span>
+			{:else}
+				<Icon icon={SpeakerWaveIcon} size="1rem" />
+				<span>Audio generieren</span>
+			{/if}
 		</button>
 		<button type="button" disabled={healthLoading} onclick={checkHealth}
 			class="px-4 py-2.5 rounded-full text-sm font-medium disabled:opacity-50" style="background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);">
@@ -470,7 +477,7 @@
 			{#if health.keys}
 				<div class="mt-3 flex flex-wrap gap-x-4 gap-y-1" style="font-family: var(--font-mono); color: var(--color-faint);">
 					{#each Object.entries(health.keys) as [k, v]}
-						<span>{k}: <span style="color: {v === true ? 'var(--color-sage)' : v === false ? 'var(--color-rose)' : 'var(--color-muted)'};">{v === true ? '✓' : v === false ? '✗ fehlt' : v}</span></span>
+						<span>{k}: <span style="color: {v === true ? 'var(--color-sage)' : v === false ? 'var(--color-rose)' : 'var(--color-muted)'};" class="inline-flex items-center gap-1">{#if v === true}<Icon icon={CheckIcon} size="0.875rem" />{:else if v === false}<Icon icon={XMarkIcon} size="0.875rem" /><span>fehlt</span>{:else}{v}{/if}</span></span>
 					{/each}
 				</div>
 			{/if}

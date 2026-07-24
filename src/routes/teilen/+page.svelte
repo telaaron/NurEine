@@ -1,19 +1,21 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { track } from '$lib/track';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CameraIcon, ChatBubbleLeftRightIcon, CheckIcon, HandThumbUpIcon, LinkIcon, PaperAirplaneIcon } from 'heroicons-svelte/24/outline';
 
 	let { data } = $props();
 
 	type Platform = 'whatsapp' | 'instagram' | 'threads' | 'facebook' | 'x' | 'link';
 	type Audience = 'allgemein' | '60plus' | 'familie' | 'skeptiker' | 'klima';
 
-	const PLATFORMS: { id: Platform; label: string; icon: string }[] = [
-		{ id: 'whatsapp', label: 'WhatsApp', icon: '💬' },
-		{ id: 'instagram', label: 'Instagram', icon: '📷' },
-		{ id: 'threads', label: 'Threads', icon: '🧵' },
-		{ id: 'facebook', label: 'Facebook', icon: '👍' },
-		{ id: 'x', label: 'X', icon: '𝕏' },
-		{ id: 'link', label: 'Nur Link', icon: '🔗' }
+	const PLATFORMS: { id: Platform; label: string; IconComponent: any }[] = [
+		{ id: 'whatsapp', label: 'WhatsApp', IconComponent: ChatBubbleLeftRightIcon },
+		{ id: 'instagram', label: 'Instagram', IconComponent: CameraIcon },
+		{ id: 'threads', label: 'Threads', IconComponent: PaperAirplaneIcon },
+		{ id: 'facebook', label: 'Facebook', IconComponent: HandThumbUpIcon },
+		{ id: 'x', label: 'X', IconComponent: LinkIcon },
+		{ id: 'link', label: 'Nur Link', IconComponent: LinkIcon }
 	];
 	const AUDIENCES: { id: Audience; label: string; hint: string }[] = [
 		{ id: 'allgemein', label: 'Allgemein', hint: 'Für alle' },
@@ -99,9 +101,10 @@
 		<div class="flex flex-wrap gap-2">
 			{#each PLATFORMS as p}
 				<button type="button" onclick={() => (platform = p.id)}
-					class="px-4 py-2.5 rounded-full text-sm font-medium transition-all"
+					class="px-4 py-2.5 rounded-full text-sm font-medium transition-all inline-flex items-center gap-1.5"
 					style={platform === p.id ? 'background: var(--color-surface-ink); color: var(--color-on-ink);' : 'background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);'}>
-					<span style="margin-right:6px;">{p.icon}</span>{p.label}
+					<Icon icon={p.IconComponent} size="1rem" />
+					{p.label}
 				</button>
 			{/each}
 		</div>
@@ -161,15 +164,23 @@
 			<div class="p-4 rounded-[10px] whitespace-pre-line text-sm leading-relaxed" style="background: var(--color-paper); border: 1px solid var(--color-rule); color: var(--color-ink-soft); font-family: var(--font-serif);">{captions[platform]()}</div>
 			<button type="button" onclick={() => copy(captions[platform](), 'cap')}
 				class="mt-2 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium" style="background: {copied === 'cap' ? 'var(--color-sage)' : 'var(--color-amber)'}; color: var(--color-on-ink);">
-				{copied === 'cap' ? 'Kopiert ✓' : 'Text kopieren'}
+				{#if copied === 'cap'}
+					<Icon icon={CheckIcon} size="1rem" />
+					Kopiert
+				{:else}
+					Text kopieren
+				{/if}
 			</button>
 
 			<p class="text-xs uppercase tracking-[0.16em] mb-2 mt-6" style="color: var(--color-muted); font-family: var(--font-mono);">Dein Link</p>
 			<div class="flex items-center gap-2">
 				<code class="flex-1 px-3 py-2 rounded-[10px] text-sm truncate" style="background: var(--color-paper); border: 1px solid var(--color-rule); color: var(--color-ink); font-family: var(--font-mono);">{link}</code>
 				<button type="button" onclick={() => copy(link, 'link')}
-					class="px-4 py-2 rounded-full text-sm font-medium shrink-0" style="background: {copied === 'link' ? 'var(--color-sage)' : 'var(--color-surface-ink)'}; color: var(--color-on-ink);">
-					{copied === 'link' ? '✓' : 'Kopieren'}
+					class="px-4 py-2 rounded-full text-sm font-medium shrink-0 inline-flex items-center gap-2" style="background: {copied === 'link' ? 'var(--color-sage)' : 'var(--color-surface-ink)'}; color: var(--color-on-ink);">
+					{#if copied === 'link'}
+						<Icon icon={CheckIcon} size="1rem" />
+					{/if}
+					{copied === 'link' ? 'Fertig' : 'Kopieren'}
 				</button>
 			</div>
 		</div>

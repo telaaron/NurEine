@@ -3,6 +3,8 @@
 	import { formatDate, inline, sections, toneStyles } from '$lib/utils';
 	import { track } from '$lib/track';
 	import { recordRead, weekStats, type WeekStats } from '$lib/readingStreak';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CheckIcon, ClipboardIcon, MagnifyingGlassIcon, PlayIcon, ShareIcon } from 'heroicons-svelte/24/outline';
 	import StoryCard from '$lib/components/StoryCard.svelte';
 	import ShareBar from '$lib/components/ShareBar.svelte';
 	import InlineNewsletter from '$lib/components/InlineNewsletter.svelte';
@@ -215,9 +217,7 @@
 				<!-- Reporter-Transparenz: welcher Beat hat die Story gefunden + Quellentyp. -->
 				<div class="mt-5 inline-flex items-center gap-2 rise rise-d3 px-3 py-1.5 rounded-full text-xs"
 					style="background: {tone.bg}; color: {tone.fg}; border: 1px solid {tone.ring};">
-					<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-						<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-					</svg>
+					<Icon icon={MagnifyingGlassIcon} size="0.8125rem" />
 					<span style="font-weight: 600;">Beat: {beatLabel}</span>
 					{#if sourceTypeLabel}<span style="opacity: 0.7;">· {sourceTypeLabel}</span>{/if}
 				</div>
@@ -272,9 +272,9 @@
 							{#if audioState === 'loading'}
 								<span class="inline-block w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" aria-hidden="true"></span>
 							{:else if audioState === 'playing'}
-								<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+								<Icon icon={PlayIcon} size="1.125rem" />
 							{:else}
-								<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="margin-left:2px;"><polygon points="6 4 20 12 6 20 6 4"/></svg>
+								<Icon icon={PlayIcon} size="1.125rem" style="margin-left:2px;" />
 							{/if}
 						</button>
 						<div class="flex flex-col">
@@ -406,17 +406,17 @@
 				<button type="button" onclick={nativeShare}
 					class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.97]"
 					style="background: var(--color-amber); color: var(--color-on-accent);">
-					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+					<Icon icon={ShareIcon} size="0.9375rem" />
 					Weitergeben
 				</button>
 				<button type="button" onclick={copyShareLine}
 					class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all active:scale-[0.97]"
 					style="background: {shareCopied ? 'var(--color-sage)' : 'var(--color-surface-ink)'}; color: var(--color-on-ink);">
 					{#if shareCopied}
-						<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+						<Icon icon={CheckIcon} size="0.9375rem" />
 						Kopiert!
 					{:else}
-						<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+						<Icon icon={ClipboardIcon} size="0.9375rem" />
 						Satz + Link kopieren
 					{/if}
 				</button>

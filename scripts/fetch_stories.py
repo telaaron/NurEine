@@ -376,8 +376,10 @@ def normalize_category(raw: Any) -> str:
 # Summe der Per-Source-Limits darüber liegen — dann greift dieser Deckel zuerst und
 # der Lauf bleibt unter dem Timeout (Runs wurden sonst gecancelt).
 MAX_ARTICLES_PER_RUN = 110
-# Pause between API calls (seconds) to stay within rate limits
-API_DELAY_SECONDS = 1.5
+# Pause between API calls (seconds) to stay within rate limits.
+# Im --export/--import-Routinemodus gibt es keinen externen LLM-Call → die Pause
+# ist reine Wartezeit und kann per env auf 0 gesetzt werden (FETCH_API_DELAY).
+API_DELAY_SECONDS = float(os.environ.get("FETCH_API_DELAY", "1.5"))
 # Extra delay after image generation
 IMAGE_API_DELAY_SECONDS = 1.0
 
@@ -551,6 +553,41 @@ def supabase_post(table: str, data: dict[str, Any]) -> dict[str, Any]:
     if not resp.text:
         return {}
     return resp.json()
+
+
+def _sql_quote(value: Any) -> str:
+    """Render a Python value as a Postgres SQL literal for the spool INSERT."""
+    if value is None:
+        return "NULL"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (int, float)):
+        return str(value)
+    if isinstance(value, (dict, list)):
+        return "'" + json.dumps(value, ensure_ascii=False).replace("'", "''") + "'::jsonb"
+    return "'" + str(value).replace("'", "''") + "'"
+
+
+def spool_story_sql(record: dict[str, Any], spool_path: str) -> None:
+    """Append an INSERT for one story to the SQL spool (Supabase-402-Fallback).
+
+    Reuses the EXACT record the normal insert path built (all gates/coercions
+    already applied), so the parked SQL is faithful. ON CONFLICT auf source_url
+    macht den Nachtrag idempotent, falls die Story bis dahin schon existiert.
+    """
+    cols = list(record.keys())
+    vals = ", ".join(_sql_quote(record[c]) for c in cols)
+    col_list = ", ".join(cols)
+    # Kein UNIQUE-Constraint auf source_url in der DB → statt ON CONFLICT ein
+    # WHERE-NOT-EXISTS-Guard: idempotent, überspringt bereits vorhandene Quellen.
+    src = _sql_quote(record.get("source_url"))
+    stmt = (
+        f"INSERT INTO nureine_stories ({col_list})\n"
+        f"SELECT {vals}\n"
+        f"WHERE NOT EXISTS (SELECT 1 FROM nureine_stories WHERE source_url = {src});\n\n"
+    )
+    with open(spool_path, "a", encoding="utf-8") as fh:
+        fh.write(stmt)
 
 
 def supabase_upload_image(image_bytes: bytes, filename: str, content_type: str = "image/jpeg") -> str | None:
@@ -1685,7 +1722,13 @@ def composite_on_canvas(image_bytes: bytes) -> bytes:
 # Main
 # ---------------------------------------------------------------------------
 def load_active_sources() -> list[dict[str, Any]]:
-    """Load all active RSS sources from Supabase."""
+    """Load all active RSS sources from Supabase.
+
+    Fallback (Storage-402-Sperre): Wenn die REST-API gesperrt ist, kann die
+    Quellenliste nicht geladen werden — dann lädt der Lauf sie aus einer lokalen
+    JSON-Datei (env FETCH_SOURCES_FILE), damit Fetch+Analyse offline weiterlaufen
+    (Team-Regel: Ablage darf verzögern, nicht vernichten).
+    """
     params = {"active": "eq.true", "select": "*"}
     try:
         sources = supabase_get("nureine_rss_sources", params=params)
@@ -1693,6 +1736,17 @@ def load_active_sources() -> list[dict[str, Any]]:
         return sources
     except requests.RequestException as exc:
         log.error("Failed to load RSS sources from Supabase: %s", exc)
+        fallback = os.environ.get("FETCH_SOURCES_FILE")
+        if fallback and os.path.exists(fallback):
+            try:
+                with open(fallback, encoding="utf-8") as fh:
+                    data = json.load(fh)
+                sources = [s for s in data if s.get("active", True)] if isinstance(data, list) else []
+                log.warning("Fallback: %d Quelle(n) aus lokaler Datei %s geladen (Supabase gesperrt).",
+                            len(sources), fallback)
+                return sources
+            except Exception as fexc:  # noqa: BLE001
+                log.error("Fallback-Quellendatei %s unlesbar: %s", fallback, fexc)
         return []
 
 
@@ -2066,6 +2120,10 @@ def run() -> None:
             image_worthy = _img_impact >= IMAGE_GATE_MIN_IMPACT or (
                 IMAGE_GATE_INCLUDE_IG_OK and _img_ig_ok
             )
+            # Spool-Modus (Supabase gesperrt): Storage-Upload unmöglich → KEIN Bild.
+            # Die Bild-Regie bebildert die Perlen später ohnehin separat.
+            if os.environ.get("FETCH_SQL_SPOOL"):
+                image_worthy = False
 
             if IMAGE_GENERATION_ENABLED and image_worthy:
                 image_prompt = result.get("image_prompt", "")
@@ -2180,6 +2238,27 @@ def run() -> None:
                 except (ValueError, TypeError, AttributeError):
                     pass
 
+            _sql_spool = os.environ.get("FETCH_SQL_SPOOL")
+            if _sql_spool:
+                # Supabase-402-Fallback: Story nicht per REST inserten, sondern als
+                # INSERT-SQL parken. Der Nachtrag lädt sie später ein.
+                try:
+                    spool_story_sql(story_record, _sql_spool)
+                    stories_added += 1
+                    log.info(
+                        "  SPOOLED: %s [%s — %s] impact=%s",
+                        story_record.get("title", ""),
+                        story_record.get("category", ""),
+                        story_record.get("region", ""),
+                        story_record.get("impact_score"),
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    log.error("  Failed to spool story '%s': %s", story_record.get("title", ""), exc)
+                    errors += 1
+                    if first_error is None:
+                        first_error = str(exc)
+                time.sleep(API_DELAY_SECONDS)
+                continue
             try:
                 supabase_post("nureine_stories", story_record)
                 stories_added += 1

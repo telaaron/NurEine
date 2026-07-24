@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import Icon from '$lib/components/Icon.svelte';
+	import { SpeakerWaveIcon } from 'heroicons-svelte/24/outline';
 
 	let { data } = $props();
 
@@ -176,7 +178,14 @@
 			<button type="button" onclick={() => (mode = 'summary')} class="px-3 py-1.5 rounded-full text-xs font-medium" style={mode==='summary' ? 'background: var(--color-ink); color: var(--color-paper);' : 'background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);'}>Zusammenfassung</button>
 			<button type="button" onclick={() => (mode = 'full')} class="px-3 py-1.5 rounded-full text-xs font-medium" style={mode==='full' ? 'background: var(--color-ink); color: var(--color-paper);' : 'background: var(--color-canvas-soft); color: var(--color-ink-soft); border: 1px solid var(--color-rule);'}>Ganzer Artikel</button>
 		</div>
-		<button type="button" disabled={busy || !selectedId} onclick={generate} class="px-5 py-2 rounded-full text-sm font-medium disabled:opacity-50" style="background: var(--color-amber); color: var(--color-paper);">{busy ? 'Generiere…' : '🔊 Vertonen'}</button>
+		<button type="button" disabled={busy || !selectedId} onclick={generate} class="px-5 py-2 rounded-full text-sm font-medium disabled:opacity-50 flex items-center gap-2" style="background: var(--color-amber); color: var(--color-paper);">
+			{#if busy}
+				Generiere…
+			{:else}
+				<Icon icon={SpeakerWaveIcon} label="Vertonen" />
+				Vertonen
+			{/if}
+		</button>
 	</div>
 	{#if status}<p class="mt-3 text-xs" style="color: var(--color-muted);">{status}</p>{/if}
 	{#if lastUrl}
@@ -218,9 +227,14 @@
 							</button>
 						{:else}
 							<button type="button" disabled={rowBusy === s.id} onclick={() => generateRow(s.id, 'summary')}
-								class="px-3 py-1.5 rounded-full text-xs font-medium disabled:opacity-50"
+								class="px-3 py-1.5 rounded-full text-xs font-medium disabled:opacity-50 flex items-center gap-2"
 								style="background: var(--color-amber); color: var(--color-paper);">
-								{rowBusy === s.id ? 'Generiere…' : '🔊 Zusammenfassung'}
+								{#if rowBusy === s.id}
+									Generiere…
+								{:else}
+									<Icon icon={SpeakerWaveIcon} label="Zusammenfassung" />
+									Zusammenfassung
+								{/if}
 							</button>
 							<button type="button" disabled={rowBusy === s.id} onclick={() => generateRow(s.id, 'full')}
 								class="px-3 py-1.5 rounded-full text-xs font-medium disabled:opacity-50"

@@ -1,0 +1,15 @@
+{
+  "bucket": "story_images",
+  "path": "story-images/katzenminze-lotion-muecken-uganda-e07324f522ff.jpg",
+  "content_type": "image/jpeg",
+  "public_url": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/story-images/katzenminze-lotion-muecken-uganda-e07324f522ff.jpg",
+  "local_file": ".agent-spool/bilder/20260720_katzenminze.jpg",
+  "db": {
+    "table": "nureine_stories",
+    "id": "12b78a3e-da3a-46b8-8811-ef999dd48996",
+    "column": "image_url"
+  },
+  "created_by": "redaktion",
+  "created_at": "2026-07-20T02:29:05Z",
+  "note": "Sachmotiv ohne Menschen/Haende: Katzenminze im Terracotta-Topf + Flaeschchen aetherisches Oel auf Veranda, rote Erde/gruenes Feld Uganda. Best-of-4, anatomie-sicher by construction."
+}

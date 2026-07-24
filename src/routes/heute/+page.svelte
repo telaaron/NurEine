@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { track } from '$lib/track';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CheckIcon } from 'heroicons-svelte/24/outline';
 	let { data } = $props();
 
 	// WhatsApp-Karte = die share-card (IG-Story-Stil): klare Headline + Subtitle +
@@ -98,8 +100,13 @@
 		<div class="mt-8">
 			<div class="flex items-center justify-between mb-2">
 				<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">{block.label}</span>
-				<button type="button" onclick={() => copy(block.text, block.key, block.fmt)} class="text-xs font-medium px-3 py-1.5 rounded-full" style="background: var(--color-amber); color: var(--color-on-accent);">
-					{copied === block.key ? 'Kopiert ✓' : 'Kopieren'}
+				<button type="button" onclick={() => copy(block.text, block.key, block.fmt)} class="text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5" style="background: var(--color-amber); color: var(--color-on-accent);">
+					{#if copied === block.key}
+						<span>Kopiert</span>
+						<Icon icon={CheckIcon} label="kopiert" size="1rem" />
+					{:else}
+						<span>Kopieren</span>
+					{/if}
 				</button>
 			</div>
 			<div class="p-4 rounded-xl whitespace-pre-line text-sm leading-relaxed" style="background: var(--color-paper); border:1px solid var(--color-rule); color: var(--color-ink-soft); font-family: {block.key === 'tags' ? 'var(--font-mono)' : 'var(--font-serif)'};">{block.text}</div>

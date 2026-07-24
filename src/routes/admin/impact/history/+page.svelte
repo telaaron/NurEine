@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import type { ImpactRun } from '../+page.server';
+	import Icon from '$lib/components/Icon.svelte';
+	import { ArrowLeftIcon, CheckIcon, XMarkIcon } from 'heroicons-svelte/24/outline';
 	let { data } = $props();
 	const runs = $derived(data.runs as ImpactRun[]);
 
@@ -8,8 +10,8 @@
 		return typeof r.scores?.gesamt === 'number' ? `${r.scores.gesamt}/10` : '–';
 	}
 	const verdictLabel: Record<string, string> = {
-		confirmed: 'bestätigt ✓',
-		rejected: 'verworfen ✕',
+		confirmed: 'bestätigt',
+		rejected: 'verworfen',
 		pending: 'gemessen'
 	};
 	const prLabel: Record<string, string> = { merged: 'gemerged', closed: 'verworfen' };
@@ -17,7 +19,7 @@
 
 <div class="mb-8">
 	<a href={base + '/admin/impact'} class="text-sm inline-flex items-center gap-1.5 mb-3" style="color: var(--color-ink-soft);">
-		<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+		<Icon icon={ArrowLeftIcon} size="1rem" label="Zurück" />
 		Zurück zum aktuellen Lauf
 	</a>
 	<h1 class="display text-2xl mb-1" style="color: var(--color-ink); font-weight: 600;">Impact — History</h1>
@@ -45,7 +47,7 @@
 					{#if r.root_cause}<div class="text-sm mt-2" style="color: var(--color-ink);"><strong>Ursache:</strong> {r.root_cause}</div>{/if}
 					{#if r.change_summary}<div class="text-sm" style="color: var(--color-ink-soft);"><strong>Änderung:</strong> {r.change_summary}</div>{/if}
 					{#if r.change_file}<div class="text-xs" style="color: var(--color-faint); font-family: var(--font-mono);">{r.change_file}</div>{/if}
-					{#if r.verdict}<div class="text-xs" style="color: var(--color-ink-soft);">Wirkung: {verdictLabel[r.verdict] ?? r.verdict}{#if r.verdict_note} — {r.verdict_note}{/if}</div>{/if}
+					{#if r.verdict}<div class="text-xs flex items-center gap-1" style="color: var(--color-ink-soft);">Wirkung: {#if r.verdict === 'confirmed'}<Icon icon={CheckIcon} size="0.875rem" />{:else if r.verdict === 'rejected'}<Icon icon={XMarkIcon} size="0.875rem" />{/if}{verdictLabel[r.verdict] ?? r.verdict}{#if r.verdict_note} — {r.verdict_note}{/if}</div>{/if}
 					{#if r.pr_url}<a href={r.pr_url} target="_blank" rel="noreferrer" class="text-xs mt-1" style="color: var(--color-amber); font-family: var(--font-mono);">PR ansehen →</a>{/if}
 				</div>
 			</details>

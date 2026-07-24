@@ -7,6 +7,8 @@
 	import { base } from '$app/paths';
 	import { prefs } from '$lib/app-v2/prefs.svelte';
 	import { tick as tickSound } from '$lib/app-v2/audio';
+	import Icon from '$lib/components/Icon.svelte';
+	import { SpeakerWaveIcon, SpeakerXMarkIcon } from 'heroicons-svelte/24/outline';
 
 	let { children } = $props();
 
@@ -44,15 +46,9 @@
 		onclick={onToggleSound}
 	>
 		{#if prefs.sound}
-			<!-- Lautsprecher an -->
-			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-				<path d="M11 5 6 9H2v6h4l5 4V5z" /><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 6a8 8 0 0 1 0 12" />
-			</svg>
+			<Icon icon={SpeakerWaveIcon} size="1.125rem" />
 		{:else}
-			<!-- Lautsprecher aus -->
-			<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-				<path d="M11 5 6 9H2v6h4l5 4V5z" /><path d="m22 9-6 6M16 9l6 6" />
-			</svg>
+			<Icon icon={SpeakerXMarkIcon} size="1.125rem" />
 		{/if}
 	</button>
 

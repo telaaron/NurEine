@@ -1,0 +1,15 @@
+{
+  "bucket": "story_images",
+  "path": "story-images/demenz-risiko-45-prozent-who-leitlinien-e8d28aa0e1f4.jpg",
+  "content_type": "image/jpeg",
+  "public_url": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/story-images/demenz-risiko-45-prozent-who-leitlinien-e8d28aa0e1f4.jpg",
+  "local_file": ".agent-spool/bilder/20260720_demenz.jpg",
+  "db": {
+    "table": "nureine_stories",
+    "id": "55489498-e5d0-4c2a-bffd-82bd666311be",
+    "column": "image_url"
+  },
+  "created_by": "redaktion",
+  "created_at": "2026-07-20T02:29:05Z",
+  "note": "Sachmotiv ohne Menschen/Haende: Kuechentisch mit Blutdruckmanschette, dampfendem Tee, Wanderschuhen und Kraeutertopf = die beeinflussbaren Faktoren. Best-of-4, 2. Runde (1. Runde komplett verworfen: Kalender mit verunglueckter Schrift 'Weedly'/'weakly' + sichtbares Markenlogo)."
+}

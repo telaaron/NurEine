@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { track } from '$lib/track';
+	import Icon from '$lib/components/Icon.svelte';
+	import { XMarkIcon } from 'heroicons-svelte/24/outline';
 
 	type TickerStory = { title: string; slug: string; category: string } | null;
 	let { story }: { story: TickerStory } = $props();
@@ -59,7 +61,7 @@
 					class="shrink-0 -mr-1 w-7 h-7 flex items-center justify-center rounded-full transition-opacity hover:opacity-70"
 					aria-label="Hinweis schließen"
 				>
-					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+					<Icon icon={XMarkIcon} />
 				</button>
 			</div>
 		</div>

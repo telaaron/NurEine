@@ -4,6 +4,8 @@
 	import { toneStyles } from '$lib/utils';
 	import { track } from '$lib/track';
 	import { getRef } from '$lib/referral';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CheckIcon } from 'heroicons-svelte/24/outline';
 
 	let { data } = $props();
 	const featured = $derived(data.featured);
@@ -198,8 +200,8 @@
 						'Werbefrei. Kein Algorithmus, der dich länger hält.'
 					] as point}
 						<li class="flex items-start gap-3">
-							<span class="mt-1.5 inline-flex w-5 h-5 rounded-full items-center justify-center shrink-0" style="background: var(--color-amber-tint);">
-								<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-amber)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+							<span class="mt-1.5 inline-flex w-5 h-5 rounded-full items-center justify-center shrink-0" style="background: var(--color-amber-tint); color: var(--color-amber);">
+								<Icon icon={CheckIcon} size="0.7rem" />
 							</span>
 							<span class="text-base leading-snug" style="color: var(--color-ink-soft); font-family: var(--font-serif);">{point}</span>
 						</li>

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { base } from '$app/paths';
+	import Icon from '$lib/components/Icon.svelte';
+	import { ArrowDownTrayIcon, CheckIcon, ClipboardIcon, PhotoIcon, SparklesIcon } from 'heroicons-svelte/24/outline';
 
 	let { data } = $props();
 
@@ -78,7 +80,10 @@
 									<span class="text-[0.62rem]" style="font-family: var(--font-mono); color: var(--color-faint);">Impact {card.impactScore}</span>
 								{/if}
 								{#if card.tiktokPosted}
-									<span class="text-[0.62rem] px-1.5 py-0.5 rounded-full" style="font-family: var(--font-mono); background: var(--color-sage-tint, rgba(90,143,111,0.14)); color: var(--color-sage, #5a8f6f);">✓ auf TikTok</span>
+									<span class="text-[0.62rem] px-1.5 py-0.5 rounded-full flex items-center gap-1" style="font-family: var(--font-mono); background: var(--color-sage-tint, rgba(90,143,111,0.14)); color: var(--color-sage, #5a8f6f);">
+										<Icon icon={CheckIcon} size="0.875rem" />
+										auf TikTok
+									</span>
 								{/if}
 							</div>
 							<h2 class="text-sm font-semibold leading-snug" style="color: var(--color-ink);">{card.title}</h2>
@@ -87,8 +92,9 @@
 
 					<!-- Keyword-Hinweis -->
 					{#if card.keyword}
-						<div class="mb-2 text-xs" style="color: var(--color-ink-soft);">
-							🎯 Keyword im Video: <strong style="color: var(--color-ink);">{card.keyword}</strong>
+						<div class="mb-2 text-xs flex items-center gap-1.5" style="color: var(--color-ink-soft);">
+							<Icon icon={SparklesIcon} size="1rem" />
+							<span>Keyword im Video: <strong style="color: var(--color-ink);">{card.keyword}</strong></span>
 						</div>
 					{/if}
 
@@ -107,8 +113,9 @@
 
 					<!-- Upload-Checkliste: die Zusatzsignale, die beim manuellen Posten Reichweite bringen (docs/TIKTOK_PLAN.md §8d) -->
 					<details class="mb-3 rounded-lg overflow-hidden" style="border: 1px solid var(--color-rule);">
-						<summary class="text-xs font-medium px-3 py-2 cursor-pointer select-none" style="background: var(--color-canvas-soft); color: var(--color-ink);">
-							📋 Beim Posten mitgeben — Reichweiten-Signale
+						<summary class="text-xs font-medium px-3 py-2 cursor-pointer select-none flex items-center gap-2" style="background: var(--color-canvas-soft); color: var(--color-ink);">
+							<Icon icon={ClipboardIcon} size="1rem" />
+							Beim Posten mitgeben — Reichweiten-Signale
 						</summary>
 						<ul class="text-[0.78rem] leading-relaxed px-3 py-2.5 space-y-1.5" style="color: var(--color-ink-soft);">
 							<li><strong style="color: var(--color-ink);">Cover:</strong> den „Belegt."-Stempel-Moment (~Sek 15) wählen — NICHT den Text-Startframe.</li>
@@ -128,16 +135,22 @@
 
 					<!-- Funnel: der Weg von TikTok zu Newsletter/App (docs/TIKTOK_STRATEGIE.md) -->
 					<details class="mb-3 rounded-lg overflow-hidden" style="border: 1px solid var(--color-rule);">
-						<summary class="text-xs font-medium px-3 py-2 cursor-pointer select-none" style="background: var(--color-canvas-soft); color: var(--color-ink);">
-							🌱 Funnel — Newsletter/App (Nordstern: Abos aus TikTok)
+						<summary class="text-xs font-medium px-3 py-2 cursor-pointer select-none flex items-center gap-2" style="background: var(--color-canvas-soft); color: var(--color-ink);">
+							<Icon icon={SparklesIcon} size="1rem" />
+							Funnel — Newsletter/App (Nordstern: Abos aus TikTok)
 						</summary>
 						<div class="text-[0.78rem] leading-relaxed px-3 py-2.5 space-y-2.5" style="color: var(--color-ink-soft);">
 							<p><strong style="color: var(--color-ink);">Gepinnten Kommentar setzen</strong> (primärer Klick-Kanal — Link erst ab 1k Follower ODER Business-Account):</p>
 							<div class="rounded-lg p-2.5 text-[0.8rem] whitespace-pre-wrap" style="background: var(--color-canvas-soft); color: var(--color-ink); font-family: var(--font-mono);">{card.pinnedComment}</div>
 							<button type="button" onclick={() => copy(card.pinnedComment, 'pin-' + card.postId)}
-								class="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+								class="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5"
 								style="background: var(--color-ink); color: var(--color-paper);">
-								{copiedKey === 'pin-' + card.postId ? '✓ kopiert' : 'Kommentar kopieren'}
+								{#if copiedKey === 'pin-' + card.postId}
+									<Icon icon={CheckIcon} size="1rem" />
+									kopiert
+								{:else}
+									Kommentar kopieren
+								{/if}
 							</button>
 							<ul class="space-y-1.5 pt-1">
 								<li><strong style="color: var(--color-ink);">Bio-Text:</strong> „Jeden Tag eine gute Nachricht, die stimmt. Nachgeprüft. → Newsletter" + Link <code style="color: var(--color-amber);">nureine.de/go?to=newsletter&src=tiktok</code> (trackt die Abos). Positiv framen, den Schmerz NIE benennen.</li>
@@ -150,22 +163,35 @@
 					<!-- Aktionen -->
 					<div class="flex flex-wrap items-center gap-2">
 						<button type="button" onclick={() => copy(card.full, 'full-' + card.postId)}
-							class="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+							class="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5"
 							style="background: var(--color-ink); color: var(--color-paper);">
-							{copiedKey === 'full-' + card.postId ? '✓ kopiert' : 'Caption + Tags kopieren'}
+							{#if copiedKey === 'full-' + card.postId}
+								<Icon icon={CheckIcon} size="1rem" />
+								kopiert
+							{:else}
+								Caption + Tags kopieren
+							{/if}
 						</button>
 						<button type="button" onclick={() => copy(card.caption, 'cap-' + card.postId)}
-							class="text-xs px-2.5 py-1.5 rounded-lg transition-colors" style="color: var(--color-ink-soft); border: 1px solid var(--color-rule);">
-							{copiedKey === 'cap-' + card.postId ? '✓' : 'nur Text'}
+							class="text-xs px-2.5 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5" style="color: var(--color-ink-soft); border: 1px solid var(--color-rule);">
+							{#if copiedKey === 'cap-' + card.postId}
+								<Icon icon={CheckIcon} size="1rem" />
+							{:else}
+								nur Text
+							{/if}
 						</button>
 						<button type="button" onclick={() => copy(card.hashtags.join(' '), 'tags-' + card.postId)}
-							class="text-xs px-2.5 py-1.5 rounded-lg transition-colors" style="color: var(--color-ink-soft); border: 1px solid var(--color-rule);">
-							{copiedKey === 'tags-' + card.postId ? '✓' : 'nur Tags'}
+							class="text-xs px-2.5 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5" style="color: var(--color-ink-soft); border: 1px solid var(--color-rule);">
+							{#if copiedKey === 'tags-' + card.postId}
+								<Icon icon={CheckIcon} size="1rem" />
+							{:else}
+								nur Tags
+							{/if}
 						</button>
 						{#if card.videoUrl}
 							<a href={card.videoUrl} download target="_blank" rel="noopener"
 								class="text-xs px-2.5 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5" style="color: var(--color-ink-soft); border: 1px solid var(--color-rule);">
-								<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+								<Icon icon={ArrowDownTrayIcon} size="1rem" />
 								Video
 							</a>
 						{/if}
@@ -173,7 +199,7 @@
 							<a href={card.imageUrl} download target="_blank" rel="noopener"
 								class="text-xs px-2.5 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5" style="color: var(--color-ink-soft); border: 1px solid var(--color-rule);"
 								title="Story-Bild als TikTok-Cover — visueller als der Text-Startframe.">
-								<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+								<Icon icon={PhotoIcon} size="1rem" />
 								Cover
 							</a>
 						{/if}
@@ -189,8 +215,11 @@
 							<form method="POST" action="?/markPosted" use:enhance>
 								<input type="hidden" name="storyId" value={card.storyId} />
 								<input type="hidden" name="postId" value={card.postId} />
-								<button type="submit" class="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
-									style="background: var(--color-sage, #5a8f6f); color: #fff;">✓ auf TikTok gepostet</button>
+								<button type="submit" class="text-xs font-medium px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5"
+									style="background: var(--color-sage, #5a8f6f); color: #fff;">
+									<Icon icon={CheckIcon} size="1rem" />
+									auf TikTok gepostet
+								</button>
 							</form>
 						{/if}
 					</div>

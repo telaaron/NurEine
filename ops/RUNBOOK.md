@@ -148,6 +148,43 @@ Dashboard: `/admin/ki` auf nureine.de.
 
 ---
 
+## 3b. Den „Chat" eines Agenten ansehen (Denkverlauf)
+
+Die cron-Agenten laufen **headless** (`claude -p`) — es gibt keine sichtbare
+Oberfläche wie in der Claude-App. Aber jeder Lauf wird komplett mitgeschrieben.
+Drei Wege, um zu sehen, was ein Agent denkt/tut:
+
+**1. Voller Denkverlauf einer Session** (Gedanken + jeder Tool-/SQL-Aufruf + Ergebnis):
+```bash
+ssh aaron@192.168.178.3
+ls -t ~/.claude/projects/-home-aaron-NurEine/*.jsonl | head   # neueste Session
+# menschenlesbar rausziehen:
+tail -40 ~/.claude/projects/-home-aaron-NurEine/<datei>.jsonl | python3 -c '
+import json,sys
+for l in sys.stdin:
+  try:
+    m=json.loads(l).get("message",{}); r=m.get("role","")
+    for c in (m.get("content") or []):
+      if c.get("type")=="text" and c.get("text","").strip(): print(f"[{r}] {c[\"text\"][:400]}")
+      elif c.get("type")=="tool_use": print(f"TOOL {c.get(\"name\")}: {json.dumps(c.get(\"input\",{}),ensure_ascii=False)[:250]}")
+  except: pass'
+```
+
+**2. End-Ergebnis live mitlesen** (während ein Agent läuft):
+```bash
+ssh aaron@192.168.178.3 'tail -f ~/nureine-logs/agent-analyst.log'
+```
+
+**3. Selbst interaktiv einen Claude auf dem Mini öffnen** (echter Chat wie in der App,
+mit Supabase-MCP): Login mit `-t` (Terminal), env laden, `claude` starten:
+```bash
+ssh -t aaron@192.168.178.3
+cd ~/NurEine && set -a && source ops/env.runner && source .env && set +a && unset ANTHROPIC_API_KEY
+claude          # interaktive Sitzung; z.B. einen Prompt aus ops/prompts/ von Hand durchsprechen
+```
+
+---
+
 ## 4. Der Claude-Zugang (Abo, kein API-Key)
 
 - Claude Code liegt unter `~/.local/bin/claude` (nativer Binary).

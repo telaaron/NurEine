@@ -1,0 +1,15 @@
+{
+  "bucket": "story_images",
+  "path": "story-images/mahlzeiten-auf-rezept-massachusetts-f07791b1a20e.jpg",
+  "content_type": "image/jpeg",
+  "public_url": "https://gbfbhspqwaqvnoxitohd.supabase.co/storage/v1/object/public/story_images/story-images/mahlzeiten-auf-rezept-massachusetts-f07791b1a20e.jpg",
+  "local_file": ".agent-spool/bilder/20260720_mahlzeiten.jpg",
+  "db": {
+    "table": "nureine_stories",
+    "id": "51773c65-bec5-4d80-9936-33f1aa2a1295",
+    "column": "image_url"
+  },
+  "created_by": "redaktion",
+  "created_at": "2026-07-20T02:29:05Z",
+  "note": "Sachmotiv ohne Menschen/Haende: fertige portionierte Mahlzeit (Fischfilet, Gemuese, Reis) in Schale auf der Tuerschwelle. Best-of-4, 2. Runde (1. Runde zeigte rohen ganzen Fisch = Lebensmittelkiste statt fertiger Mahlzeit, dazu Kritzelschrift auf dem Zettel)."
+}

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { page } from '$app/state';
+	import Icon from '$lib/components/Icon.svelte';
+	import { ArrowRightIcon, CheckIcon } from 'heroicons-svelte/24/outline';
 
 	let emailInput = $state('');
 	let status = $state('');
@@ -103,11 +105,8 @@
 			<div
 				class="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
 				style="background: var(--color-amber);"
-				aria-hidden="true"
 			>
-				<svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="var(--color-paper)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-					<path d="M20 6L9 17l-5-5" />
-				</svg>
+				<Icon icon={CheckIcon} size="1.75rem" label="Bestätigt" />
 			</div>
 			<div>
 				<h2 class="display text-xl sm:text-2xl leading-tight" style="color: var(--color-on-ink); font-weight: 600;">
@@ -122,7 +121,7 @@
 					style="background: var(--color-amber); color: var(--color-on-accent);"
 				>
 					Heutige Geschichte lesen
-					<svg class="w-3.5 h-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3l5 5-5 5" /></svg>
+					<Icon icon={ArrowRightIcon} size="0.875rem" />
 				</a>
 			</div>
 		</div>

@@ -3,6 +3,8 @@
 	import { CATEGORIES } from '$lib/categories';
 	import { REFERRAL_TIERS, nextTier, currentTier, tierProgress } from '$lib/referralTiers';
 	import { onMount } from 'svelte';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CheckIcon } from 'heroicons-svelte/24/outline';
 
 	let { data } = $props();
 
@@ -120,7 +122,7 @@
 						style="border: 1.5px solid {on ? 'var(--color-amber)' : 'var(--color-rule-strong)'}; background: {on ? 'var(--color-amber)' : 'transparent'};"
 					>
 						{#if on}
-							<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--color-paper)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+							<Icon icon={CheckIcon} size="0.6875rem" />
 						{/if}
 					</span>
 				</button>

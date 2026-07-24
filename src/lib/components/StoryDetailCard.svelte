@@ -2,6 +2,8 @@
 	import { base } from '$app/paths';
 	import { formatDate } from '$lib/utils';
 	import { getStoryHeroImageSrc } from '$lib/story-images';
+	import Icon from '$lib/components/Icon.svelte';
+	import { XMarkIcon } from 'heroicons-svelte/24/outline';
 
 	interface Props {
 		story: {
@@ -53,9 +55,7 @@
 					style="color: var(--color-muted);"
 					aria-label="Schließen"
 				>
-					<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
-					</svg>
+					<Icon icon={XMarkIcon} label="Schließen" />
 				</button>
 			</div>
 		{/if}

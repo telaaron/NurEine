@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import Icon from '$lib/components/Icon.svelte';
+	import { ArrowTopRightOnSquareIcon, XMarkIcon } from 'heroicons-svelte/24/outline';
 	import ShareBar from '$lib/components/ShareBar.svelte';
 
 	type Metric = {
@@ -147,7 +149,7 @@
 						<h3 class="display text-2xl mt-2" style="color: var(--color-ink); font-weight: 600;">{m.label}</h3>
 					</div>
 					<button type="button" onclick={() => (active = null)} aria-label="Schließen" class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center" style="border: 1px solid var(--color-rule);">
-						<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-ink)" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+						<Icon icon={XMarkIcon} label="Schließen" size="1rem" />
 					</button>
 				</div>
 
@@ -171,7 +173,7 @@
 				{#if m.blurb}<p class="mt-5 text-base leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">{m.blurb}</p>{/if}
 				<div class="mt-5 pt-4 flex items-center justify-between" style="border-top: 1px solid var(--color-rule);">
 					<span style="font-family: var(--font-mono); font-size: 0.66rem; color: var(--color-faint);">Quelle: {m.source}</span>
-					{#if m.source_url}<a href={m.source_url} target="_blank" rel="noreferrer" style="font-family: var(--font-mono); font-size: 0.66rem; color: var(--color-amber);">Methodik ↗</a>{/if}
+					{#if m.source_url}<a href={m.source_url} target="_blank" rel="noreferrer" style="font-family: var(--font-mono); font-size: 0.66rem; color: var(--color-amber);">Methodik <Icon icon={ArrowTopRightOnSquareIcon} size="0.66rem" /></a>{/if}
 				</div>
 			</div>
 		</div>

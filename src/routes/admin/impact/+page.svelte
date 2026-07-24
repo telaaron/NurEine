@@ -2,6 +2,8 @@
 	import { base } from '$app/paths';
 	import { invalidateAll } from '$app/navigation';
 	import type { ImpactRun } from './+page.server';
+	import Icon from '$lib/components/Icon.svelte';
+	import { ArrowDownIcon, ArrowTopRightOnSquareIcon, ArrowUpIcon, CheckIcon, ClockIcon, ExclamationTriangleIcon } from 'heroicons-svelte/24/outline';
 	let { data } = $props();
 
 	const runs = $derived(data.runs as ImpactRun[]); // neueste zuerst
@@ -124,7 +126,7 @@
 		<h1 class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">Impact</h1>
 		{#if data.doneCount > 0}
 			<a href={base + '/admin/impact/history'} class="text-sm inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors" style="color: var(--color-ink-soft); border: 1px solid var(--color-rule);">
-				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+				<Icon icon={ClockIcon} size="1rem" />
 				History ({data.doneCount})
 			</a>
 		{/if}
@@ -142,7 +144,7 @@
 		<div class="rounded-xl p-5 mb-6" style="background: var(--color-paper); border: 2px solid var(--color-amber);">
 			<div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
 				<div class="text-sm font-semibold" style="color: var(--color-ink);">Hauptstory für {hero.for_date} wählen</div>
-				{#if hero.status === 'approved'}<span class="text-[0.6rem] font-bold uppercase rounded-full px-2 py-0.5" style="background:#1f9d63;color:#fff;">gewählt ✓ — live über alle Kanäle</span>{/if}
+				{#if hero.status === 'approved'}<span class="text-[0.6rem] font-bold uppercase rounded-full px-2 py-0.5 inline-flex items-center gap-1" style="background:#1f9d63;color:#fff;">gewählt <Icon icon={CheckIcon} size="0.75rem" /> — live über alle Kanäle</span>{/if}
 			</div>
 			<div class="text-xs mb-3" style="color: var(--color-faint);">Deine Wahl wird Hero (Feed + Mail) und automatisch der IG-Post. Du musst nur eine wählen.</div>
 
@@ -164,7 +166,7 @@
 							<button type="button" onclick={() => chooseOption(hero.id, opt.story_id)} disabled={deciding === hero.id}
 								class="mt-2 text-xs font-medium px-4 py-1.5 rounded-lg" style="background:#1f9d63;color:#fff;opacity:{deciding === hero.id ? '0.6' : '1'};">Diese wählen</button>
 						{/if}
-						{#if isChosen}<div class="mt-1 text-[0.65rem]" style="color:#1f9d63;">✓ Diese geht morgen live</div>{/if}
+						{#if isChosen}<div class="mt-1 text-[0.65rem] inline-flex items-center gap-1" style="color:#1f9d63;"><Icon icon={CheckIcon} size="0.75rem" /> Diese geht morgen live</div>{/if}
 					</div>
 				{/each}
 			</div>
@@ -179,7 +181,9 @@
 
 {#if latest?.status === 'blocked'}
 	<div class="rounded-xl p-4 mb-6 flex items-start gap-3" style="background: var(--color-rose-tint); border: 1px solid var(--color-rose);">
-		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-rose)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+		<div style="flex-shrink:0;margin-top:1px;color:var(--color-rose);">
+			<Icon icon={ExclamationTriangleIcon} size="1.25rem" />
+		</div>
 		<div>
 			<div class="text-sm font-semibold" style="color: var(--color-rose);">Letzter Lauf blockiert — {latest.run_date}</div>
 			{#if latest.blocked_reason}<div class="text-sm mt-0.5" style="color: var(--color-ink-soft);">{latest.blocked_reason}</div>{/if}
@@ -208,7 +212,14 @@
 				<div class="text-[0.6rem] uppercase tracking-[0.16em] opacity-70" style="font-family: var(--font-mono);">Gesamt</div>
 				<div class="display text-3xl mt-1" style="font-weight: 600;">{latestGesamt}<span class="text-lg opacity-50">/10</span></div>
 				{#if delta !== null}
-					<div class="text-xs mt-1" style="color: {delta >= 0 ? '#7fe0a8' : '#ffb4a8'};">{delta >= 0 ? '▲' : '▼'} {Math.abs(delta)} ggü. Vortag</div>
+					<div class="text-xs mt-1 inline-flex items-center gap-1" style="color: {delta >= 0 ? '#7fe0a8' : '#ffb4a8'};">
+						{#if delta >= 0}
+							<Icon icon={ArrowUpIcon} size="0.75rem" />
+						{:else}
+							<Icon icon={ArrowDownIcon} size="0.75rem" />
+						{/if}
+						{Math.abs(delta)} ggü. Vortag
+					</div>
 				{/if}
 			</div>
 			{#each ['Z', 'S', 'E', 'D'] as ax}
@@ -261,14 +272,14 @@
 					<a href={latest.pr_url} target="_blank" rel="noreferrer"
 						class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
 						style="background: var(--color-ink); color: var(--color-paper);">
-						<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+						<Icon icon={ArrowTopRightOnSquareIcon} size="1rem" />
 						PR auf GitHub ansehen &amp; mergen{#if latest.pr_number} #{latest.pr_number}{/if}
 					</a>
 					{#if latest.pr_state === 'open' || !latest.pr_state}
 						<button type="button" onclick={markMerged} disabled={marking}
 							class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
 							style="background: #1f9d63; color: #fff; opacity: {marking ? '0.6' : '1'};">
-							<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+							<Icon icon={CheckIcon} size="1rem" />
 							{marking ? 'Speichere…' : 'Als gemerged abhaken'}
 						</button>
 						<span class="text-xs" style="color: var(--color-faint);">→ wandert in die History</span>

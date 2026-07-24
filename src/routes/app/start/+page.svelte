@@ -6,6 +6,8 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CheckCircleIcon, ClockIcon, DevicePhoneMobileIcon, SparklesIcon } from 'heroicons-svelte/24/outline';
 	import SkyView from '$lib/app-v2/SkyView.svelte';
 	import { collection } from '$lib/app-v2/collection.svelte';
 	import { prefs } from '$lib/app-v2/prefs.svelte';
@@ -20,24 +22,24 @@
 	// ── Beat 1: Themen-Wahl steuert den ersten illustrativen Beleg ──
 	type TopicKey = 'klima' | 'gesundheit' | 'konflikt';
 	let topic = $state<TopicKey>('gesundheit');
-	const TOPICS: Record<TopicKey, { label: string; icon: string; answer: string; num: string; unit: string }> = {
+	const TOPICS: Record<TopicKey, { label: string; icon: typeof SparklesIcon | typeof CheckCircleIcon; answer: string; num: string; unit: string }> = {
 		klima: {
 			label: 'Klima & Umwelt',
-			icon: '🌿',
+			icon: SparklesIcon,
 			answer: 'Seit dem Tief 1990 hat sich das Ozonloch messbar geschlossen — weil die Welt sich an ein Abkommen gehalten hat.',
 			num: '−28 %',
 			unit: 'FCKW-Ausstoß weltweit fast bei null. Das Ozonloch ist heute kleiner als in den 1980ern.'
 		},
 		gesundheit: {
 			label: 'Krankheit & Gesundheit',
-			icon: '🩸',
+			icon: CheckCircleIcon,
 			answer: 'Seit 1990 ist die Zahl der Kinder, die vor ihrem fünften Geburtstag sterben, jedes Jahr gefallen. Nicht ein bisschen.',
 			num: '−63 %',
 			unit: '12,8 Millionen im Jahr → unter 4,8 Millionen. Jeden Tag rund 19.000 Kinder, die früher gestorben wären.'
 		},
 		konflikt: {
 			label: 'Kriege & Konflikte',
-			icon: '🕊',
+			icon: CheckCircleIcon,
 			answer: 'Seit 1990 wurden weltweit über 55 Millionen Landminen aus dem Boden geholt — von Menschen, die dafür jeden Tag rausgehen.',
 			num: '−55 Mio',
 			unit: 'Ganze Länder sind heute wieder minenfrei. Kambodscha meldet Dörfer, in denen Kinder erstmals frei laufen.'
@@ -57,10 +59,10 @@
 
 	// ── Beat 4: Anker ──
 	const ANCHORS = [
-		{ key: 'Kaffee', label: 'der erste Kaffee', icon: '☕', trigger: 'den ersten Kaffee nehme', when: 'beim ersten Kaffee' },
-		{ key: 'Bahn', label: 'in der Bahn', icon: '🚆', trigger: 'in die Bahn steige', when: 'in der Bahn' },
-		{ key: 'Fruehstueck', label: 'beim Frühstück', icon: '🥐', trigger: 'mich zum Frühstück setze', when: 'beim Frühstück' },
-		{ key: 'Aufwachen', label: 'nach dem Aufwachen', icon: '⏰', trigger: 'aufwache', when: 'nach dem Aufwachen' }
+		{ key: 'Kaffee', label: 'der erste Kaffee', icon: SparklesIcon, trigger: 'den ersten Kaffee nehme', when: 'beim ersten Kaffee' },
+		{ key: 'Bahn', label: 'in der Bahn', icon: DevicePhoneMobileIcon, trigger: 'in die Bahn steige', when: 'in der Bahn' },
+		{ key: 'Fruehstueck', label: 'beim Frühstück', icon: SparklesIcon, trigger: 'mich zum Frühstück setze', when: 'beim Frühstück' },
+		{ key: 'Aufwachen', label: 'nach dem Aufwachen', icon: ClockIcon, trigger: 'aufwache', when: 'nach dem Aufwachen' }
 	];
 	let anchorKey = $state<string | null>(null);
 	const anchorFormed = $derived(
@@ -205,7 +207,7 @@
 			<div class="choices">
 				{#each Object.entries(TOPICS) as [key, val]}
 					<button class="choice sf" type="button" onclick={() => pickTopic(key as TopicKey)}>
-						<span class="ch-ico">{val.icon}</span>{val.label}
+						<span class="ch-ico"><Icon icon={val.icon} /></span>{val.label}
 					</button>
 				{/each}
 			</div>
@@ -245,7 +247,7 @@
 			<div class="anc-chips">
 				{#each ANCHORS as a}
 					<button class="anc-chip sf" type="button" class:sel={anchorKey === a.key} onclick={() => pickAnchor(a.key)}>
-						<span class="ac-ico">{a.icon}</span>{a.label}
+						<span class="ac-ico"><Icon icon={a.icon} /></span>{a.label}
 					</button>
 				{/each}
 			</div>
@@ -276,7 +278,7 @@
 
 	{#if beat === 6}
 		<div class="beat surface-ink tex">
-			<div class="push-ico" aria-hidden="true">🌅</div>
+			<div class="push-ico" aria-hidden="true"><Icon icon={SparklesIcon} size="2rem" /></div>
 			<div class="push-lead sf">Sollen wir dich morgen<br />einmal antippen?</div>
 			<p class="push-sub">Ein leiser Hinweis, wenn dein Beleg fertig ist. Kein Feed, kein Nachschub — ein Morgen, einer.</p>
 			<div class="push-preview">

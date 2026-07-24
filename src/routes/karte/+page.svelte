@@ -1,274 +1,58 @@
 <script lang="ts">
-	import { base } from '$app/paths';
-	import { browser } from '$app/environment';
-	import 'leaflet/dist/leaflet.css';
-	import '$lib/styles/leaflet-shared.css';
-	import { toneColors } from '$lib/tone-constants';
-	import MapLegend from '$lib/components/MapLegend.svelte';
-	import MapLoadingOverlay from '$lib/components/MapLoadingOverlay.svelte';
-	import MobileStorySheet from '$lib/components/MobileStorySheet.svelte';
-	import { createStoryMarker, highlightMarker } from '$lib/map/story-marker';
-
-	// Light marker shape — exactly the fields the map dots + sidebar card read.
-	// The server now ships MapMarker (getMapMarkers), not full stories.
-	interface StoryMarker {
-		slug: string; title: string; dek: string;
-		category: string; country: string;
-		coords: [number, number]; coordsX: number; coordsY: number;
-		publishedAt: string; readingMinutes: number;
-		impactScore: number; impactNote: string;
-		tone: 'amber' | 'sage' | 'rose' | 'sky'; hero: string;
-		sensitive: boolean; createdAt: string;
-	}
+	import { page } from '$app/stores';
+	import VariantClassic from './VariantClassic.svelte';
+	import VariantPlanetarium from './VariantPlanetarium.svelte';
+	import VariantAtlas from './VariantAtlas.svelte';
+	import VariantLiveFeed from './VariantLiveFeed.svelte';
 
 	let { data } = $props();
+	const stories = $derived(data.stories ?? []);
 
-	const stories = $derived((data.stories ?? []) as StoryMarker[]);
-	const storyCount = $derived(stories.length);
+	// ?v=1|2|3 picks a variant; default (no param / 0) = current live design.
+	const v = $derived($page.url.searchParams.get('v') ?? '0');
 
-	let activeSlug = $state<string | null>(null);
-	let mapContainer = $state<HTMLDivElement | null>(null);
-
-	const activeStory = $derived(
-		activeSlug ? stories.find((s) => s.slug === activeSlug) ?? null : null
-	);
-
-	// --- Map state (imperative) ---
-	let map: any = null;
-	let markerBySlug = new Map<string, any>();
-	let _initialized = false;
-	let mapReady = $state(false);
-
-	$effect(() => {
-		const el = mapContainer;
-		if (!browser || !el || _initialized) return;
-		_initialized = true;
-
-		import('leaflet').then((L) => {
-			if (!mapContainer) return;
-
-			const leafletMap = L.map(el, {
-				center: [50, 10],
-				zoom: 3,
-				zoomControl: true,
-				scrollWheelZoom: true,
-				attributionControl: false
-			});
-
-			L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-				maxZoom: 19,
-				attribution:
-					'&copy; <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> &mdash; <a href="https://carto.com/">CARTO</a>'
-			}).addTo(leafletMap);
-
-			// Expose L globally for story-marker helper
-			(window as any).L = L;
-
-			for (const s of stories) {
-				const marker = createStoryMarker(s, leafletMap, (slug) => {
-					activeSlug = slug;
-				});
-				if (marker) markerBySlug.set(s.slug, marker);
-			}
-
-			if (stories.length > 0) {
-				const group = L.featureGroup(Array.from(markerBySlug.values()));
-				const bounds = group.getBounds();
-				if (bounds.isValid()) {
-					leafletMap.fitBounds(bounds.pad(0.2), { maxZoom: 6 });
-				}
-			}
-
-			requestAnimationFrame(() => {
-				leafletMap.invalidateSize();
-			});
-
-			map = leafletMap;
-			mapReady = true;
-		});
-
-		return () => {
-			map?.remove();
-			map = null;
-			markerBySlug.clear();
-			_initialized = false;
-			mapReady = false;
-		};
-	});
-
-	// --- Highlight active marker & pan ---
-	$effect(() => {
-		const slug = activeSlug;
-		if (!map || !slug) return;
-
-		const activeMarker = markerBySlug.get(slug);
-		if (!activeMarker) return;
-
-		highlightMarker(activeMarker, true);
-
-		for (const [otherSlug, otherMarker] of markerBySlug) {
-			if (otherSlug !== slug) {
-				highlightMarker(otherMarker, false);
-			}
-		}
-
-		map.panTo(activeMarker.getLatLng(), { animate: true, duration: 0.5 });
-
-		return () => {
-			for (const s of stories) {
-				const m = markerBySlug.get(s.slug);
-				if (m) highlightMarker(m, false);
-			}
-		};
-	});
-
-	function clearActive() {
-		activeSlug = null;
-	}
+	const variants = [
+		{ id: '0', label: 'Aktuell' },
+		{ id: '1', label: 'Planetarium' },
+		{ id: '2', label: 'Atlas' },
+		{ id: '3', label: 'Live-Feed' }
+	];
 </script>
 
-<!-- ===== HEADER ===== -->
-<section class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-14 pb-4 sm:pb-6 lg:pb-8">
-	<p class="eyebrow" style="color: var(--color-amber);">Karte der Hoffnung</p>
-	<h1
-		class="display mt-3 leading-tight text-[1.7rem] sm:text-[2.2rem] lg:text-[3.2rem]"
-		style="color: var(--color-ink); font-weight: 600; max-width: 14ch;"
-	>
-		Wo auf der Welt Gutes passiert.
-	</h1>
-	<div class="mt-4 flex flex-wrap items-center gap-4">
-		<p
-			class="page-dek leading-relaxed"
-			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
-		>
-			{storyCount} Geschichten aus aller Welt. Klick auf einen Punkt.
-		</p>
-		<span
-			class="eyebrow inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-			style="background: var(--color-amber-tint); color: var(--color-amber);"
-		>
-			<span class="tnum font-semibold">{storyCount}</span>
-			Geschichten
-		</span>
-	</div>
-</section>
+<svelte:head><title>Karte der Hoffnung — Varianten</title></svelte:head>
 
-<!-- ===== MAP + SIDEBAR ===== -->
-<div class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-10 pb-10 sm:pb-12 lg:pb-16">
-	<div class="flex flex-col lg:flex-row gap-6 lg:gap-10">
-		<div class="flex-1 min-h-0">
-			<div
-				class="paper relative w-full rounded-[8px] overflow-hidden"
-				style="border: 1px solid var(--color-rule); height: 55vh; min-height: 280px;"
-				bind:this={mapContainer}
-			>
-				{#if !mapReady}
-					<MapLoadingOverlay />
-				{/if}
-			</div>
-			<MapLegend />
-		</div>
+{#key v}
+	{#if v === '1'}
+		<VariantPlanetarium {stories} />
+	{:else if v === '2'}
+		<VariantAtlas {stories} />
+	{:else if v === '3'}
+		<VariantLiveFeed {stories} />
+	{:else}
+		<VariantClassic {stories} />
+	{/if}
+{/key}
 
-		<!-- Desktop sidebar -->
-		<aside class="hidden lg:block lg:w-96 xl:w-[420px] flex-shrink-0">
-			{#if activeStory}
-				{@const hex = toneColors[activeStory.tone] ?? '#c87340'}
-				<div
-					class="paper rounded-[8px] overflow-hidden sticky top-6"
-					style="border: 1px solid color-mix(in srgb, {hex} 30%, transparent);"
-				>
-					<div class="h-1.5" style="background: {hex};"></div>
-					<div class="p-5 sm:p-6 lg:p-7">
-						<div class="flex items-center gap-2.5 text-xs" style="color: var(--color-muted);">
-							<span
-								class="badge px-2.5 py-1 rounded-full"
-								style="background: color-mix(in srgb, {hex} 12%, transparent); color: {hex}; font-weight: 600;"
-							>
-								{activeStory.category}
-							</span>
-							<span>&middot;</span>
-							<span>{activeStory.country}</span>
-						</div>
-
-						<div class="mt-5 flex items-start gap-3">
-							{#if activeStory.hero?.startsWith('http')}
-								<div
-									class="w-10 h-10 flex-shrink-0 rounded-full overflow-hidden"
-									style="border: 1px solid var(--color-rule);"
-								>
-									<img
-										src={activeStory.hero}
-										alt=""
-										class="w-full h-full object-cover"
-										loading="lazy"
-									/>
-								</div>
-							{:else}
-								<span class="text-2xl flex-shrink-0 mt-0.5">{activeStory.hero || '&#x1F4F0;'}</span>
-							{/if}
-							<h2
-								class="display leading-snug text-[1.2rem] sm:text-[1.35rem] lg:text-[1.5rem]"
-								style="color: var(--color-ink); font-weight: 600;"
-							>
-								{activeStory.title}
-							</h2>
-						</div>
-
-						<p
-							class="card-dek mt-4 leading-relaxed"
-							style="color: var(--color-ink-soft); font-family: var(--font-serif);"
-						>
-							{activeStory.dek}
-						</p>
-
-						<div
-							class="mt-6 pt-4 flex items-center justify-between text-xs"
-							style="border-top: 1px solid var(--color-rule); color: var(--color-muted);"
-						>
-							<div class="flex items-center gap-1.5">
-								<span class="tnum font-semibold" style="color: {hex};">{activeStory.impactScore}/100</span>
-								<span>Wirkung</span>
-							</div>
-							<span>&middot; {activeStory.readingMinutes} Min.</span>
-						</div>
-
-						<a
-							href={base + '/geschichte/' + activeStory.slug}
-							class="mt-5 group flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm transition-all duration-200 hover:gap-3"
-							style="background: var(--color-surface-ink); color: var(--color-on-ink);"
-						>
-							Geschichte lesen
-							<svg class="w-3.5 h-3.5 transition-transform duration-200" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-								<path d="M6 3l5 5-5 5" />
-							</svg>
-						</a>
-					</div>
-				</div>
-			{:else}
-				<div
-					class="paper rounded-[8px] p-8 sticky top-6 flex flex-col items-center text-center gap-3"
-					style="border: 1px solid var(--color-rule);"
-				>
-					<span class="text-3xl">&#x1F30D;</span>
-					<p class="text-sm leading-relaxed" style="color: var(--color-muted); max-width: 26ch;">
-						W&auml;hle einen Punkt auf der Karte, um eine Geschichte zu entdecken.
-					</p>
-					<p class="meta" style="color: var(--color-faint);">{storyCount} Geschichten geladen</p>
-				</div>
-			{/if}
-		</aside>
-	</div>
+<!-- Floating variant picker (dev/review only) -->
+<div class="vpicker">
+	<span class="vp-label">Variante</span>
+	{#each variants as opt}
+		<a class="vp-btn" class:active={v === opt.id} href={'?v=' + opt.id}>{opt.label}</a>
+	{/each}
 </div>
 
-<!-- ===== MOBILE BOTTOM SHEET ===== -->
-<MobileStorySheet story={activeStory} onClose={clearActive} />
-
-<!-- ===== STYLES ===== -->
 <style>
-	/* Page-specific: attribution (only on karte, not bei-dir) */
-	:global(.leaflet-control-attribution) {
-		font-size: 10px !important;
-		color: var(--color-faint) !important;
-		background: var(--color-veil) !important;
+	.vpicker {
+		position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); z-index: 9000;
+		display: flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.5rem 0.4rem 0.85rem;
+		border-radius: 999px; background: color-mix(in srgb, var(--color-paper) 88%, transparent);
+		backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4);
+		border: 1px solid var(--color-rule-strong); box-shadow: 0 12px 40px -12px rgba(0,0,0,0.5);
+		font-size: 0.8rem;
 	}
+	.vp-label { color: var(--color-muted); font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 0.25rem; }
+	.vp-btn { padding: 0.35rem 0.75rem; border-radius: 999px; text-decoration: none; color: var(--color-ink-soft); transition: all 0.15s; white-space: nowrap; }
+	.vp-btn:hover { background: var(--color-canvas-soft); }
+	.vp-btn.active { background: var(--color-surface-ink); color: var(--color-on-ink); }
+	@media (max-width: 560px) { .vpicker { font-size: 0.72rem; padding: 0.35rem 0.4rem; gap: 0.2rem; } .vp-label { display: none; } }
 </style>

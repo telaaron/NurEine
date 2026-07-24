@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { track } from '$lib/track';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CheckIcon } from 'heroicons-svelte/24/outline';
 
 	let { data } = $props();
 	const cardUrl = $derived(`${base}/api/wa-card/${data.slug}`);
@@ -55,8 +57,9 @@
 	<div class="mt-10">
 		<div class="flex items-center justify-between mb-2">
 			<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">Begleittext</span>
-			<button type="button" onclick={copyCaption} class="text-xs font-medium px-3 py-1.5 rounded-full" style="background: var(--color-amber); color: var(--color-on-accent);">
-				{copied ? 'Kopiert ✓' : 'Text kopieren'}
+			<button type="button" onclick={copyCaption} class="text-xs font-medium px-3 py-1.5 rounded-full flex items-center gap-1.5" style="background: var(--color-amber); color: var(--color-on-accent);">
+				{copied ? 'Kopiert' : 'Text kopieren'}
+				{#if copied}<Icon icon={CheckIcon} size="1rem" />{/if}
 			</button>
 		</div>
 		<div class="p-5 rounded-xl whitespace-pre-line text-base leading-relaxed" style="background: var(--color-paper); border: 1px solid var(--color-rule); color: var(--color-ink-soft); font-family: var(--font-serif);">{data.caption}</div>

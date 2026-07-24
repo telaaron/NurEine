@@ -2,14 +2,18 @@ name = "nureine-newsletter-cron"
 main = "src/index.ts"
 compatibility_date = "2026-05-01"
 
-# Cron: 04:20 UTC täglich (= 06:20 CEST) — Haupt-Lauf.
+# Cron: 04:40 UTC täglich (= 06:40 CEST) — Haupt-Lauf.
+#   Verschoben 2026-07-22 von 04:20 → 04:40: Die Nacht-Kette auf dem Mac-Mini
+#   (Fetch 03:10 → Chefredakteur 03:40 → Redaktion 04:10) braucht Puffer, damit
+#   die frische Hero-Story fertig veredelt+bebildert+freigegeben ist, BEVOR der
+#   Newsletter feuert. 04:40 = ~30 Min nach Redaktion-Start (statt 10 Min).
 # 05:40 UTC (= 07:40 CEST) — BACKUP-Lauf: Cloudflare-Free-Cron-Trigger sind
 # "best effort" und werden gelegentlich übersprungen (Ursache: am 2026-07-13 kam
 # kein Newsletter, obwohl Endpoint+Code gesund waren). Der Endpoint ist idempotent
 # (fetchRecentSendsByStory überspringt bereits gesendete Stories/Empfänger) → ein
 # zweiter Lauf schickt NIE doppelt, fängt aber einen verpassten Haupt-Lauf ab.
 [triggers]
-crons = ["20 4 * * *", "40 5 * * *"]
+crons = ["40 4 * * *", "40 5 * * *"]
 
 # Public vars (non-secret). Override per environment in the dashboard if needed.
 [vars]

@@ -11,22 +11,26 @@
 	//   Icon icon={XMarkIcon} label="Schliessen"  -> a11y-Label (sonst aria-hidden)
 	//
 	// Heroicons erben Farbe ueber currentColor; Groesse setzt der Wrapper.
-	import type { Component } from 'svelte';
-
+	// icon = eine Heroicons-Svelte-Komponente (z.B. CheckIcon). Bewusst als `any`
+	// typisiert: Sveltes `Component`-Generic passt nicht zur Signatur der
+	// heroicons-svelte-Komponenten (Type-Mismatch bei jeder Nutzung), und ein
+	// Inline-Generic bricht den Compiler. Der Wrapper rendert die Komponente nur.
 	interface Props {
-		icon: Component;
+		// svelte-ignore we intentionally use any here
+		icon: any;
 		size?: string;
 		label?: string;
 		class?: string;
+		style?: string;
 	}
-	let { icon, size = '1.25rem', label = undefined, class: cls = '' }: Props = $props();
+	let { icon, size = '1.25rem', label = undefined, class: cls = '', style = '' }: Props = $props();
 
 	const Ico = $derived(icon);
 </script>
 
 <span
 	class="ne-icon {cls}"
-	style="--icon-size: {size}"
+	style="--icon-size: {size}; {style}"
 	role={label ? 'img' : 'presentation'}
 	aria-label={label}
 	aria-hidden={label ? undefined : 'true'}

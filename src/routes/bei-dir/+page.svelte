@@ -6,6 +6,8 @@
 	import { toneColors, toneLabels } from '$lib/tone-constants';
 	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import { formatDate, toneStyles } from '$lib/utils';
+	import Icon from '$lib/components/Icon.svelte';
+	import { ChevronRightIcon, GlobeEuropeAfricaIcon, MagnifyingGlassIcon } from 'heroicons-svelte/24/outline';
 	import MapLoadingOverlay from '$lib/components/MapLoadingOverlay.svelte';
 	import MobileStorySheet from '$lib/components/MobileStorySheet.svelte';
 
@@ -411,7 +413,9 @@
 	<section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pb-12 sm:pb-16">
 		{#if displayStories.length === 0}
 			<div class="paper rounded-[8px] p-6 sm:p-10 lg:p-14 text-center" style="border: 1px solid var(--color-rule);">
-				<span class="text-5xl block mb-4">&#x1F50D;</span>
+				<div class="flex justify-center mb-4">
+					<Icon icon={MagnifyingGlassIcon} size="2.5rem" />
+				</div>
 				<h2 class="serif text-xl sm:text-2xl lg:text-3xl leading-tight" style="color: var(--color-ink); font-weight: 500;">
 					Noch keine lokalen Nachrichten in deiner N&auml;he
 				</h2>
@@ -421,16 +425,16 @@
 				<div class="mt-8">
 					<a href={base + '/archiv'} class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-200 hover:gap-3" style="background: var(--color-surface-ink); color: var(--color-on-ink);">
 						Alle Geschichten entdecken
-						<svg class="w-3.5 h-3.5 transition-transform duration-200" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<path d="M6 3l5 5-5 5" />
-						</svg>
+						<Icon icon={ChevronRightIcon} size="0.875rem" />
 					</a>
 				</div>
 			</div>
 		{:else}
 			{#if nearbyStories.length === 0}
 				<div class="mb-8 paper rounded-[8px] p-4 sm:p-6 lg:p-8 flex items-start gap-4" style="border: 1px solid var(--color-rule);">
-					<span class="text-2xl flex-shrink-0 mt-0.5">&#x1F30D;</span>
+					<div class="flex-shrink-0 mt-0.5">
+						<Icon icon={GlobeEuropeAfricaIcon} size="1.5rem" />
+					</div>
 					<div>
 						<h3 class="serif text-lg leading-snug" style="color: var(--color-ink); font-weight: 500;">Europ&auml;ische Nachrichten</h3>
 						<p class="mt-1 text-sm leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">

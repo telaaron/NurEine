@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CheckIcon } from 'heroicons-svelte/24/outline';
 
 	let token = $state('');
 	let longToken = $state('');
@@ -36,7 +38,11 @@
 			<h3 style="margin-top:24px;">Long-Lived Token (60 Tage) — diesen brauchen wir</h3>
 			<textarea readonly rows="4" style="width:100%;font-family:monospace;font-size:12px;padding:10px;">{longToken}</textarea>
 			<button onclick={() => copy(longToken)} style="margin-top:8px;padding:10px 18px;background:#16140f;color:#fff;border:none;border-radius:8px;">
-				{copied ? 'Kopiert ✓' : 'Long-Lived Token kopieren'}
+				{#if copied}
+					Kopiert <Icon icon={CheckIcon} />
+				{:else}
+					Long-Lived Token kopieren
+				{/if}
 			</button>
 		{/if}
 

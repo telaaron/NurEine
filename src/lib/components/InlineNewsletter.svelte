@@ -2,6 +2,8 @@
 	import { base } from '$app/paths';
 	import { track } from '$lib/track';
 	import { getRef } from '$lib/referral';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CheckIcon } from 'heroicons-svelte/24/outline';
 
 	let { source = 'inline', compact = false }: { source?: string; compact?: boolean } = $props();
 
@@ -62,9 +64,7 @@
 					style="background: var(--color-amber);"
 					aria-hidden="true"
 				>
-					<svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="var(--color-paper)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M20 6L9 17l-5-5" />
-					</svg>
+					<Icon icon={CheckIcon} size="1.5rem" />
 				</div>
 				<div>
 					<p class="text-base sm:text-lg font-semibold" style="color: var(--color-on-ink);">

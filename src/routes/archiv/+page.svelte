@@ -4,6 +4,8 @@
 	import ArchiveLogbook from '$lib/components/ArchiveLogbook.svelte';
 	import { page } from '$app/stores';
 	import { base } from '$app/paths';
+	import Icon from '$lib/components/Icon.svelte';
+	import { ChevronDownIcon, MagnifyingGlassIcon, XMarkIcon } from 'heroicons-svelte/24/outline';
 
 	let { data } = $props();
 	const stories = $derived(data.stories);
@@ -85,7 +87,9 @@
 				style="border: 1px solid var(--color-rule); color: var(--color-ink);"
 			>
 				{active}
-				<svg class="w-3 h-3 transition-transform" style="transform: {filterOpen ? 'rotate(180deg)' : 'rotate(0)'};" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="m1 1 4 4 4-4"/></svg>
+				<div class="w-3 h-3 transition-transform" style="transform: {filterOpen ? 'rotate(180deg)' : 'rotate(0)'};">
+					<Icon icon={ChevronDownIcon} />
+				</div>
 			</button>
 			{#if filterOpen}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -114,9 +118,9 @@
 
 		<!-- Volltext-Suche -->
 		<div class="relative flex-1 min-w-0 max-w-[340px]">
-			<svg class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-faint);">
-				<circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-			</svg>
+			<div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style="width: 1.25rem; height: 1.25rem; color: var(--color-faint);">
+				<Icon icon={MagnifyingGlassIcon} />
+			</div>
 			<!-- type=text statt search: 'search' rendert ein zweites natives Clear-X
 			     zusätzlich zu unserem → Doppel-Button. -->
 			<input
@@ -128,8 +132,8 @@
 			/>
 			{#if query}
 				<button type="button" onclick={() => (query = '')} aria-label="Suche löschen"
-					class="absolute right-2.5 top-1/2 -translate-y-1/2 hover:opacity-70" style="color: var(--color-muted);">
-					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+					class="absolute right-2.5 top-1/2 -translate-y-1/2 hover:opacity-70" style="color: var(--color-muted); width: 1.25rem; height: 1.25rem;">
+					<Icon icon={XMarkIcon} />
 				</button>
 			{/if}
 		</div>

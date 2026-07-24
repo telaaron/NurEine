@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { base } from '$app/paths';
 	import { page } from '$app/state';
+	import Icon from '$lib/components/Icon.svelte';
+	import { Bars3Icon, XMarkIcon } from 'heroicons-svelte/24/outline';
 
 	const nav = [
 		{ href: '/', label: 'Heute' },
@@ -76,17 +78,13 @@
 					class="lg:hidden flex items-center justify-center w-10 h-10 rounded-md -mr-1"
 					aria-label={menuOpen ? 'Menü schließen' : 'Menü öffnen'}
 					aria-expanded={menuOpen}
+					style="color: var(--color-ink);"
 				>
-					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-ink)" stroke-width="2" stroke-linecap="round">
-						{#if menuOpen}
-							<line x1="18" y1="6" x2="6" y2="18" />
-							<line x1="6" y1="6" x2="18" y2="18" />
-						{:else}
-							<line x1="3" y1="6" x2="21" y2="6" />
-							<line x1="3" y1="12" x2="21" y2="12" />
-							<line x1="3" y1="18" x2="21" y2="18" />
-						{/if}
-					</svg>
+					{#if menuOpen}
+						<Icon icon={XMarkIcon} />
+					{:else}
+						<Icon icon={Bars3Icon} />
+					{/if}
 				</button>
 			</div>
 		</div>
@@ -116,10 +114,7 @@
 				aria-label="Menü schließen"
 				style="color: var(--color-ink);"
 			>
-				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-					<line x1="18" y1="6" x2="6" y2="18" />
-					<line x1="6" y1="6" x2="18" y2="18" />
-				</svg>
+				<Icon icon={XMarkIcon} />
 			</button>
 		</div>
 

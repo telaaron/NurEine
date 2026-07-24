@@ -2,6 +2,8 @@
 	import { base } from '$app/paths';
 	import { track } from '$lib/track';
 	import ShareBar from '$lib/components/ShareBar.svelte';
+	import Icon from '$lib/components/Icon.svelte';
+	import { BoltIcon, CheckIcon } from 'heroicons-svelte/24/outline';
 
 	let { data } = $props();
 	const url = 'https://nureine.de/roadmap';
@@ -82,7 +84,7 @@
 		</p>
 		{#if sent}
 			<div class="mt-4 p-4 rounded-[10px] flex items-center gap-3" style="background: var(--color-sage-tint); border: 1px solid var(--color-sage);">
-				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--color-sage)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+				<div style="color: var(--color-sage);"><Icon icon={CheckIcon} /></div>
 				<span class="text-sm" style="color: var(--color-ink);">Danke! Wir lesen jede Nachricht.</span>
 				<button type="button" onclick={() => (sent = false)} class="ml-auto text-xs underline" style="color: var(--color-muted);">Noch eine</button>
 			</div>
@@ -134,7 +136,7 @@
 
 	{#if data.inProgress.length}
 		<div class="mt-12">
-			<h2 class="text-xs uppercase tracking-[0.16em] mb-3" style="color: var(--color-amber); font-family: var(--font-mono);">⚡ In Arbeit</h2>
+			<h2 class="text-xs uppercase tracking-[0.16em] mb-3 flex items-center gap-2" style="color: var(--color-amber); font-family: var(--font-mono);"><Icon icon={BoltIcon} size="1rem" /> In Arbeit</h2>
 			{@render entryList(data.inProgress, false)}
 		</div>
 	{/if}
@@ -148,7 +150,7 @@
 
 	{#if data.shipped.length}
 		<div class="mt-10">
-			<h2 class="text-xs uppercase tracking-[0.16em] mb-3" style="color: var(--color-sage); font-family: var(--font-mono);">✓ Veröffentlicht</h2>
+			<h2 class="text-xs uppercase tracking-[0.16em] mb-3 flex items-center gap-2" style="color: var(--color-sage); font-family: var(--font-mono);"><Icon icon={CheckIcon} size="1rem" /> Veröffentlicht</h2>
 			{@render entryList(data.shipped, false)}
 		</div>
 	{/if}

@@ -4,6 +4,8 @@
 	import { getStoryHeroImageSrc } from '$lib/story-images';
 	import { track } from '$lib/track';
 	import { getRef } from '$lib/referral';
+	import Icon from '$lib/components/Icon.svelte';
+	import { CameraIcon, EnvelopeIcon } from 'heroicons-svelte/24/outline';
 	import StoryCard from '$lib/components/StoryCard.svelte';
 	import ShareBar from '$lib/components/ShareBar.svelte';
 
@@ -446,10 +448,7 @@
 			<div class="relative lg:col-span-5 flex flex-col items-center text-center gap-4 rounded-2xl p-7 sm:p-9"
 				style="background: rgba(189,106,53,0.14); border: 1px solid rgba(189,106,53,0.4);">
 				<div class="flex items-center justify-center w-16 h-16 rounded-full" style="background: var(--color-amber);">
-					<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-						<polyline points="22,6 12,13 2,6"></polyline>
-					</svg>
+					<Icon icon={EnvelopeIcon} size="1.875rem" style="color: #fff;" />
 				</div>
 				<div>
 					<p class="display text-xl sm:text-2xl" style="color: var(--color-on-ink); font-weight: 600;">Fast geschafft!</p>
@@ -513,11 +512,7 @@
 					class="inline-flex items-center gap-1 underline decoration-dotted underline-offset-2 hover:opacity-80"
 					style="color: var(--color-amber);"
 				>
-					<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-						<path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-						<line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-					</svg>
+					<Icon icon={CameraIcon} size="0.75rem" />
 					@nureine.de
 				</a>
 				— eine Geschichte, jeden Morgen.

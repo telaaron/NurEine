@@ -29,22 +29,27 @@
 	let saving = $state(false);
 	let audioGenerating = $state(false);
 	let audioStatus = $state('');
+	let audioStatusType = $state<'success' | 'error' | ''>('');
 	let audioUrl = $state('');
 
 	async function generateAudio() {
 		audioGenerating = true;
 		audioStatus = '';
+		audioStatusType = '';
 		try {
 			const res = await fetch(`/api/admin/stories/${story.id}/generate-audio`, { method: 'POST' });
 			const result = await res.json();
 			if (result.success) {
-				audioStatus = `✅ Audio generiert (${result.provider}): ${result.audio_url}`;
+				audioStatus = `Audio generiert (${result.provider}): ${result.audio_url}`;
+				audioStatusType = 'success';
 				audioUrl = result.audio_url;
 			} else {
-				audioStatus = `❌ Fehler: ${result.error || 'Unbekannt'}`;
+				audioStatus = `Fehler: ${result.error || 'Unbekannt'}`;
+				audioStatusType = 'error';
 			}
 		} catch (e) {
-			audioStatus = `❌ Netzwerkfehler: ${e}`;
+			audioStatus = `Netzwerkfehler: ${e}`;
+			audioStatusType = 'error';
 		} finally {
 			audioGenerating = false;
 		}

@@ -95,7 +95,7 @@
 				{@const hex = toneColors[activeStory.tone] ?? '#c87340'}
 				<article class="card" style="--accent:{hex}">
 					{#if activeStory.hero?.startsWith('http')}
-						<div class="card-hero"><img src={activeStory.hero} alt="" loading="lazy" /></div>
+						<div class="card-hero"><img src={`${base}/img?url=${encodeURIComponent(activeStory.hero)}&w=600`} alt="" loading="lazy" /></div>
 					{:else}
 						<div class="card-hero placeholder"><span>{activeStory.hero || '📰'}</span></div>
 					{/if}

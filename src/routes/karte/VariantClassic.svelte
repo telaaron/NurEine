@@ -198,8 +198,10 @@
 									class="w-10 h-10 flex-shrink-0 rounded-full overflow-hidden"
 									style="border: 1px solid var(--color-rule);"
 								>
+									<!-- /img-Proxy (WebP, skaliert, CDN-Cache): sonst lädt der 40px-
+									     Avatar das volle Supabase-Original (2–6 MB) — Egress-Fresser. -->
 									<img
-										src={activeStory.hero}
+										src={`${base}/img?url=${encodeURIComponent(activeStory.hero)}&w=96`}
 										alt=""
 										class="w-full h-full object-cover"
 										loading="lazy"

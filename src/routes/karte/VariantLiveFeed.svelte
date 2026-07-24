@@ -114,11 +114,7 @@
 						style="--accent:{hex}"
 						onclick={() => (activeSlug = s.slug)}
 					>
-						{#if s.hero?.startsWith('http')}
-							<img class="fi-thumb" src={s.hero} alt="" loading="lazy" />
-						{:else}
-							<span class="fi-thumb fi-emoji">{s.hero || '📰'}</span>
-						{/if}
+						<span class="fi-tick" style="background:{hex}"></span>
 						<div class="fi-body">
 							<div class="fi-top"><span class="fi-country">{s.country}</span><span class="fi-impact">{s.impactScore}</span></div>
 							<span class="fi-title">{s.title}</span>
@@ -129,14 +125,24 @@
 		</div>
 	</div>
 
-	<!-- active story detail bar -->
+	<!-- active story detail card -->
 	{#if activeStory}
 		{@const hex = toneColors[activeStory.tone] ?? '#c87340'}
-		<a class="detail" style="--accent:{hex}" href={base + '/geschichte/' + activeStory.slug}>
-			<span class="det-badge">{activeStory.category}</span>
-			<span class="det-title">{activeStory.title}</span>
-			<span class="det-dek">{activeStory.dek}</span>
-			<span class="det-go">Lesen →</span>
+		{@const hasImg = activeStory.hero?.startsWith('http')}
+		<a class="detail" class:with-img={hasImg} style="--accent:{hex}" href={base + '/geschichte/' + activeStory.slug}>
+			{#if hasImg}
+				<div class="det-media"><img src={`${base}/img?url=${encodeURIComponent(activeStory.hero)}&w=600`} alt="" loading="lazy" /></div>
+			{/if}
+			<div class="det-content">
+				<div class="det-top">
+					<span class="det-badge">{activeStory.category}</span>
+					<span class="det-country">{activeStory.country}</span>
+					<span class="det-impact">{activeStory.impactScore}/100 Wirkung</span>
+				</div>
+				<h3 class="det-title display">{activeStory.title}</h3>
+				<p class="det-dek">{activeStory.dek}</p>
+				<span class="det-go">Geschichte lesen<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 3l5 5-5 5"/></svg></span>
+			</div>
 		</a>
 	{/if}
 </section>
@@ -170,18 +176,37 @@
 	.feed-item { display: flex; gap: 0.75rem; width: 100%; text-align: left; padding: 0.6rem; border-radius: 9px; border: 1px solid transparent; background: transparent; cursor: pointer; transition: background 0.15s, border-color 0.15s; align-items: center; }
 	.feed-item:hover { background: var(--color-canvas-soft); }
 	.feed-item.active { background: color-mix(in srgb, var(--accent) 10%, transparent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
-	.fi-thumb { width: 3rem; height: 3rem; border-radius: 8px; object-fit: cover; flex-shrink: 0; background: var(--color-canvas-soft); }
-	.fi-emoji { display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
+	/* slim tone-tick instead of a thumbnail */
+	.fi-tick { width: 3px; align-self: stretch; border-radius: 999px; flex-shrink: 0; opacity: 0.55; transition: opacity 0.15s; }
+	.feed-item:hover .fi-tick, .feed-item.active .fi-tick { opacity: 1; }
 	.fi-body { min-width: 0; flex: 1; }
 	.fi-top { display: flex; justify-content: space-between; align-items: center; font-size: 0.68rem; color: var(--color-muted); }
 	.fi-impact { font-family: var(--font-mono); color: var(--accent); font-weight: 600; }
 	.fi-title { display: block; font-size: 0.86rem; color: var(--color-ink); font-weight: 500; line-height: 1.3; margin-top: 0.15rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
-	.detail { margin-top: 1.25rem; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.5rem 1rem; padding: 1rem 1.25rem; border-radius: 12px; border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--color-rule)); background: var(--color-paper); text-decoration: none; animation: cardin 0.3s ease both; }
-	@keyframes cardin { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-	.det-badge { grid-row: 1; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
-	.det-title { grid-row: 1; color: var(--color-ink); font-weight: 600; font-size: 1rem; }
-	.det-go { grid-row: 1; grid-column: 3; color: var(--accent); font-weight: 600; font-size: 0.85rem; white-space: nowrap; }
-	.det-dek { grid-column: 1 / 3; grid-row: 2; color: var(--color-ink-soft); font-family: var(--font-serif); font-size: 0.9rem; line-height: 1.5; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-	@media (max-width: 640px) { .detail { grid-template-columns: 1fr; } .det-go { grid-column: 1; grid-row: 3; } .det-dek { grid-column: 1; } }
+	/* rich, inviting story card at the bottom */
+	.detail {
+		margin-top: 1.5rem; display: grid; grid-template-columns: 1fr; gap: 0; border-radius: 16px; overflow: hidden;
+		border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--color-rule));
+		background: var(--color-paper); text-decoration: none;
+		box-shadow: 0 18px 50px -28px rgba(0,0,0,0.55);
+		animation: cardin 0.35s cubic-bezier(0.2,0.7,0.2,1) both; transition: transform 0.2s, box-shadow 0.2s;
+	}
+	.detail:hover { transform: translateY(-2px); box-shadow: 0 24px 60px -26px rgba(0,0,0,0.6); }
+	@keyframes cardin { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+	@media (min-width: 720px) { .detail.with-img { grid-template-columns: 300px 1fr; } }
+
+	.det-media { position: relative; overflow: hidden; background: var(--color-canvas-soft); min-height: 180px; }
+	.det-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+	.det-media::after { content: ''; position: absolute; inset: 0; box-shadow: inset -1px 0 0 var(--color-rule); }
+
+	.det-content { padding: 1.4rem 1.6rem 1.5rem; display: flex; flex-direction: column; }
+	.det-top { display: flex; align-items: center; gap: 0.7rem; font-size: 0.72rem; color: var(--color-muted); flex-wrap: wrap; }
+	.det-badge { padding: 0.22rem 0.65rem; border-radius: 999px; font-weight: 600; background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); text-transform: capitalize; }
+	.det-impact { margin-left: auto; font-family: var(--font-mono); color: var(--accent); font-weight: 600; }
+	.det-title { margin-top: 0.75rem; color: var(--color-ink); font-weight: 600; font-size: clamp(1.2rem, 2vw, 1.6rem); line-height: 1.2; }
+	.det-dek { margin-top: 0.65rem; color: var(--color-ink-soft); font-family: var(--font-serif); font-size: 1rem; line-height: 1.55; }
+	.det-go { margin-top: 1.1rem; display: inline-flex; align-items: center; gap: 0.4rem; color: var(--accent); font-weight: 600; font-size: 0.9rem; }
+	.detail:hover .det-go { gap: 0.6rem; }
+	.det-go svg { transition: transform 0.2s; }
 </style>

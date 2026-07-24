@@ -37,6 +37,7 @@
 					<li><a class="hover:opacity-70" href={base + '/karte'}>Karte der Hoffnung</a></li>
 					<li><a class="hover:opacity-70" href={base + '/bei-dir'}>Gute Nachrichten vor Ort</a></li>
 					<li><a class="hover:opacity-70" href={base + '/preise'}>Preise & Abos</a></li>
+					<li><a class="hover:opacity-70" href={base + '/fuer-unternehmen'}>Für Unternehmen</a></li>
 				</ul>
 			</div>
 			<div>

@@ -275,6 +275,9 @@
 			Hoffnungsmomente. Praxen berichten von entspannteren Patienten, Schulen von
 			aufmerksameren Schülern. Sprecht mit uns über eine maßgeschneiderte Lösung.
 		</p>
+		<p class="mt-3 text-sm">
+			<a href={base + '/fuer-unternehmen'} class="hover:opacity-70" style="color: var(--color-amber-deep); border-bottom: 1px solid var(--color-rule-strong);">Alle Tarife &amp; wie es funktioniert &rarr;</a>
+		</p>
 
 		{#if b2bSent}
 			<div

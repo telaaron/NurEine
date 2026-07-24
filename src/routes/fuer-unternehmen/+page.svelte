@@ -3,6 +3,7 @@
 	import B2BForm from '$lib/components/B2BForm.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { ComputerDesktopIcon, EnvelopeIcon, HomeModernIcon, SwatchIcon } from 'heroicons-svelte/24/outline';
+	import ScrollScreen from '$lib/components/ScrollScreen.svelte';
 </script>
 
 <svelte:head>
@@ -29,22 +30,25 @@
 		</div>
 	</header>
 
-	<!-- SCREEN-MOCK (aus C) -->
+	<!-- SCREEN-MOCK mit 3D-Scroll-Kipp-Effekt -->
 	<section class="demo">
-		<div class="screen">
-			<div class="screen-bezel">
-				<div class="screen-content">
-					<div class="s-cat">Gesundheit · Wirkung 82</div>
-					<h3 class="s-head">Speicheltest verkürzt eine Diagnose von neun Jahren auf Stunden</h3>
-					<p class="s-dek">
-						Was Betroffene früher fast ein Jahrzehnt Ungewissheit kostete, klärt ein einfacher Test
-						jetzt am selben Tag.
-					</p>
-					<div class="s-foot"><span>Quelle: Fachjournal</span><span class="s-brand">NurEine</span></div>
+		<ScrollScreen>
+			<div class="screen-content">
+				<div class="s-top">
+					<span class="s-cat">Gesundheit</span>
+					<span class="s-live"><span class="dot"></span>Heute · nureine.de</span>
+				</div>
+				<h3 class="s-head">Speicheltest verkürzt eine Diagnose von neun Jahren auf Stunden</h3>
+				<p class="s-dek">
+					Was Betroffene früher fast ein Jahrzehnt Ungewissheit kostete, klärt ein einfacher Test
+					jetzt am selben Tag.
+				</p>
+				<div class="s-foot">
+					<span class="s-src">Quelle: Fachjournal</span>
+					<span class="s-wirk">Wirkung <strong>82</strong>/100</span>
 				</div>
 			</div>
-			<div class="screen-stand"></div>
-		</div>
+		</ScrollScreen>
 		<p class="demo-cap">So sieht ein guter Morgen auf euren Bildschirmen aus.</p>
 	</section>
 
@@ -138,17 +142,23 @@
 	.btn-primary { background: var(--color-amber); color: #fff; padding: 0.9rem 2rem; border-radius: 100px; font-weight: 700; text-decoration: none; }
 	.btn-ghost { border: 1px solid var(--color-rule); color: var(--color-ink); padding: 0.9rem 2rem; border-radius: 100px; font-weight: 600; text-decoration: none; }
 
-	/* SCREEN-MOCK */
+	/* SCREEN-MOCK (Inhalt im ScrollScreen-Rahmen) */
 	.demo { display: flex; flex-direction: column; align-items: center; margin: 1rem 0 4rem; }
-	.screen-bezel { width: 100%; max-width: 520px; background: #1a1a1c; border-radius: 16px; padding: 16px; box-shadow: 0 28px 70px rgba(40,25,15,0.2); }
-	.screen-content { background: #faf6ee; border-radius: 7px; padding: 2rem; aspect-ratio: 16/10; display: flex; flex-direction: column; justify-content: center; }
-	.s-cat { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #c87340; margin-bottom: 0.8rem; }
-	.s-head { font-family: var(--font-display); font-size: 1.5rem; line-height: 1.14; letter-spacing: -0.02em; margin: 0 0 0.8rem; color: #1a1815; }
-	.s-dek { font-family: var(--font-serif); font-size: 1rem; line-height: 1.45; color: #3a342c; margin: 0; }
-	.s-foot { display: flex; justify-content: space-between; margin-top: auto; padding-top: 1.4rem; font-size: 0.78rem; color: #9a9087; }
-	.s-brand { font-family: var(--font-display); font-weight: 700; color: #1a1815; }
-	.screen-stand { width: 100px; height: 44px; background: linear-gradient(#2a2a2c, #1a1a1c); clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); margin-top: -2px; }
-	.demo-cap { font-family: var(--font-serif); font-style: italic; font-size: 1.15rem; color: var(--color-muted); margin-top: 1.5rem; text-align: center; }
+	.screen-content { padding: 2.4rem 2.6rem; aspect-ratio: 16/9; display: flex; flex-direction: column;
+		background: linear-gradient(160deg, #ffffff 0%, #faf6ee 100%); color: #1a1815; }
+	.s-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.1rem; }
+	.s-cat { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #c87340;
+		background: rgba(200,115,64,0.12); padding: 4px 12px; border-radius: 100px; }
+	.s-live { display: inline-flex; align-items: center; gap: 7px; font-size: 0.72rem; color: #9a9087; font-weight: 500; }
+	.s-live .dot { width: 7px; height: 7px; border-radius: 50%; background: #5a7a52; box-shadow: 0 0 0 3px rgba(90,122,82,0.18); }
+	.s-head { font-family: var(--font-display); font-size: 1.7rem; line-height: 1.12; letter-spacing: -0.02em; margin: 0 0 0.9rem; color: #16140f; }
+	.s-dek { font-family: var(--font-serif); font-size: 1.05rem; line-height: 1.5; color: #3a342c; margin: 0; }
+	.s-foot { display: flex; justify-content: space-between; align-items: baseline; margin-top: auto; padding-top: 1.4rem;
+		border-top: 1px solid rgba(22,20,15,0.08); font-size: 0.8rem; color: #9a9087; }
+	.s-wirk { color: #6b6359; }
+	.s-wirk strong { font-family: var(--font-display); font-size: 1.05rem; color: #c87340; }
+	.demo-cap { font-family: var(--font-serif); font-style: italic; font-size: 1.15rem; color: var(--color-muted); margin-top: 2rem; text-align: center; }
+	@media (max-width: 640px) { .screen-content { padding: 1.5rem 1.6rem; aspect-ratio: 4/3; } .s-head { font-size: 1.3rem; } }
 
 	/* SCHRITTE */
 	.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 2rem 0 4rem; }

@@ -86,6 +86,8 @@
 	</a>
 
 	<a href={xUrl} target="_blank" rel="noopener noreferrer" onclick={() => track('share', { method: 'x', url: shareUrl })} class="share-btn" aria-label="Auf X teilen" title="X">
+		<!-- AUSNAHME vom Heroicons-Standard: X/Twitter ist ein Marken-Logo, das
+		     Heroicons bewusst nicht enthält (wie alle Brand-Marks). Bleibt inline. -->
 		<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
 			<path d="M4 4l11.733 16h4.267l-11.733 -16z" />
 			<path d="M4 20l6.768 -6.768" />

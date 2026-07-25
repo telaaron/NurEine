@@ -3,6 +3,7 @@
 	"_beispiel": "\"Malaria\": \"Malaaria\" würde die Betonung strecken; \"WHO\": \"Weh Haa Oh\" buchstabiert.",
 	"_regel_komposita": "Die Multilingual-Stimme kippt bei langen deutschen Komposita ins Englische ('Notbremsassistent' -> 'Not Bram's Assistant', 'Gebärmutterhalskrebs' -> 'Gebbermutter Hall-Scribs'). Gegenmittel: mit Bindestrichen in Sprech-Silben zerlegen. Verifiziert per Whisper-Gegenprobe 2026-07-17.",
 	"_regel_abkuerzungen": "ABER: Buchstaben-Abkürzungen NICHT mit Bindestrichen als Silben schreiben ('Ha-Pe-Vau' -> 'HPEW', verschliffen). Einzelbuchstaben mit LEERZEICHEN buchstabieren ('H P V' -> sauber 'HPV'). Verifiziert per Whisper 2026-07-18.",
+	"_regel_englisch": "render.mjs hat einen ENGLISCH-WÄCHTER: erkennt er ein englisches Wort im voText (das die Stimme englisch aussprechen würde), bricht der Render HART ab. Bester Fix ist NICHT das Lexikon, sondern das Wort im voText EINDEUTSCHEN/UMSCHREIBEN (Quellen/Eigennamen gehören eh nur in den Screen, im voText 'eine kanadische Klinik' statt 'Hamilton Health Sciences'). Nur wenn ein englischer Begriff zwingend gesprochen werden MUSS: hier eine deutsche Aussprache eintragen. Übersteuern des Wächters: render.mjs --no-en-check (nur mit Grund).",
 	"WHO": "Weh Ha Oh",
 	"UNICEF": "Unizef",
 	"NASA": "Nassa",

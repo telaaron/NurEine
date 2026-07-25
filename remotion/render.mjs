@@ -265,6 +265,29 @@ function escapeRegex(s) {
 	return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// ── Englisch-Detektor (kein englisches Wort mehr in den VO) ──────────────────
+// Beide Engines (ElevenLabs UND edge-tts Multilingual) sprechen englische Wörter
+// im voText ENGLISCH aus. Der Detektor läuft NACH prepareTts (also nach Lexikon/
+// Abkürzungen/Zahlen) auf dem finalen TTS-Text: bleibt ein verdächtig englisches
+// Wort übrig, das NICHT über tts-lexikon.json aufgelöst wurde, bricht der Render
+// hart ab (wie der SEO-Check). Fix: das Wort im voText eindeutschen ODER eine
+// deutsche Aussprache ins Lexikon eintragen. So kann nichts mehr unbemerkt durch.
+const EN_BLACKLIST = new Set(['the', 'and', 'of', 'for', 'with', 'health', 'sciences', 'science', 'university', 'journal', 'news', 'network', 'daily', 'report', 'study', 'good', 'world', 'first', 'new', 'clean', 'energy', 'power', 'care', 'brain', 'heart', 'monitor', 'trust', 'foundation', 'institute', 'research', 'optimist', 'restores', 'memory', 'clears', 'model', 'evidence', 'chemical', 'neuroscience', 'global', 'nature', 'medicine', 'medical', 'today', 'future', 'people', 'life', 'water', 'green', 'happy', 'hope', 'children', 'women', 'ocean', 'forest', 'wildlife', 'climate']);
+const EN_PATTERNS = [/[a-z]+ing\b/i, /[a-z]{2}ght\b/i, /^th[a-z]+/i, /[a-z]+ously\b/i, /\bwh[a-z]{2,}/i, /[a-z]ea[a-z]/i, /[a-z]oo[a-z]/i];
+const DE_MARKERS = /[äöüß]|sch|ung$|keit$|heit$|lich$|chen$|ische$|ischen$|tät$|ieren$|iert$/i;
+const DE_OK = new Set(['team', 'teams', 'training', 'internet', 'computer', 'link', 'online', 'live', 'app', 'apps', 'video', 'story', 'update', 'meeting', 'design', 'start', 'test', 'job', 'jobs', 'fair', 'international', 'labor', 'partner', 'sport', 'international']);
+
+function detectEnglishWords(ttsText) {
+	const suspects = [];
+	for (const w of ttsText.match(/[A-Za-zÄÖÜäöüß]{3,}/g) || []) {
+		const lo = w.toLowerCase();
+		if (DE_OK.has(lo) || DE_MARKERS.test(w)) continue;
+		if (EN_BLACKLIST.has(lo)) suspects.push(w);
+		else if (lo.length <= 9 && EN_PATTERNS.some((p) => p.test(lo))) suspects.push(w);
+	}
+	return [...new Set(suspects)];
+}
+
 /**
  * Kompletter TTS-Vorbereitungs-Pass: Lexikon → Gedankenstriche/Abkürzungen →
  * Zahlen ausschreiben. Liefert subs fürs Caption-Rückmapping.
@@ -344,6 +367,13 @@ function synthSegment(text, slug, name) {
 	// Multilingual-Stimme Ziffern englisch bzw. stolpert über Sonderzeichen.
 	const { ttsText, subs } = prepareTts(text);
 	if (subs.length) console.log(`vo-fix (${name}): ${subs.map((s) => `"${s.display}"→"${s.spoken.join(' ')}"`).join(' · ')}`);
+	// Englisch-Wächter: kein englisches Wort darf die Stimme erreichen (beide Engines
+	// sprechen es englisch aus). Bricht hart ab; Fix = Wort eindeutschen ODER deutsche
+	// Aussprache ins tts-lexikon.json. --no-en-check übersteuert bewusst.
+	const enSuspects = detectEnglishWords(ttsText);
+	if (enSuspects.length && !arg('no-en-check')) {
+		throw new Error(`VO-Segment "${name}": vermutlich ENGLISCHE Wörter im voText → würden englisch ausgesprochen: ${enSuspects.join(', ')}. Fix: im voText eindeutschen (z.B. Quelle „Good News Network" → „einer Good-News-Redaktion") ODER deutsche Aussprache in remotion/tts-lexikon.json eintragen. (Übersteuern: --no-en-check)`);
+	}
 	try {
 		execFileSync(py, [fileURLToPath(new URL('./scripts/tts.py', import.meta.url)), '--text', ttsText, '--voice', VOICE, '--rate', TTS_RATE, '--engine', TTS_ENGINE, '--out', `${dir}${slug}-${name}.mp3`, '--words', wordsPath], { stdio: 'inherit', timeout: 120000 });
 		let words = JSON.parse(readFileSync(wordsPath, 'utf8'));

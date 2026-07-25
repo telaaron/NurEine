@@ -89,10 +89,18 @@ einer Empfehlung). Bestimme die Top 3 nach `resonance_score`:
 - GAR NICHTS ≥ 7.0 → eine **Archiv-Perle** aus dem Pool an Rang 1 (`is_pearl=true`,
   `below_bar=true`), plus die 2 besten frischen als Alternativen:
   ```sql
-  SELECT id,title,summary,resonance_score FROM nureine_stories
-  WHERE resonance_score >= 7.5 AND is_hero = false
-    AND id NOT IN (SELECT story_id FROM nureine_curation_queue WHERE story_id IS NOT NULL)
-  ORDER BY resonance_score DESC, created_at ASC LIMIT 5;
+  -- Perlen robust ueber die FORMEL ranken (immun gegen resonance_score-Skalendrift,
+  -- siehe RESONANCE.md) und Groesse-ohne-Resonanz-Quellen (hero_eligible=false) ausschliessen:
+  SELECT * FROM (
+    SELECT s.id, s.title, s.summary,
+      round((res_perspektive*0.30 + res_koerper*0.25 + res_handlung*0.25 + res_erinnerung*0.20)::numeric, 2) AS fine
+    FROM nureine_stories s
+    LEFT JOIN nureine_rss_sources src ON src.name = s.source_name
+    WHERE res_perspektive IS NOT NULL AND res_koerper IS NOT NULL
+      AND res_handlung IS NOT NULL AND res_erinnerung IS NOT NULL
+      AND s.is_hero = false AND coalesce(src.hero_eligible, true) = true
+      AND s.id NOT IN (SELECT story_id FROM nureine_curation_queue WHERE story_id IS NOT NULL)
+  ) q WHERE fine >= 7.5 ORDER BY fine DESC LIMIT 5;
   ```
 - Pro Option: 1-Satz-`rationale` (warum sie berührt) + fertige IG-Caption + Mail-Betreff.
 

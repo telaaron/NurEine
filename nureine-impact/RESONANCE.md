@@ -61,6 +61,19 @@ Gewichteter Schnitt — **alle 4 zählen, aber die seltenen Achsen mehr**, weil 
 resonance_score = perspektive×0.30 + koerper×0.25 + handlung×0.25 + erinnerung×0.20
 ```
 
+> **Speicher-Konvention (verbindlich):** `resonance_score` wird auf der **0–10-Skala**
+> gespeichert — exakt der Formel-Output oben, **kein ×10**. Die vier Achsen
+> (`res_perspektive/res_koerper/res_handlung/res_erinnerung`) ebenso 0–10. Die
+> Schwellen unten (7.0 / 7.5) gelten auf genau dieser Skala.
+>
+> **Drift-Befund 2026-07-16:** mehrere Juli-Kurationsläufe schrieben `resonance_score`
+> versehentlich ×10 (z.B. `58.0` statt `5.8`, `90.0` statt `9.0`). Das verfälscht den
+> Dashboard-Score-Trend **und** ließ die Archiv-Perlen-Query in ROUTINE A4 (`>= 7.5`)
+> leer laufen, während echte Perlen im Bestand lagen. Betroffene Alt-Zeilen einmalig
+> normalisieren (manuell, kein Auto-Run):
+> `UPDATE nureine_stories SET resonance_score = resonance_score/10 WHERE resonance_score > 10;`
+> (und analog in `nureine_curation_queue`). Ab jetzt immer 0–10 schreiben.
+
 `resonance_note`: EIN Satz, warum es (nicht) berührt. Ehrlich, schonungslos.
 Beispiel schwach: "Positiv, aber generisch — betrifft viele, bewegt niemanden."
 Beispiel stark: "Der Vater, der zum ersten Mal sieht — das bleibt im Hals stecken."

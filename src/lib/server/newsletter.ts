@@ -980,7 +980,13 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
   console.info('[newsletter] B2C subscribers:', subscribers.length);
 
   // Per-subscriber dedup: which candidate stories has each already received?
-  const sentByStory = await fetchRecentSendsByStory(ranked.map((s) => s.id));
+  // heroForAll is not necessarily part of `ranked` (it comes from a separate
+  // curation query), so it must be included here explicitly — otherwise a
+  // second cron run (backup trigger, see wrangler.toml) resends it to
+  // everyone unchecked. (improvement #49, Verbesserer-Agent)
+  const candidateIds = ranked.map((s) => s.id);
+  if (heroForAll && !candidateIds.includes(heroForAll.id)) candidateIds.push(heroForAll.id);
+  const sentByStory = await fetchRecentSendsByStory(candidateIds);
 
   let b2cSent = 0;
   let b2cFailed = 0;
@@ -991,8 +997,12 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
       b2cFailed += 1;
       continue;
     }
-    // Hero-für-alle: kuratierte Hero → jeder kriegt sie. Sonst personalisiert (alt).
-    const pick = heroForAll ?? pickForSubscriber(ranked, sub.categories, sub.category_scores, sentByStory.get(sub.id) ?? new Set());
+    const alreadySent = sentByStory.get(sub.id) ?? new Set<string>();
+    // Hero-für-alle: kuratierte Hero → jeder kriegt sie, aber nur EINMAL —
+    // ein zweiter Cron-Lauf (Backup-Trigger) darf sie nicht erneut verschicken.
+    const pick = heroForAll
+      ? (alreadySent.has(heroForAll.id) ? null : heroForAll)
+      : pickForSubscriber(ranked, sub.categories, sub.category_scores, alreadySent);
     if (!pick) {
       // Everything in the candidate set already sent to this subscriber — skip.
       continue;

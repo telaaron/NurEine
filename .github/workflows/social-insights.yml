@@ -3,8 +3,11 @@ name: Social — Refresh Insights
 # Zieht täglich IG-Insights (saves/reach) für geposteten Content in die DB.
 # A/B-Auswertung ohne manuelles Eintragen.
 on:
-  schedule:
-    - cron: '0 22 * * *'  # 22:00 UTC (00:00 CEST) — nach dem Tagesgeschäft
+  # ABGESCHALTET (2026-07-25): läuft jetzt vom Mac-Mini-Runner
+  # (ops/crontab.txt). GitHub-Cron feuerte parallel → doppelte Trigger
+  # (Highlight-/Social-Mails kamen 2×). Manuell weiter per workflow_dispatch.
+  # schedule:
+  #   - cron: '0 22 * * *'  # 22:00 UTC (00:00 CEST) — nach dem Tagesgeschäft
   workflow_dispatch:
 
 jobs:

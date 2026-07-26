@@ -4,8 +4,11 @@ name: Daten-Reporter — Weltbank-Indikatoren
 # (Kindersterblichkeit, Armut, Trinkwasser, Bildung), die nie als Schlagzeile
 # erscheinen. Wöchentlich — solche Indikatoren ändern sich nur langsam.
 on:
-  schedule:
-    - cron: '30 5 * * 1'  # Montags 05:30 UTC
+  # ABGESCHALTET (2026-07-25): läuft jetzt vom Mac-Mini-Runner
+  # (ops/crontab.txt). GitHub-Cron feuerte parallel → doppelte Trigger
+  # (Highlight-/Social-Mails kamen 2×). Manuell weiter per workflow_dispatch.
+  # schedule:
+  #   - cron: '30 5 * * 1'  # Montags 05:30 UTC
   workflow_dispatch:
 
 jobs:

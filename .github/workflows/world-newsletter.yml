@@ -1,8 +1,11 @@
 name: Monthly World Newsletter (Stand der Welt)
 
 on:
-  schedule:
-    - cron: '20 6 1 * *'  # 06:20 UTC am 1. jedes Monats — nach dem Metrik-Fetch (05:00)
+  # ABGESCHALTET (2026-07-25): läuft jetzt vom Mac-Mini-Runner
+  # (ops/crontab.txt). GitHub-Cron feuerte parallel → doppelte Trigger
+  # (Highlight-/Social-Mails kamen 2×). Manuell weiter per workflow_dispatch.
+  # schedule:
+  #   - cron: '20 6 1 * *'  # 06:20 UTC am 1. jedes Monats — nach dem Metrik-Fetch (05:00)
   workflow_dispatch:
 
 jobs:

@@ -6,8 +6,11 @@ name: IndexNow — Ping Stories
 #   fetch-stories run could not reach the endpoint.
 # No-op-safe: returns 500 only if INDEXNOW_KEY/CRON_SECRET are unset.
 on:
-  schedule:
-    - cron: '15 7 * * *'  # 07:15 UTC — after the night's stories exist
+  # ABGESCHALTET (2026-07-25): läuft jetzt vom Mac-Mini-Runner
+  # (ops/crontab.txt). GitHub-Cron feuerte parallel → doppelte Trigger
+  # (Highlight-/Social-Mails kamen 2×). Manuell weiter per workflow_dispatch.
+  # schedule:
+  #   - cron: '15 7 * * *'  # 07:15 UTC — after the night's stories exist
   workflow_dispatch:
     inputs:
       recent:

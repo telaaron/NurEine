@@ -53,8 +53,13 @@ const VO_TAIL = TIKTOK ? 0.15 : 0.35; // Sekunden hinter dem letzten Wort im TTS
 // nur ~2,2 Wörter/s, damit wird ein 50-Wort-Skript >23s. REEL_RATE übersteuert.
 // +16% seit 2026-07-11 (Publikums-Feedback: „muss schneller geredet werden").
 const TTS_RATE = env.REEL_RATE || (TIKTOK ? '+16%' : '+4%');
-// TTS-Backend: 'edge' (kostenlos) oder 'eleven' (ElevenLabs-Premium-Stimme via
-// ELEVENLABS_API_KEY/_VOICE_ID — eine Marken-Stimme, Figur-Kopplung entfällt).
+// TTS-Backend:
+//   'edge'   — kostenlos, Microsoft-Neural-Stimmen, braucht Internet (Default)
+//   'eleven' — ElevenLabs-Premium via ELEVENLABS_API_KEY/_VOICE_ID (eine
+//              Marken-Stimme, Figur-Kopplung entfällt); wortgenaue Timings
+//   'local'  — lokaler TTS-Service auf dem Mac Mini (Piper/Chatterbox), offline
+//              und kostenlos. Adresse via TTS_LOCAL_URL, Engine via
+//              TTS_LOCAL_ENGINE. Siehe ops/tts-service/README.md
 const TTS_ENGINE = env.REEL_TTS || 'edge';
 
 // ── Extraktion (Fallbacks ohne LLM) ─────────────────────────────────────────
@@ -718,7 +723,7 @@ async function main() {
 	// --comp übersteuert (Debug); der ReelDaily-Build wurde 2026-07-14 verworfen.
 	const compArg = arg('comp');
 	const comp = compArg && compArg !== true ? compArg : 'ReelTikTok';
-	console.log(`szenen: ${scenes.map((s) => s.kind).join(' → ')} | ${Math.round(duration / FPS)}s | VO: ${anyVo ? `ja (${TTS_ENGINE === 'eleven' ? 'ElevenLabs' : VOICE})` : 'nein'} | comp: ${comp} | pace: ${PACE}${TIKTOK ? ' (tiktok)' : ''}`);
+	console.log(`szenen: ${scenes.map((s) => s.kind).join(' → ')} | ${Math.round(duration / FPS)}s | VO: ${anyVo ? `ja (${TTS_ENGINE === 'eleven' ? 'ElevenLabs' : TTS_ENGINE === 'local' ? `lokal/${env.TTS_LOCAL_ENGINE || 'piper'}` : VOICE})` : 'nein'} | comp: ${comp} | pace: ${PACE}${TIKTOK ? ' (tiktok)' : ''}`);
 
 	execFileSync('npx', ['remotion', 'render', comp, out, `--props=${propsPath}`, '--log=error'], {
 		stdio: 'inherit',
@@ -754,6 +759,6 @@ async function main() {
 }
 
 main().catch((e) => {
-	console.error('FEHLER:', e.message);
+	console.error('FEHLER:', e.stack || e.message);
 	exit(1);
 });

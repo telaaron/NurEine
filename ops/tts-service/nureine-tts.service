@@ -1,0 +1,32 @@
+# NurEine TTS-Service — lokale Sprachgenerierung im Heimnetz
+#
+# Installation auf dem Mac Mini:
+#   sudo cp ops/tts-service/nureine-tts.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now nureine-tts
+#   systemctl status nureine-tts
+#
+# Erreichbar danach unter http://192.168.178.3:8123
+[Unit]
+Description=NurEine lokaler TTS-Service (Piper + Chatterbox)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=aaron
+WorkingDirectory=/home/aaron/tts-service
+Environment=TTS_SERVICE_DIR=/home/aaron/tts-service
+Environment=TTS_PORT=8123
+# Chatterbox/torch auf dieser alten CPU: Threads begrenzen, damit die
+# Nacht-Routinen nicht ausgehungert werden (der Mini hat 8 Threads).
+Environment=OMP_NUM_THREADS=4
+Environment=MKL_NUM_THREADS=4
+ExecStart=/home/aaron/tts-service/.venv/bin/python /home/aaron/tts-service/server.py
+Restart=on-failure
+RestartSec=5
+# Nie die ganze Maschine blockieren
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

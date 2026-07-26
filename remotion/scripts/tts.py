@@ -145,6 +145,8 @@ def synth_local(text: str, rate: str, out_mp3: str, out_words: str, voice: str) 
 
     payload = json.dumps({
         "text": text, "engine": engine, "voice": voice or None,
+        # thorsten_emotional: "amused" klingt warm/zugewandt, "neutral" unbeteiligt
+        "emotion": os.environ.get("TTS_LOCAL_EMOTION") or None,
         "format": "mp3", "speed": round(speed, 2), "words": True,
     }).encode("utf-8")
     req = urllib.request.Request(

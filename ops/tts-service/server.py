@@ -103,13 +103,37 @@ def apply_speed(wav_path: Path, speed: float) -> Path:
 
 
 # ── Engines ─────────────────────────────────────────────────────────────────
-def synth_piper(text: str, voice: str, out_wav: Path, want_words: bool) -> list[dict] | None:
-    """Piper: schnell, CPU-freundlich. Optional mit Wort-Timings."""
+def voice_speakers(voice: str) -> dict[str, int]:
+    """Mehrsprecher-Modelle (z.B. thorsten_emotional) haben benannte Stimmen/Emotionen."""
+    cfg = MODELS_DIR / f"{voice}.onnx.json"
+    if not cfg.exists():
+        return {}
+    try:
+        return json.loads(cfg.read_text()).get("speaker_id_map", {}) or {}
+    except Exception:
+        return {}
+
+
+def synth_piper(text: str, voice: str, out_wav: Path, want_words: bool,
+                emotion: str | None = None) -> list[dict] | None:
+    """Piper: schnell, CPU-freundlich. Optional mit Wort-Timings.
+
+    `emotion` wählt bei Mehrsprecher-Modellen (thorsten_emotional) die Variante:
+    amused, angry, disgusted, drunk, neutral, sleepy, surprised, whisper.
+    Für NurEine ist "amused" der warme, zugewandte Ton — "neutral" klingt
+    schnell nach unbeteiligtem Vorlesen."""
     model = MODELS_DIR / f"{voice}.onnx"
     if not model.exists():
         raise HTTPException(404, f"Piper-Stimme '{voice}' nicht gefunden. Verfügbar: {piper_voices()}")
 
     cmd = [str(VENV_PY), "-m", "piper", "-m", str(model), "-f", str(out_wav)]
+
+    speakers = voice_speakers(voice)
+    if emotion and speakers:
+        if emotion not in speakers:
+            raise HTTPException(400, f"Emotion '{emotion}' gibt es bei '{voice}' nicht. Möglich: {sorted(speakers)}")
+        cmd += ["--speaker", str(speakers[emotion])]
+
     proc = subprocess.run(cmd, input=text.encode("utf-8"), capture_output=True)
     if proc.returncode != 0 or not out_wav.exists():
         raise HTTPException(500, f"Piper-Fehler: {proc.stderr.decode()[:400]}")
@@ -152,6 +176,7 @@ class TTSRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=8000)
     engine: str = "piper"
     voice: str | None = None
+    emotion: str | None = None   # nur thorsten_emotional: amused, surprised, whisper, …
     format: str = "mp3"
     speed: float = 1.0
     words: bool = False
@@ -167,8 +192,12 @@ def health() -> dict:
 
 @app.get("/voices")
 def voices() -> dict:
+    piper = {}
+    for v in piper_voices():
+        speakers = voice_speakers(v)
+        piper[v] = {"emotions": sorted(speakers)} if speakers else {}
     return {
-        "piper": piper_voices(),
+        "piper": piper,
         "chatterbox": ["multilingual (de)"] if chatterbox_available() else [],
     }
 
@@ -180,7 +209,8 @@ def tts(req: TTSRequest):
         wav = Path(td) / "out.wav"
 
         if engine == "piper":
-            word_list = synth_piper(req.text, req.voice or DEFAULT_PIPER_VOICE, wav, req.words)
+            word_list = synth_piper(req.text, req.voice or DEFAULT_PIPER_VOICE, wav,
+                                    req.words, req.emotion)
         elif engine == "chatterbox":
             synth_chatterbox(req.text, wav, req.speed)
             word_list = None

@@ -33,9 +33,29 @@ curl -X POST http://192.168.178.3:8123/tts \
 > **Warum Piper der Standard ist:** Der Mini ist ein 2011er-Sandy-Bridge ohne AVX2.
 > Piper (ONNX) läuft darauf hervorragend, große Transformer-Modelle nicht.
 
-**Stimmen:** `de_DE-thorsten-medium` (warm, männlich). Weitere Stimmen ablegen in
-`~/tts-service/models/` (je `.onnx` + `.onnx.json` von
+### Stimmen
+
+| Stimme | Qualität | Charakter |
+|---|---|---|
+| `de_DE-thorsten_emotional-medium` | medium | **Empfohlen.** 8 Emotionen (s.u.) — mit `amused` warm und zugewandt |
+| `de_DE-thorsten-medium` | medium | Sachlich, neutral. Klingt schnell nach unbeteiligtem Vorlesen |
+| `de_DE-kerstin-low` | low | Weiblich, aber hörbar rauer (nur `low` verfügbar) |
+| `de_DE-ramona-low` | low | Weiblich, `low` |
+
+**Emotionen** (nur `thorsten_emotional`): `amused`, `angry`, `disgusted`, `drunk`,
+`neutral`, `sleepy`, `surprised`, `whisper`.
+Für NurEine passt **`amused`** — warm, ohne kitschig zu werden. `neutral` klingt
+unbeteiligt, `surprised` kann für Hook-Szenen funktionieren.
+
+```bash
+curl -X POST http://192.168.178.3:8123/tts -H "Content-Type: application/json" \
+  -d '{"text":"…","voice":"de_DE-thorsten_emotional-medium","emotion":"amused"}' -o vo.mp3
+```
+
+Weitere Stimmen ablegen in `~/tts-service/models/` (je `.onnx` + `.onnx.json` von
 [huggingface.co/rhasspy/piper-voices](https://huggingface.co/rhasspy/piper-voices)).
+Verfügbare deutsche Stimmen dort: thorsten, thorsten_emotional, eva_k, kerstin,
+karlsson, ramona, pavoque, mls — die meisten nur in `low`/`x_low`.
 
 ---
 
@@ -44,12 +64,13 @@ curl -X POST http://192.168.178.3:8123/tts \
 ### `POST /tts`
 ```jsonc
 {
-  "text":   "Der zu sprechende Text",   // Pflicht
-  "engine": "piper",                    // piper | chatterbox
-  "voice":  "de_DE-thorsten-medium",    // optional
-  "format": "mp3",                      // mp3 | wav
-  "speed":  1.0,                        // 0.5–2.0
-  "words":  false                       // true → JSON mit Wort-Timings statt Audio-Bytes
+  "text":    "Der zu sprechende Text",              // Pflicht
+  "engine":  "piper",                               // piper | chatterbox
+  "voice":   "de_DE-thorsten_emotional-medium",     // optional
+  "emotion": "amused",                              // nur thorsten_emotional
+  "format":  "mp3",                                 // mp3 | wav
+  "speed":   1.0,                                   // 0.5–2.0
+  "words":   false                                  // true → JSON mit Wort-Timings statt Audio-Bytes
 }
 ```
 - `words: false` → Audio-Bytes (`audio/mpeg` bzw. `audio/wav`)

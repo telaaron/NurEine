@@ -48,10 +48,7 @@
 
 <svelte:head>
 	<title>Geschichte einreichen — NurEine</title>
-	<meta
-		name="description"
-		content="Kennst du eine gute Nachricht, die mehr Menschen sehen sollten? Reiche sie bei NurEine ein — wir prüfen jede Einsendung."
-	/>
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 </svelte:head>
 
 <section class="mx-auto max-w-[720px] px-4 sm:px-6 lg:px-10 py-12 sm:py-20">

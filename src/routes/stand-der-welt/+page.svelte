@@ -85,10 +85,7 @@
 
 <svelte:head>
 	<title>Der Stand der Welt — wo sie besser wird — NurEine</title>
-	<meta
-		name="description"
-		content="Auf den Metriken, die wirklich zählen, bewegt sich die Welt in die richtige Richtung. Kuratierte Langzeit-Daten — und ehrlich, was wir nicht zeigen."
-	/>
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 </svelte:head>
 
 <section class="mx-auto max-w-[1100px] px-4 sm:px-6 lg:px-10 py-12 sm:py-20">

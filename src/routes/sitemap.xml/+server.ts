@@ -45,6 +45,9 @@ export async function GET() {
 
 	const staticPages = [
 		{ loc: `${BASE_URL}/`, priority: '1.0', changefreq: 'daily' },
+		// Entity-Seite: definiert maschinenlesbar, was NurEine ist, und grenzt gegen
+		// Namens-Verwechslungen ab. Hohe Priorität, damit Google/AI sie sicher crawlen.
+		{ loc: `${BASE_URL}/ueber-uns`, priority: '0.9', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/warum`, priority: '0.9', changefreq: 'monthly' },
 			{ loc: `${BASE_URL}/werte`, priority: '0.9', changefreq: 'monthly' },
 			{ loc: `${BASE_URL}/redaktion`, priority: '0.8', changefreq: 'weekly' },

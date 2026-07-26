@@ -4,7 +4,7 @@
 
 <svelte:head>
 	<title>Datenschutzerklärung — NurEine</title>
-	<meta name="description" content="Wie NurEine personenbezogene Daten verarbeitet — DSGVO-konform, transparent." />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href={url} />
 </svelte:head>
 

@@ -8,10 +8,7 @@
 
 <svelte:head>
 	<title>NurEine für Unternehmen — belegte gute Nachrichten für eure Kanäle</title>
-	<meta
-		name="description"
-		content="Täglich eine belegte gute Nachricht für eure Office-Screens, euren Newsletter und euer Intranet. 30 Tage kostenlos testen."
-	/>
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 </svelte:head>
 
 <div class="wrap">

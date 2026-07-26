@@ -73,10 +73,7 @@
 
 <svelte:head>
 	<title>Warum NurEine — Schluss mit Doomscrolling</title>
-	<meta
-		name="description"
-		content="Wir berichten nicht, dass die Welt gut ist — wir zeigen, wo sie besser wird. Täglich eine belegte Geschichte über echten Fortschritt, in zwei Minuten. Kein Feed, kein Algorithmus."
-	/>
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 </svelte:head>
 
 <!-- ─── HERO ─── -->

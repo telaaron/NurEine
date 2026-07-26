@@ -6,7 +6,7 @@
 
 <svelte:head>
 	<title>Mitwirkende — NurEine</title>
-	<meta name="description" content="Menschen, die NurEine durch Weiterempfehlung mittragen." />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href={url} />
 </svelte:head>
 

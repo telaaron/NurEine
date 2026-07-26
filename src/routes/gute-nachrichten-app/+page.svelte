@@ -65,10 +65,7 @@
 
 <svelte:head>
 	<title>Beste App für gute Nachrichten ohne Algorithmus — NurEine</title>
-	<meta
-		name="description"
-		content="NurEine ist die App für gute Nachrichten ohne Algorithmus: eine belegte Geschichte pro Tag mit messbarem Wirkungsindex. Kein Feed, werbefrei. Als Website, Newsletter und iOS-App."
-	/>
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href="https://nureine.de/gute-nachrichten-app" />
 	{@html `<script type="application/ld+json">${jsonLd}</scr` + `ipt>`}
 </svelte:head>

@@ -44,7 +44,8 @@
                 '/einreichen': 'Geschichte einreichen',
                 '/karte': 'Karte',
                 '/newsletter': 'Newsletter',
-                '/bei-dir': 'Bei dir'
+                '/bei-dir': 'Bei dir',
+                '/ueber-uns': 'Was ist NurEine?'
         };
 
         const seoTitle = $derived(
@@ -52,10 +53,75 @@
                 (pathTitles[pagePath] ? `${pathTitles[pagePath]} — NurEine` : 'NurEine — Ehrlicher Fortschritt, täglich')
         );
 
+        // ALLE seitenspezifischen Descriptions stehen hier — bewusst zentral.
+        //
+        // Grund: <svelte:head> dedupliziert NICHT über die Layout-/Seiten-Grenze
+        // hinweg (per SSR-Test 2026-07-26 verifiziert; auch ein gemeinsames `id`
+        // hilft nicht). Setzt eine Seite zusätzlich ihre eigene Description, stehen
+        // ZWEI Tags im HTML — das generische Layout-Tag zuerst, und genau das wertet
+        // Google. Die sorgfältig geschriebene Beschreibung der Seite verpufft.
+        //
+        // Darum gilt: das description-Tag wird NUR hier gerendert. Eine neue Seite
+        // trägt ihren Text in pathDescriptions ein statt ein eigenes <meta> zu setzen.
+        const pathDescriptions: Record<string, string> = {
+                '/ueber-uns':
+                        'NurEine ist eine deutschsprachige Good-News-Plattform aus Teltow (Brandenburg), gegründet 2026: eine belegte gute Nachricht pro Tag mit transparentem Wirkungsindex. Nicht zu verwechseln mit dem Film „Nur eine Frau“ (2019) oder der Chemikalie „neurine“.',
+                '/datenschutz':
+                        'Wie NurEine personenbezogene Daten verarbeitet — DSGVO-konform, transparent.',
+                '/einreichen':
+                        'Kennst du eine gute Nachricht, die mehr Menschen sehen sollten? Reiche sie bei NurEine ein — wir prüfen jede Einsendung.',
+                '/fuer-unternehmen':
+                        'Täglich eine belegte gute Nachricht für eure Office-Screens, euren Newsletter und euer Intranet. 30 Tage kostenlos testen.',
+                '/gute-nachrichten-app':
+                        'NurEine ist die App für gute Nachrichten ohne Algorithmus: eine belegte Geschichte pro Tag mit messbarem Wirkungsindex. Kein Feed, werbefrei. Als Website, Newsletter und iOS-App.',
+                '/heute':
+                        'Die Geschichte des Tages — fertige Karten und Texte zum Teilen.',
+                '/impressum':
+                        'Impressum und Anbieterkennzeichnung von NurEine.',
+                '/lichtblick':
+                        'Lies die gute Nachricht von heute — und bekomm jeden Morgen eine. Belegt, werbefrei, in zwei Minuten.',
+                '/methodik':
+                        'Vollständig offengelegt: Quellen, Gewichtungen und Grenzen des NurEine-Wirkungsindex. Keine Blackbox. Prüf uns nach.',
+                '/nutzungsbedingungen':
+                        'Nutzungsbedingungen für das Angebot von NurEine.',
+                '/redaktion':
+                        'Transparenz statt Blackbox: Welche Primärquellen NurEine pro Themen-Beat beobachtet — und warum wir Daten statt Lärm folgen.',
+                '/roadmap':
+                        'Was bei NurEine neu ist, woran wir arbeiten und was geplant ist — transparent. Gib Feedback und gestalte mit.',
+                '/stand-der-welt':
+                        'Auf den Metriken, die wirklich zählen, bewegt sich die Welt in die richtige Richtung. Kuratierte Langzeit-Daten — und ehrlich, was wir nicht zeigen.',
+                '/teilen':
+                        'Empfiehl NurEine weiter: wähle Plattform und Zielgruppe, bekomme eine fertige Karte und den passenden Text — mit deinem Empfehlungslink.',
+                '/unterstuetzer':
+                        'Menschen, die NurEine durch Weiterempfehlung mittragen.',
+                '/werte':
+                        'NurEine misst Fortschritt daran, ob Menschen gesünder, sicherer, freier und verbundener leben. Sieben universelle Bereiche, kein Partei-Framing, kein Aktivismus — transparent offengelegt.'
+        };
+
+        // Dynamische Routen: die Seiten leiteten ihre Description aus `data.label`
+        // ab. Das ist hier über page.data ohne Änderung an den load-Funktionen
+        // rekonstruierbar.
+        const dynamicDesc = $derived.by(() => {
+                const label = page.data?.label;
+                if (!label) return null;
+                if (pagePath.startsWith('/gute-nachrichten/land/'))
+                        return `Belegte gute Nachrichten aus ${label}: positive Entwicklungen mit messbarem Wirkungsindex, kuratiert von NurEine. Kein Algorithmus, werbefrei.`;
+                if (pagePath.startsWith('/gute-nachrichten/'))
+                        return `Belegte gute Nachrichten zum Thema ${label}: kuratiert, mit messbarem Wirkungsindex, eine pro Tag. Kein Algorithmus, werbefrei — von NurEine.`;
+                if (pagePath.startsWith('/archiv/')) return page.data?.intro ?? null;
+                return null;
+        });
+
+        // Reihenfolge: eine explizit eingetragene Description gewinnt IMMER — auch
+        // gegen den Story-Fallback. Sonst überschreibt z. B. /lichtblick (lädt eine
+        // Story in page.data, ist aber eine Landingpage) seinen eigenen Text mit dem
+        // Story-Dek.
         const seoDesc = $derived(
-                isStory
+                pathDescriptions[pagePath] ??
+                dynamicDesc ??
+                (isStory
                         ? `${page.data.story.dek} · Eine gute Nachricht am Tag — ehrlicher Fortschritt, belegt. Kostenlos auf nureine.de`
-                        : 'Wir berichten nicht, dass die Welt gut ist — wir zeigen, wo sie besser wird. Täglich eine belegte Geschichte über echten Fortschritt, in zwei Minuten. Kein Feed, kein Algorithmus.'
+                        : 'Wir berichten nicht, dass die Welt gut ist — wir zeigen, wo sie besser wird. Täglich eine belegte Geschichte über echten Fortschritt, in zwei Minuten. Kein Feed, kein Algorithmus.')
         );
 
         // JPEG for og:image — universally supported by WhatsApp, iMessage, Facebook, Twitter
@@ -113,7 +179,12 @@
                                 '@type': 'NewsMediaOrganization',
                                 '@id': 'https://nureine.de/#org',
                                 name: 'NurEine',
-                                alternateName: ['NurEine.de', 'Nur Eine'],
+                                alternateName: ['NurEine.de', 'Nur Eine', 'NurEine Good News'],
+                                // Entity-Disambiguierung: Google AI Overview und Perplexity lösten
+                                // „nureine" auf FREMDE Entitäten auf (Kinofilm „Nur eine Frau" 2019
+                                // / Chemikalie „neurine"). disambiguatingDescription ist das
+                                // Schema.org-Feld genau für „nicht zu verwechseln mit".
+                                disambiguatingDescription: 'NurEine ist ein 2026 gegründeter deutschsprachiger Good-News-Nachrichtendienst aus Teltow, Brandenburg. Nicht zu verwechseln mit dem Kinofilm „Nur eine Frau" (2019) von Sherry Hormann und nicht mit der chemischen Verbindung Neurin (englisch neurine).',
                                 url: 'https://nureine.de',
                                 logo: {
                                         '@type': 'ImageObject',

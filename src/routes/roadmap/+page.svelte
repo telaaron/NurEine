@@ -61,7 +61,7 @@
 
 <svelte:head>
 	<title>Roadmap & Changelog — NurEine</title>
-	<meta name="description" content="Was bei NurEine neu ist, woran wir arbeiten und was geplant ist — transparent. Gib Feedback und gestalte mit." />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href={url} />
 	{@html `<script type="application/ld+json">${jsonLd}</scr` + `ipt>`}
 </svelte:head>

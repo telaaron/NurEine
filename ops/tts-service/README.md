@@ -8,6 +8,38 @@ nur dass die Daten das Haus nie verlassen und nichts abgerechnet wird.
 
 ---
 
+> ## ⏸️ Aktuell RUHEND (Stand 2026-07-26)
+>
+> Der Dienst ist **gestoppt und deaktiviert**, alle Modelle sind gelöscht (~9,7 GB
+> freigegeben). Grund: Keine der getesteten Stimmen war für NurEine gut genug.
+>
+> | Getestet | Ergebnis |
+> |---|---|
+> | **Piper** (thorsten, thorsten_emotional, kerstin, ramona) | Technisch schnell (RTF 0,3 = 3× Echtzeit), aber klanglich zu blechern/unbeteiligt |
+> | **Chatterbox Multilingual** | **RTF 14,8×** auf dieser CPU → ~5 Min pro 20-Sek-Voiceover, ~25-30 Min pro Reel. Zu langsam, Qualität rechtfertigt es nicht. Ursache: `NNPACK unsupported hardware` (Sandy Bridge 2011) + autoregressives Modell |
+>
+> **Die Architektur bleibt vollständig erhalten** — Server, API, systemd-Unit und
+> die Pipeline-Engine `local` in `remotion/scripts/tts.py`. Ein besseres Modell
+> muss nur noch eingehängt werden.
+>
+> ### Wiederbeleben (wenn ein gutes Modell gefunden ist)
+> ```bash
+> ssh aaron@192.168.178.3
+> mkdir -p ~/tts-service/models && cd ~/tts-service
+> python3 -m venv .venv
+> .venv/bin/pip install piper-tts fastapi "uvicorn[standard]"
+> # Modell nach ~/tts-service/models/ legen (.onnx + .onnx.json)
+> # server.py aus dem Repo deployen:
+> #   scp ops/tts-service/server.py aaron@192.168.178.3:~/tts-service/
+> sudo systemctl enable --now nureine-tts
+> ```
+> Die systemd-Unit liegt bereits unter `/etc/systemd/system/nureine-tts.service`.
+>
+> **Produktion läuft weiter über `edge-tts`** (`REEL_TTS=edge`, Default) — davon war
+> nichts betroffen.
+
+---
+
 ## Schnellstart
 
 ```bash

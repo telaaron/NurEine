@@ -17,7 +17,7 @@
  * ENV: DEEPSEEK_API_KEY (Skript), SUPABASE_URL + SUPABASE_SERVICE_KEY (--queue),
  *      VO=1 (Voiceover an, Default AUS bis Stimm-Qualität abgenommen ist).
  */
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { writeFileSync, readFileSync, statSync, mkdirSync, existsSync } from 'node:fs';
 import { argv, env, exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -395,6 +395,31 @@ function synthSegment(text, slug, name) {
 		// DANN säubern (Panel-Fix 2026-07-17).
 		// sbrk = echtes Satz-Ende (. ! ?), brk = jeder Satzteil. Beide aus tts.py ODER Token.
 		words = words.map((w) => ({ ...w, brk: !!w.brk || /[.,;:!?–—]\s*$/.test(w.t), sbrk: !!w.sbrk || /[.!?]\s*$/.test(w.t), t: cleanTok(w.t) })).filter((w) => w.t.length);
+		// AUSSPRACHE-GATE (Vorfall 2026-07-26): Der Englisch-Wächter prüft die SCHREIBWEISE,
+		// er kann nicht sehen, was die Stimme daraus MACHT. Belegt durchgerutscht:
+		// „Trachom."→„Trakum.", „Prüfer suchten jahrelang."→„Proofers sucht den Geraldine."
+		// Beide sehen deutsch aus (ch/ü) und werden von DE_MARKERS sogar entlastet. Nur die
+		// Gegenprobe am fertigen Audio findet das. Hard-Fail; --no-vo-verify übersteuert.
+		if (!arg('no-vo-verify')) {
+			const vres = spawnSync(py, [fileURLToPath(new URL('./scripts/verify_vo.py', import.meta.url)), '--audio', `${dir}${slug}-${name}.mp3`, '--text', ttsText, '--json'], { encoding: 'utf8', timeout: 300000 });
+			if (vres.status === 3) {
+				let d = {};
+				try {
+					d = JSON.parse(vres.stdout || '{}');
+				} catch {}
+				throw new Error(
+					`VO-Segment "${name}": die Stimme spricht NICHT, was geplant ist —\n` +
+						`  geplant: "${d.planned ?? ttsText}"\n  gehört:  "${d.heard ?? '?'}"\n` +
+						(d.missing?.length ? `  nicht gesprochen: ${d.missing.join(', ')}\n` : '') +
+						(d.extra?.length ? `  erfunden/verhört: ${d.extra.join(', ')}\n` : '') +
+						`  Fix: Satz umformulieren (bloßes Substantiv am Satzanfang kippt die Stimme —\n` +
+						`  „Die Prüfer suchten…" statt „Prüfer suchten…") ODER Aussprache in\n` +
+						`  remotion/tts-lexikon.json eintragen. (Übersteuern: --no-vo-verify)`
+				);
+			}
+			if (vres.status === 2) console.log(`WARN Aussprache-Gate übersprungen (${name}): Whisper nicht lauffähig`);
+			else if (vres.status === 0) console.log(`OK aussprache (${name})`);
+		}
 		return {
 			file,
 			words: words.map((w) => ({ t: w.t, brk: !!w.brk, sbrk: !!w.sbrk, start: Math.round(w.start * FPS), end: Math.round(w.end * FPS) })),
@@ -647,12 +672,18 @@ async function main() {
 			const spoken = (first.voText || '').toLowerCase();
 			const overlay = [first.text, first.value, first.unit, first.context, first.kicker].filter(Boolean).join(' ').toLowerCase();
 			const cap60 = (plan.tiktok?.caption || '').slice(0, 60).toLowerCase();
+			// seo.spokenOptional:true = das Keyword ist ein Fachwort, das die Stimme nicht
+			// sicher trifft (Vorfall 2026-07-30: „Trachom" wurde je nach Schreibweise
+			// „Trakum"/„Track Home"/polnisch). Dann steht es NUR im Screen + Caption, und
+			// der voText umschreibt es („eine Augenkrankheit"). Zwei Kanäle der Dreifach-
+			// Platzierung bleiben erhalten — besser als ein falsch gesprochenes Keyword.
+			const spokenOptional = plan.seo?.spokenOptional === true;
 			const miss = [];
-			if (!spoken.includes(kw)) miss.push('voText Szene 1 (gesprochen)');
+			if (!spoken.includes(kw) && !spokenOptional) miss.push('voText Szene 1 (gesprochen)');
 			if (!overlay.includes(kw)) miss.push('Overlay Szene 1');
 			if (!cap60.includes(kw)) miss.push('tiktok.caption (erste 60 Zeichen)');
 			if (miss.length) throw new Error(`seo.keyword "${plan.seo.keyword}" fehlt in: ${miss.join(' + ')} — Dreifach-Platzierung ist Pflicht (übersteuern: --no-seo-check)`);
-			console.log(`OK seo.keyword "${plan.seo.keyword}" dreifach platziert`);
+			console.log(`OK seo.keyword "${plan.seo.keyword}" ${spokenOptional ? 'im Screen+Caption (gesprochen bewusst umschrieben)' : 'dreifach platziert'}`);
 		}
 	}
 

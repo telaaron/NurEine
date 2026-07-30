@@ -1,0 +1,77 @@
+{
+	"story": {
+		"id": "3c2ef897-5f45-4269-80e8-bcfb9e1a6129",
+		"slug": "trachom-el-salvador",
+		"category": "gesundheit",
+		"image": "story/trachom.jpg",
+		"source": "WHO News",
+		"impactScore": 74,
+		"shareHook": "Eine Erblindungs-Ursache. In einem ganzen Land ausgelöscht."
+	},
+	"seo": {
+		"keyword": "Trachom",
+		"spokenOptional": true
+	},
+	"loop": true,
+	"softCta": "Sowas steht selten in den Nachrichten. Hier jeden Tag eins.",
+	"caption": "Trachom: El Salvador hat die weltweit häufigste ansteckende Ursache für Erblindung ausgelöscht — offiziell bestätigt von der WHO. Kein Wundermittel: Behandlung, sauberes Wasser, Dranbleiben bis zum letzten Fall.\n\nQuelle: WHO — von uns nachgeprüft.",
+	"hashtags": ["#gutenachrichten", "#gesundheit", "#who", "#fortschritt"],
+	"tiktok": {
+		"caption": "Trachom macht blind — und ist in El Salvador jetzt einfach weg. Offiziell. Die Prüfer suchten jahrelang in den Risikodörfern: null Fälle bei Kindern, null bei Erwachsenen. Kein Wundermittel, sondern Behandlung, sauberes Wasser und Dranbleiben bis zum letzten Fall. Sowas steht selten in den Nachrichten.\n\nQuelle: WHO — von uns nachgeprüft.",
+		"hashtags": ["#gutenachrichten", "#gesundheit", "#who", "#fortschritt"],
+		"location": "Berlin"
+	},
+	"music": "audio/warm-2.mp3",
+	"scenes": [
+		{
+			"kind": "number",
+			"snap": true,
+			"kicker": "NUR EINE · GEPRÜFT",
+			"value": "0",
+			"unit": "Fälle",
+			"context": "Trachom in El Salvador",
+			"image": "story/trachom.jpg",
+			"voText": "Eine Augenkrankheit, die blind macht."
+		},
+		{
+			"kind": "hook",
+			"text": "In einem ganzen Land: weg.",
+			"punch": "weg",
+			"kicker": "EL SALVADOR · TRACHOM",
+			"voText": "In einem ganzen Land — einfach weg. Offiziell."
+		},
+		{
+			"kind": "beat",
+			"text": "Null Fälle bei Kindern. Null bei Erwachsenen.",
+			"image": "story/trachom.jpg",
+			"full": true,
+			"voText": "Die Prüfer suchten jahrelang. Bei Kindern: nichts. Bei Erwachsenen: nichts."
+		},
+		{
+			"kind": "beat",
+			"text": "Behandlung. Wasser. Ausdauer.",
+			"image": null,
+			"voText": "Kein Wundermittel. Behandlung, sauberes Wasser, Dranbleiben bis zum letzten Fall."
+		},
+		{
+			"kind": "proof",
+			"source": "WHO",
+			"impact": 74,
+			"progress": 1103,
+			"snapshot": {
+				"outlet": "WHO",
+				"year": "2026",
+				"title": "El Salvador: Trachom als Gesundheitsproblem beseitigt",
+				"quote": "Keine aktiven Fälle in Risikogemeinden"
+			},
+			"voText": "Geprüft von der Weltgesundheitsorganisation. Echt."
+		},
+		{
+			"kind": "end",
+			"share": "Eine Erblindungs-Ursache. In einem ganzen Land ausgelöscht.",
+			"cta": "",
+			"engage": true,
+			"voText": "Und die nächste gute Nachricht ist schon nachgeprüft. Nämlich:"
+		}
+	]
+}

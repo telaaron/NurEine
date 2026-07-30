@@ -96,7 +96,22 @@ def synth_eleven(text: str, rate: str, out_mp3: str, out_words: str) -> None:
 
     try:
         resp = call(body)
-    except urllib.error.HTTPError:
+    except urllib.error.HTTPError as e:
+        # Kontingent/Key-Probleme NICHT verschlucken (Vorfall 2026-07-30: Free-Tier war
+        # aufgebraucht — 4 von 10.000 Credits — die Pipeline fiel still auf edge-tts
+        # zurück und die Aussprache-Fehler wurden der Stimme statt dem Kontingent
+        # zugeschrieben). Klartext-Fehler mit dem Grund aus der API.
+        detail = ""
+        try:
+            detail = json.load(e).get("detail", {})
+            detail = detail.get("message") or detail.get("code") or str(detail)
+        except Exception:
+            pass
+        if e.code in (401, 402, 403, 429):
+            raise SystemExit(
+                f"ElevenLabs nicht verfügbar (HTTP {e.code}): {detail}\n"
+                f"  → Kontingent/Key prüfen. Bewusst auf die kostenlose Stimme wechseln: REEL_TTS=edge"
+            )
         # Ältere Modelle/Stimmen kennen "speed" nicht → einmal ohne erneut versuchen.
         body["voice_settings"].pop("speed", None)
         resp = call(body)

@@ -14,6 +14,7 @@
 		XMarkIcon
 	} from 'heroicons-svelte/24/outline';
 	import MapLoadingOverlay from '$lib/components/MapLoadingOverlay.svelte';
+	import StoryHeroTile from '$lib/components/StoryHeroTile.svelte';
 	import { createGlowMarker, highlightGlow } from '$lib/map/glow-marker';
 	import { createUserMarker, createDistanceRings, DISTANCE_RINGS } from '$lib/map/user-marker';
 	import {
@@ -569,12 +570,12 @@
 		<!-- Aktive Geschichte als reiche Karte -->
 		{#if activeStory}
 			{@const hex = toneColors[activeStory.tone] ?? '#c87340'}
-			{@const img = storyImageSrc(activeStory.hero, base, 600)}
-			<a class="detail" class:with-img={!!img} style="--accent:{hex}"
+			<!-- Medienfläche steht IMMER: ohne Foto übernimmt die Rubrik-Fläche,
+			     damit die Karte ihr zweispaltiges Format behält statt je nach
+			     Bebilderung zu springen. -->
+			<a class="detail with-img" style="--accent:{hex}"
 				href={base + '/geschichte/' + activeStory.slug}>
-				{#if img}
-					<div class="det-media"><img src={img} alt="" loading="lazy" decoding="async" /></div>
-				{/if}
+				<div class="det-media"><StoryHeroTile story={activeStory} width={600} /></div>
 				<div class="det-content">
 					<div class="det-top">
 						<span class="det-badge">{activeStory.category}</span>
@@ -630,24 +631,22 @@
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
 						{#each group.stories as story (story.slug)}
 							{@const hex = toneColors[story.tone] ?? '#c87340'}
-							{@const img = storyImageSrc(story.hero, base, 760)}
+							{@const hasImg = !!storyImageSrc(story.hero, base, 760)}
 							<a href={base + '/geschichte/' + story.slug}
 								class="group block paper rounded-[6px] overflow-hidden transition-all duration-500 story-card"
 								style="--accent:{hex}; border: 1px solid var(--color-rule);">
 								<div class="relative aspect-[4/3] overflow-hidden" style="background: var(--color-paper);">
-									{#if img}
-										<img src={img} alt="" class="absolute inset-0 h-full w-full object-cover transition-transform duration-[900ms] group-hover:scale-[1.04]" loading="lazy" decoding="async" />
-									{:else}
-										<div class="absolute inset-0 flex items-center justify-center" style="background: color-mix(in srgb, {hex} 12%, var(--color-canvas-soft));">
-											<span class="display text-2xl" style="color: {hex};">{story.category}</span>
+									<StoryHeroTile {story} width={760} />
+									{#if hasImg}
+										<!-- Ohne Bild trägt die Rubrik-Fläche den Kategorienamen schon
+										     selbst — das Badge wäre eine Dopplung. -->
+										<div class="absolute top-3 left-3">
+											<span class="badge px-2.5 py-1 rounded-full backdrop-blur-sm"
+												style="background: color-mix(in srgb, var(--color-paper) 78%, transparent); color: {hex}; border: 1px solid color-mix(in srgb, {hex} 45%, transparent);">
+												{story.category}
+											</span>
 										</div>
 									{/if}
-									<div class="absolute top-3 left-3">
-										<span class="badge px-2.5 py-1 rounded-full backdrop-blur-sm"
-											style="background: color-mix(in srgb, var(--color-paper) 78%, transparent); color: {hex}; border: 1px solid color-mix(in srgb, {hex} 45%, transparent);">
-											{story.category}
-										</span>
-									</div>
 									<div class="absolute top-3 right-3">
 										<span class="badge px-2.5 py-1 rounded-full backdrop-blur-sm tnum"
 											style="background: color-mix(in srgb, var(--color-ink) 72%, transparent); color: var(--color-on-ink);">
@@ -781,8 +780,10 @@
 	@keyframes cardin { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 	@media (min-width: 720px) { .detail.with-img { grid-template-columns: 300px 1fr; } }
 
-	.det-media { position: relative; overflow: hidden; background: var(--color-canvas-soft); min-height: 180px; }
-	.det-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+	/* StoryHeroTile positioniert sich absolut (inset-0) — die Fläche braucht
+	   daher einen eigenen Positionskontext UND eine Mindesthöhe, sonst hätte
+	   sie ohne Foto keine Ausdehnung. */
+	.det-media { position: relative; overflow: hidden; background: var(--color-canvas-soft); min-height: 200px; }
 	.det-content { padding: 1.4rem 1.6rem 1.5rem; display: flex; flex-direction: column; }
 	.det-top { display: flex; align-items: center; gap: 0.7rem; font-size: 0.72rem; color: var(--color-muted); flex-wrap: wrap; }
 	.det-badge {

@@ -38,6 +38,27 @@ def _mark_clause_breaks(words, text):
         if idx < 0:
             w["brk"] = False
             w["sbrk"] = False
+            continue
+        after = idx + len(tok)
+        cursor = after
+        # Direkt folgende Satzzeichen einsammeln (auch „…", „?!"), Leerzeichen davor
+        # zulassen ( „Wort ," kommt in handgeschriebenen voTexts vor).
+        j = after
+        while j < len(low) and low[j] == " ":
+            j += 1
+        punct = ""
+        while j < len(low) and low[j] in CLAUSE_END:
+            punct += low[j]
+            j += 1
+        w["brk"] = bool(punct)
+        w["sbrk"] = any(c in SENTENCE_END for c in punct)
+        # Das Satzzeichen AN DAS WORT hängen — sonst zeigen die Captions „Trachom Eine
+        # Krankheit die blind macht" ohne Punkt/Komma und lesen sich wie Stichpunkte,
+        # obwohl die Stimme deutlich pausiert (Aaron 2026-07-26: „regt nicht zum
+        # Mitlesen an"). Gedankenstriche sind reine Sprech-Pausen → nicht anzeigen.
+        visible = "".join(c for c in punct if c not in "–—")
+        if visible:
+            w["t"] = tok + visible
 
 
 async def synth(text: str, voice: str, rate: str, out_mp3: str, out_words: str) -> None:

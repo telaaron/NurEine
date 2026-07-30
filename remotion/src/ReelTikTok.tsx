@@ -151,11 +151,33 @@ const SceneVoice: React.FC<{ vo: SceneVo | null | undefined; dark?: boolean; cap
 				<div style={{ position: 'absolute', left: align === 'left' ? M : 60, right: align === 'left' ? 380 : 60, bottom: SAFE_BOTTOM + 70 + raise, display: 'flex', justifyContent: align === 'left' ? 'flex-start' : 'center', zIndex: 20, transform: `scale(${pop})`, transformOrigin: align === 'left' ? 'left bottom' : 'center bottom' }}>
 					<div style={{ background: dark ? 'rgba(244,239,230,0.96)' : 'rgba(22,20,15,0.9)', borderRadius: 18, padding: '16px 30px', maxWidth: 940, boxShadow: '0 10px 30px rgba(0,0,0,0.35)' }}>
 						<div style={{ fontFamily: FF.interSemi, fontSize: 42, lineHeight: 1.22, color: dark ? INK : '#fff', textAlign: align === 'left' ? 'left' : 'center' }}>
-							{current.map((w, i) => (
-								<span key={i} style={{ color: frame >= w.start ? (frame <= w.end ? (dark ? AMBER_DEEP : AMBER) : dark ? INK : '#fff') : dark ? 'rgba(22,20,15,0.4)' : 'rgba(255,255,255,0.45)', fontWeight: frame >= w.start && frame <= w.end ? 800 : 600 }}>
-									{w.t}{' '}
-								</span>
-							))}
+							{current.map((w, i) => {
+								// WACHSENDE CAPTION (Aaron 2026-07-26, Vorbild InsiderForce): das Wort
+								// SCHNAPPT beim Sprechen herein — startet groesser, blasser und leicht
+								// tiefer und rastet in ~6 Frames auf seine endgueltige Form ein.
+								// Gesprochene Woerter BLEIBEN stehen, kommende sind gedimmt: der Satz
+								// waechst sichtbar mit und zieht den Blick aufs naechste Wort, statt
+								// einen fertigen Block zum Ueberfliegen anzubieten.
+								const spoken = frame >= w.start;
+								const enter = spoken ? spring({ frame: frame - w.start, fps: TIKTOK_FPS, config: { damping: 200, mass: 0.45 }, durationInFrames: 6 }) : 0;
+								const scale = spoken ? interpolate(enter, [0, 1], [1.16, 1]) : 1;
+								const dy = spoken ? interpolate(enter, [0, 1], [9, 0]) : 0;
+								const active = spoken && frame <= w.end;
+								return (
+									<span
+										key={i}
+										style={{
+											display: 'inline-block',
+											transform: `translateY(${dy}px) scale(${scale})`,
+											color: active ? (dark ? AMBER_DEEP : AMBER) : spoken ? (dark ? INK : '#fff') : dark ? 'rgba(22,20,15,0.34)' : 'rgba(255,255,255,0.38)',
+											fontWeight: active ? 800 : 600,
+											opacity: spoken ? interpolate(enter, [0, 1], [0.5, 1]) : 1
+										}}
+									>
+										{w.t}&nbsp;
+									</span>
+								);
+							})}
 						</div>
 					</div>
 				</div>

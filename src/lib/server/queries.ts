@@ -888,7 +888,7 @@ export async function getMapMarkers(): Promise<MapMarker[]> {
   return (data as Partial<SupabaseStory>[]).map((r) => toMarker(mapListRow(r)));
 }
 
-/** Geo-tagged stories as light markers (newest first). For /lokal. */
+/** Geo-tagged stories as light markers (newest first). For /bei-dir. */
 export async function getLocalMarkers(): Promise<MapMarker[]> {
   const { data, error } = await supabaseAdmin
     .from('nureine_stories')

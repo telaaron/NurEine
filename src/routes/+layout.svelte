@@ -34,7 +34,6 @@
         const isBare = $derived(isAdmin || isApp);
 
         const pathTitles: Record<string, string> = {
-                '/lokal': 'Lokal',
                 '/archiv': 'Archiv',
                 '/preise': 'Preise',
                 '/manifest': 'Manifest',
@@ -47,6 +46,13 @@
                 '/bei-dir': 'Bei dir'
         };
 
+        // Seitenspezifische Descriptions. NUR hier pflegen, nie in den Seiten
+        // selbst — svelte:head dedupliziert nicht über die Layout-Grenze, ein
+        // zweites <meta name="description"> in einer Route ergäbe zwei Tags.
+        const pathDescriptions: Record<string, string> = {
+                '/bei-dir': 'Gute Nachrichten aus deiner Nähe — jede Geschichte nach Entfernung zu dir sortiert, auf einer Karte mit dir im Mittelpunkt. Belegter Fortschritt vor deiner Haustür, in deiner Region und darüber hinaus.'
+        };
+
         const seoTitle = $derived(
                 isStory ? `${page.data.story.title} — NurEine` : 
                 (pathTitles[pagePath] ? `${pathTitles[pagePath]} — NurEine` : 'NurEine — Ehrlicher Fortschritt, täglich')
@@ -55,7 +61,8 @@
         const seoDesc = $derived(
                 isStory
                         ? `${page.data.story.dek} · Eine gute Nachricht am Tag — ehrlicher Fortschritt, belegt. Kostenlos auf nureine.de`
-                        : 'Wir berichten nicht, dass die Welt gut ist — wir zeigen, wo sie besser wird. Täglich eine belegte Geschichte über echten Fortschritt, in zwei Minuten. Kein Feed, kein Algorithmus.'
+                        : (pathDescriptions[pagePath] ??
+                                'Wir berichten nicht, dass die Welt gut ist — wir zeigen, wo sie besser wird. Täglich eine belegte Geschichte über echten Fortschritt, in zwei Minuten. Kein Feed, kein Algorithmus.')
         );
 
         // JPEG for og:image — universally supported by WhatsApp, iMessage, Facebook, Twitter

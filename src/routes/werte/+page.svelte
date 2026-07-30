@@ -56,7 +56,7 @@
 
 <svelte:head>
 	<title>Unsere Werte — Woran NurEine Fortschritt misst</title>
-	<meta name="description" content="NurEine misst Fortschritt daran, ob Menschen gesünder, sicherer, freier und verbundener leben. Sieben universelle Bereiche, kein Partei-Framing, kein Aktivismus — transparent offengelegt." />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href={url} />
 	{@html `<script type="application/ld+json">${jsonLd}</scr` + `ipt>`}
 </svelte:head>

@@ -22,13 +22,47 @@ function escapeXml(str: string): string {
 }
 
 export async function GET() {
-	const stories = await getStoryList(); // newest first
+	let stories: Awaited<ReturnType<typeof getStoryList>>;
+	try {
+		stories = await getStoryList(); // newest first
+	} catch {
+		stories = [];
+	}
+
+	// DB-Ausfall-Guard (Vorfall 2026-07-20): Bei gesperrtem Supabase (402) liefert
+	// getStoryList() [] → eine leere News-Sitemap. Google News verlangt eine
+	// nicht-leere Sitemap; eine leere erzeugt genau den "1 error" in der GSC und
+	// lässt den ganzen News-Feed misstrauen. 503 + Retry-After hält den letzten
+	// guten Stand, statt einen kaputten Feed auszuliefern.
+	if (stories.length === 0) {
+		return new Response('Story data temporarily unavailable', {
+			status: 503,
+			headers: {
+				'Retry-After': '900',
+				'Cache-Control': 'no-store'
+			}
+		});
+	}
+
 	const cutoff = Date.now() - NEWS_WINDOW_MS;
 
 	const recent = stories.filter((s) => {
 		const t = Date.parse(s.publishedAt);
 		return Number.isFinite(t) && t >= cutoff;
 	});
+
+	// Kein Artikel im 48h-Fenster (Pipeline-Stillstand oder ruhiger Tag): lieber
+	// den letzten guten Stand halten (503) als einen leeren <urlset> ausliefern,
+	// der in der GSC exakt als "1 error" auftaucht und den Feed distrusten lässt.
+	if (recent.length === 0) {
+		return new Response('No recent articles for the news window', {
+			status: 503,
+			headers: {
+				'Retry-After': '900',
+				'Cache-Control': 'no-store'
+			}
+		});
+	}
 
 	const urls = recent
 		.map((s) => {

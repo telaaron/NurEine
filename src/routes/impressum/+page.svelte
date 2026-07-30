@@ -4,7 +4,7 @@
 
 <svelte:head>
 	<title>Impressum — NurEine</title>
-	<meta name="description" content="Impressum und Anbieterkennzeichnung von NurEine." />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href={url} />
 	<meta name="robots" content="noindex" />
 </svelte:head>

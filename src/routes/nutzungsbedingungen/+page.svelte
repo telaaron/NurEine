@@ -4,7 +4,7 @@
 
 <svelte:head>
 	<title>Nutzungsbedingungen — NurEine</title>
-	<meta name="description" content="Nutzungsbedingungen für das Angebot von NurEine." />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href={url} />
 </svelte:head>
 

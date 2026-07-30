@@ -15,7 +15,28 @@ function escapeXml(str: string): string {
 }
 
 export async function GET() {
-	const stories = await getStoryList();
+	let stories: Awaited<ReturnType<typeof getStoryList>>;
+	try {
+		stories = await getStoryList();
+	} catch {
+		stories = [];
+	}
+
+	// DB-Ausfall-Guard (Vorfall 2026-07-20): Bei gesperrtem Supabase (402) liefert
+	// getStoryList() ein leeres Array. Ohne Guard würde die Sitemap nur die ~48
+	// statischen Seiten enthalten und ALLE Story-URLs (409 Stück) verschwinden —
+	// Google wertet das als Entfernung und deindexiert. Stattdessen 503 + Retry-After:
+	// Google behält dann den zuletzt erfolgreich abgerufenen Stand. Diese Domain hat
+	// immer Stories; eine leere Liste ist hier IMMER ein Ausfall, nie ein Normalzustand.
+	if (stories.length === 0) {
+		return new Response('Story data temporarily unavailable', {
+			status: 503,
+			headers: {
+				'Retry-After': '3600',
+				'Cache-Control': 'no-store'
+			}
+		});
+	}
 
 	// Hub/static pages get today's date as lastmod — they reflect the freshest
 	// story set (archive, homepage, map all re-render daily), so a current
@@ -24,6 +45,9 @@ export async function GET() {
 
 	const staticPages = [
 		{ loc: `${BASE_URL}/`, priority: '1.0', changefreq: 'daily' },
+		// Entity-Seite: definiert maschinenlesbar, was NurEine ist, und grenzt gegen
+		// Namens-Verwechslungen ab. Hohe Priorität, damit Google/AI sie sicher crawlen.
+		{ loc: `${BASE_URL}/ueber-uns`, priority: '0.9', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/warum`, priority: '0.9', changefreq: 'monthly' },
 			{ loc: `${BASE_URL}/werte`, priority: '0.9', changefreq: 'monthly' },
 			{ loc: `${BASE_URL}/redaktion`, priority: '0.8', changefreq: 'weekly' },

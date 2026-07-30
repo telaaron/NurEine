@@ -30,7 +30,7 @@
 
 <svelte:head>
 	<title>Heute teilen — NurEine</title>
-	<meta name="description" content="Die Geschichte des Tages — fertige Karten und Texte zum Teilen." />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 </svelte:head>
 
 <section class="mx-auto max-w-[680px] px-4 sm:px-6 py-10 sm:py-14">

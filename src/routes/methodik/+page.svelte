@@ -31,10 +31,7 @@
 
 <svelte:head>
 	<title>Methodik — Wie der Wirkungsindex funktioniert — NurEine</title>
-	<meta
-		name="description"
-		content="Vollständig offengelegt: Quellen, Gewichtungen und Grenzen des NurEine-Wirkungsindex. Keine Blackbox. Prüf uns nach."
-	/>
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 </svelte:head>
 
 <section class="mx-auto max-w-[760px] px-4 sm:px-6 lg:px-10 py-12 sm:py-20">

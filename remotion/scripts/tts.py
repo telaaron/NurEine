@@ -13,6 +13,7 @@ words.json: [{"t": "Wort", "start": 0.12, "end": 0.38}, …]  (Sekunden)
 import argparse
 import asyncio
 import json
+import os
 import sys
 
 import edge_tts
@@ -37,6 +38,27 @@ def _mark_clause_breaks(words, text):
         if idx < 0:
             w["brk"] = False
             w["sbrk"] = False
+            continue
+        after = idx + len(tok)
+        cursor = after
+        # Direkt folgende Satzzeichen einsammeln (auch „…", „?!"), Leerzeichen davor
+        # zulassen ( „Wort ," kommt in handgeschriebenen voTexts vor).
+        j = after
+        while j < len(low) and low[j] == " ":
+            j += 1
+        punct = ""
+        while j < len(low) and low[j] in CLAUSE_END:
+            punct += low[j]
+            j += 1
+        w["brk"] = bool(punct)
+        w["sbrk"] = any(c in SENTENCE_END for c in punct)
+        # Das Satzzeichen AN DAS WORT hängen — sonst zeigen die Captions „Trachom Eine
+        # Krankheit die blind macht" ohne Punkt/Komma und lesen sich wie Stichpunkte,
+        # obwohl die Stimme deutlich pausiert (Aaron 2026-07-26: „regt nicht zum
+        # Mitlesen an"). Gedankenstriche sind reine Sprech-Pausen → nicht anzeigen.
+        visible = "".join(c for c in punct if c not in "–—")
+        if visible:
+            w["t"] = tok + visible
 
 
 async def synth(text: str, voice: str, rate: str, out_mp3: str, out_words: str) -> None:
@@ -95,7 +117,22 @@ def synth_eleven(text: str, rate: str, out_mp3: str, out_words: str) -> None:
 
     try:
         resp = call(body)
-    except urllib.error.HTTPError:
+    except urllib.error.HTTPError as e:
+        # Kontingent/Key-Probleme NICHT verschlucken (Vorfall 2026-07-30: Free-Tier war
+        # aufgebraucht — 4 von 10.000 Credits — die Pipeline fiel still auf edge-tts
+        # zurück und die Aussprache-Fehler wurden der Stimme statt dem Kontingent
+        # zugeschrieben). Klartext-Fehler mit dem Grund aus der API.
+        detail = ""
+        try:
+            detail = json.load(e).get("detail", {})
+            detail = detail.get("message") or detail.get("code") or str(detail)
+        except Exception:
+            pass
+        if e.code in (401, 402, 403, 429):
+            raise SystemExit(
+                f"ElevenLabs nicht verfügbar (HTTP {e.code}): {detail}\n"
+                f"  → Kontingent/Key prüfen. Bewusst auf die kostenlose Stimme wechseln: REEL_TTS=edge"
+            )
         # Ältere Modelle/Stimmen kennen "speed" nicht → einmal ohne erneut versuchen.
         body["voice_settings"].pop("speed", None)
         resp = call(body)
@@ -123,6 +160,51 @@ def synth_eleven(text: str, rate: str, out_mp3: str, out_words: str) -> None:
         print("WARNUNG: keine Timestamps von ElevenLabs", file=sys.stderr)
 
 
+def synth_local(text: str, rate: str, out_mp3: str, out_words: str, voice: str) -> None:
+    """Lokaler TTS-Service auf dem Mac Mini (Piper/Chatterbox) — kostenlos, offline,
+    kein Cloud-Abhängigkeit. Adresse via TTS_LOCAL_URL (Default: Mini im Heimnetz).
+
+    Engine wählbar über TTS_LOCAL_ENGINE (piper|chatterbox). Piper ist schnell
+    (RTF ~0.3 auf dem Mini), Chatterbox besser in der Prosodie, aber viel langsamer.
+    Liefert dieselbe words.json-Struktur wie edge/eleven, damit Remotion die
+    Captions unverändert synchronisieren kann."""
+    import base64 as _b64
+    import urllib.request
+
+    url = os.environ.get("TTS_LOCAL_URL", "http://192.168.178.3:8123").rstrip("/")
+    engine = os.environ.get("TTS_LOCAL_ENGINE", "piper")
+    # "+16%" → 1.16 (der Service erwartet einen Faktor, kein Prozent-String)
+    try:
+        speed = 1.0 + int(str(rate).replace("%", "").replace("+", "")) / 100.0
+    except ValueError:
+        speed = 1.0
+
+    payload = json.dumps({
+        "text": text, "engine": engine, "voice": voice or None,
+        # thorsten_emotional: "amused" klingt warm/zugewandt, "neutral" unbeteiligt
+        "emotion": os.environ.get("TTS_LOCAL_EMOTION") or None,
+        "format": "mp3", "speed": round(speed, 2), "words": True,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        f"{url}/tts", data=payload, headers={"Content-Type": "application/json"}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=300) as r:
+            resp = json.loads(r.read().decode("utf-8"))
+    except Exception as exc:
+        raise SystemExit(f"Lokaler TTS-Service ({url}) nicht erreichbar: {exc}")
+
+    with open(out_mp3, "wb") as f:
+        f.write(_b64.b64decode(resp["audio_base64"]))
+
+    words = [{"t": w["t"], "start": w["s"], "end": w["e"]} for w in resp.get("words", [])]
+    _mark_clause_breaks(words, text)
+    with open(out_words, "w", encoding="utf-8") as f:
+        json.dump(words, f, ensure_ascii=False)
+    if not words:
+        print("WARNUNG: keine Timestamps vom lokalen TTS-Service", file=sys.stderr)
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--text", required=True)
@@ -130,10 +212,14 @@ def main() -> None:
     p.add_argument("--words", required=True)
     p.add_argument("--voice", default=DEFAULT_VOICE)
     p.add_argument("--rate", default="+4%")  # minimal flotter = weniger Hänger
-    p.add_argument("--engine", default="edge", choices=["edge", "eleven"])
+    p.add_argument("--engine", default="edge", choices=["edge", "eleven", "local"])
     args = p.parse_args()
     if args.engine == "eleven":
         synth_eleven(args.text, args.rate, args.out, args.words)
+    elif args.engine == "local":
+        # Piper hat eigene Stimmnamen — der edge-Default passt hier nicht.
+        voice = None if args.voice == DEFAULT_VOICE else args.voice
+        synth_local(args.text, args.rate, args.out, args.words, voice)
     else:
         asyncio.run(synth(args.text, args.voice, args.rate, args.out, args.words))
     print(f"OK vo -> {args.out}")

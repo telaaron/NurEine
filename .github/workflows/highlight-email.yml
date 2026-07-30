@@ -4,8 +4,11 @@ name: Daily Highlight Email (post-worthy story → Aaron)
 # Only sends if today's top story clears impact >= 85 (the "post-worthy" bar).
 # Recipient is Aaron (HIGHLIGHT_EMAIL / reply-to), never subscribers.
 on:
-  schedule:
-    - cron: '30 6 * * *'  # 06:30 UTC (08:30 CEST) — after 06:00 fetch + 06:05 OG
+  # ABGESCHALTET (2026-07-25): läuft jetzt vom Mac-Mini-Runner
+  # (ops/crontab.txt). GitHub-Cron feuerte parallel → doppelte Trigger
+  # (Highlight-/Social-Mails kamen 2×). Manuell weiter per workflow_dispatch.
+  # schedule:
+  #   - cron: '30 6 * * *'  # 06:30 UTC (08:30 CEST) — after 06:00 fetch + 06:05 OG
   workflow_dispatch:
 
 jobs:

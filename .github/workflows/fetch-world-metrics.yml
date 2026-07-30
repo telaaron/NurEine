@@ -1,8 +1,11 @@
 name: Fetch World Metrics (Stand der Welt)
 
 on:
-  schedule:
-    - cron: '0 5 1 * *'  # 05:00 UTC am 1. jedes Monats — Daten ändern sich jährlich
+  # ABGESCHALTET (2026-07-25): läuft jetzt vom Mac-Mini-Runner
+  # (ops/crontab.txt). GitHub-Cron feuerte parallel → doppelte Trigger
+  # (Highlight-/Social-Mails kamen 2×). Manuell weiter per workflow_dispatch.
+  # schedule:
+  #   - cron: '0 5 1 * *'  # 05:00 UTC am 1. jedes Monats — Daten ändern sich jährlich
   workflow_dispatch:
 
 jobs:

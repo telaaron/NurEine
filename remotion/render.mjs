@@ -17,7 +17,7 @@
  * ENV: DEEPSEEK_API_KEY (Skript), SUPABASE_URL + SUPABASE_SERVICE_KEY (--queue),
  *      VO=1 (Voiceover an, Default AUS bis Stimm-Qualität abgenommen ist).
  */
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { writeFileSync, readFileSync, statSync, mkdirSync, existsSync } from 'node:fs';
 import { argv, env, exit } from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -53,8 +53,13 @@ const VO_TAIL = TIKTOK ? 0.15 : 0.35; // Sekunden hinter dem letzten Wort im TTS
 // nur ~2,2 Wörter/s, damit wird ein 50-Wort-Skript >23s. REEL_RATE übersteuert.
 // +16% seit 2026-07-11 (Publikums-Feedback: „muss schneller geredet werden").
 const TTS_RATE = env.REEL_RATE || (TIKTOK ? '+16%' : '+4%');
-// TTS-Backend: 'edge' (kostenlos) oder 'eleven' (ElevenLabs-Premium-Stimme via
-// ELEVENLABS_API_KEY/_VOICE_ID — eine Marken-Stimme, Figur-Kopplung entfällt).
+// TTS-Backend:
+//   'edge'   — kostenlos, Microsoft-Neural-Stimmen, braucht Internet (Default)
+//   'eleven' — ElevenLabs-Premium via ELEVENLABS_API_KEY/_VOICE_ID (eine
+//              Marken-Stimme, Figur-Kopplung entfällt); wortgenaue Timings
+//   'local'  — lokaler TTS-Service auf dem Mac Mini (Piper/Chatterbox), offline
+//              und kostenlos. Adresse via TTS_LOCAL_URL, Engine via
+//              TTS_LOCAL_ENGINE. Siehe ops/tts-service/README.md
 const TTS_ENGINE = env.REEL_TTS || 'edge';
 
 // ── Extraktion (Fallbacks ohne LLM) ─────────────────────────────────────────
@@ -265,6 +270,29 @@ function escapeRegex(s) {
 	return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// ── Englisch-Detektor (kein englisches Wort mehr in den VO) ──────────────────
+// Beide Engines (ElevenLabs UND edge-tts Multilingual) sprechen englische Wörter
+// im voText ENGLISCH aus. Der Detektor läuft NACH prepareTts (also nach Lexikon/
+// Abkürzungen/Zahlen) auf dem finalen TTS-Text: bleibt ein verdächtig englisches
+// Wort übrig, das NICHT über tts-lexikon.json aufgelöst wurde, bricht der Render
+// hart ab (wie der SEO-Check). Fix: das Wort im voText eindeutschen ODER eine
+// deutsche Aussprache ins Lexikon eintragen. So kann nichts mehr unbemerkt durch.
+const EN_BLACKLIST = new Set(['the', 'and', 'of', 'for', 'with', 'health', 'sciences', 'science', 'university', 'journal', 'news', 'network', 'daily', 'report', 'study', 'good', 'world', 'first', 'new', 'clean', 'energy', 'power', 'care', 'brain', 'heart', 'monitor', 'trust', 'foundation', 'institute', 'research', 'optimist', 'restores', 'memory', 'clears', 'model', 'evidence', 'chemical', 'neuroscience', 'global', 'nature', 'medicine', 'medical', 'today', 'future', 'people', 'life', 'water', 'green', 'happy', 'hope', 'children', 'women', 'ocean', 'forest', 'wildlife', 'climate']);
+const EN_PATTERNS = [/[a-z]+ing\b/i, /[a-z]{2}ght\b/i, /^th[a-z]+/i, /[a-z]+ously\b/i, /\bwh[a-z]{2,}/i, /[a-z]ea[a-z]/i, /[a-z]oo[a-z]/i];
+const DE_MARKERS = /[äöüß]|sch|ung$|keit$|heit$|lich$|chen$|ische$|ischen$|tät$|ieren$|iert$/i;
+const DE_OK = new Set(['team', 'teams', 'training', 'internet', 'computer', 'link', 'online', 'live', 'app', 'apps', 'video', 'story', 'update', 'meeting', 'design', 'start', 'test', 'job', 'jobs', 'fair', 'international', 'labor', 'partner', 'sport', 'international']);
+
+function detectEnglishWords(ttsText) {
+	const suspects = [];
+	for (const w of ttsText.match(/[A-Za-zÄÖÜäöüß]{3,}/g) || []) {
+		const lo = w.toLowerCase();
+		if (DE_OK.has(lo) || DE_MARKERS.test(w)) continue;
+		if (EN_BLACKLIST.has(lo)) suspects.push(w);
+		else if (lo.length <= 9 && EN_PATTERNS.some((p) => p.test(lo))) suspects.push(w);
+	}
+	return [...new Set(suspects)];
+}
+
 /**
  * Kompletter TTS-Vorbereitungs-Pass: Lexikon → Gedankenstriche/Abkürzungen →
  * Zahlen ausschreiben. Liefert subs fürs Caption-Rückmapping.
@@ -344,6 +372,13 @@ function synthSegment(text, slug, name) {
 	// Multilingual-Stimme Ziffern englisch bzw. stolpert über Sonderzeichen.
 	const { ttsText, subs } = prepareTts(text);
 	if (subs.length) console.log(`vo-fix (${name}): ${subs.map((s) => `"${s.display}"→"${s.spoken.join(' ')}"`).join(' · ')}`);
+	// Englisch-Wächter: kein englisches Wort darf die Stimme erreichen (beide Engines
+	// sprechen es englisch aus). Bricht hart ab; Fix = Wort eindeutschen ODER deutsche
+	// Aussprache ins tts-lexikon.json. --no-en-check übersteuert bewusst.
+	const enSuspects = detectEnglishWords(ttsText);
+	if (enSuspects.length && !arg('no-en-check')) {
+		throw new Error(`VO-Segment "${name}": vermutlich ENGLISCHE Wörter im voText → würden englisch ausgesprochen: ${enSuspects.join(', ')}. Fix: im voText eindeutschen (z.B. Quelle „Good News Network" → „einer Good-News-Redaktion") ODER deutsche Aussprache in remotion/tts-lexikon.json eintragen. (Übersteuern: --no-en-check)`);
+	}
 	try {
 		execFileSync(py, [fileURLToPath(new URL('./scripts/tts.py', import.meta.url)), '--text', ttsText, '--voice', VOICE, '--rate', TTS_RATE, '--engine', TTS_ENGINE, '--out', `${dir}${slug}-${name}.mp3`, '--words', wordsPath], { stdio: 'inherit', timeout: 120000 });
 		let words = JSON.parse(readFileSync(wordsPath, 'utf8'));
@@ -360,6 +395,31 @@ function synthSegment(text, slug, name) {
 		// DANN säubern (Panel-Fix 2026-07-17).
 		// sbrk = echtes Satz-Ende (. ! ?), brk = jeder Satzteil. Beide aus tts.py ODER Token.
 		words = words.map((w) => ({ ...w, brk: !!w.brk || /[.,;:!?–—]\s*$/.test(w.t), sbrk: !!w.sbrk || /[.!?]\s*$/.test(w.t), t: cleanTok(w.t) })).filter((w) => w.t.length);
+		// AUSSPRACHE-GATE (Vorfall 2026-07-26): Der Englisch-Wächter prüft die SCHREIBWEISE,
+		// er kann nicht sehen, was die Stimme daraus MACHT. Belegt durchgerutscht:
+		// „Trachom."→„Trakum.", „Prüfer suchten jahrelang."→„Proofers sucht den Geraldine."
+		// Beide sehen deutsch aus (ch/ü) und werden von DE_MARKERS sogar entlastet. Nur die
+		// Gegenprobe am fertigen Audio findet das. Hard-Fail; --no-vo-verify übersteuert.
+		if (!arg('no-vo-verify')) {
+			const vres = spawnSync(py, [fileURLToPath(new URL('./scripts/verify_vo.py', import.meta.url)), '--audio', `${dir}${slug}-${name}.mp3`, '--text', ttsText, '--json'], { encoding: 'utf8', timeout: 300000 });
+			if (vres.status === 3) {
+				let d = {};
+				try {
+					d = JSON.parse(vres.stdout || '{}');
+				} catch {}
+				throw new Error(
+					`VO-Segment "${name}": die Stimme spricht NICHT, was geplant ist —\n` +
+						`  geplant: "${d.planned ?? ttsText}"\n  gehört:  "${d.heard ?? '?'}"\n` +
+						(d.missing?.length ? `  nicht gesprochen: ${d.missing.join(', ')}\n` : '') +
+						(d.extra?.length ? `  erfunden/verhört: ${d.extra.join(', ')}\n` : '') +
+						`  Fix: Satz umformulieren (bloßes Substantiv am Satzanfang kippt die Stimme —\n` +
+						`  „Die Prüfer suchten…" statt „Prüfer suchten…") ODER Aussprache in\n` +
+						`  remotion/tts-lexikon.json eintragen. (Übersteuern: --no-vo-verify)`
+				);
+			}
+			if (vres.status === 2) console.log(`WARN Aussprache-Gate übersprungen (${name}): Whisper nicht lauffähig`);
+			else if (vres.status === 0) console.log(`OK aussprache (${name})`);
+		}
 		return {
 			file,
 			words: words.map((w) => ({ t: w.t, brk: !!w.brk, sbrk: !!w.sbrk, start: Math.round(w.start * FPS), end: Math.round(w.end * FPS) })),
@@ -612,12 +672,18 @@ async function main() {
 			const spoken = (first.voText || '').toLowerCase();
 			const overlay = [first.text, first.value, first.unit, first.context, first.kicker].filter(Boolean).join(' ').toLowerCase();
 			const cap60 = (plan.tiktok?.caption || '').slice(0, 60).toLowerCase();
+			// seo.spokenOptional:true = das Keyword ist ein Fachwort, das die Stimme nicht
+			// sicher trifft (Vorfall 2026-07-30: „Trachom" wurde je nach Schreibweise
+			// „Trakum"/„Track Home"/polnisch). Dann steht es NUR im Screen + Caption, und
+			// der voText umschreibt es („eine Augenkrankheit"). Zwei Kanäle der Dreifach-
+			// Platzierung bleiben erhalten — besser als ein falsch gesprochenes Keyword.
+			const spokenOptional = plan.seo?.spokenOptional === true;
 			const miss = [];
-			if (!spoken.includes(kw)) miss.push('voText Szene 1 (gesprochen)');
+			if (!spoken.includes(kw) && !spokenOptional) miss.push('voText Szene 1 (gesprochen)');
 			if (!overlay.includes(kw)) miss.push('Overlay Szene 1');
 			if (!cap60.includes(kw)) miss.push('tiktok.caption (erste 60 Zeichen)');
 			if (miss.length) throw new Error(`seo.keyword "${plan.seo.keyword}" fehlt in: ${miss.join(' + ')} — Dreifach-Platzierung ist Pflicht (übersteuern: --no-seo-check)`);
-			console.log(`OK seo.keyword "${plan.seo.keyword}" dreifach platziert`);
+			console.log(`OK seo.keyword "${plan.seo.keyword}" ${spokenOptional ? 'im Screen+Caption (gesprochen bewusst umschrieben)' : 'dreifach platziert'}`);
 		}
 	}
 
@@ -688,7 +754,7 @@ async function main() {
 	// --comp übersteuert (Debug); der ReelDaily-Build wurde 2026-07-14 verworfen.
 	const compArg = arg('comp');
 	const comp = compArg && compArg !== true ? compArg : 'ReelTikTok';
-	console.log(`szenen: ${scenes.map((s) => s.kind).join(' → ')} | ${Math.round(duration / FPS)}s | VO: ${anyVo ? `ja (${TTS_ENGINE === 'eleven' ? 'ElevenLabs' : VOICE})` : 'nein'} | comp: ${comp} | pace: ${PACE}${TIKTOK ? ' (tiktok)' : ''}`);
+	console.log(`szenen: ${scenes.map((s) => s.kind).join(' → ')} | ${Math.round(duration / FPS)}s | VO: ${anyVo ? `ja (${TTS_ENGINE === 'eleven' ? 'ElevenLabs' : TTS_ENGINE === 'local' ? `lokal/${env.TTS_LOCAL_ENGINE || 'piper'}` : VOICE})` : 'nein'} | comp: ${comp} | pace: ${PACE}${TIKTOK ? ' (tiktok)' : ''}`);
 
 	execFileSync('npx', ['remotion', 'render', comp, out, `--props=${propsPath}`, '--log=error'], {
 		stdio: 'inherit',
@@ -724,6 +790,6 @@ async function main() {
 }
 
 main().catch((e) => {
-	console.error('FEHLER:', e.message);
+	console.error('FEHLER:', e.stack || e.message);
 	exit(1);
 });

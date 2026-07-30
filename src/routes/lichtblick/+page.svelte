@@ -56,7 +56,7 @@
 
 <svelte:head>
 	<title>Eine gute Nachricht für dich — NurEine</title>
-	<meta name="description" content="Lies die gute Nachricht von heute — und bekomm jeden Morgen eine. Belegt, werbefrei, in zwei Minuten." />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href="https://nureine.de/lichtblick" />
 </svelte:head>
 

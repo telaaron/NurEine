@@ -10,7 +10,7 @@
 
 <svelte:head>
 	<title>{data.label} — gute Nachrichten | NurEine</title>
-	<meta name="description" content={data.intro} />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 </svelte:head>
 
 <section class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-10 pt-8 sm:pt-10 lg:pt-16 pb-6">

@@ -3,8 +3,11 @@ name: Social — Generate Daily Draft
 # Erzeugt täglich den Instagram-Post-Entwurf der Tagesstory (status 'draft').
 # Postet nichts. Läuft nach dem 06:00-Story-Fetch.
 on:
-  schedule:
-    - cron: '15 6 * * *'  # 06:15 UTC (08:15 CEST)
+  # ABGESCHALTET (2026-07-25): läuft jetzt vom Mac-Mini-Runner
+  # (ops/crontab.txt). GitHub-Cron feuerte parallel → doppelte Trigger
+  # (Highlight-/Social-Mails kamen 2×). Manuell weiter per workflow_dispatch.
+  # schedule:
+  #   - cron: '15 6 * * *'  # 06:15 UTC (08:15 CEST)
   workflow_dispatch:
 
 jobs:

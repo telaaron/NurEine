@@ -1,0 +1,21 @@
+CREATE
+LAST	Lde	"NurEine"
+LAST	Len	"NurEine"
+LAST	Dde	"deutschsprachige Good-News-Plattform, gegründet 2026"
+LAST	Den	"German-language good news website founded in 2026"
+LAST	Ade	"NurEine.de"
+LAST	Ade	"nureine"
+LAST	Ade	"Nur Eine"
+LAST	Aen	"NurEine.de"
+LAST	Aen	"nureine"
+LAST	P31	Q17232649	S854	"https://nureine.de/ueber-uns"
+LAST	P856	"https://nureine.de"
+LAST	P407	Q188	S854	"https://nureine.de/ueber-uns"
+LAST	P571	+2026-00-00T00:00:00Z/9	S854	"https://nureine.de/ueber-uns"
+LAST	P17	Q183	S854	"https://nureine.de/impressum"
+LAST	P159	Q572512	S854	"https://nureine.de/ueber-uns"
+LAST	P452	Q11030	S854	"https://nureine.de/ueber-uns"
+LAST	P1813	de:"NurEine"
+LAST	P1889	Q62006534
+LAST	P1889	Q7070005
+LAST	P1889	Q408180

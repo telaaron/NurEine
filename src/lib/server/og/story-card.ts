@@ -36,16 +36,6 @@ const CATEGORY_DARK: Record<string, string> = {
 	kultur: '#291708',
 	innovation: '#101c2a'
 };
-// Mittel-dunkle Variante für split-Panel (heller als BG, Text bleibt weiß).
-const CATEGORY_PANEL: Record<string, string> = {
-	klima: '#24402e',
-	gesundheit: '#45252a',
-	wissenschaft: '#1c3148',
-	gemeinschaft: '#46280f',
-	tiere: '#24402e',
-	kultur: '#46280f',
-	innovation: '#1c3148'
-};
 const CATEGORY_LABELS: Record<string, string> = {
 	klima: 'Klima',
 	gesundheit: 'Gesundheit',
@@ -89,8 +79,8 @@ const IMG_MIN_H = 880;
 const IMG_MAX_H = 1040;
 const FADE_H = 380; // langer Schwarz-Verlauf → Bild weniger gezoomt, sauberer Übergang
 
-export type TemplateName = 'stat' | 'poster' | 'statement' | 'split' | 'ticker';
-const TEMPLATES: TemplateName[] = ['stat', 'poster', 'statement', 'split', 'ticker'];
+export type TemplateName = 'stat' | 'poster' | 'statement' | 'ticker';
+const TEMPLATES: TemplateName[] = ['stat', 'poster', 'statement', 'ticker'];
 
 export interface StoryCardInput {
 	title: string;
@@ -158,7 +148,7 @@ function pickTemplate(input: StoryCardInput): TemplateName {
 	const cands: TemplateName[] = [];
 	if (hasStat) cands.push('stat', 'ticker');
 	if (shortTitle) cands.push('statement');
-	if (hasImage) cands.push('poster', 'split');
+	if (hasImage) cands.push('poster'); // 'split' entfernt (Aaron 2026-07-25)
 	if (hasImage && wide) cands.push('poster'); // breites Bild → Poster wahrscheinlicher
 	if (cands.length === 0) cands.push('stat'); // Sicherheitsnetz
 
@@ -357,51 +347,8 @@ function tplStatement(input: StoryCardInput, accent: string, catLabel: string): 
 }
 
 // ─── Template 4: SPLIT (obere Hälfte Bild, untere Hälfte Kategorie-Farbe) ────
-function tplSplit(input: StoryCardInput, accent: string, catLabel: string, hook: Hook | null): string {
-	// Bild oben, farbiges Panel unten. Mit den ECHTEN Safe-Zones (SAFE_BOTTOM=360)
-	// rückt der bottom-verankerte CTA nach oben — der Textblock braucht mehr Panel.
-	// splitY=940 gibt genug Höhe für 2-zeiligen Titel + Ortszeile + 1-zeiligen
-	// Untertitel, ohne dass irgendetwas hinter dem CTA verschwindet (Aaron 2026-07-10:
-	// der Untertitel lief hinter den CTA). Untertitel bewusst 1 Zeile (Titel trägt).
-	const splitY = 940;
-	const panelBg = CATEGORY_PANEL[input.category] || '#2a2118';
-	const image = input.imageBase64
-		? `<img src="${input.imageBase64}" width="${W}" height="${splitY}" style="position:absolute;top:0;left:0;width:${W}px;height:${splitY}px;object-fit:cover;object-position:center;" />`
-		: imageCover(null, splitY);
-	const panel = `<div style="position:absolute;left:0;top:${splitY}px;display:flex;width:${W}px;height:${H - splitY}px;background:${panelBg};"></div>`;
-	const blend = `<div style="position:absolute;left:0;top:${splitY - 90}px;display:flex;width:${W}px;height:90px;background:linear-gradient(180deg,rgba(0,0,0,0) 0%,${panelBg} 100%);"></div>`;
-	// Titel GRÖSSER (Aaron 2026-07-11: im Panel ist Platz). Stufen hochgezogen.
-	const n = input.title.length;
-	const hs = n <= 32 ? 88 : n <= 55 ? 74 : n <= 80 ? 62 : 52;
-	const locParts = [input.country?.toUpperCase(), hook?.fromText ? hook.value : null].filter(Boolean);
-	const locLine = locParts.length
-		? `<div style="display:flex;align-items:center;margin-bottom:22px;">
-        <div style="display:flex;width:16px;height:16px;border-radius:16px;background:${accent};margin-right:14px;"></div>
-        <div style="display:flex;font-family:'Inter';font-size:32px;font-weight:700;letter-spacing:0.06em;color:#fff;">${esc(locParts.join('  ·  '))}</div>
-      </div>`
-		: '';
-	// Textblock füllt das Panel MITTIG (justify-content:center) zwischen Panel-
-	// Oberkante und CTA → kein hohles grünes Feld mehr (Aaron 2026-07-11).
-	const ctaTop = H - SAFE_BOTTOM - 190; // grobe CTA-Oberkante (Höhe ~190)
-	return page(`
-    ${image}
-    ${blend}
-    ${panel}
-    ${topLabels(accent, catLabel, input.logoDataUri)}
-    <div style="position:absolute;display:flex;flex-direction:column;justify-content:center;left:${SAFE_SIDE}px;right:${SAFE_SIDE}px;top:${splitY + 30}px;height:${ctaTop - (splitY + 30) - 30}px;width:${CONTENT_W}px;">
-      ${locLine}
-      <div style="display:flex;font-family:'Space Grotesk';font-size:${hs}px;font-weight:700;color:#fff;line-height:1.03;letter-spacing:-0.03em;">${esc(input.title)}</div>
-      ${dekText(input.dek, 'rgba(255,255,255,0.92)', 40, 10, 2)}
-      ${input.impactScore != null && input.impactScore >= 50 ? `<div style="display:flex;margin-top:24px;">${impactPill(input.impactScore, accent)}</div>` : ''}
-    </div>
-    <!-- CTA HART unten verankert → nie in der IG-Antwortzeile -->
-    <div style="position:absolute;display:flex;left:${SAFE_SIDE}px;right:${SAFE_SIDE}px;bottom:${SAFE_BOTTOM}px;width:${CONTENT_W}px;">
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:${CONTENT_W}px;background:${AMBER};border-radius:34px;padding:38px 32px;">
-        <div style="display:flex;font-family:'Space Grotesk';font-size:44px;font-weight:700;color:#fff;letter-spacing:-0.02em;text-align:center;white-space:nowrap;">Deine gute Nachricht für heute →</div>
-        <div style="display:flex;font-family:'Inter';font-size:34px;font-weight:600;color:rgba(255,255,255,0.96);margin-top:12px;">Kostenlos abonnieren · Link im Profil</div>
-      </div>
-    </div>`);
-}
+// 'split'-Template entfernt (Aaron 2026-07-25): Bild oben + farbiges Panel unten.
+// Aus der Rotation genommen, tplSplit + CATEGORY_PANEL gelöscht.
 
 // ─── Template 5: TICKER (Bild oben, strukturierte Daten-Karte darunter) ──────
 function tplTicker(
@@ -450,8 +397,6 @@ export function buildStoryCard(input: StoryCardInput): string {
 			return tplPoster(input, accent, catLabel);
 		case 'statement':
 			return tplStatement(input, accent, catLabel);
-		case 'split':
-			return tplSplit(input, accent, catLabel, hook);
 		case 'ticker':
 			return tplTicker(input, accent, catLabel, hook);
 		case 'stat':

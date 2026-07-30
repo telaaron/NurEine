@@ -33,7 +33,7 @@
 
 <svelte:head>
 	<title>{title}</title>
-	<meta name="description" content={desc} />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href={canonical} />
 	{@html `<script type="application/ld+json">${jsonLd}</scr` + `ipt>`}
 </svelte:head>

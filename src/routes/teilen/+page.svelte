@@ -81,7 +81,7 @@
 
 <svelte:head>
 	<title>NurEine weiterempfehlen — fertige Assets für jede Plattform</title>
-	<meta name="description" content="Empfiehl NurEine weiter: wähle Plattform und Zielgruppe, bekomme eine fertige Karte und den passenden Text — mit deinem Empfehlungslink." />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href="https://nureine.de/teilen" />
 </svelte:head>
 

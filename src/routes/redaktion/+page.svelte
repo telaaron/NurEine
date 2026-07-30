@@ -21,7 +21,7 @@
 
 <svelte:head>
 	<title>So arbeitet NurEine — Unsere Quellen & Beats</title>
-	<meta name="description" content="Transparenz statt Blackbox: Welche Primärquellen NurEine pro Themen-Beat beobachtet — und warum wir Daten statt Lärm folgen." />
+	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href={url} />
 </svelte:head>
 

@@ -20,6 +20,14 @@
 	border-top-color: var(--color-ink) !important;
 }
 
+/* Ortsnamen-Overlay liegt im markerPane ÜBER den Story-Punkten, damit Städte
+   lesbar bleiben. Es darf aber keine Klicks abfangen, die den Markern darunter
+   gehören — Leaflets `interactive:false` deckt den Layer ab, die Kachel-<img>
+   brauchen es zusätzlich. */
+.label-overlay {
+	pointer-events: none !important;
+}
+
 .leaflet-container {
 	background: var(--color-canvas) !important;
 	font-family: var(--font-sans), 'Inter', 'Helvetica Neue', Arial, sans-serif !important;
@@ -35,6 +43,22 @@
 .leaflet-top,
 .leaflet-bottom {
 	z-index: 1 !important;
+}
+
+/* Ausnahme: der Ortsnamen-Pane MUSS über den Markern liegen, sonst verdecken
+   die Story-Punkte genau die Städtenamen, an denen sie kleben. Bleibt mit 2
+   trotzdem innerhalb des isolierten Stacking-Kontexts der Karte, kann also
+   weiterhin nicht über den Sticky-Header der Seite geraten. */
+/* Der Ortsnamen-Layer liegt im tilePane — nur dort greifen Leaflets
+   Zoom-Animation und das Aufräumen alter Kacheln zuverlässig (in einem eigenen
+   Pane lud er die höhere Zoomstufe nicht nach und malte ein achtfach
+   hochskaliertes „BERLIN" über die Karte).
+   Das tilePane liegt unter den Markern, darum wird hier der Kachel-Container
+   des Layers aus dem Pane herausgehoben: `position:absolute` + eigener z-index
+   heben ihn über overlayPane/markerPane, ohne den isolierten Stacking-Kontext
+   der Karte zu verlassen (Sticky-Header bleibt also unangetastet). */
+.leaflet-tile-pane .leaflet-layer:has(.label-overlay) {
+	z-index: 5;
 }
 .leaflet-control {
 	z-index: 2 !important;

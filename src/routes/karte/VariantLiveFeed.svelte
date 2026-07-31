@@ -5,6 +5,7 @@
 	import '$lib/styles/leaflet-shared.css';
 	import { toneColors, toneLabels } from '$lib/tone-constants';
 	import { createGlowMarker, highlightGlow } from '$lib/map/glow-marker';
+	import { addBaseTiles, addLabelTiles } from '$lib/map/basemap';
 
 	let { stories = [] }: { stories?: any[] } = $props();
 	const storyCount = $derived(stories.length);
@@ -34,15 +35,14 @@
 			if (!mapContainer) return;
 			const m = L.map(el, { center: [35, 10], zoom: 2, zoomControl: true, scrollWheelZoom: true, attributionControl: false, worldCopyJump: true });
 			(window as any).L = L;
-			const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-			const url = dark
-				? 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'
-				: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png';
-			L.tileLayer(url, { maxZoom: 19 }).addTo(m);
+			addBaseTiles(m);
 			for (const s of stories) {
 				const mk = createGlowMarker(s, m, (slug) => (activeSlug = slug));
 				if (mk) markerBySlug.set(s.slug, mk);
 			}
+			// Ortsnamen ZULETZT: über den Punkten, sonst verdecken gerade die
+			// Ballungsräume ihre eigenen Städtenamen.
+			addLabelTiles(m);
 			requestAnimationFrame(() => m.invalidateSize());
 			map = m;
 			mapReady = true;

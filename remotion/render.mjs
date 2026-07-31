@@ -516,14 +516,88 @@ function buildScenes(story, script, voWanted, slug) {
  * Render, Upload, Queue. So variiert die Dramaturgie täglich, ohne dass die
  * technische Qualität (Safe-Zones, Sync, Marke) verhandelbar wird.
  */
+/**
+ * EINE Aufnahme für das ganze Reel, danach an den Satzgrenzen geschnitten.
+ *
+ * Warum (Aaron 2026-07-31): Segmentweise Synthese setzt die Stimme bei JEDEM Segment
+ * neu an — Tonhöhe, Tempo und Klangfarbe schwanken dadurch hörbar von Szene zu Szene.
+ * Ein einziger Call hält die Prosodie über das ganze Stück konstant; wir schneiden das
+ * fertige Audio anhand der Wort-Timings, statt sechsmal neu zu sprechen.
+ *
+ * Rückgabe: dieselbe Struktur wie synthSegment, pro Szene ein Eintrag — oder null,
+ * wenn die Aufnahme nicht zu den geplanten Sätzen passt (dann greift der Segment-Weg).
+ */
+function synthWholeTake(plan, slug) {
+	const texts = plan.scenes.map((s) => s.voText).filter(Boolean);
+	if (texts.length < 2) return null;
+	// Sätze mit klarer Zäsur aneinanderhängen: die Stimme bekommt EIN Skript.
+	const joined = texts.join(' ');
+	const take = synthSegment(joined, slug, 'take');
+	if (!take || !take.words.length) return null;
+
+	// Zuordnung Wort -> Szene über die Wortanzahl je Szene (die Reihenfolge ist fix).
+	const dir = fileURLToPath(new URL('./public/vo/', import.meta.url));
+	const counts = texts.map((t) => prepareTts(t).ttsText.trim().split(/\s+/).filter(Boolean).length);
+	const totalPlanned = counts.reduce((a, b) => a + b, 0);
+	// Weicht die Wortzahl stark ab (Stimme hat verschluckt/ergänzt), lieber abbrechen
+	// als falsch zu schneiden — der Segment-Weg ist dann die sichere Variante.
+	if (Math.abs(take.words.length - totalPlanned) > Math.max(2, totalPlanned * 0.12)) {
+		console.log(`WARN Ganz-Aufnahme: ${take.words.length} Wörter statt ${totalPlanned} — schneide nicht, nutze Segmente`);
+		return null;
+	}
+
+	const out = [];
+	let idx = 0;
+	let ci = 0; // Zähler über die Szenen MIT voText — counts[] folgt derselben Reihenfolge.
+	for (let i = 0; i < plan.scenes.length; i++) {
+		if (!plan.scenes[i].voText) { out.push(null); continue; }
+		const n = counts[ci++];
+		const slice = take.words.slice(idx, idx + n);
+		idx += n;
+		if (!slice.length) { out.push(null); continue; }
+		// Schnittfenster: vom ersten Wort bis kurz hinter das letzte (VO_TAIL wie sonst).
+		// LEAD: 120 ms Vorlauf, sonst frisst der Schnitt den Anlaut des ersten Wortes
+		// („Welthunger" wurde zu „Elthunger", belegt 2026-07-31). Die Wort-Timings
+		// markieren den Vokal-Einsatz, nicht den Konsonanten davor.
+		const LEAD = 0.12;
+		const startSec = Math.max(0, slice[0].start / FPS - LEAD);
+		const endSec = slice[slice.length - 1].end / FPS + VO_TAIL;
+		const file = `vo/${slug}-cut${i}.mp3`;
+		try {
+			// NICHT -c copy: MP3-Frames sind ~26 ms lang, ein Kopier-Schnitt rastet auf die
+			// nächste Frame-Grenze und schneidet damit erneut in den Anlaut. Neu kodieren.
+			execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', `${dir}${slug}-take.mp3`,
+				'-ss', String(startSec), '-to', String(endSec), '-c:a', 'libmp3lame', '-q:a', '2',
+				`${dir}${slug}-cut${i}.mp3`], { timeout: 60000 });
+		} catch {
+			return null; // Schnitt fehlgeschlagen → sauberer Rückfall
+		}
+		// Timings relativ zum SCHNITT-Anfang neu setzen — inklusive LEAD, sonst laufen
+		// die Karaoke-Captions um den Vorlauf voraus.
+		const off = Math.round(startSec * FPS);
+		out.push({
+			file,
+			words: slice.map((w) => ({ ...w, start: w.start - off, end: w.end - off })),
+			durFrames: Math.round((endSec - startSec) * FPS)
+		});
+	}
+	console.log(`OK ganz-aufnahme: 1 Call, ${out.filter(Boolean).length} Szenen geschnitten (gleichmäßige Stimme)`);
+	return out;
+}
+
 function buildScenesFromPlan(plan, voWanted, slug) {
 	const scenes = [];
 	let t = 0;
 	let anyVo = false;
+	// EINE Aufnahme bevorzugen (gleichmäßige Stimme); nur wenn das scheitert, Segmente.
+	const whole = voWanted && !arg('no-whole-take') ? synthWholeTake(plan, slug) : null;
 	plan.scenes.forEach((raw, i) => {
 		const { voText, ...sc } = raw;
 		let vo = null;
-		if (voWanted && voText) {
+		if (whole) {
+			vo = whole[i] || null;
+			if (vo) anyVo = true;
+		} else if (voWanted && voText) {
 			vo = synthSegment(voText, slug, `s${i}-${sc.kind}`);
 			if (vo) anyVo = true;
 		}

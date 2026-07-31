@@ -17,6 +17,7 @@
 	import StoryHeroTile from '$lib/components/StoryHeroTile.svelte';
 	import { createGlowMarker, highlightGlow } from '$lib/map/glow-marker';
 	import { createUserMarker, createDistanceRings, DISTANCE_RINGS } from '$lib/map/user-marker';
+	import { addBaseTiles, addLabelTiles } from '$lib/map/basemap';
 	import {
 		haversineDistance,
 		isDefaultCoord,
@@ -250,7 +251,13 @@
 	let leaflet: any = null;
 	let userMarker: any = null;
 	let ringLayers: any[] = [];
+	let labelLayer: any = null;
 	let markerBySlug = new Map<string, any>();
+	// Merkt sich, auf welchen Ort die Karte zuletzt zentriert wurde — damit der
+	// Layer-Effect die Ansicht nur beim echten Ortswechsel anfasst.
+	let viewCentered = false;
+	let viewLat = 0;
+	let viewLng = 0;
 	let mapReady = $state(false);
 	let activeSlug = $state<string | null>(null);
 
@@ -265,6 +272,8 @@
 		ringLayers = [];
 		userMarker?.remove?.();
 		userMarker = null;
+		labelLayer?.remove?.();
+		labelLayer = null;
 	}
 
 	/** Karte einmal anlegen, sobald ein Standort und der Container da sind. */
@@ -280,22 +289,20 @@
 			(window as any).L = L;
 			leaflet = L;
 
+			// Gleich mit der richtigen Ansicht starten. Eine zweite
+			// Ansichtsänderung kurz nach dem Anlegen unterbricht Leaflets
+			// Kachel-Einblendung — die Kacheln blieben dann auf opacity:0 stehen
+			// und die Karte wäre leer.
 			const m = L.map(el, {
 				center: [place.lat, place.lng],
-				zoom: 6,
+				zoom: 9, // Stadt + Umland: Orte sind benannt und einordbar
 				zoomControl: true,
 				scrollWheelZoom: false, // Seite soll beim Scrollen nicht in der Karte hängen bleiben
 				attributionControl: false
 			});
 
-			// Dark/Light wie auf /karte — vorher war /bei-dir hart auf hell.
-			const dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-			L.tileLayer(
-				dark
-					? 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'
-					: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',
-				{ maxZoom: 19 }
-			).addTo(m);
+			// Basis ohne Ortsnamen — die Labels kommen weiter unten ÜBER die Marker.
+			addBaseTiles(m);
 
 			map = m;
 			// Vor mapReady: der Layer-Effect passt direkt danach die Bounds an und
@@ -329,22 +336,21 @@
 			const mk = createGlowMarker(s, map, (slug) => (activeSlug = slug));
 			if (mk) markerBySlug.set(s.slug, mk);
 		}
+		// Ortsnamen ZULETZT — so liegen sie über den Markern und bleiben lesbar,
+		// gerade an den großen Städten, wo die meisten Punkte kleben.
+		labelLayer = addLabelTiles(map);
 
-		// Auf Standort + die nächsten Geschichten einpassen. Ohne Nachbarn bleibt
-		// ein ruhiger Regional-Zoom statt eines sinnlosen Welt-Ausschnitts.
-		const near = stories.slice(0, 8).map((s) => markerBySlug.get(s.slug)).filter(Boolean);
-		// Erst nach dem Layout einpassen. Der Container hängt in einem {#if}, ist
-		// also im Moment des Effects u. U. noch nicht vermessen — fitBounds würde
-		// dann gegen ein 0×0-Viewport rechnen und auf Weltzoom (z=0) zurückfallen.
-		const fit = () => {
+		// Die Startansicht steht schon beim Anlegen der Karte (Standort + z9) —
+		// hier NUR nachziehen, wenn der Nutzer wirklich den Ort gewechselt hat.
+		// Ein zusätzliches setView beim ersten Lauf würde Leaflets
+		// Kachel-Einblendung unterbrechen und die Karte leer stehen lassen.
+		if (viewCentered && (viewLat !== lat || viewLng !== lng)) {
 			map.invalidateSize();
-			if (near.length > 0 && userMarker) {
-				const bounds = leaflet.featureGroup([userMarker, ...near]).getBounds();
-				if (bounds.isValid()) { map.fitBounds(bounds.pad(0.25), { maxZoom: 9 }); return; }
-			}
-			map.setView([lat, lng], 6);
-		};
-		requestAnimationFrame(fit);
+			map.setView([lat, lng], Math.min(10, Math.max(8, map.getZoom())));
+		}
+		viewCentered = true;
+		viewLat = lat;
+		viewLng = lng;
 	});
 
 	/** Aktiven Marker hervorheben und anfliegen. */

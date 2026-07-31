@@ -75,7 +75,12 @@ jobs:
             --queue --story-id "${{ steps.pick.outputs.sid }}" \
             --category "${{ steps.pick.outputs.cat }}" \
             --hashtags "${{ steps.pick.outputs.tags }}" \
-            --caption "${{ steps.pick.outputs.cap }}"
+            --caption "${{ steps.pick.outputs.cap }}" \
+            --allow-unverified-vo
+          # --allow-unverified-vo: Das Aussprache-Gate braucht Whisper (~500 MB Modell),
+          # das im Runner nicht installiert ist. Vertretbar, weil dieser Workflow nur das
+          # NOTFALL-SKELETT rendert — die täglichen Master baut die Reel-Regie auf dem Mac,
+          # wo das Gate scharf ist. Ohne das Flag würde der Job ab 2026-07-30 hart failen.
         working-directory: remotion
         env:
           BASE_URL: ${{ secrets.PUBLIC_BASE_URL }}
@@ -86,6 +91,15 @@ jobs:
           # VO default AN (Aaron 2026-07-10: Reels immer mit Sprecher). Über
           # Repo-Variable REEL_VO=0 oder workflow_dispatch-Input abschaltbar.
           VO: ${{ github.event.inputs.vo || vars.REEL_VO || '1' }}
+          # Stimme seit 2026-07-30: ElevenLabs (Default in render.mjs). Grund ist
+          # Fehlerfreiheit — edge-tts trifft Fachwörter nicht sicher. Fehlt der Key,
+          # bricht tts.py mit Klartext ab statt still auf edge zurückzufallen.
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          # Marken-Stimme "Luca - Dynamic & Engaging"; Secret übersteuert den Default.
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+          # Aussprache-Gate braucht Whisper. Im CI-Runner ist es nicht installiert →
+          # dort bewusst erlaubt (die Regie-Routine auf dem Mac prüft mit).
+          REEL_TTS: ${{ vars.REEL_TTS || 'eleven' }}
 
       - name: Sofort posten (Publish-Cron läuft sonst erst morgen früh)
         if: steps.pick.outputs.slug != ''

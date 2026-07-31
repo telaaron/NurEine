@@ -11,6 +11,34 @@ bekommt ihre eigene Dramaturgie**, aber Marke/Safe-Zones/Sync sind nicht verhand
 > verworfen; `ReelDaily.tsx` ist nur noch das geteilte Typen-Modul. `--tiktok` ist im
 > render.mjs jetzt Default. Das TikTok-Rezept unten (§„TikTok-Master") ist DER Standard.
 
+
+## STIMME & TEXT — Pflichtstand seit 2026-07-30
+
+**Textstil:** `docs/REEL_TEXT_REGELN.md` ist verbindlich (Aarons Fuenf-Block-Struktur,
+Untertreibung statt Euphorie, kein Medien-Vorwurf). Diese Datei hier beschreibt die
+BAUSTEINE, jene den TEXT. Bei Widerspruch gewinnt REEL_TEXT_REGELN.md.
+
+**Engine:** ElevenLabs ist DEFAULT (`TTS_ENGINE` in render.mjs). Nicht aus Komfort —
+edge-tts trifft medizinische/griechische Fachwoerter nicht sicher und kein Silbenhack
+im Lexikon loest das. Notausgang: `REEL_TTS=edge`.
+
+**Stimme:** „Luca — Dynamic & Engaging" (`mmAbrxFQ9xjByXyBpqrK`). Gemessene Settings
+in `scripts/tts.py`: stability 0.65, speed max 1.15, Tag `[matter-of-fact]` wird
+automatisch vorangestellt. NIE `[excited]` — der Zuschauer soll selbst „krass" denken.
+
+**Aussprache-Gate (Pflicht):** Jedes VO-Segment wird nach der Synthese per Whisper
+gegen den geplanten Text geprueft (`scripts/verify_vo.py`). Abweichung = harter
+Render-Abbruch. Faellt das Gate technisch aus, bricht der Render EBENFALLS ab —
+ungeprueften Ton gibt es nicht mehr. Bewusst uebersteuern: `--allow-unverified-vo`.
+
+**Belegte Sprech-Fallen** (bei der Regie schon vermeiden):
+- Nacktes Substantiv am Satzanfang kippt ins Englische → Artikel davor
+  („Die Pruefer suchten…", nicht „Pruefer suchten…").
+- „fuehlt sich an wie" → wird „fuehrt"; Komma setzen: „fuehlt sich an, wie".
+- Einzelne Substantive verschleifen („Geld" → „gelt", „Loesbar" → „loestbar") —
+  in einen vollen Satz einbetten („Es ist loesbar, wenn…").
+- Ein Satz, der auf Doppelpunkt endet, verliert das letzte Wort → ganzen Satz bilden.
+
 ## Szenen-Bausteine (Komposition `ReelTikTok`; Typen in remotion/src/ReelDaily.tsx)
 
 | kind | Zweck | Felder | Wann einsetzen |

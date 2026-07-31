@@ -60,7 +60,12 @@ const TTS_RATE = env.REEL_RATE || (TIKTOK ? '+16%' : '+4%');
 //   'local'  — lokaler TTS-Service auf dem Mac Mini (Piper/Chatterbox), offline
 //              und kostenlos. Adresse via TTS_LOCAL_URL, Engine via
 //              TTS_LOCAL_ENGINE. Siehe ops/tts-service/README.md
-const TTS_ENGINE = env.REEL_TTS || 'edge';
+// DEFAULT seit 2026-07-30 (Aarons Entscheidung): ElevenLabs. Grund ist nicht Komfort,
+// sondern Fehlerfreiheit — die kostenlose edge-tts-Stimme trifft medizinische/griechische
+// Fachwörter NICHT sicher ('Trachom' -> 'Trakum'/'Track Home'/polnisch klingend), und
+// kein Silbenhack im Lexikon löst das (siehe _regel_fachwoerter). REEL_TTS=edge als
+// Notausgang, falls das ElevenLabs-Kontingent leer ist.
+const TTS_ENGINE = env.REEL_TTS || 'eleven';
 
 // ── Extraktion (Fallbacks ohne LLM) ─────────────────────────────────────────
 
@@ -417,7 +422,23 @@ function synthSegment(text, slug, name) {
 						`  remotion/tts-lexikon.json eintragen. (Übersteuern: --no-vo-verify)`
 				);
 			}
-			if (vres.status === 2) console.log(`WARN Aussprache-Gate übersprungen (${name}): Whisper nicht lauffähig`);
+			if (vres.status === 2) {
+				// Aaron 2026-07-30: "kein einziger Sprachfehler". Ein technisch ausgefallenes
+				// Gate darf deshalb NICHT stillschweigend durchwinken — sonst geht genau der
+				// ungeprüfte Ton raus, gegen den es gebaut wurde (belegt: kaputter
+				// ~/.cache/whisper-Symlink liess 7 Segmente ungeprüft passieren).
+				// --allow-unverified-vo erlaubt es bewusst, z.B. wenn Whisper fehlt.
+				const why = (vres.stderr || '').trim().split('\n').pop() || 'unbekannt';
+				if (!arg('allow-unverified-vo')) {
+					throw new Error(
+						`Aussprache-Gate nicht lauffähig (${name}): ${why}\n` +
+							`  Der Ton wäre UNGEPRÜFT ins Video gegangen. Fix: Whisper reparieren\n` +
+							`  (TTS_PYTHON zeigt auf die venv mit openai-whisper, ~/.cache/whisper muss\n` +
+							`  beschreibbar sein). Bewusst ohne Prüfung rendern: --allow-unverified-vo`
+					);
+				}
+				console.log(`WARN Aussprache-Gate übersprungen (${name}): ${why} — bewusst erlaubt`);
+			}
 			else if (vres.status === 0) console.log(`OK aussprache (${name})`);
 		}
 		return {

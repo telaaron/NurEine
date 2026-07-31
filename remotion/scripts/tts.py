@@ -96,7 +96,21 @@ def synth_eleven(text: str, rate: str, out_mp3: str, out_words: str) -> None:
     import urllib.request
 
     key = os.environ["ELEVENLABS_API_KEY"]
-    voice = os.environ.get("REEL_ELEVEN_VOICE") or os.environ["ELEVENLABS_VOICE_ID"]
+    # Marken-Stimme seit 2026-07-30: "Luca - Dynamic & Engaging" (deutsch, jung,
+    # social_media). Ausgewählt im A/B am echten Reel-Text: sprach als einziger
+    # Kandidat sowohl das Fachwort als auch "fühlt sich an" fehlerfrei (Laura sagte
+    # reproduzierbar "führt sich an"). Env übersteuert für Tests.
+    voice = (
+        os.environ.get("REEL_ELEVEN_VOICE")
+        or os.environ.get("ELEVENLABS_VOICE_ID")
+        or "mmAbrxFQ9xjByXyBpqrK"
+    )
+    # UNTERTREIBUNG statt Euphorie (docs/REEL_TEXT_REGELN.md §2): Der Zuschauer soll
+    # selbst "krass" denken. Sagt die Stimme es ihm, nimmt sie ihm die Schlussfolgerung
+    # ab. Energie kommt aus dem TEMPO, nicht aus Begeisterung — deshalb [matter-of-fact]
+    # und ausdrücklich NICHT [excited]. Nur wenn der Text nicht schon selbst taggt.
+    if not text.lstrip().startswith("["):
+        text = "[matter-of-fact] " + text
     try:
         speed = max(0.7, min(1.2, 1.0 + float(rate.replace("%", "").replace("+", "")) / 100.0))
     except ValueError:
@@ -104,7 +118,17 @@ def synth_eleven(text: str, rate: str, out_mp3: str, out_words: str) -> None:
     body = {
         "text": text,
         "model_id": os.environ.get("ELEVEN_MODEL", "eleven_v3"),  # Aaron 2026-07-17: v3 = bestes Deutsch/Betonung (Panel-Fix); via ELEVEN_MODEL übersteuerbar
-        "voice_settings": {"stability": 0.5, "similarity_boost": 0.75, "speed": speed},
+        # GEMESSEN 2026-07-30 (A/B am echten Reel-Text, Whisper-Gegenprobe):
+        #   stability 0.30 -> halluziniert (Stimme wiederholte einen ganzen Satz)
+        #   stability 0.45 -> verliert Wörter ('Trachom' -> 'Trahum')
+        #   stability 0.65 -> sauber, immer noch ~2,4 Wörter/s
+        # speed wird zusätzlich auf 1.15 gedeckelt: bei 1.2 verschluckt die Stimme
+        # Silben ('Trachom' -> 'Tachom').
+        "voice_settings": {
+            "stability": float(os.environ.get("ELEVEN_STABILITY", "0.65")),
+            "similarity_boost": 0.75,
+            "speed": min(speed, 1.15),
+        },
     }
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps?output_format=mp3_44100_128"
 
@@ -154,6 +178,10 @@ def synth_eleven(text: str, rate: str, out_mp3: str, out_words: str) -> None:
             end = e
     if cur:
         words.append({"t": cur, "start": round(start, 3), "end": round(end, 3)})
+    # v3-Audio-Tags ([matter-of-fact], [pause] …) steuern nur die STIMME. Sie stehen
+    # aber im Char-Alignment und würden sonst als Wort in den Untertiteln landen.
+    # Raus damit — die Captions zeigen nur, was wirklich gesprochen wird.
+    words = [w for w in words if not (w["t"].startswith("[") or w["t"].endswith("]"))]
     with open(out_words, "w", encoding="utf-8") as f:
         json.dump(words, f, ensure_ascii=False)
     if not words:

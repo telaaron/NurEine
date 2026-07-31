@@ -19,6 +19,7 @@ damit ein kaputtes Gate nicht die ganze Pipeline blockiert.
 """
 import argparse
 import json
+import os
 import re
 import sys
 import unicodedata
@@ -51,6 +52,50 @@ def tokens(s: str) -> list:
     return [TOLERATED.get(w, w) for w in norm(s).split() if w]
 
 
+# Deutsche Zahlwörter -> Ziffern. Der voText wird vor dem TTS ausgeschrieben
+# ("43" -> "dreiundvierzig"), Whisper schreibt aber wieder "43". Ohne diese
+# Rueckuebersetzung meldet das Gate jede Zahl als Fehler (belegt 2026-07-30).
+_ONES = {"null": 0, "ein": 1, "eine": 1, "eins": 1, "zwei": 2, "drei": 3, "vier": 4,
+         "fuenf": 5, "sechs": 6, "sieben": 7, "acht": 8, "neun": 9, "zehn": 10,
+         "elf": 11, "zwoelf": 12, "dreizehn": 13, "vierzehn": 14, "fuenfzehn": 15,
+         "sechzehn": 16, "siebzehn": 17, "achtzehn": 18, "neunzehn": 19}
+_TENS = {"zwanzig": 20, "dreissig": 30, "vierzig": 40, "fuenfzig": 50, "sechzig": 60,
+         "siebzig": 70, "achtzig": 80, "neunzig": 90}
+
+
+def word_to_int(w: str):
+    """'dreiundvierzig' -> 43, 'sechshundertfuenfundvierzig' -> 645. None wenn kein Zahlwort."""
+    if not w or any(c.isdigit() for c in w):
+        return None
+    total, rest = 0, w
+    for unit, mult in (("million", 1000000), ("tausend", 1000)):
+        if unit in rest:
+            head, rest = rest.split(unit, 1)
+            total += (word_to_int(head) or 1) * mult
+    if "hundert" in rest:
+        head, rest = rest.split("hundert", 1)
+        total += (word_to_int(head) or 1) * 100
+    if not rest:
+        return total or None
+    if rest in _ONES:
+        return total + _ONES[rest]
+    if rest in _TENS:
+        return total + _TENS[rest]
+    if "und" in rest:
+        a, b = rest.split("und", 1)
+        if a in _ONES and b in _TENS:
+            return total + _ONES[a] + _TENS[b]
+    return total or None
+
+
+def numeric_key(w: str):
+    """Vergleichsschluessel: Zahlwort und Ziffer werden auf denselben Wert abgebildet."""
+    if w.isdigit():
+        return "#" + str(int(w))
+    n = word_to_int(w)
+    return "#" + str(n) if n is not None else w
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--audio", required=True)
@@ -68,7 +113,13 @@ def main() -> int:
         return 2
 
     try:
-        model = whisper.load_model(a.model)
+        # download_root explizit setzen: whisper legt sonst ~/.cache/whisper per
+        # os.makedirs OHNE exist_ok an und wirft "[Errno 17] File exists", sobald der
+        # Ordner schon da ist (belegt 2026-07-30 — das Gate fiel dadurch still auf
+        # "nicht lauffähig" zurück und hätte ungeprüften Ton durchgelassen).
+        cache = os.path.expanduser("~/.cache/whisper")
+        os.makedirs(cache, exist_ok=True)
+        model = whisper.load_model(a.model, download_root=cache)
         heard_raw = model.transcribe(a.audio, language="de", fp16=False)["text"].strip()
     except Exception as e:
         print(f"verify_vo: Transkription fehlgeschlagen ({e})", file=sys.stderr)
@@ -76,11 +127,30 @@ def main() -> int:
 
     want, got = tokens(a.text), tokens(heard_raw)
 
-    # Fehlende Wörter = geplant, aber nicht gehört. Füllwörter ignorieren (die Stimme
-    # verschleift "und"/"der" gern, das ist kein Aussprachefehler).
-    missing = [w for w in want if w not in got and w not in FILLER]
-    # Erfundene Wörter = gehört, aber nie geplant -> genau der "Geraldine"-Fall.
-    extra = [w for w in got if w not in want and w not in FILLER]
+    # Zahlwort <-> Ziffer auf denselben Schluessel bringen ("dreiundvierzig" == "43").
+    wantk = [numeric_key(w) for w in want]
+    gotk = [numeric_key(w) for w in got]
+
+    # Whisper schreibt manches phonetisch anders, ohne dass die AUSSPRACHE falsch ist
+    # ("Lösbar" -> "Lössbar"). Doppelkonsonanten und ss/s vereinheitlichen, bevor
+    # verglichen wird — sonst blockiert das Gate korrekt gesprochene Saetze.
+    def fuzzy(w: str) -> str:
+        if w.startswith("#"):
+            return w
+        out, prev = [], ""
+        for c in w:
+            if c != prev:
+                out.append(c)
+            prev = c
+        return "".join(out)
+
+    wf, gf = [fuzzy(w) for w in wantk], [fuzzy(w) for w in gotk]
+    # Getrennt/zusammen ist kein Aussprachefehler ("dranbleibt" == "dran bleibt"):
+    # zusaetzlich gegen den zusammengezogenen Gesamtstring pruefen.
+    wjoin, gjoin = "".join(wf), "".join(gf)
+
+    missing = [w for w, k in zip(want, wf) if k not in gf and k not in FILLER and k not in gjoin]
+    extra = [w for w, k in zip(got, gf) if k not in wf and k not in FILLER and k not in wjoin]
 
     ok = not missing and not extra
     out = {

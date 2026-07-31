@@ -1,0 +1,83 @@
+{
+	"story": {
+		"id": "1f1919c2-fff6-497a-97eb-69c71356fe47",
+		"slug": "welthunger-drittes-jahr",
+		"category": "gesundheit",
+		"image": "reel-assets/bg-hunger-1.jpg",
+		"source": "Vereinte Nationen",
+		"impactScore": 72,
+		"shareHook": "43 Millionen Menschen weniger hungern als 2022."
+	},
+	"seo": {
+		"keyword": "Welthunger"
+	},
+	"loop": true,
+	"softCta": "Sowas steht selten in den Nachrichten. Hier jeden Tag eins.",
+	"caption": "Welthunger: 43 Millionen Menschen weniger hungern als 2022 — drittes Jahr in Folge. Noch 645 Millionen, aber die Kurve zeigt nach unten. Geprüft von fünf UN-Organisationen.\n\nQuelle: Vereinte Nationen — von uns nachgeprüft.",
+	"hashtags": ["#gutenachrichten", "#welthunger", "#fortschritt", "#un"],
+	"tiktok": {
+		"caption": "Welthunger fühlt sich an wie ein Problem ohne Ausgang. Die Zahlen sagen aber etwas anderes: 43 Millionen Menschen weniger hungern als 2022 — drittes Jahr in Folge weniger. Noch 645 Millionen, aber sinkend. Der Grund: gezielte Politik und Geld an den richtigen Stellen. Geprüft von fünf UN-Organisationen.\n\nQuelle: Vereinte Nationen — von uns nachgeprüft.",
+		"hashtags": ["#gutenachrichten", "#welthunger", "#fortschritt", "#un"],
+		"location": "Berlin"
+	},
+	"music": "audio/warm-2.mp3",
+	"scenes": [
+		{
+			"kind": "number",
+			"snap": true,
+			"kicker": "NUR EINE · GEPRÜFT",
+			"value": "43 Mio.",
+			"unit": "weniger",
+			"context": "Welthunger — drittes Jahr in Folge",
+			"image": "reel-assets/bg-hunger-1.jpg",
+			"voText": "Welthunger fühlt sich an, wie ein Problem ohne Ausgang."
+		},
+		{
+			"kind": "hook",
+			"text": "Die Zahlen sagen etwas anderes.",
+			"punch": "anderes",
+			"kicker": "WELTHUNGER · UN-BERICHT",
+			"voText": "Die Zahlen sagen aber etwas anderes."
+		},
+		{
+			"kind": "beat",
+			"text": "43 Millionen weniger als 2022.",
+			"image": "reel-assets/bg-hunger-1.jpg",
+			"full": true,
+			"voText": "43 Millionen weniger als 2022. Drittes Jahr in Folge weniger."
+		},
+		{
+			"kind": "beat",
+			"text": "Noch 645 Millionen — aber sinkend.",
+			"image": null,
+			"voText": "Es geht also voran. Noch 645 Millionen, aber sinkend."
+		},
+		{
+			"kind": "beat",
+			"text": "Gezielte Politik. Geld an den richtigen Stellen.",
+			"image": "reel-assets/bg-archiv-1.jpg",
+			"full": true,
+			"voText": "Der Grund: gezielte Politik, und Investitionen an den richtigen Stellen. Es ist lösbar, wenn man dranbleibt."
+		},
+		{
+			"kind": "proof",
+			"source": "Vereinte Nationen",
+			"impact": 72,
+			"progress": 1104,
+			"snapshot": {
+				"outlet": "Vereinte Nationen",
+				"year": "2026",
+				"title": "Welthunger sinkt drittes Jahr in Folge",
+				"quote": "645 Mio. — 43 Mio. weniger als 2022"
+			},
+			"voText": "Geprüft von fünf Organisationen der Vereinten Nationen. Nicht erfunden."
+		},
+		{
+			"kind": "end",
+			"share": "Drittes Jahr in Folge weniger Hunger.",
+			"cta": "",
+			"engage": true,
+			"voText": "Die nächste gute Nachricht ist schon überprüft. Und zwar diese."
+		}
+	]
+}

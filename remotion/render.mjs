@@ -535,16 +535,40 @@ function synthWholeTake(plan, slug) {
 	const take = synthSegment(joined, slug, 'take');
 	if (!take || !take.words.length) return null;
 
-	// Zuordnung Wort -> Szene über die Wortanzahl je Szene (die Reihenfolge ist fix).
+	// Zuordnung Wort -> Szene NICHT über Wortanzahl (die driftet: mergeNumberWords zieht
+	// „dreiundvierzig" wieder zu „43" zusammen, danach passen alle Grenzen nicht mehr —
+	// belegt 2026-07-31: Szenen zogen Wörter der nächsten Szene mit). Stattdessen über
+	// den tatsächlichen WORTLAUT: pro Szene deren Wörter der Reihe nach in der Aufnahme
+	// wiederfinden. Vergleich normalisiert (klein, ohne Interpunktion), damit „43" und
+	// „dreiundvierzig" denselben Schlüssel bekommen.
 	const dir = fileURLToPath(new URL('./public/vo/', import.meta.url));
-	const counts = texts.map((t) => prepareTts(t).ttsText.trim().split(/\s+/).filter(Boolean).length);
-	const totalPlanned = counts.reduce((a, b) => a + b, 0);
-	// Weicht die Wortzahl stark ab (Stimme hat verschluckt/ergänzt), lieber abbrechen
-	// als falsch zu schneiden — der Segment-Weg ist dann die sichere Variante.
-	if (Math.abs(take.words.length - totalPlanned) > Math.max(2, totalPlanned * 0.12)) {
-		console.log(`WARN Ganz-Aufnahme: ${take.words.length} Wörter statt ${totalPlanned} — schneide nicht, nutze Segmente`);
-		return null;
+	const norm = (s) => String(s).toLowerCase().replace(/[^0-9a-zäöüß]/g, '');
+	const spoken = take.words.map((w) => norm(w.t));
+	const counts = [];
+	let cursor = 0;
+	for (const t of texts) {
+		// Szenen-Wörter so, wie sie in der Aufnahme ankommen (Ziffern bleiben Ziffern,
+		// weil mergeNumberWords sie zurückverwandelt hat).
+		const want = t.trim().split(/\s+/).map(norm).filter(Boolean);
+		let taken = 0;
+		for (const w of want) {
+			// Nächstes Vorkommen ab dem Cursor suchen (kleine Toleranz für verschliffene
+			// Füllwörter, die die Stimme weglässt).
+			let hit = -1;
+			for (let k = cursor + taken; k < Math.min(spoken.length, cursor + taken + 4); k++) {
+				if (spoken[k] === w || spoken[k].startsWith(w) || w.startsWith(spoken[k])) { hit = k; break; }
+			}
+			if (hit >= 0) taken = hit - cursor + 1;
+		}
+		if (taken <= 0) {
+			console.log('WARN Ganz-Aufnahme: Szenen-Zuordnung fehlgeschlagen — nutze Segmente');
+			return null;
+		}
+		counts.push(taken);
+		cursor += taken;
 	}
+	// Rest-Wörter (Stimme hat am Ende ergänzt) der letzten Szene zuschlagen.
+	if (cursor < spoken.length) counts[counts.length - 1] += spoken.length - cursor;
 
 	const out = [];
 	let idx = 0;

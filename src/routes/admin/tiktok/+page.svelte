@@ -135,7 +135,14 @@
 								<strong style="color: var(--color-ink);">Quelle @-erwähnen</strong>, WENN sie einen echten TikTok-Account hat:
 								{#if card.mentionHint}<span style="color: var(--color-amber);"> {card.mentionHint}</span>{:else}<span style="color: var(--color-faint);"> Quelle „{card.sourceName ?? '—'}“ prüfen — kein Account gefunden? dann weglassen (nie erfinden).</span>{/if}
 							</li>
-							<li><strong style="color: var(--color-ink);">Musik:</strong> unser Original-Ton reicht. KEINE Chart-Trending-Sounds (DMCA-/Stummschalt-Risiko für Marken). Höchstens ein Commercial-Library-Track leise.</li>
+							<li>
+								<strong style="color: var(--color-ink);">Sound aus der Commercial Music Library</strong> — beim Posten „Sound hinzufügen“ →
+								<em>Commercial Sounds</em>. Suchbegriffe für diese Story:
+								{#each card.soundKeywords as kw, i}<span style="color: var(--color-amber);">„{kw}“</span>{#if i < card.soundKeywords.length - 1}, {/if}{/each}
+								<br />
+								<span style="color: var(--color-faint);">Leise unter unseren Ton legen. NIE Chart-/Trending-Sounds oder fremde „Original Sounds“ — für
+								kommerzielle Konten nicht lizenziert. CML gilt NUR auf TikTok: die Instagram-Fassung behält unseren Ton.</span>
+							</li>
 							<li style="color: var(--color-faint);">Zeit: Di–Do ~16:30–17:30 CET (30–90 Min vor dem Abend-Peak).</li>
 						</ul>
 					</details>

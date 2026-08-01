@@ -34,6 +34,16 @@ export interface TikTokCaption {
 	keyword: string;
 	/** Komplett kopierbare Version: caption + "\n\n" + hashtags.join(' '). */
 	full: string;
+	/**
+	 * Suchbegriffe fuer TikToks Commercial Music Library (Aaron 2026-08-01: TikTok
+	 * stellt den Sound, nicht wir). WARUM als Sucht-Begriffe statt fertiger Track:
+	 * die CML ist nur IN der App durchsuchbar und wechselt staendig — ein fixer
+	 * Track waere morgen weg. RECHTLICH wichtig: nur die Commercial Music Library
+	 * ist fuer kommerzielle Konten freigegeben, NICHT die allgemeine Bibliothek
+	 * (Charts) und keine fremden "Original Sounds". CML-Sounds gelten ausserdem
+	 * NUR auf TikTok — die IG-Fassung darf sie nicht tragen.
+	 */
+	soundKeywords: string[];
 }
 
 /**
@@ -223,6 +233,34 @@ function buildHashtags(story: TikTokStoryInput, keyword: string): string[] {
  * Baut eine TikTok-optimierte Caption + Hashtags + gesprochenes Keyword aus
  * den Story-Daten. Siehe TIKTOK_PLAN.md §3 / §5.
  */
+
+/**
+ * Sound-Suchbegriffe fuer TikToks Commercial Music Library — deterministisch aus
+ * Kategorie + Wirkung. Bewusst ENGLISCH: die CML-Suche ist englischsprachig indexiert,
+ * deutsche Begriffe liefern dort kaum Treffer.
+ *
+ * Der Ton folgt docs/REEL_TEXT_REGELN.md §2 (Untertreibung): ruhig-warm mit Sog,
+ * NIE euphorisch/triumphal — die Musik darf die gute Nachricht nicht ueberverkaufen,
+ * sonst nimmt sie dem Zuschauer die eigene Schlussfolgerung ab.
+ */
+const SOUND_BY_CATEGORY: Record<string, string[]> = {
+	gesundheit: ['warm documentary', 'soft piano build', 'gentle hopeful'],
+	klima: ['cinematic minimal', 'ambient pulse', 'slow build strings'],
+	wissenschaft: ['curious minimal', 'clean electronic pulse', 'thoughtful ambient'],
+	innovation: ['modern minimal beat', 'clean tech ambient', 'subtle momentum'],
+	tiere: ['warm acoustic', 'light playful strings', 'gentle folk'],
+	gemeinschaft: ['warm uplifting', 'human piano', 'soft community groove'],
+	kultur: ['warm nostalgic', 'felt piano', 'analog warmth']
+};
+
+export function buildSoundKeywords(story: TikTokStoryInput): string[] {
+	const cat = (story.category ?? '').toLowerCase();
+	const base = SOUND_BY_CATEGORY[cat] ?? ['warm documentary', 'cinematic minimal', 'felt piano'];
+	// Perlen (hoher Wirkungsindex) vertragen etwas mehr Zug, ohne triumphal zu werden.
+	const lift = (story.impact_score ?? 0) >= 80 ? 'uplifting build no drop' : 'calm underscore';
+	return [...base, lift];
+}
+
 export function buildTikTokCaption(story: TikTokStoryInput): TikTokCaption {
 	const keyword = deriveKeyword(story);
 	let hook = buildHook(story);
@@ -250,5 +288,5 @@ export function buildTikTokCaption(story: TikTokStoryInput): TikTokCaption {
 	const hashtags = buildHashtags(story, keyword);
 	const full = `${caption}\n\n${hashtags.join(' ')}`.trim();
 
-	return { caption, hashtags, keyword, full };
+	return { caption, hashtags, keyword, full, soundKeywords: buildSoundKeywords(story) };
 }

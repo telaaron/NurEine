@@ -234,6 +234,9 @@ const HookScene: React.FC<Extract<DailyScene, { kind: 'hook' }>> = ({ text, punc
 				NurEine · belegt statt behauptet
 			</div>
 			<FlashWipe />
+			{/* Erwartungsbruch: Kontrastwechsel (whoosh, leise) + Punch-Wort (click). */}
+			<Sfx at={0} file="whoosh" vol={0.18} rate={1.25} />
+			<Sfx at={10} file="click" vol={0.14} />
 			<SceneVoice vo={vo} />
 		</AbsoluteFill>
 	);
@@ -249,6 +252,28 @@ const imgSrc = (src: string) => (/^(https?:|data:|blob:)/.test(src) ? src : stat
 // snap-Variante = Cold-Open (Rezept §C): Zahl steht ab Frame 0 und rastet mit
 // Overshoot ein — kein Count-up von 0 (bei Ø 3,75 s Wiedergabedauer zu langsam
 // als Opener). kicker trägt dort den Serien-Anker („TAG 217 · NUR EINE").
+/**
+ * Sound-Design-Bausteine (Aaron 2026-08-01: „haben wir schon Sound Design für die
+ * Animationen? das ist noch ganz wichtig").
+ *
+ * Vorher hatte NUR der Belegt-Stempel Ton — jede andere Bewegung war stumm. Ein
+ * Bildereignis ohne Ton wirkt auf TikTok wie ein Fehler; der Ton verankert den Schnitt.
+ *
+ * Regeln: sehr leise (0.10–0.35), nie über der Stimme, ein Ereignis = ein Sound.
+ * Wir bleiben bei den vier vorhandenen Samples und variieren Tonhöhe/Tempo per
+ * playbackRate, statt neue Dateien einzuführen — hält die Marke akustisch konsistent.
+ */
+const Sfx: React.FC<{ at: number; file: 'click' | 'ping' | 'settle' | 'whoosh'; vol?: number; rate?: number }> = ({
+	at,
+	file,
+	vol = 0.22,
+	rate = 1
+}) => (
+	<Sequence from={Math.max(0, Math.round(at))} durationInFrames={90} layout="none">
+		<Audio src={staticFile(`audio/fx/${file}.wav`)} volume={vol} playbackRate={rate} />
+	</Sequence>
+);
+
 const NumberScene: React.FC<Extract<DailyScene, { kind: 'number' }> & { category: string }> = ({ value, unit, context, category, vo, snap, kicker, image }) => {
 	const frame = useCurrentFrame();
 	const accent = accentFor(category);
@@ -283,6 +308,9 @@ const NumberScene: React.FC<Extract<DailyScene, { kind: 'number' }> & { category
 			</div>
 			{/* Kein FlashWipe im Snap-Modus: Frame 0 ist Videostart bzw. Loop-Übergang, kein Cut */}
 			{snap ? null : <FlashWipe color={accent} />}
+			{/* Cold-Open: Zahl rastet ein (settle, tiefer) + Akzentlinie faehrt aus (click). */}
+			<Sfx at={snap ? 2 : 4} file="settle" vol={0.3} rate={0.85} />
+			<Sfx at={snap ? 9 : 13} file="click" vol={0.15} />
 			<SceneVoice vo={vo} dark />
 		</AbsoluteFill>
 	);
@@ -431,6 +459,8 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 			{/* Caption NUR im Polaroid-Modus: beim Fullscreen-Beat (full) trägt der große
 			    Text schon die Aussage — eine Karaoke-Caption darunter wäre dasselbe doppelt
 			    und kollidiert mit dem Screen-Text (Panel-Befund „unübersichtlich" 2026-07-17). */}
+			{/* Beat: nur der Schnitt selbst, sehr leise — das Bild traegt die Szene. */}
+			<Sfx at={0} file="whoosh" vol={0.13} rate={1.4} />
 			<SceneVoice vo={vo} captions={!!image && !full} />
 		</AbsoluteFill>
 	);
@@ -482,6 +512,9 @@ const MapScene: React.FC<Extract<DailyScene, { kind: 'map' }> & { category: stri
 				<div style={{ fontFamily: FF.interSemi, fontSize: 28, letterSpacing: '0.14em', color: 'rgba(244,239,230,0.75)' }}>ORT DER NACHRICHT</div>
 			</div>
 			<FlashWipe color={accent} />
+			{/* Karte: Anflug (whoosh) + Einrasten auf dem Ort (ping, hoch). */}
+			<Sfx at={0} file="whoosh" vol={0.2} />
+			<Sfx at={26} file="ping" vol={0.18} rate={1.2} />
 			<SceneVoice vo={vo} dark />
 		</AbsoluteFill>
 	);
@@ -753,6 +786,11 @@ const EngageIcons: React.FC<{ accent: string }> = ({ accent }) => {
 					</svg>
 				);
 			})}
+			{/* Jedes Icon federt einzeln ein (Frame 10/17/24) — je ein leiser Klick,
+			    aufsteigend in der Tonhoehe. Bewegung ohne Ton wirkt wie ein Fehler. */}
+			<Sfx at={10} file="click" vol={0.13} rate={1.0} />
+			<Sfx at={17} file="click" vol={0.13} rate={1.12} />
+			<Sfx at={24} file="click" vol={0.13} rate={1.24} />
 		</div>
 	);
 };
@@ -881,6 +919,15 @@ export const ReelTikTok: React.FC<ReelDailyProps> = (p) => {
 				</Sequence>
 			) : null}
 			{p.badge != null ? <RewatchBadge value={p.badge} proofStart={proofStart} category={p.category} targetDX={badgeDX} targetDY={badgeDY} toArchive={badgeToArchive} /> : null}
+			{/* Badge-Toene (absolute Frames, weil das Badge ueber den Szenen liegt):
+			    Auftauchen bei BADGE_START = leiser Ping; der Einflug ins Archiv endet mit
+			    einem tiefen settle — die Aufloesung des Rewatch-Raetsels bekommt Gewicht. */}
+			{p.badge != null ? (
+				<>
+					<Sfx at={240} file="ping" vol={0.14} rate={1.35} />
+					<Sfx at={proofStart + 26} file="settle" vol={0.2} rate={0.9} />
+				</>
+			) : null}
 			{/* Soft-CTA: von ~Sek 8 bis kurz vor dem Stempel (proofStart) — nach dem Aha,
 			    vor der Beleg-Klimax; nie am Ende, damit der Loop intakt bleibt. */}
 			{p.softCta ? <SoftCta text={p.softCta} fromFrame={Math.min(8 * TIKTOK_FPS, proofStart - 90)} toFrame={proofStart - 20} /> : null}

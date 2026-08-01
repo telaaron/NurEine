@@ -18,7 +18,8 @@
 	"tiktok": {
 		"caption": "Welthunger fühlt sich an wie ein Problem ohne Ausgang. Die Zahlen sagen aber etwas anderes: 43 Millionen Menschen weniger hungern als 2022 — drittes Jahr in Folge weniger. Noch 645 Millionen, aber sinkend. Der Grund: gezielte Politik und Geld an den richtigen Stellen. Geprüft von fünf UN-Organisationen.\n\nQuelle: Vereinte Nationen — von uns nachgeprüft.",
 		"hashtags": ["#gutenachrichten", "#welthunger", "#fortschritt", "#un"],
-		"location": "Berlin"
+		"location": "Berlin",
+		"soundKeywords": ["hopeful minimal", "warm documentary", "soft piano build", "calm uplifting"]
 	},
 	"music": "audio/warm-2.mp3",
 	"scenes": [

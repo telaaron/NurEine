@@ -59,6 +59,8 @@ export interface TikTokReelCard {
 	pinnedComment: string;
 	/** true = Master-MP4 wurde nach dem Posten aus dem Bucket gelöscht (Speicher sparen). */
 	videoDeleted: boolean;
+	/** Suchbegriffe für TikToks Commercial Music Library (beim Posten Sound wählen). */
+	soundKeywords: string[];
 }
 
 // Bekannte, verifizierte TikTok-Handles häufiger Quellen. Nur eintragen, was WIRKLICH
@@ -162,7 +164,8 @@ export const load: PageServerLoad = async () => {
 			mentionHint: mentionForSource(s.source_name),
 			// Gepinnter Kommentar: NUR Mehrwert (die Quelle), kein wiederholtes Marken-
 			// Sprech (das dupliziert sonst die Caption und wirkt bot-haft). Kein „Doom".
-			pinnedComment: `Quelle, von uns nachgeprüft: ${s.source_name ?? '—'} 🔍`
+			pinnedComment: `Quelle, von uns nachgeprüft: ${s.source_name ?? '—'} 🔍`,
+			soundKeywords: built.soundKeywords
 		};
 	});
 

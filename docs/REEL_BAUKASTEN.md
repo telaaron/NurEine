@@ -39,6 +39,37 @@ ungeprueften Ton gibt es nicht mehr. Bewusst uebersteuern: `--allow-unverified-v
   in einen vollen Satz einbetten („Es ist loesbar, wenn…").
 - Ein Satz, der auf Doppelpunkt endet, verliert das letzte Wort → ganzen Satz bilden.
 
+
+## SOUND — Design im Video + Musik beim Posten (Stand 2026-08-01)
+
+**Sound Design (im Master, automatisch):** Jede Animation hat einen Ton. Vorher hatte
+NUR der Belegt-Stempel Sound — jede andere Bewegung war stumm, und ein Bildereignis
+ohne Ton wirkt auf TikTok wie ein Fehler. Vertont sind jetzt:
+Cold-Open (Zahl rastet ein + Akzentlinie), Hook (Kontrastwechsel + Punch-Wort),
+jeder Beat-Schnitt, Karten-Zoom (Anflug + Einrasten), Rewatch-Badge (Auftauchen +
+Einflug ins Archiv), Engage-Icons (drei aufsteigende Klicks), Belegt-Stempel (wie bisher).
+
+Regeln: sehr leise (0.10-0.35), NIE über der Stimme, ein Ereignis = ein Sound. Wir
+nutzen die vier vorhandenen Samples (`public/audio/fx/`) und variieren Tonhöhe per
+`playbackRate` statt neue Dateien einzuführen — das hält die Marke akustisch konsistent.
+Baustein: `<Sfx at={frame} file="click|ping|settle|whoosh" vol={…} rate={…} />`.
+
+**Musik: NICHT im Master.** Aarons Entscheidung 2026-08-01 — der Sound kommt beim
+Posten aus TikToks **Commercial Music Library**. Der Master trägt nur Voiceover + Sound
+Design. Gründe:
+- Nur die CML ist für kommerzielle Konten lizenziert. Die allgemeine Bibliothek
+  (Charts) und fremde „Original Sounds" sind für Business-Accounts TABU.
+- CML-Sounds gelten **nur auf TikTok** — die Instagram-Fassung darf sie nicht tragen.
+  Deshalb steckt die Musik nicht im gemeinsamen Master.
+
+**Pro Video liefert die Pipeline Sound-Suchbegriffe** (`buildSoundKeywords` in
+`src/lib/server/social/tiktok-caption.ts`, angezeigt in `/admin/tiktok` unter
+„Beim Posten mitgeben"). Bewusst ENGLISCH — die CML-Suche ist englisch indexiert.
+Der Ton folgt REEL_TEXT_REGELN §2: ruhig-warm mit Sog, nie euphorisch. Musik, die
+die gute Nachricht überverkauft, nimmt dem Zuschauer die eigene Schlussfolgerung.
+
+Im `plan.json` kann `tiktok.soundKeywords` die Ableitung überschreiben.
+
 ## Szenen-Bausteine (Komposition `ReelTikTok`; Typen in remotion/src/ReelDaily.tsx)
 
 | kind | Zweck | Felder | Wann einsetzen |

@@ -138,7 +138,12 @@ export const load: PageServerLoad = async () => {
 		const curated = !!(s.tiktok_caption && s.tiktok_caption.trim());
 		const built = buildTikTokCaption(storyInput(s));
 		const caption = curated ? s.tiktok_caption!.trim() : built.caption;
-		let hashtags = curated ? (s.tiktok_hashtags ?? []).filter(Boolean) : built.hashtags;
+		// Sound-Suchbegriffe reisen als "sound:"-Einträge in derselben Spalte mit (kein
+		// eigenes DB-Feld). Hier wieder heraustrennen — sonst landen sie als Hashtag
+		// unter dem Video.
+		const stored = (s.tiktok_hashtags ?? []).filter(Boolean);
+		const plannedSounds = stored.filter((t) => t.startsWith('sound:')).map((t) => t.slice(6));
+		let hashtags = curated ? stored.filter((t) => !t.startsWith('sound:')) : built.hashtags;
 		if (!hashtags.length) hashtags = built.hashtags;
 		return {
 			postId: synthId--,
@@ -165,7 +170,8 @@ export const load: PageServerLoad = async () => {
 			// Gepinnter Kommentar: NUR Mehrwert (die Quelle), kein wiederholtes Marken-
 			// Sprech (das dupliziert sonst die Caption und wirkt bot-haft). Kein „Doom".
 			pinnedComment: `Quelle, von uns nachgeprüft: ${s.source_name ?? '—'} 🔍`,
-			soundKeywords: built.soundKeywords
+			// Vom Plan vorgegebene Begriffe schlagen die Kategorie-Ableitung.
+			soundKeywords: plannedSounds.length ? plannedSounds : built.soundKeywords
 		};
 	});
 

@@ -88,3 +88,17 @@ Text fehlerfrei. Aussprachesicherheit schlägt Stimmfarbe.
 
 Verworfen: „George" (britisch, `language: en` — war fälschlich als Default gesetzt),
 alle `narrative_story`-Stimmen (Doku-Tempo, zu langsam für TikTok).
+
+## 8. Caption = derselbe Einstieg wie das Voiceover (2026-08-01)
+
+Der Einstieg spiegelt ein **Gefühl**, keine Tatsache. Sonst wird der Kipp-Satz
+unlogisch: „Mammutbäume STERBEN in Waldbränden, das KLINGT nach einem Kampf" —
+etwas, das nachweislich passiert, „klingt" nicht danach, es IST so.
+
+Richtig ist die offene Formulierung, die das Voiceover ohnehin nutzt:
+„Mammutbäume und Waldbrand — das klingt nach einem Kampf, den man nur verlieren kann."
+
+**Regel:** Die TikTok-Caption übernimmt den Einstiegssatz WORTGLEICH aus Szene 0.
+Wird der voText gekürzt oder umformuliert, MUSS die Caption mitgezogen werden —
+sonst driften Ton und Beschreibung auseinander (belegt: beim Straffen von 86 auf
+77 Wörter blieb die alte Caption stehen).

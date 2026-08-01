@@ -714,13 +714,20 @@ async function queueReel(storyId, videoUrl, caption, hashtags, category, hookTyp
  * nicht auto-postet, ist das der einzige Ort, an dem die TikTok-Variante lebt.
  * Rein additiv, ändert nur diese zwei Story-Spalten (kein Reel-Insert berührt).
  */
-async function persistTikTokMeta(storyId, { caption, hashtags, videoUrl }) {
+async function persistTikTokMeta(storyId, { caption, hashtags, videoUrl, soundKeywords }) {
 	if (!storyId) return;
 	const supa = env.SUPABASE_URL.replace(/\/$/, '');
 	const key = env.SUPABASE_SERVICE_KEY;
 	const patch = {};
 	if (caption) patch.tiktok_caption = caption;
-	if (caption) patch.tiktok_hashtags = hashtags || [];
+	// Sound-Suchbegriffe fuer die TikTok-CML reisen als "sound:"-Eintraege in derselben
+	// Spalte mit — bewusst KEIN neues DB-Feld (Schema-Aenderungen nur nach Ruecksprache,
+	// CLAUDE.md). /admin/tiktok trennt sie wieder heraus und zeigt sie separat an.
+	if (caption)
+		patch.tiktok_hashtags = [
+			...(hashtags || []),
+			...(soundKeywords || []).map((k) => `sound:${k}`)
+		];
 	if (videoUrl) patch.tiktok_video_url = videoUrl; // Master-MP4 → /admin/tiktok zeigt genau dieses Video
 	if (!Object.keys(patch).length) return;
 	const r = await fetch(`${supa}/rest/v1/nureine_stories?id=eq.${storyId}`, {
@@ -900,6 +907,7 @@ async function main() {
 			await persistTikTokMeta(storyId, {
 				caption: plan?.tiktok?.caption,
 				hashtags: plan?.tiktok?.hashtags || [],
+				soundKeywords: plan?.tiktok?.soundKeywords || [],
 				videoUrl
 			});
 		}

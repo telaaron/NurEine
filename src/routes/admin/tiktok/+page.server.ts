@@ -93,9 +93,31 @@ export const load: PageServerLoad = async () => {
 		.from('nureine_stories')
 		.select(STORY_COLS + ',published_at')
 		.not('tiktok_video_url', 'is', null)
-		.order('published_at', { ascending: false })
 		.limit(80);
-	const stories = (storyRows as (StoryRow & { published_at: string | null })[] | null) ?? [];
+	let stories = (storyRows as (StoryRow & { published_at: string | null })[] | null) ?? [];
+
+	// Sortierung = wann das REEL gebaut wurde, NICHT wann die Story erschien. Sonst
+	// rutscht ein heute aus einer älteren Story gebauter Master unter ein Reel, dessen
+	// Story später veröffentlicht wurde — und das frisch gerenderte Video steht nicht
+	// oben (belegt 2026-07-31: zwei Welthunger-Stories, das alte Reel lag vorn).
+	// Der echte Bau-Zeitpunkt ist das created_at des MP4 im Bucket story_reels.
+	const { data: reelObjects } = await supabaseAdmin.storage
+		.from('story_reels')
+		.list('reels', { limit: 1000, sortBy: { column: 'created_at', order: 'desc' } });
+	const uploadedAt = new Map<string, string>();
+	for (const o of reelObjects ?? []) if (o.created_at) uploadedAt.set(`reels/${o.name}`, o.created_at);
+	const reelKey = (url: string | null): string => {
+		if (!url) return '';
+		// greift für echte URLs UND für den "deleted:reels/…"-Marker
+		const m = url.match(/(?:story_reels\/|deleted:)(reels\/[^?]+)/);
+		return m ? m[1] : '';
+	};
+	const sortTs = (s: StoryRow & { published_at: string | null }): number => {
+		const ts = uploadedAt.get(reelKey(s.tiktok_video_url)) ?? s.published_at ?? '';
+		const n = Date.parse(ts);
+		return Number.isNaN(n) ? 0 : n;
+	};
+	stories = [...stories].sort((a, b) => sortTs(b) - sortTs(a));
 
 	// Welche Stories sind bereits als auf TikTok gepostet markiert?
 	const { data: tiktokRows } = await supabaseAdmin

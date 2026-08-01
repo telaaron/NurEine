@@ -57,6 +57,8 @@ export interface TikTokReelCard {
 	mentionHint: string | null;
 	/** Fertiger Text für den gepinnten Kommentar (Quelle + Wert + Funnel-Verweis). */
 	pinnedComment: string;
+	/** true = Master-MP4 wurde nach dem Posten aus dem Bucket gelöscht (Speicher sparen). */
+	videoDeleted: boolean;
 }
 
 // Bekannte, verifizierte TikTok-Handles häufiger Quellen. Nur eintragen, was WIRKLICH
@@ -122,7 +124,10 @@ export const load: PageServerLoad = async () => {
 			impactScore: s.impact_score ?? null,
 			igStatus: 'none',
 			igPostedAt: null,
-			videoUrl: s.tiktok_video_url,
+			// "deleted:"-Marker = Master nach dem Posten aufgeräumt. Nach aussen als
+			// videoUrl:null + videoDeleted:true, damit die Seite keinen toten Link zeigt.
+			videoUrl: s.tiktok_video_url?.startsWith('deleted:') ? null : s.tiktok_video_url,
+			videoDeleted: !!s.tiktok_video_url?.startsWith('deleted:'),
 			imageUrl: s.image_url ?? null,
 			caption,
 			hashtags,
@@ -197,7 +202,10 @@ export const actions: Actions = {
 			hook_style: string | null;
 		} | null;
 
-		const videoUrl = st?.tiktok_video_url ?? s?.slide_urls?.[0] ?? null;
+		// Ein bereits aufgeräumter Master trägt den "deleted:"-Marker — der darf NIE als
+		// URL in nureine_social_posts landen (passiert beim erneuten Markieren).
+		const storedUrl = st?.tiktok_video_url?.startsWith('deleted:') ? null : st?.tiktok_video_url;
+		const videoUrl = storedUrl ?? s?.slide_urls?.[0] ?? null;
 		const { error } = await supabaseAdmin.from('nureine_social_posts').upsert(
 			{
 				story_id: storyId,
@@ -221,6 +229,32 @@ export const actions: Actions = {
 			{ onConflict: 'story_id,platform,post_kind' }
 		);
 		if (error) return fail(500, { error: error.message });
+
+		// SPEICHER FREIGEBEN (Aaron 2026-07-31): Ist das Video auf TikTok, wird die
+		// Master-MP4 im Bucket nicht mehr gebraucht — sie liegt jetzt bei TikTok. Ein
+		// Reel wiegt 15-20 MB; ohne Aufräumen läuft story_reels genauso voll wie
+		// story_images im Juli (971 MB → Projekt 4 Tage gesperrt).
+		// Die URL bleibt in nureine_social_posts als Beleg, was gepostet wurde.
+		const posted = videoUrl ?? st?.tiktok_video_url ?? null;
+		if (posted) {
+			const m = posted.match(/story_reels\/(reels\/[^?]+)$/);
+			if (m) {
+				const { error: delErr } = await supabaseAdmin.storage.from('story_reels').remove([m[1]]);
+				// Nicht hart scheitern: Das Posten IST erfolgt, das ist die wichtige
+				// Tatsache. Ein fehlgeschlagenes Aufräumen darf sie nicht zurücknehmen.
+				if (delErr) console.warn(`[tiktok] Master ${m[1]} nicht gelöscht: ${delErr.message}`);
+				else {
+					// NICHT auf null setzen: der Loader filtert auf `tiktok_video_url IS NOT
+					// NULL` — die Story fiele sonst komplett aus der Liste und man sähe nicht
+					// mehr, was schon gepostet wurde. Stattdessen als aufgeräumt markieren;
+					// die Seite zeigt dann „Datei gelöscht" statt eines toten Download-Links.
+					await supabaseAdmin
+						.from('nureine_stories')
+						.update({ tiktok_video_url: 'deleted:' + m[1] })
+						.eq('id', storyId);
+				}
+			}
+		}
 		return { ok: true };
 	},
 

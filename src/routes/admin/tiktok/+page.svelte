@@ -65,8 +65,15 @@
 							class="w-full h-full object-cover" style="aspect-ratio: 9/16; max-height: 300px;"></video>
 					{:else if card.imageUrl}
 						<img src={card.imageUrl} alt="" class="w-full object-cover" style="aspect-ratio: 9/16; max-height: 300px;" />
+						{#if card.videoDeleted}
+							<div class="absolute inset-x-0 bottom-0 text-[10px] text-center py-1" style="background: rgba(22,20,15,.72); color: #fbf8f1;">
+								Master gelöscht — Speicher gespart
+							</div>
+						{/if}
 					{:else}
-						<div class="w-full flex items-center justify-center text-xs" style="aspect-ratio: 9/16; color: var(--color-faint);">kein Video</div>
+						<div class="w-full flex items-center justify-center text-xs" style="aspect-ratio: 9/16; color: var(--color-faint);">
+							{card.videoDeleted ? 'Master gelöscht' : 'kein Video'}
+						</div>
 					{/if}
 				</div>
 

@@ -289,11 +289,11 @@ def main() -> None:
         asyncio.run(synth(args.text, args.voice, args.rate, args.out, args.words))
     # Tempo-Nachschärfung (Aaron 2026-08-01: "noch schneller"). Gilt für JEDE Engine,
     # weil sie am fertigen Audio ansetzt — anders als voice_settings.speed, das bei
-    # eleven_v3 wirkungslos ist. Default 1.12; REEL_TEMPO=1.0 schaltet ab.
+    # eleven_v3 wirkungslos ist. Default 1.28; REEL_TEMPO=1.0 schaltet ab.
     try:
-        tempo = float(os.environ.get("REEL_TEMPO", "1.12"))
+        tempo = float(os.environ.get("REEL_TEMPO", "1.28"))
     except ValueError:
-        tempo = 1.12
+        tempo = 1.28
     speed_up(args.out, args.words, tempo)
     print(f"OK vo -> {args.out}")
 

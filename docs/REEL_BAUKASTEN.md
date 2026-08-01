@@ -42,6 +42,13 @@ ungeprueften Ton gibt es nicht mehr. Bewusst uebersteuern: `--allow-unverified-v
 
 ## SOUND — Design im Video + Musik beim Posten (Stand 2026-08-01)
 
+**Tempo & Schnitt (Stand 2026-08-01):** `REEL_TEMPO` Default **1.28** (atempo am
+fertigen Audio). Darueber verschluckt die Stimme Silben. Szenen-Nachlauf `PAD` 2 Frames,
+`VO_TAIL` 0.08 s, `MINF` 30 Frames — die Szene endet also fast direkt hinter dem letzten
+Wort. WICHTIG: Die Laenge bestimmt die STIMME, nicht der Schnitt (gemessen: von 40 s
+Video waren 37,4 s reine Sprechzeit). Kuerzer wird ein Reel deshalb ueber Tempo +
+weniger Woerter, nicht ueber schnellere Animationen. Richtwert fuer ~30 s: **75-80 Woerter**.
+
 **Sound Design (im Master, automatisch):** Jede Animation hat einen Ton. Vorher hatte
 NUR der Belegt-Stempel Sound — jede andere Bewegung war stumm, und ein Bildereignis
 ohne Ton wirkt auf TikTok wie ein Fehler. Vertont sind jetzt:

@@ -14,12 +14,27 @@
 	"loop": true,
 	"softCta": "Sowas steht selten in den Nachrichten. Hier jeden Tag eins.",
 	"caption": "Mammutbäume: Wer Feuer bekämpfen will, muss Feuer legen. Bäume, bei denen das Unterholz vorher kontrolliert abgebrannt wurde, überlebten die Großbrände von 2020 und 2021 viermal häufiger — rund 1.900 Riesenmammutbäume wurden so gerettet.\n\nQuelle: Yale Environment 360 — von uns nachgeprüft.",
-	"hashtags": ["#gutenachrichten", "#mammutbäume", "#waldbrand", "#klima"],
+	"hashtags": [
+		"#gutenachrichten",
+		"#mammutbäume",
+		"#waldbrand",
+		"#klima"
+	],
 	"tiktok": {
 		"caption": "Mammutbäume sterben in Waldbränden, das klingt nach einem Kampf, den man nur verlieren kann. Die Zahlen sagen etwas anderes: Wo vorher kontrolliert Feuer gelegt wurde, überlebten die Bäume viermal häufiger. Rund 1.900 Riesenmammutbäume wurden so gerettet. Man bekämpft Feuer also mit Feuer — nur zur richtigen Zeit.\n\nQuelle: Yale Environment 360 — von uns nachgeprüft.",
-		"hashtags": ["#gutenachrichten", "#mammutbäume", "#waldbrand", "#klima"],
+		"hashtags": [
+			"#gutenachrichten",
+			"#mammutbäume",
+			"#waldbrand",
+			"#klima"
+		],
 		"location": "Berlin",
-		"soundKeywords": ["cinematic minimal", "slow build strings", "ambient pulse", "calm underscore"]
+		"soundKeywords": [
+			"cinematic minimal",
+			"slow build strings",
+			"ambient pulse",
+			"calm underscore"
+		]
 	},
 	"scenes": [
 		{
@@ -50,14 +65,14 @@
 			"kind": "beat",
 			"text": "Das Unterholz brennt weg, bevor es zum Brennstoff wird.",
 			"image": null,
-			"voText": "Der Grund ist simpel. Das trockene Unterholz brennt kontrolliert weg, bevor es zum Brennstoff wird."
+			"voText": "Das trockene Unterholz brennt weg, bevor es zum Brennstoff wird."
 		},
 		{
 			"kind": "beat",
 			"text": "1.900 Bäume. Bis zu 3.000 Jahre alt.",
 			"image": "story/mammut.jpg",
 			"full": true,
-			"voText": "Rund 1.900 Riesenmammutbäume haben die Großbrände so überstanden. Manche von ihnen sind dreitausend Jahre alt."
+			"voText": "Rund 1.900 Riesenmammutbäume haben so überlebt. Manche sind dreitausend Jahre alt."
 		},
 		{
 			"kind": "proof",

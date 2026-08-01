@@ -46,9 +46,9 @@ const PACE = (() => {
 	return TIKTOK ? 0.7 : 1.0;
 })();
 // VO-Nachlauf/Mindestlängen: im TikTok-Modus enger, sonst wie gehabt.
-const MINF = TIKTOK ? 40 : 60; // Mindest-Szenenlänge MIT VO (Frames)
-const PAD = TIKTOK ? 4 : 10; // Nachlauf hinter dem letzten VO-Wort (Frames)
-const VO_TAIL = TIKTOK ? 0.15 : 0.35; // Sekunden hinter dem letzten Wort im TTS-Segment
+const MINF = TIKTOK ? 30 : 60; // Mindest-Szenenlänge MIT VO (Frames)
+const PAD = TIKTOK ? 2 : 10; // Nachlauf hinter dem letzten VO-Wort (Frames)
+const VO_TAIL = TIKTOK ? 0.08 : 0.35; // Sekunden hinter dem letzten Wort im TTS-Segment
 // Sprechtempo (edge-tts rate): TikTok flotter — gemessen spricht Seraphina bei +4%
 // nur ~2,2 Wörter/s, damit wird ein 50-Wort-Skript >23s. REEL_RATE übersteuert.
 // +16% seit 2026-07-11 (Publikums-Feedback: „muss schneller geredet werden").

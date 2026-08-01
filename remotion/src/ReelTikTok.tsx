@@ -235,8 +235,8 @@ const HookScene: React.FC<Extract<DailyScene, { kind: 'hook' }>> = ({ text, punc
 			</div>
 			<FlashWipe />
 			{/* Erwartungsbruch: Kontrastwechsel (whoosh, leise) + Punch-Wort (click). */}
-			<Sfx at={0} file="whoosh" vol={0.34} rate={1.25} />
-			<Sfx at={10} file="click" vol={0.27} />
+			<Sfx at={0} file="whoosh" vol={0.51} rate={1.25} />
+			<Sfx at={10} file="click" vol={0.41} />
 			<SceneVoice vo={vo} />
 		</AbsoluteFill>
 	);
@@ -266,7 +266,7 @@ const imgSrc = (src: string) => (/^(https?:|data:|blob:)/.test(src) ? src : stat
 const Sfx: React.FC<{ at: number; file: 'click' | 'ping' | 'settle' | 'whoosh'; vol?: number; rate?: number }> = ({
 	at,
 	file,
-	vol = 0.42,
+	vol = 0.62,
 	rate = 1
 }) => (
 	<Sequence from={Math.max(0, Math.round(at))} durationInFrames={90} layout="none">
@@ -309,8 +309,8 @@ const NumberScene: React.FC<Extract<DailyScene, { kind: 'number' }> & { category
 			{/* Kein FlashWipe im Snap-Modus: Frame 0 ist Videostart bzw. Loop-Übergang, kein Cut */}
 			{snap ? null : <FlashWipe color={accent} />}
 			{/* Cold-Open: Zahl rastet ein (settle, tiefer) + Akzentlinie faehrt aus (click). */}
-			<Sfx at={snap ? 2 : 4} file="settle" vol={0.57} rate={0.85} />
-			<Sfx at={snap ? 9 : 13} file="click" vol={0.28} />
+			<Sfx at={snap ? 2 : 4} file="settle" vol={0.85} rate={0.85} />
+			<Sfx at={snap ? 9 : 13} file="click" vol={0.42} />
 			<SceneVoice vo={vo} dark />
 		</AbsoluteFill>
 	);
@@ -460,7 +460,7 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 			    Text schon die Aussage — eine Karaoke-Caption darunter wäre dasselbe doppelt
 			    und kollidiert mit dem Screen-Text (Panel-Befund „unübersichtlich" 2026-07-17). */}
 			{/* Beat: nur der Schnitt selbst, sehr leise — das Bild traegt die Szene. */}
-			<Sfx at={0} file="whoosh" vol={0.25} rate={1.4} />
+			<Sfx at={0} file="whoosh" vol={0.38} rate={1.4} />
 			<SceneVoice vo={vo} captions={!!image && !full} />
 		</AbsoluteFill>
 	);
@@ -513,8 +513,8 @@ const MapScene: React.FC<Extract<DailyScene, { kind: 'map' }> & { category: stri
 			</div>
 			<FlashWipe color={accent} />
 			{/* Karte: Anflug (whoosh) + Einrasten auf dem Ort (ping, hoch). */}
-			<Sfx at={0} file="whoosh" vol={0.38} />
-			<Sfx at={26} file="ping" vol={0.34} rate={1.2} />
+			<Sfx at={0} file="whoosh" vol={0.57} />
+			<Sfx at={26} file="ping" vol={0.51} rate={1.2} />
 			<SceneVoice vo={vo} dark />
 		</AbsoluteFill>
 	);
@@ -596,11 +596,11 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 			    Anflug-whoosh → beim Aufschlag DREI geschichtete Layer: settle (Anschlag) +
 			    settle auf 0.5 verlangsamt (tiefer Holz-Bass-Thud) + ping (kurzer metallischer
 			    Anschlag oben drauf). Die Musik duckt hier zeitgleich (Haupt-Komposition). */}
-			<Audio src={staticFile('audio/fx/whoosh.wav')} volume={0.8} />
+			<Audio src={staticFile('audio/fx/whoosh.wav')} volume={1} />
 			<Sequence from={6}>
 				<Audio src={staticFile('audio/fx/settle.wav')} volume={1} />
 				<Audio src={staticFile('audio/fx/settle.wav')} volume={0.95} playbackRate={0.5} />
-				<Audio src={staticFile('audio/fx/ping.wav')} volume={0.62} />
+				<Audio src={staticFile('audio/fx/ping.wav')} volume={0.85} />
 			</Sequence>
 		</>
 	);
@@ -788,9 +788,9 @@ const EngageIcons: React.FC<{ accent: string }> = ({ accent }) => {
 			})}
 			{/* Jedes Icon federt einzeln ein (Frame 10/17/24) — je ein leiser Klick,
 			    aufsteigend in der Tonhoehe. Bewegung ohne Ton wirkt wie ein Fehler. */}
-			<Sfx at={10} file="click" vol={0.25} rate={1.0} />
-			<Sfx at={17} file="click" vol={0.25} rate={1.12} />
-			<Sfx at={24} file="click" vol={0.25} rate={1.24} />
+			<Sfx at={10} file="click" vol={0.38} rate={1.0} />
+			<Sfx at={17} file="click" vol={0.38} rate={1.12} />
+			<Sfx at={24} file="click" vol={0.38} rate={1.24} />
 		</div>
 	);
 };
@@ -930,8 +930,8 @@ export const ReelTikTok: React.FC<ReelDailyProps> = (p) => {
 			    einem tiefen settle — die Aufloesung des Rewatch-Raetsels bekommt Gewicht. */}
 			{p.badge != null ? (
 				<>
-					<Sfx at={240} file="ping" vol={0.27} rate={1.35} />
-					<Sfx at={proofStart + 26} file="settle" vol={0.38} rate={0.9} />
+					<Sfx at={240} file="ping" vol={0.41} rate={1.35} />
+					<Sfx at={proofStart + 26} file="settle" vol={0.57} rate={0.9} />
 				</>
 			) : null}
 			{/* Soft-CTA: von ~Sek 8 bis kurz vor dem Stempel (proofStart) — nach dem Aha,

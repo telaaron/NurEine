@@ -33,6 +33,7 @@
 				{ href: '/admin/ki', label: 'KI-Cockpit', icon: 'heart', badge: 0 },
 				{ href: '/admin/social', label: 'Social', icon: 'share', badge: 0 },
 				{ href: '/admin/tiktok', label: 'TikTok', icon: 'send', badge: 0, sub: true },
+				{ href: '/admin/newsletter', label: 'Newsletter', icon: 'send', badge: 0 },
 				{ href: '/admin/kosten', label: 'Kosten', icon: 'coins', badge: 0 }
 			]
 		}

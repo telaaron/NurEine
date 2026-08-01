@@ -141,6 +141,14 @@ function slugify(text: string): string {
     .slice(0, 80);
 }
 
+// Kleiner deterministischer Hash (djb2) — rotiert die CTA-Zeile pro Story,
+// damit nicht jeden Tag derselbe Satz steht.
+function hashSeed(s: string): number {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = (h * 33) ^ s.charCodeAt(i);
+  return h | 0;
+}
+
 // UTM so newsletter clicks are attributed to the newsletter in analytics,
 // instead of polluting "direct" traffic or the www duplicate host.
 const NL_UTM = 'utm_source=newsletter&utm_medium=email&utm_campaign=daily';
@@ -165,6 +173,7 @@ function trackedStoryUrl(story: HeroStory, email: string, token: string): string
     e: email,
     t: token,
     c: story.category || '',
+    s: story.id, // Story-ID → /r protokolliert den Klick pro Story (Klick-Zähler)
     to
   });
   return `${BASE_URL}/r?${q.toString()}`;
@@ -242,10 +251,23 @@ export function buildB2CHtml(
   const category = story.category || 'Allgemein';
   const color = categoryColor(category);
   const header = headerHtml(story.image_url);
-  const summary = story.summary || '';
-  const dek = story.subtitle || '';
-  const impact = story.impact_score ?? '?';
-  const minutes = story.reading_time_min ?? '?';
+  // Der Newsletter teasert NUR an — kein Summary mehr. Ein Satz, dann Website.
+  // Reihenfolge der Präferenz: share_hook (schickbar, Aaron-Ton) > subtitle/dek.
+  const teaser = (story.share_hook || story.subtitle || '').trim();
+  const impact = story.impact_score ?? null;
+  const minutes = story.reading_time_min ?? null;
+
+  // CTA-Zeile im Aaron-Ton: freundlich, leise untertreibend, nie generisch.
+  // Rotiert deterministisch pro Story (kein „Weiterlesen" jeden Tag).
+  const ctaLines = [
+    'Die ganze Geschichte wartet',
+    'Weil ein Satz zu wenig ist',
+    'Es wird noch besser, versprochen',
+    'Der Rest lohnt sich',
+    'Nachlesen, in Ruhe',
+    'Hier steht das Schöne ausführlich'
+  ];
+  const ctaText = ctaLines[Math.abs(hashSeed(story.id)) % ctaLines.length];
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -301,41 +323,34 @@ export function buildB2CHtml(
 
         ${header}
 
-        <tr><td style="padding:28px 40px 24px;">
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr><td>
-            <span style="display:inline-block;background-color:${color};color:#ffffff;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;padding:3px 12px;border-radius:9999px;">${category}</span>
-          </td></tr></table>
-
-          <h2 class="nur-eine-text-primary" style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:400;color:#1a1815;line-height:1.22;letter-spacing:-0.01em;">${story.title}</h2>
-          ${dek ? `<p class="nur-eine-text-dek" style="margin:0 0 22px;font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#4a3f35;line-height:1.5;letter-spacing:-0.005em;">${dek}</p>` : ''}
-          <p class="nur-eine-text-body" style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;color:#3a342c;line-height:1.7;">${summary}</p>
-          ${story.audio_url ? `<table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin:22px 0 0;"><tr><td style="background-color:#f3ece1;background-image:url('${PNG_CARD}');border:1px solid rgba(200,115,64,0.30);border-radius:9px;padding:14px 18px;">
-            <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-              <td style="vertical-align:middle;padding-right:12px;font-size:20px;line-height:1;">&#x1F3A7;</td>
-              <td style="vertical-align:middle;">
-                <p style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:14px;font-weight:600;color:#1a1815;line-height:1.4;" class="nur-eine-text-primary">Diese Geschichte gibt&rsquo;s auch zum Anh&ouml;ren.</p>
-                <p style="margin:2px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.4;"><a href="${url}" target="_blank" class="nur-eine-link" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.35);">Jetzt vertont anh&ouml;ren &rarr;</a></p>
-              </td>
-            </tr></table>
-          </td></tr></table>` : ''}
-        </td></tr>
-
-        <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;" /></td></tr>
-        <tr><td style="padding:18px 40px 0;">
-          <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:20px;"><tr>
-            <td style="padding-right:28px;"><span class="nur-eine-text-muted" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;"><strong style="font-weight:600;color:#1a1815;">Wirkung</strong> ${impact}/100</span></td>
-            <td><span class="nur-eine-text-muted" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#6b6359;"><strong style="font-weight:600;color:#1a1815;">Lesezeit</strong> ${minutes} Min.</span></td>
+        <tr><td style="padding:28px 40px 8px;">
+          <!-- Kategorie + Wirkungsgrad in EINER Zeile, wie in den IG-Stories -->
+          <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:22px;"><tr>
+            <td style="vertical-align:middle;">
+              <span style="display:inline-block;background-color:${color};color:#ffffff;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.18em;padding:4px 13px;border-radius:9999px;">${category}</span>
+            </td>
+            <td align="right" style="vertical-align:middle;">
+              <span class="nur-eine-text-faint" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:11px;color:#9a9087;letter-spacing:0.1em;text-transform:uppercase;">Wirkung</span>
+              <span class="nur-eine-text-primary" style="font-family:Georgia,'Times New Roman',serif;font-size:30px;font-weight:400;color:#1a1815;vertical-align:middle;margin-left:8px;">${impact ?? '—'}</span><span class="nur-eine-text-faint" style="font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;color:#9a9087;">/100</span>
+            </td>
           </tr></table>
+
+          <!-- Titel — der Blickfang. Kein Summary mehr, nur EIN Teaser-Satz. -->
+          <h2 class="nur-eine-text-primary" style="margin:0 0 16px;font-family:Georgia,'Times New Roman',serif;font-size:30px;font-weight:400;color:#1a1815;line-height:1.2;letter-spacing:-0.01em;">${story.title}</h2>
+          ${teaser ? `<p class="nur-eine-text-dek" style="margin:0;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:18px;color:#4a3f35;line-height:1.5;">${escapeForHtml(teaser)}</p>` : ''}
+          ${story.audio_url ? `<p style="margin:16px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;line-height:1.4;"><a href="${url}" target="_blank" class="nur-eine-link" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.35);">&#x1F3A7; Lieber h&ouml;ren? Gibt&rsquo;s auch vertont &rarr;</a></p>` : ''}
         </td></tr>
 
         ${familyBlock}
 
-        <tr><td style="padding:0 40px 32px;">
+        <!-- CTA: besonderer Aaron-Ton, rotiert pro Story, nie generisch -->
+        <tr><td style="padding:26px 40px 34px;">
           <table role="presentation" cellpadding="0" cellspacing="0"><tr>
             <td class="nur-eine-cta" bgcolor="#1a1815" style="background-color:#1a1815;background-image:url('${PNG_INK}');border-radius:9999px;text-align:center;">
-              <a href="${url}" target="_blank" style="display:inline-block;padding:14px 40px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">Geschichte lesen &rarr;</a>
+              <a href="${url}" target="_blank" style="display:inline-block;padding:15px 42px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:15px;font-weight:600;color:#faf6ee;text-decoration:none;border-radius:9999px;">${ctaText} &rarr;</a>
             </td>
           </tr></table>
+          ${minutes ? `<p class="nur-eine-text-faint" style="margin:12px 0 0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;">${minutes} Min. gut investiert.</p>` : ''}
         </td></tr>
 
         <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;" /></td></tr>

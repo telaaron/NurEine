@@ -18,6 +18,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const email = (url.searchParams.get('e') || '').toLowerCase().trim();
 	const token = url.searchParams.get('t') || '';
 	const category = url.searchParams.get('c') || '';
+	const storyId = url.searchParams.get('s') || '';
 	const to = url.searchParams.get('to') || '/';
 
 	// Open-redirect guard: only allow same-site relative paths.
@@ -28,6 +29,20 @@ export const GET: RequestHandler = async ({ url }) => {
 	// guard so it can't be abused. Preserves any existing query on `safeTo`.
 	const sep = safeTo.includes('?') ? '&' : '?';
 	const dest = `${safeTo}${sep}utm_source=newsletter&utm_medium=email&utm_campaign=daily`;
+
+	// Klick-Zähler (fire-and-forget): protokolliert JEDEN Newsletter-Klick, damit
+	// wir pro Tag/Story sehen, wie viele über die Mail zur Story kamen. Unabhängig
+	// vom Personalisierungs-Signal unten (das braucht ein gültiges Token; der
+	// Klick zählt IMMER, sobald eine Story-ID mitkommt).
+	if (storyId) {
+		try {
+			await supabaseAdmin
+				.from('nureine_newsletter_clicks')
+				.insert({ story_id: storyId, category: category || null });
+		} catch {
+			/* never block redirect on tracking */
+		}
+	}
 
 	// Fire-and-forget the signal; never block the redirect on it.
 	if (email && token && CATEGORY_SLUGS.includes(category)) {

@@ -85,6 +85,43 @@ async def synth(text: str, voice: str, rate: str, out_mp3: str, out_words: str) 
         print("WARNUNG: keine WordBoundaries erhalten", file=sys.stderr)
 
 
+def speed_up(out_mp3: str, out_words: str, factor: float) -> None:
+    """Tempo NACHTRÄGLICH per ffmpeg atempo — inkl. Wort-Timings.
+
+    Warum nicht über voice_settings.speed: bei eleven_v3 ist der Parameter praktisch
+    wirkungslos (gemessen 2026-08-01: speed 1.15 -> 11.84s, speed 1.20 -> 11.92s,
+    also KEIN Unterschied). atempo wirkt zuverlässig (1.22 -> 9.72s) und lässt die
+    Tonhöhe unangetastet. Die Timings werden mitskaliert, sonst laufen die
+    Karaoke-Captions aus dem Takt.
+    REEL_TEMPO übersteuert; 1.0 schaltet den Schritt ab.
+    """
+    import shutil
+    import subprocess
+    import tempfile
+
+    if factor <= 1.001:
+        return
+    tmp = tempfile.mktemp(suffix=".mp3")
+    try:
+        subprocess.run(
+            ["ffmpeg", "-y", "-loglevel", "error", "-i", out_mp3,
+             "-filter:a", f"atempo={factor:.3f}", "-c:a", "libmp3lame", "-q:a", "2", tmp],
+            check=True, timeout=120,
+        )
+        shutil.move(tmp, out_mp3)
+    except Exception as e:  # Tempo ist Kür — lieber Originaltempo als kein Audio
+        print(f"WARNUNG: atempo fehlgeschlagen ({e}) — Originaltempo", file=sys.stderr)
+        return
+    try:
+        words = json.load(open(out_words, encoding="utf-8"))
+        for w in words:
+            w["start"] = round(w["start"] / factor, 3)
+            w["end"] = round(w["end"] / factor, 3)
+        json.dump(words, open(out_words, "w", encoding="utf-8"), ensure_ascii=False)
+    except Exception as e:
+        print(f"WARNUNG: Timings nicht skaliert ({e})", file=sys.stderr)
+
+
 def synth_eleven(text: str, rate: str, out_mp3: str, out_words: str) -> None:
     """ElevenLabs-Backend (Premium-Stimme): with-timestamps liefert Char-Alignment,
     daraus bauen wir dieselben Wort-Timings wie bei edge-tts. Braucht
@@ -250,6 +287,14 @@ def main() -> None:
         synth_local(args.text, args.rate, args.out, args.words, voice)
     else:
         asyncio.run(synth(args.text, args.voice, args.rate, args.out, args.words))
+    # Tempo-Nachschärfung (Aaron 2026-08-01: "noch schneller"). Gilt für JEDE Engine,
+    # weil sie am fertigen Audio ansetzt — anders als voice_settings.speed, das bei
+    # eleven_v3 wirkungslos ist. Default 1.12; REEL_TEMPO=1.0 schaltet ab.
+    try:
+        tempo = float(os.environ.get("REEL_TEMPO", "1.12"))
+    except ValueError:
+        tempo = 1.12
+    speed_up(args.out, args.words, tempo)
     print(f"OK vo -> {args.out}")
 
 

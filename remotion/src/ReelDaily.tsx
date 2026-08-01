@@ -59,7 +59,8 @@ export interface ReelDailyProps {
 	seed: string;
 	/** Moderator:in — fehlt sie, entscheidet der Seed (Feed wechselt ab). */
 	person?: Person | null;
-	musicFile: string;
+	/** Leer/weggelassen = kein Musikbett (Default seit 2026-08-01, Sound kommt von TikTok). */
+	musicFile?: string;
 	hasVo: boolean;
 	durationInFrames: number;
 	/** Loop-Naht — durationInFrames enthält dann den Loop-Schwanz (14 Frames). */

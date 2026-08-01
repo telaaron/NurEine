@@ -848,12 +848,20 @@ async function main() {
 		console.log('OK Kohärenz-Check: Bild-Zahlen = gesprochene Zahlen');
 	}
 
-	// Musik deterministisch variieren (per Slug), damit der Feed nicht monoton klingt.
+	// MUSIKBETT: seit 2026-08-01 standardmäßig AUS (Aaron). Der Sound kommt beim Posten
+	// aus TikToks Commercial Music Library — ein zweites Bett im Master würde sich damit
+	// überlagern. Nur noch an, wenn der Plan es ausdrücklich verlangt (plan.music) oder
+	// --music <datei> gesetzt ist. Die deterministische Auswahl bleibt für diesen Fall.
 	let h = 0;
 	for (const c of slug) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+	const musicArg = arg('music');
 	// uplift-1/2: fal.ai Stable Audio (loudnorm -20 LUFS). Die alten hope/calm-WAVs
 	// waren mit -47dB praktisch stumm (das "Brummen" im ersten geposteten Reel).
-	const music = plan?.music || ['audio/uplift-1.mp3', 'audio/uplift-2.mp3'][h % 2];
+	const music =
+		plan?.music ||
+		(musicArg === true ? ['audio/uplift-1.mp3', 'audio/uplift-2.mp3'][h % 2] : musicArg) ||
+		null;
+	if (!music) console.log('OK ohne Musikbett (Sound kommt beim Posten aus der TikTok-CML)');
 
 	const props = {
 		scenes,

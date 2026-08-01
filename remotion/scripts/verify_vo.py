@@ -67,6 +67,19 @@ def word_to_int(w: str):
     """'dreiundvierzig' -> 43, 'sechshundertfuenfundvierzig' -> 645. None wenn kein Zahlwort."""
     if not w or any(c.isdigit() for c in w):
         return None
+    # Jahreszahlen in Sprechweise: "zwanzigzwanzig" -> 2020, "zwanzigeinundzwanzig" -> 2021,
+    # "neunzehnhundertneunzig" faengt die Hundert-Regel unten ab. Ohne das meldet das Gate
+    # jede gesprochene Jahreszahl als Fehler (belegt 2026-08-01).
+    for tens, base in (("zwanzig", 2000), ("neunzehn", 1900)):
+        if w.startswith(tens) and len(w) > len(tens):
+            rest = w[len(tens):]
+            if rest.startswith("hundert"):
+                break  # klassische Form -> normale Regeln unten
+            r = word_to_int(rest)
+            if r is not None and r < 100:
+                return base + r
+        if w == tens and base == 2000:
+            break
     total, rest = 0, w
     for unit, mult in (("million", 1000000), ("tausend", 1000)):
         if unit in rest:

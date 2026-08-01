@@ -1,0 +1,83 @@
+{
+	"story": {
+		"id": "d9589c71-a0b1-47a7-b155-653308884674",
+		"slug": "mammutbaeume-feuer",
+		"category": "klima",
+		"image": "story/mammut.jpg",
+		"source": "Yale Environment 360",
+		"impactScore": 68,
+		"shareHook": "1.900 Mammutbäume überlebten — weil man vorher Feuer legte."
+	},
+	"seo": {
+		"keyword": "Mammutbäume"
+	},
+	"loop": true,
+	"softCta": "Sowas steht selten in den Nachrichten. Hier jeden Tag eins.",
+	"caption": "Mammutbäume: Wer Feuer bekämpfen will, muss Feuer legen. Bäume, bei denen das Unterholz vorher kontrolliert abgebrannt wurde, überlebten die Großbrände von 2020 und 2021 viermal häufiger — rund 1.900 Riesenmammutbäume wurden so gerettet.\n\nQuelle: Yale Environment 360 — von uns nachgeprüft.",
+	"hashtags": ["#gutenachrichten", "#mammutbäume", "#waldbrand", "#klima"],
+	"tiktok": {
+		"caption": "Mammutbäume sterben in Waldbränden, das klingt nach einem Kampf, den man nur verlieren kann. Die Zahlen sagen etwas anderes: Wo vorher kontrolliert Feuer gelegt wurde, überlebten die Bäume viermal häufiger. Rund 1.900 Riesenmammutbäume wurden so gerettet. Man bekämpft Feuer also mit Feuer — nur zur richtigen Zeit.\n\nQuelle: Yale Environment 360 — von uns nachgeprüft.",
+		"hashtags": ["#gutenachrichten", "#mammutbäume", "#waldbrand", "#klima"],
+		"location": "Berlin",
+		"soundKeywords": ["cinematic minimal", "slow build strings", "ambient pulse", "calm underscore"]
+	},
+	"scenes": [
+		{
+			"kind": "number",
+			"snap": true,
+			"kicker": "NUR EINE · GEPRÜFT",
+			"value": "1.900",
+			"unit": "gerettet",
+			"context": "Mammutbäume — durch Feuer",
+			"image": "story/mammut.jpg",
+			"voText": "Mammutbäume und Waldbrand, das klingt nach einem Kampf, den man nur verlieren kann. 1.900 sagen etwas anderes."
+		},
+		{
+			"kind": "hook",
+			"text": "Man legt Feuer. Absichtlich.",
+			"punch": "Absichtlich",
+			"kicker": "KALIFORNIEN · SIERRA NEVADA",
+			"voText": "Die Rettung ist ausgerechnet das, was sie sonst tötet."
+		},
+		{
+			"kind": "beat",
+			"text": "Viermal häufiger überlebt.",
+			"image": "story/mammut.jpg",
+			"full": true,
+			"voText": "Wo vorher kontrolliert Feuer gelegt wurde, überlebten die Bäume viermal häufiger."
+		},
+		{
+			"kind": "beat",
+			"text": "Das Unterholz brennt weg, bevor es zum Brennstoff wird.",
+			"image": null,
+			"voText": "Der Grund ist simpel. Das trockene Unterholz brennt kontrolliert weg, bevor es zum Brennstoff wird."
+		},
+		{
+			"kind": "beat",
+			"text": "1.900 Bäume. Bis zu 3.000 Jahre alt.",
+			"image": "story/mammut.jpg",
+			"full": true,
+			"voText": "Rund 1.900 Riesenmammutbäume haben die Großbrände so überstanden. Manche von ihnen sind dreitausend Jahre alt."
+		},
+		{
+			"kind": "proof",
+			"source": "Yale Environment 360",
+			"impact": 68,
+			"progress": 1105,
+			"snapshot": {
+				"outlet": "Yale Environment 360",
+				"year": "2026",
+				"title": "Kontrollierte Feuer retten Riesenmammutbäume",
+				"quote": "Viermal höhere Überlebensrate, ~1.900 Bäume"
+			},
+			"voText": "Geprüft an den Bränden von zwanzig-zwanzig und zwanzig-einundzwanzig. Nicht erfunden."
+		},
+		{
+			"kind": "end",
+			"share": "Feuer bekämpft man mit Feuer. Nur zur richtigen Zeit.",
+			"cta": "",
+			"engage": true,
+			"voText": "Die nächste gute Nachricht ist schon überprüft, nämlich diese."
+		}
+	]
+}

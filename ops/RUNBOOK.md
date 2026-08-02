@@ -185,6 +185,50 @@ claude          # interaktive Sitzung; z.B. einen Prompt aus ops/prompts/ von Ha
 
 ---
 
+## 3c. Wenn das Claude-Kontingent aufgebraucht ist
+
+Das Abo kennt **zwei Limits mit sehr unterschiedlicher Konsequenz** — `agent.sh`
+unterscheidet sie und reagiert passend:
+
+| Limit | Verhalten | Was `agent.sh` tut |
+|---|---|---|
+| **5-Stunden-Fenster** (rollierend, resetet von selbst) | Warten lohnt sich | Wartet bis zur genannten Reset-Zeit (max. 4 h), dann **ein** Retry. Danach Schluss. |
+| **Wochen-Limit** (fest pro Account, fester Wochentag) | Warten zwecklos | **Kein Retry** — bricht sofort ab und meldet laut. |
+
+**Exit-Codes zum Unterscheiden im Monitoring:**
+
+| Code | Bedeutung |
+|---|---|
+| `0` | Lauf erfolgreich |
+| `20` | **Wochen-Limit** — Kontingent bis zum Wochen-Reset erschöpft |
+| `21` | 5h-Limit, auch der Retry nach dem Reset lief ins Limit |
+| sonst | normaler Fehler (Code vom `claude`-Aufruf) |
+
+```bash
+# Gab es Limit-Abbrüche?
+ssh aaron@192.168.178.3 'grep -hE "LIMIT|limit=" ~/nureine-logs/agent-*.log | tail -20'
+```
+
+**Wartedeckel:** Der Retry darf den nächsten regulären Cron-Lauf nicht überholen —
+sonst liefe ein Fetch erst, wenn Redaktion (04:10) und Newsletter (04:40) längst
+durch sind. Deshalb max. **4 h** Wartezeit, übersteuerbar per
+`NUREINE_MAX_LIMIT_WAIT` (Sekunden). Liegt der Reset dahinter, wird der Retry
+trotzdem versucht und im Log als „evtl. verfrüht" vermerkt.
+
+> **Hinweis zur Erkennung:** Das exakte Fehlerformat von `claude -p --output-format
+> json` bei Limits ist **nicht dokumentiert** (geprüft 2026-08-02). Die Erkennung
+> prüft deshalb defensiv mehrere Signale gleichzeitig (Meldungstext, `is_error`,
+> `api_error_status`, `rate_limit_error`, `429`). Ein Supabase-402 wird bewusst
+> **nicht** als Claude-Limit gewertet — sonst würde bei DB-Problemen sinnlos
+> stundenlang gewartet.
+>
+> Es gibt **keine** Möglichkeit, den Verbrauchsstand vor einem Lauf abzufragen:
+> kein `claude usage`-Befehl, keine lokale Verbrauchsdatei, und der
+> `statusLine`-Hook (der `rate_limits` liefern würde) läuft im `-p`-Modus nicht.
+> Getestet, nicht vermutet.
+
+---
+
 ## 4. Der Claude-Zugang (Abo, kein API-Key)
 
 - Claude Code liegt unter `~/.local/bin/claude` (nativer Binary).

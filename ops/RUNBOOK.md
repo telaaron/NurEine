@@ -332,36 +332,40 @@ ssh aaron@192.168.178.3 'cd ~/NurEine && git fetch origin && git reset --hard or
 - **Nichts doppelt laufen lassen:** entweder MacBook-Routinen ODER Mini — nie beide.
 - **Der Mini schläft nie** und startet cron nach jedem Reboot automatisch.
 
-## Repo-Disziplin — WARUM main und Mini auseinanderliefen (03.08.2026)
+## Ueberwachung — EIN Check, Mail nur bei Problem (Stand 2026-08-03)
 
-**Der Vorfall:** Ein Merge am 24.07. loeschte beim Konflikt ~1140 Zeilen aus
-`scripts/fetch_stories.py` (21 Funktionen). Die Datei war nicht mehr importierbar
-(SyntaxError Zeile 650) — der Fetch-Cronjob war TOT, ohne dass jemand es merkte.
-Die Reparatur landete danach nur auf einem lokalen Branch des Mac Minis. Zwei
-Wochen lang lief der Mini auf einem eigenen Stand und main blieb kaputt.
+`ops/run/healthcheck.sh`, taeglich **09:45** (nach Fetch/Redaktion/Reel-Regie).
 
-**Zwei Regeln, damit das nicht wiederkommt:**
+**Stille bedeutet: alles laeuft.** Es kommt nur Post, wenn etwas kaputt ist —
+an `aaron@nureine.de` ueber Brevo. Jede Meldung nennt das Problem, warum es
+zaehlt, und den konkreten Befehl zum Nachsehen. Ein Log, in das niemand schaut,
+ist kein Alarm; deshalb geht der Befund raus statt nur in eine Datei.
 
-1. **Der Mac Mini steht IMMER auf `main`.** Kein Feature-Branch, kein „nur kurz".
-   Er ist eine Produktionsmaschine, kein Arbeitsplatz. `ops/run/repo-watchdog.sh`
-   prueft das taeglich 02:45 (vor den Nacht-Routinen) und zieht fast-forward nach.
-2. **Ein Fix, der nur auf dem Mini liegt, existiert nicht.** Der Mini hat KEINE
-   GitHub-Zugangsdaten und kann nicht pushen. Wer dort etwas repariert, muss es
-   von einer Maschine mit Zugang nach `main` bringen — sonst ist es beim naechsten
-   `git reset` weg. Der Watchdog meldet solche ungesicherten Commits.
+Geprueft wird genau das, was zuletzt **still** kaputtgegangen ist:
 
-**Was die Watchdogs melden (`~/nureine-logs/`):**
-
-| Datei | Prueft | Wann |
+| # | Pruefung | Vorfall dahinter |
 |---|---|---|
-| `repo-watchdog.log` | Branch = main, synchron mit origin, Skripte importierbar | 02:45 |
-| `reel-watchdog.log` | Wurde heute ein Reel-Master gebaut? | 09:15 |
+| 1 | Mini auf `main`, synchron, Skripte importierbar | main war 2 Wochen kaputt — ein Merge loeschte 1140 Zeilen aus `fetch_stories.py` (SyntaxError), die Reparatur lag nur lokal auf dem Mini |
+| 2 | Wurde heute ein Reel gebaut? | Cron meldete `exit=0`, aber der Agent startete den Render im Hintergrund und beendete sich — kein Video, keine Warnung |
+| 3 | Kam in 48h eine neue Story? | Der Fetch-Job war tot, ohne dass es jemand merkte |
+| 4 | Lief jede Nacht-Routine in den letzten 2 Tagen? | Ausfaelle fielen erst nach Tagen auf |
 
-**Wenn ein ALARM im Log steht:** Die Zeile darunter nennt den konkreten Befehl.
-Nichts raten — der Watchdog schreibt den Fix mit ins Log.
+**Testmail (zeigt, wie eine Meldung aussieht):**
+```
+ssh aaron@192.168.178.3 '~/NurEine/ops/run/healthcheck.sh --test'
+```
 
-**Warum die Reel-Pruefung auf die TATSACHE schaut:** Der Cron-Job meldete am
-01./02.08. `exit=0`, obwohl kein Video entstand (der Agent hatte den Render nur
-im Hintergrund gestartet und sich beendet). Ein gruener Exit-Code ist KEIN Beweis
-fuer ein fertiges Reel — deshalb prueft der Watchdog den Bucket, nicht den Status.
+**Anderer Empfaenger:** `HEALTHCHECK_TO=...` in `~/NurEine/.env` setzen.
 
+### Zwei Regeln, die den Vorfall verursacht haben
+
+1. **Der Mac Mini steht IMMER auf `main`.** Kein Feature-Branch, auch nicht kurz.
+   Er ist eine Produktionsmaschine, kein Arbeitsplatz.
+2. **Ein Fix, der nur auf dem Mini liegt, existiert nicht.** Der Mini hat keine
+   GitHub-Zugangsdaten und kann nicht pushen. Wer dort repariert, muss es von
+   einer Maschine mit Zugang nach `main` bringen — sonst ist es beim naechsten
+   `git reset` weg. Der Check meldet solche ungesicherten Commits namentlich.
+
+**Wichtig zum Reel-Check:** Er schaut auf die TATSACHE (liegt ein Master im
+Bucket?), nicht auf den Exit-Code. Ein gruener Exit ist kein Beweis fuer ein
+fertiges Video — genau daran ist der Ausfall am 01./02.08. unbemerkt geblieben.

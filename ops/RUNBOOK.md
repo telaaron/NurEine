@@ -331,3 +331,37 @@ ssh aaron@192.168.178.3 'cd ~/NurEine && git fetch origin && git reset --hard or
 - **Code ändern:** committen + pushen, dann auf dem Mini `git reset --hard origin/main`.
 - **Nichts doppelt laufen lassen:** entweder MacBook-Routinen ODER Mini — nie beide.
 - **Der Mini schläft nie** und startet cron nach jedem Reboot automatisch.
+
+## Repo-Disziplin — WARUM main und Mini auseinanderliefen (03.08.2026)
+
+**Der Vorfall:** Ein Merge am 24.07. loeschte beim Konflikt ~1140 Zeilen aus
+`scripts/fetch_stories.py` (21 Funktionen). Die Datei war nicht mehr importierbar
+(SyntaxError Zeile 650) — der Fetch-Cronjob war TOT, ohne dass jemand es merkte.
+Die Reparatur landete danach nur auf einem lokalen Branch des Mac Minis. Zwei
+Wochen lang lief der Mini auf einem eigenen Stand und main blieb kaputt.
+
+**Zwei Regeln, damit das nicht wiederkommt:**
+
+1. **Der Mac Mini steht IMMER auf `main`.** Kein Feature-Branch, kein „nur kurz".
+   Er ist eine Produktionsmaschine, kein Arbeitsplatz. `ops/run/repo-watchdog.sh`
+   prueft das taeglich 02:45 (vor den Nacht-Routinen) und zieht fast-forward nach.
+2. **Ein Fix, der nur auf dem Mini liegt, existiert nicht.** Der Mini hat KEINE
+   GitHub-Zugangsdaten und kann nicht pushen. Wer dort etwas repariert, muss es
+   von einer Maschine mit Zugang nach `main` bringen — sonst ist es beim naechsten
+   `git reset` weg. Der Watchdog meldet solche ungesicherten Commits.
+
+**Was die Watchdogs melden (`~/nureine-logs/`):**
+
+| Datei | Prueft | Wann |
+|---|---|---|
+| `repo-watchdog.log` | Branch = main, synchron mit origin, Skripte importierbar | 02:45 |
+| `reel-watchdog.log` | Wurde heute ein Reel-Master gebaut? | 09:15 |
+
+**Wenn ein ALARM im Log steht:** Die Zeile darunter nennt den konkreten Befehl.
+Nichts raten — der Watchdog schreibt den Fix mit ins Log.
+
+**Warum die Reel-Pruefung auf die TATSACHE schaut:** Der Cron-Job meldete am
+01./02.08. `exit=0`, obwohl kein Video entstand (der Agent hatte den Render nur
+im Hintergrund gestartet und sich beendet). Ein gruener Exit-Code ist KEIN Beweis
+fuer ein fertiges Reel — deshalb prueft der Watchdog den Bucket, nicht den Status.
+

@@ -53,13 +53,47 @@ Auf dem Mini sind es **cron-Jobs**, die dieselben Prompts per `claude -p` ausfü
 | **Secrets** | `~/NurEine/.env` + `~/NurEine/ops/env.runner` (beide `chmod 600`) |
 | **Ersetzte/alte Prompts** | `~/NurEine/ops/prompts/_ersetzt/` (Rückfall-Option) |
 
-### Aktuelle Kette (Stand 2026-07-19)
+### Aktuelle Kette (Stand 2026-08-03) — VERKETTET, nicht mehr zeitgesteuert
 
 ```
-Fetch 03:10 → Chefredakteur 03:40 → Redaktion 04:10 → Analyst 05:10
-(+ Reel-Regie 08:00 täglich, Verbesserer 10:17)
+03:10 Fetch ──► Chefredakteur ──► Redaktion ──► Analyst
+      (jeder startet den nächsten, sobald er WIRKLICH fertig ist)
+
+08:00 Reel-Regie      ← eigener Cron, nicht Teil der Kette
+10:17 Verbesserer     ← eigener Cron, nicht Teil der Kette
 ```
-Alle Zeiten **lokale Berlin-Zeit** (der Mini läuft in `Europe/Berlin`).
+
+**Nur `fetch` hat noch einen Cron-Eintrag.** Die restlichen drei startet der
+Wrapper selbst (`agent.sh` → `next_in_chain`), nachdem der Vorgänger mit `exit=0`
+durch ist.
+
+**Warum:** Vorher hingen alle vier an geratenen Uhrzeiten mit 30-Min-Puffer. Das
+brach, sobald ein Lauf länger dauerte oder nach einem Kontingent-Limit wiederholt
+wurde — die Redaktion startete, bevor der Chefredakteur Perlen genehmigt hatte,
+und lief inhaltsleer durch (real passiert 2026-08-03). Gemessene Laufzeiten
+(14 Tage): fetch ~23, chefredakteur ~3, redaktion ~10, analyst ~5 Min → die Kette
+ist gegen ~04:20 durch, sicher vor dem Newsletter (04:40). Früher brauchte
+dieselbe Kette bis 05:10.
+
+**Bei Fehler stoppt die Kette bewusst** — ein Chefredakteur ohne frische Stories
+wäre nur ein leerer Lauf. Im Log steht dann `Kette gestoppt (exit=N)`.
+
+**Einzeln nachholen**, ohne dass der Nachfolger mitstartet:
+```bash
+ssh aaron@192.168.178.3 'cd ~/NurEine && ops/run/agent.sh redaktion --no-chain'
+```
+
+**Kette prüfen:**
+```bash
+ssh aaron@192.168.178.3 'grep -hE "startet Nachfolger|Kette gestoppt" ~/nureine-logs/agent-*.log | tail'
+```
+
+> **Übergabe-INHALT läuft weiter über das `nureine_team_board`** (Supabase) — die
+> Verkettung regelt nur, WER WANN startet. Das Board kann mehr als eine
+> Prozess-Übergabe: Blocker über Tage hinweg, Meldungen an Agenten die nicht
+> direkt folgen (Fetcher → Analyst), und es ist die Quelle für `/admin/ki`.
+> Deshalb bewusst behalten.
+
 „Redaktion" ersetzt seit 2026-07-16 die früher getrennten Veredler + Bild-Regie.
 
 ### Eine Routine ändern
@@ -331,41 +365,3 @@ ssh aaron@192.168.178.3 'cd ~/NurEine && git fetch origin && git reset --hard or
 - **Code ändern:** committen + pushen, dann auf dem Mini `git reset --hard origin/main`.
 - **Nichts doppelt laufen lassen:** entweder MacBook-Routinen ODER Mini — nie beide.
 - **Der Mini schläft nie** und startet cron nach jedem Reboot automatisch.
-
-## Ueberwachung — EIN Check, Mail nur bei Problem (Stand 2026-08-03)
-
-`ops/run/healthcheck.sh`, taeglich **09:45** (nach Fetch/Redaktion/Reel-Regie).
-
-**Stille bedeutet: alles laeuft.** Es kommt nur Post, wenn etwas kaputt ist —
-an `aaron@nureine.de` ueber Brevo. Jede Meldung nennt das Problem, warum es
-zaehlt, und den konkreten Befehl zum Nachsehen. Ein Log, in das niemand schaut,
-ist kein Alarm; deshalb geht der Befund raus statt nur in eine Datei.
-
-Geprueft wird genau das, was zuletzt **still** kaputtgegangen ist:
-
-| # | Pruefung | Vorfall dahinter |
-|---|---|---|
-| 1 | Mini auf `main`, synchron, Skripte importierbar | main war 2 Wochen kaputt — ein Merge loeschte 1140 Zeilen aus `fetch_stories.py` (SyntaxError), die Reparatur lag nur lokal auf dem Mini |
-| 2 | Wurde heute ein Reel gebaut? | Cron meldete `exit=0`, aber der Agent startete den Render im Hintergrund und beendete sich — kein Video, keine Warnung |
-| 3 | Kam in 48h eine neue Story? | Der Fetch-Job war tot, ohne dass es jemand merkte |
-| 4 | Lief jede Nacht-Routine in den letzten 2 Tagen? | Ausfaelle fielen erst nach Tagen auf |
-
-**Testmail (zeigt, wie eine Meldung aussieht):**
-```
-ssh aaron@192.168.178.3 '~/NurEine/ops/run/healthcheck.sh --test'
-```
-
-**Anderer Empfaenger:** `HEALTHCHECK_TO=...` in `~/NurEine/.env` setzen.
-
-### Zwei Regeln, die den Vorfall verursacht haben
-
-1. **Der Mac Mini steht IMMER auf `main`.** Kein Feature-Branch, auch nicht kurz.
-   Er ist eine Produktionsmaschine, kein Arbeitsplatz.
-2. **Ein Fix, der nur auf dem Mini liegt, existiert nicht.** Der Mini hat keine
-   GitHub-Zugangsdaten und kann nicht pushen. Wer dort repariert, muss es von
-   einer Maschine mit Zugang nach `main` bringen — sonst ist es beim naechsten
-   `git reset` weg. Der Check meldet solche ungesicherten Commits namentlich.
-
-**Wichtig zum Reel-Check:** Er schaut auf die TATSACHE (liegt ein Master im
-Bucket?), nicht auf den Exit-Code. Ein gruener Exit ist kein Beweis fuer ein
-fertiges Video — genau daran ist der Ausfall am 01./02.08. unbemerkt geblieben.

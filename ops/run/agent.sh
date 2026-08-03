@@ -6,11 +6,17 @@
 # Ersetzt die bisherigen Claude-Scheduled-Tasks auf Aarons Mac (Chefredakteur,
 # Story-Veredler, Analyst, Bild-Regie, Verbesserer, Fetch-Analyse).
 #
-# Aufruf:   ops/run/agent.sh <agent-name>
+# Aufruf:   ops/run/agent.sh <agent-name> [--no-chain]
 # Beispiel: ops/run/agent.sh analyst
 #
 # Der Prompt liegt in ops/prompts/<agent-name>.md (1:1 aus den heutigen
 # Scheduled-Tasks übernommen — siehe Task #4 / ops/prompts/README.md).
+#
+# VERKETTUNG: Nach einem erfolgreichen Lauf startet der Wrapper automatisch den
+# nächsten Agenten der Nacht-Kette (siehe NEXT_IN_CHAIN). Damit hängt die Kette
+# nicht mehr an geratenen Uhrzeiten — jeder startet, wenn der Vorgänger WIRKLICH
+# fertig ist. Nur der erste (fetch) braucht noch einen cron-Eintrag.
+#   --no-chain  → Einzellauf ohne Nachfolger (für Tests/manuelles Nachholen)
 #
 # Braucht:
 #   - ops/env.runner mit CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-...  (chmod 600)
@@ -19,7 +25,24 @@
 # ============================================================================
 set -euo pipefail
 
-AGENT="${1:?Usage: agent.sh <agent-name>  (z.B. analyst, chefredakteur, veredler, bildregie, verbesserer)}"
+AGENT="${1:?Usage: agent.sh <agent-name> [--no-chain]}"
+CHAIN=1
+[ "${2:-}" = "--no-chain" ] && CHAIN=0
+[ "${NUREINE_NO_CHAIN:-0}" = "1" ] && CHAIN=0
+
+# Die Nacht-Kette. Reihenfolge ist inhaltlich zwingend: der Chefredakteur braucht
+# frische Stories, die Redaktion genehmigte Perlen, der Analyst das Ergebnis.
+# Gemessene Laufzeiten (14 Tage): fetch ~23, chefredakteur ~3, redaktion ~10,
+# analyst ~5 Min → Kette ab 03:10 ist um ~04:20 durch, vor dem Newsletter (04:40).
+# reel-regie und verbesserer hängen NICHT dran (eigene Cron-Zeiten, andere Aufgabe).
+next_in_chain() {
+    case "$1" in
+        fetch)          echo "chefredakteur" ;;
+        chefredakteur)  echo "redaktion" ;;
+        redaktion)      echo "analyst" ;;
+        *)              echo "" ;;
+    esac
+}
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PROMPT_FILE="$ROOT/ops/prompts/$AGENT.md"
@@ -190,4 +213,24 @@ fi
 
 set -e
 echo "[$STAMP] agent=$AGENT exit=$RC" >>"$LOG"
+
+# ── Nachfolger starten ──────────────────────────────────────────────────────
+# Nur nach einem sauberen Lauf. Bei Fehler/Limit bricht die Kette bewusst ab:
+# Ein Chefredakteur ohne frische Stories oder eine Redaktion ohne genehmigte
+# Perlen würde nur leer laufen — und genau das ist der Fehler, den die
+# Verkettung vermeiden soll (siehe Vorfall 2026-08-03).
+NEXT="$(next_in_chain "$AGENT")"
+if [ "$CHAIN" = "1" ] && [ "$RC" = "0" ] && [ -n "$NEXT" ]; then
+    if [ -f "$ROOT/ops/prompts/$NEXT.md" ]; then
+        echo "[$STAMP] agent=$AGENT → startet Nachfolger '$NEXT'" >>"$LOG"
+        # setsid + nohup: der Nachfolger überlebt, wenn dieser Prozess endet.
+        # Er hängt sich selbst wieder an seinen eigenen Log (agent-<name>.log).
+        setsid nohup "$ROOT/ops/run/agent.sh" "$NEXT" >/dev/null 2>&1 < /dev/null &
+    else
+        echo "[$STAMP] agent=$AGENT → Nachfolger '$NEXT' hat keinen Prompt, Kette endet hier" >>"$LOG"
+    fi
+elif [ -n "$NEXT" ] && [ "$CHAIN" = "1" ]; then
+    echo "[$STAMP] agent=$AGENT → Kette gestoppt (exit=$RC), '$NEXT' NICHT gestartet" >>"$LOG"
+fi
+
 exit $RC

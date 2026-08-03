@@ -15,15 +15,23 @@
 # ============================================================================
 SHELL=/bin/bash
 
-# ── NACHT-KETTE (Claude-Agenten, lokale Berlin-Zeit) ────────────────────────
-# 03:10 Fetch — erster nach Kontingent-Reset. RSS + Claude-Analyse (kein API-Key).
+# ── NACHT-KETTE (Claude-Agenten) — VERKETTET, nur EIN Cron-Eintrag ──────────
+# Seit 2026-08-03 startet jeder Agent seinen Nachfolger SELBST (agent.sh, siehe
+# next_in_chain), sobald er wirklich fertig ist:
+#     fetch → chefredakteur → redaktion → analyst
+# Vorher hingen die vier an geratenen Uhrzeiten mit 30-Min-Puffer. Das ging
+# schief, sobald ein Lauf länger brauchte oder nach einem Kontingent-Limit
+# wiederholt wurde: Die Redaktion startete, bevor der Chefredakteur Perlen
+# genehmigt hatte, und lief inhaltsleer durch (Vorfall 2026-08-03).
+#
+# Gemessene Laufzeiten (14 Tage): fetch ~23, chefredakteur ~3, redaktion ~10,
+# analyst ~5 Min → die Kette ist ab 03:10 gegen ~04:20 durch, also sicher vor
+# dem Newsletter (04:40). Bricht ein Glied ab, stoppt die Kette bewusst.
+#
+# Einzeln nachholen (ohne Nachfolger):  ops/run/agent.sh <name> --no-chain
 10 3 * * *   $HOME/NurEine/ops/run/agent.sh fetch
-# 03:40 Chefredakteur — bewertet neu, GENEHMIGT Tages-Perlen. MUSS vor Redaktion.
-40 3 * * *   $HOME/NurEine/ops/run/agent.sh chefredakteur
-# 04:10 Redaktion — veredelt Perlen sprachlich UND bebildert sie (Seedream).
-10 4 * * *   $HOME/NurEine/ops/run/agent.sh redaktion
-# 05:10 Analyst — letzter der Kette: misst Performance, schreibt Verbesserungs-Ideen.
-10 5 * * *   $HOME/NurEine/ops/run/agent.sh analyst
+
+# Nicht Teil der Kette — eigene Aufgabe, eigener Zeitpunkt:
 # 08:00 Reel-Regie — täglich TikTok-Master (Mo/Mi/Fr zusätzlich IG-Reel).
 0 8 * * *    $HOME/NurEine/ops/run/agent.sh reel-regie
 # 10:17 Verbesserer — setzt getrackte Verbesserungs-Ideen im Code um (Branch+Commit).

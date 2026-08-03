@@ -864,10 +864,11 @@ async function main() {
 	const musicArg = arg('music');
 	// uplift-1/2: fal.ai Stable Audio (loudnorm -20 LUFS). Die alten hope/calm-WAVs
 	// waren mit -47dB praktisch stumm (das "Brummen" im ersten geposteten Reel).
-	const music =
-		plan?.music ||
-		(musicArg === true ? ['audio/uplift-1.mp3', 'audio/uplift-2.mp3'][h % 2] : musicArg) ||
-		null;
+	// plan.music wird BEWUSST IGNORIERT (Aaron 2026-08-03): die Regie-Routine kopiert
+	// das Feld aus alten Vorlagen und rendert dann doch mit Musikbett. Musik gibt es nur
+	// noch, wenn sie AUSDRÜCKLICH per --music angefordert wird.
+	if (plan?.music) console.log('WARN plan.music ignoriert — Musik kommt beim Posten aus der TikTok-CML (--music erzwingt sie)');
+	const music = musicArg === true ? ['audio/uplift-1.mp3', 'audio/uplift-2.mp3'][h % 2] : musicArg || null;
 	if (!music) console.log('OK ohne Musikbett (Sound kommt beim Posten aus der TikTok-CML)');
 
 	const props = {

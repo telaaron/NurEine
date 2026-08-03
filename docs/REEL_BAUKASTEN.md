@@ -299,7 +299,10 @@ curl -fsS -X POST "$PUBLIC_BASE_URL/api/cron/social-reel-select" -H "Authorizati
     "caption": "<tiktok-caption: keyword in ersten ~60 zeichen + save/comment-cta>",
     "hashtags": ["#gutenachrichten", "..."]
   },
-  "music": "audio/uplift-1.mp3",           // oder audio/uplift-2.mp3 — NICHT hope-1/calm-1.wav (zu leise)
+  // KEIN "music"-Feld mehr (Aaron 2026-08-01): der Sound kommt beim Posten aus
+  // TikToks Commercial Music Library. Ein Musikbett im Master wuerde sich damit
+  // ueberlagern. Setzt der Plan "music", rendert render.mjs es MIT Musik — genau
+  // das ist am 03.08. passiert, weil dieses Schema hier es noch vorgab.
   "person": "frau",                        // "mann" | "frau" | weglassen (Seed wechselt ab);
                                            // die VO-Stimme folgt der Figur automatisch
   "scenes": [ { "kind": "hook", "text": "...", "punch": "...", "kicker": "GUTE NACHRICHT · KULTUR", "voText": "..." }, ... ]

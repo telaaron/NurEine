@@ -109,6 +109,40 @@ run_claude() {
         --output-format json ) 2>&1
 }
 
+# Verwaiste 'running'-Einträge dieses Agenten schließen.
+#
+# Warum: Bricht der erste Versuch am Kontingent ab, hat der Agent seinen
+# nureine_ai_runs-Eintrag schon auf status='running' gesetzt, kommt aber nicht
+# mehr zum Abschluss-UPDATE. Der Retry startet eine NEUE Claude-Session, die den
+# alten Eintrag nicht kennt — er bliebe als Zombie hängen, bis der Watchdog ihn
+# nach 90 Min auf 'failed' setzt und eine Alarm-Mail auslöst (real passiert
+# 2026-08-03, redaktion id=137).
+#
+# Läuft bewusst über PostgREST statt über Claude: Der Aufräumer muss gerade dann
+# funktionieren, wenn Claude nicht verfügbar ist. Scheitert er, ist das kein
+# Grund den Retry zu verhindern — der Watchdog fängt es weiterhin ab.
+close_orphan_runs() {
+    [ -n "${SUPABASE_URL:-}" ] && [ -n "${SUPABASE_SERVICE_KEY:-}" ] || {
+        echo "[$STAMP] agent=$AGENT (kein Supabase-Zugang — Aufräumen übersprungen)" >>"$LOG"
+        return 0
+    }
+    # Agent-Name in der DB weicht teils vom Wrapper-Namen ab (fetch → fetcher).
+    local db_agent="$AGENT"
+    [ "$AGENT" = "fetch" ] && db_agent="fetcher"
+
+    local url="${SUPABASE_URL%/}/rest/v1/nureine_ai_runs?status=eq.running&agent=eq.${db_agent}"
+    local body='{"status":"superseded","finished_at":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'","error":"vom Retry nach Kontingent-Limit abgeloest (agent.sh)"}'
+
+    local n
+    n="$(curl -fsS -m 20 -X PATCH "$url" \
+            -H "apikey: $SUPABASE_SERVICE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -H "Content-Type: application/json" \
+            -H "Prefer: return=representation" \
+            -d "$body" 2>/dev/null | grep -o '"id"' | wc -l)" || n=0
+    echo "[$STAMP] agent=$AGENT verwaiste running-Einträge geschlossen: ${n:-0}" >>"$LOG"
+}
+
 # ── Lauf mit einem Retry nach Kontingent-Reset ──────────────────────────────
 set +e
 OUT="$(run_claude)"
@@ -135,6 +169,10 @@ elif [ "$LIMIT" = "session" ]; then
     fi
     echo "[$STAMP] agent=$AGENT 5H-LIMIT erreicht — warte $((WAIT/60)) Min bis Reset, dann EIN Retry" >>"$LOG"
     sleep "$WAIT"
+
+    # Erst den halbfertigen Eintrag des abgebrochenen Versuchs schließen, dann neu
+    # starten — sonst bleibt er als Zombie liegen und alarmiert den Watchdog.
+    close_orphan_runs
 
     STAMP2="$(date -u +%Y%m%dT%H%M%SZ)"
     echo "[$STAMP2] agent=$AGENT retry nach Kontingent-Reset" >>"$LOG"

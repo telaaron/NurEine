@@ -29,6 +29,13 @@ import unicodedata
 TOLERATED = {
     "trakom": "trachom",   # korrekte deutsche Aussprache Tra-KOM, Whisper schreibt es phonetisch
     "trakoms": "trachoms",
+    # Whisper KUERZT beim Schreiben ab, obwohl das Wort voll gesprochen wird.
+    # Ohne diese Zuordnung meldet das Gate jedes "Prozent"/"Millionen" als Fehler
+    # (belegt 2026-08-03).
+    "%": "prozent",
+    "mio": "millionen",
+    "mrd": "milliarden",
+    "tsd": "tausend",
 }
 
 FILLER = {"und", "der", "die", "das", "den", "dem", "ein", "eine", "einen", "ist", "sind"}

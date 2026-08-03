@@ -285,7 +285,12 @@ function escapeRegex(s) {
 const EN_BLACKLIST = new Set(['the', 'and', 'of', 'for', 'with', 'health', 'sciences', 'science', 'university', 'journal', 'news', 'network', 'daily', 'report', 'study', 'good', 'world', 'first', 'new', 'clean', 'energy', 'power', 'care', 'brain', 'heart', 'monitor', 'trust', 'foundation', 'institute', 'research', 'optimist', 'restores', 'memory', 'clears', 'model', 'evidence', 'chemical', 'neuroscience', 'global', 'nature', 'medicine', 'medical', 'today', 'future', 'people', 'life', 'water', 'green', 'happy', 'hope', 'children', 'women', 'ocean', 'forest', 'wildlife', 'climate']);
 const EN_PATTERNS = [/[a-z]+ing\b/i, /[a-z]{2}ght\b/i, /^th[a-z]+/i, /[a-z]+ously\b/i, /\bwh[a-z]{2,}/i, /[a-z]ea[a-z]/i, /[a-z]oo[a-z]/i];
 const DE_MARKERS = /[äöüß]|sch|ung$|keit$|heit$|lich$|chen$|ische$|ischen$|tät$|ieren$|iert$/i;
-const DE_OK = new Set(['team', 'teams', 'training', 'internet', 'computer', 'link', 'online', 'live', 'app', 'apps', 'video', 'story', 'update', 'meeting', 'design', 'start', 'test', 'job', 'jobs', 'fair', 'international', 'labor', 'partner', 'sport', 'international']);
+const DE_OK = new Set([
+	// Deutsche Woerter, die der th-/ea-/oo-Mustererkennung sonst zum Opfer fallen.
+	// Belegt 2026-08-03: 'Themen' blockierte einen Render, obwohl sauber deutsch.
+	'thema', 'themen', 'theater', 'theorie', 'theoretisch', 'therapie', 'these', 'thesen',
+	'ideal', 'real', 'reale', 'realen', 'reaktion', 'kreativ', 'ozean', 'europaeer',
+	'team', 'teams', 'training', 'internet', 'computer', 'link', 'online', 'live', 'app', 'apps', 'video', 'story', 'update', 'meeting', 'design', 'start', 'test', 'job', 'jobs', 'fair', 'international', 'labor', 'partner', 'sport', 'international']);
 
 function detectEnglishWords(ttsText) {
 	const suspects = [];
@@ -447,6 +452,13 @@ function synthSegment(text, slug, name) {
 			durFrames: Math.round((words[words.length - 1].end + VO_TAIL) * FPS)
 		};
 	} catch (e) {
+		// Aussprache-/Englisch-Gate sind BEFUNDE, keine technischen Pannen: sie dürfen
+		// nicht als "Szene ohne Stimme" verschluckt werden. Belegt 2026-08-03: bei der
+		// Ganz-Aufnahme ("take") liess ein Gate-Treffer die Funktion still null liefern
+		// -> Rückfall auf Einzel-Calls -> die Stimme variierte hörbar zwischen den Szenen,
+		// obwohl der eigentliche Fehler ein einziges Wort war ("Merseyside").
+		const istBefund = /spricht NICHT, was geplant ist|ENGLISCHE Wörter/.test(e.message);
+		if (istBefund) throw e;
 		console.log(`VO-Segment "${name}" fehlgeschlagen (${e.message}) — Szene ohne Stimme`);
 		return null;
 	}

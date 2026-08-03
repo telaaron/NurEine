@@ -1,0 +1,83 @@
+{
+	"story": {
+		"id": "761eeda1-7f05-45aa-84e1-117ced32eef7",
+		"slug": "fussballtraining-jugend",
+		"category": "gemeinschaft",
+		"image": "story/fussball.jpg",
+		"source": "Positive.News",
+		"impactScore": 68,
+		"shareHook": "82 Prozent weniger Kriminalität — während des Trainings."
+	},
+	"seo": {
+		"keyword": "Jugendkriminalität"
+	},
+	"loop": true,
+	"softCta": "Sowas steht selten in den Nachrichten. Hier jeden Tag eins.",
+	"caption": "Jugendkriminalität und Fußball — das klingt nach zwei Themen, die nichts miteinander zu tun haben. In Merseyside sank die Kriminalität während der Trainingszeiten um 75 bis 82 Prozent. Polizei und Premier League fördern 43 solcher Clubs mit über zwei Millionen Pfund.\n\nQuelle: Positive.News — von uns nachgeprüft.",
+	"hashtags": ["#gutenachrichten", "#jugendarbeit", "#fußball", "#england"],
+	"tiktok": {
+		"caption": "Jugendkriminalität und Fußball — das klingt nach zwei Themen, die nichts miteinander zu tun haben. Die Zahlen sagen etwas anderes: In Merseyside sank die Kriminalität während der Trainingszeiten um bis zu 82 Prozent. Nicht durch mehr Polizei, sondern durch Trainer, die jede Woche da sind.\n\nQuelle: Positive.News — von uns nachgeprüft.",
+		"hashtags": ["#gutenachrichten", "#jugendarbeit", "#fußball", "#england"],
+		"location": "Berlin",
+		"soundKeywords": ["warm uplifting", "human piano", "soft community groove", "calm underscore"]
+	},
+	"scenes": [
+		{
+			"kind": "number",
+			"snap": true,
+			"kicker": "NUR EINE · GEPRÜFT",
+			"value": "82 %",
+			"unit": "weniger",
+			"context": "Jugendkriminalität — während des Trainings",
+			"image": "story/fussball.jpg",
+			"voText": "Jugendkriminalität und Fußball, das klingt nach zwei Themen, die nichts miteinander zu tun haben. 82 Prozent sagen etwas anderes."
+		},
+		{
+			"kind": "hook",
+			"text": "Nicht mehr Polizei. Ein Trainer.",
+			"punch": "Trainer",
+			"kicker": "MERSEYSIDE · ENGLAND",
+			"voText": "Die Lösung war nicht mehr Polizei."
+		},
+		{
+			"kind": "beat",
+			"text": "Kostenloses Training. Feste Bezugsperson.",
+			"image": "story/fussball.jpg",
+			"full": true,
+			"voText": "Sondern kostenloses Training in benachteiligten Vierteln, mit jemandem, der jede Woche da ist."
+		},
+		{
+			"kind": "beat",
+			"text": "Vertrauen statt Kontrolle.",
+			"image": null,
+			"voText": "Bei einem Trainer öffnen sich Jugendliche eher als bei Polizei oder Lehrern."
+		},
+		{
+			"kind": "beat",
+			"text": "43 Clubs. Über 2 Millionen Pfund.",
+			"image": "story/fussball.jpg",
+			"full": true,
+			"voText": "Die Polizei und der englische Profifußball fördern inzwischen 43 solcher Vereine mit über zwei Millionen Pfund."
+		},
+		{
+			"kind": "proof",
+			"source": "Positive.News",
+			"impact": 68,
+			"progress": 1106,
+			"snapshot": {
+				"outlet": "Positive.News",
+				"year": "2026",
+				"title": "Fußballtraining senkt Jugendkriminalität in England",
+				"quote": "Merseyside: 75 bis 82 Prozent weniger während der Trainingszeiten"
+			},
+			"voText": "Geprüft in einer englischen Region mit knapp anderthalb Millionen Einwohnern. Nicht erfunden."
+		},
+		{
+			"kind": "end",
+			"share": "Ein Trainer, der jede Woche da ist. Das reicht.",
+			"cta": "",
+			"engage": true,
+			"voText": "Die nächste gute Nachricht ist schon überprüft, nämlich diese."
+		}
+	]
+}

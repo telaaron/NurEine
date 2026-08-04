@@ -61,6 +61,17 @@ nutzen die vier vorhandenen Samples (`public/audio/fx/`) und variieren Tonhöhe 
 `playbackRate` statt neue Dateien einzuführen — das hält die Marke akustisch konsistent.
 Baustein: `<Sfx at={frame} file="click|ping|settle|whoosh" vol={…} rate={…} />`.
 
+**ZWEI FASSUNGEN pro Reel (seit 2026-08-03).** `--queue` rendert automatisch beide:
+
+| Fassung | Musik | Wohin | Warum |
+|---|---|---|---|
+| Master (`<slug>.mp4`) | **keine** | TikTok (manuell) | Aaron legt beim Posten einen CML-Sound darüber — ein Musikbett wuerde sich damit ueberlagern |
+| IG (`<slug>-ig.mp4`) | **unser Bett** (uplift-1/2) | Instagram (automatisch) | Dort postet die Queue ohne Zutun; niemand kann nachtraeglich Musik waehlen, und ein stummer Hintergrund wirkt wie ein Fehler |
+
+Nur die IG-Fassung geht in `queueReel`, nur der Master in `persistTikTokMeta`
+(= /admin/tiktok). `--no-ig-music` schaltet den zweiten Render ab; laeuft der
+Master ohnehin schon mit `--music`, entfaellt er automatisch.
+
 **Musik: NICHT im Master.** Aarons Entscheidung 2026-08-01 — der Sound kommt beim
 Posten aus TikToks **Commercial Music Library**. Der Master trägt nur Voiceover + Sound
 Design. Gründe:

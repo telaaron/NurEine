@@ -927,8 +927,28 @@ async function main() {
 		if (arg('queue')) {
 			if (!storyId) throw new Error('--queue braucht --story-id');
 			const tags = plan?.hashtags?.length ? plan.hashtags : (arg('hashtags') || '').split(',').map((t) => t.trim()).filter(Boolean);
-			await queueReel(storyId, videoUrl, plan?.caption || arg('caption') || '', tags, plan?.story?.category || arg('category') || 'gemeinschaft', story.igHookType);
-			console.log('OK reel-draft angelegt (status=draft)');
+			// ZWEI FASSUNGEN (Aaron 2026-08-03): Auf TikTok legt Aaron beim Posten einen
+			// Sound aus der Commercial Music Library darüber — der Master bleibt deshalb
+			// musikfrei. Instagram wird dagegen AUTOMATISCH gepostet, dort kann niemand
+			// nachträglich Musik wählen; ein stummer Hintergrund wirkt dort wie ein Fehler.
+			// Also: dieselben Szenen ein zweites Mal rendern, diesmal mit unserem eigenen
+			// Musikbett, und NUR diese Fassung an die IG-Queue geben.
+			let igUrl = videoUrl;
+			if (!music && !arg('no-ig-music')) {
+				const igOut = out.replace(/\.mp4$/, '-ig.mp4');
+				const igMusic = ['audio/uplift-1.mp3', 'audio/uplift-2.mp3'][h % 2];
+				console.log(`IG-Fassung rendern (mit Musikbett ${igMusic}) …`);
+				const igPropsPath = `/tmp/reel-props-${slug}-ig.json`;
+				writeFileSync(igPropsPath, JSON.stringify({ ...props, musicFile: igMusic }));
+				execFileSync('npx', ['remotion', 'render', comp, igOut, `--props=${igPropsPath}`, '--log=error'], {
+					stdio: 'inherit',
+					cwd: fileURLToPath(new URL('.', import.meta.url))
+				});
+				igUrl = await uploadToSupabase(igOut, `${slug}-ig`);
+				console.log(`OK IG-Fassung → ${igUrl}`);
+			}
+			await queueReel(storyId, igUrl, plan?.caption || arg('caption') || '', tags, plan?.story?.category || arg('category') || 'gemeinschaft', story.igHookType);
+			console.log(`OK reel-draft angelegt (status=draft)${igUrl !== videoUrl ? ' — MIT Musik (IG)' : ''}`);
 			// Falls NICHT --tiktok (reiner IG-Lauf), die TikTok-Caption trotzdem mitschreiben.
 			if (!TIKTOK && plan?.tiktok?.caption) {
 				await persistTikTokMeta(storyId, { caption: plan.tiktok.caption, hashtags: plan.tiktok.hashtags || [] });

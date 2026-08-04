@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { base } from '$app/paths';
 	import Icon from '$lib/components/Icon.svelte';
-	import { ArrowDownTrayIcon, CheckIcon, ClipboardIcon, PhotoIcon, SparklesIcon } from 'heroicons-svelte/24/outline';
+	import { ArrowDownTrayIcon, CheckIcon, ClipboardIcon, MusicalNoteIcon, PhotoIcon, SparklesIcon } from 'heroicons-svelte/24/outline';
 
 	let { data } = $props();
 
@@ -102,6 +102,18 @@
 						<div class="mb-2 text-xs flex items-center gap-1.5" style="color: var(--color-ink-soft);">
 							<Icon icon={SparklesIcon} size="1rem" />
 							<span>Keyword im Video: <strong style="color: var(--color-ink);">{card.keyword}</strong></span>
+						</div>
+					{/if}
+
+					<!-- Sound-Vorschlag: steht sichtbar OBEN, nicht im zugeklappten Block —
+					     beim Posten braucht man ihn zusammen mit der Caption (Aaron 2026-08-03). -->
+					{#if card.soundKeywords?.length}
+						<div class="mb-2 text-xs flex items-start gap-1.5" style="color: var(--color-ink-soft);">
+							<Icon icon={MusicalNoteIcon} size="1rem" />
+							<span>
+								Sound suchen in <em>Commercial Sounds</em>:
+								{#each card.soundKeywords as kw, i}<strong style="color: var(--color-amber);">{kw}</strong>{#if i < card.soundKeywords.length - 1} · {/if}{/each}
+							</span>
 						</div>
 					{/if}
 

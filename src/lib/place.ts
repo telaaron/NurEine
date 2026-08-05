@@ -57,25 +57,50 @@ export function placeDetail(s: PlaceLike): string {
 }
 
 /**
+ * Ortsadjektive, die keiner Regel folgen. Deutsche Einwohnerbezeichnungen sind
+ * nicht ableitbar: Essen → Essener, aber Bremen → Bremer; Dresden → Dresdner,
+ * aber Emden → Emder. Jede Heuristik produziert hier irgendwann Unsinn
+ * („ESSER LICHTBLICK"), darum stehen die Ausnahmen ausgeschrieben.
+ * Ergänzen, wenn ein falsch gebeugter Ort auffällt.
+ */
+const IRREGULAR_ADJECTIVES: Record<string, string> = {
+	münchen: 'Münchner',
+	dresden: 'Dresdner',
+	essen: 'Essener',
+	bremen: 'Bremer',
+	emden: 'Emder',
+	zwickau: 'Zwickauer',
+	hannover: 'Hannoveraner',
+	jena: 'Jenaer',
+	gera: 'Geraer',
+	fulda: 'Fuldaer',
+	weimar: 'Weimarer'
+};
+
+/**
  * Kopfzeile der Zeitung: „TELTOWER LICHTBLICK“.
  *
- * Deutsche Ortsadjektive sind unregelmäßig (München → Münchner, Teltow →
- * Teltower, Halle → Hallesche). Ein voller Regelsatz wäre Ratespiel; hier
- * deckt eine kleine Heuristik die häufigen Muster ab, und wo sie unsicher
- * ist, wird die neutrale Form „LICHTBLICK FÜR <ORT>“ benutzt — die ist immer
- * korrekt.
+ * Regelfall ist das angehängte -er (Teltow → Teltower, Berlin → Berliner).
+ * Alles, was sich nicht sicher beugen lässt — mehrteilige Namen, Endung auf
+ * -e, unbekannte Muster — bekommt die neutrale Form „LICHTBLICK FÜR <ORT>“.
+ * Die ist immer korrekt; ein falsch gebeugter Ortsname im Zeitungskopf wäre
+ * das erste, was einem Einheimischen auffällt.
  */
 export function newspaperName(place: string): string {
 	const p = place.trim();
 	if (!p) return 'DEIN LICHTBLICK';
 
+	const irregular = IRREGULAR_ADJECTIVES[p.toLowerCase()];
+	if (irregular) return `${irregular.toUpperCase()} LICHTBLICK`;
+
 	// Mehrteilige Namen ("Bad Belzig", "Frankfurt am Main") nicht beugen.
 	if (/[\s-]/.test(p)) return `LICHTBLICK FÜR ${p.toUpperCase()}`;
 
-	// -en/-er/-en-Endungen: München → Münchner, Bremen → Bremer
-	if (p.endsWith('en')) return `${p.slice(0, -2).toUpperCase()}ER LICHTBLICK`;
-	// Städte auf -e: Halle → Hallenser wäre falsch geraten → neutral bleiben
-	if (p.endsWith('e')) return `LICHTBLICK FÜR ${p.toUpperCase()}`;
+	// Städte auf -e und -en sind zu unregelmäßig für eine Regel (Halle →
+	// Hallesche, Essen → Essener, Bremen → Bremer). Was nicht oben in der
+	// Liste steht, bekommt die neutrale Form.
+	if (/e[ns]?$/i.test(p)) return `LICHTBLICK FÜR ${p.toUpperCase()}`;
+
 	// Der Normalfall: Teltow → Teltower, Berlin → Berliner, Potsdam → Potsdamer
 	if (/[a-zäöüß]$/i.test(p)) return `${p.toUpperCase()}ER LICHTBLICK`;
 

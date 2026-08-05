@@ -13,7 +13,8 @@
 		MapPinIcon,
 		XMarkIcon,
 		ShareIcon,
-		CheckIcon
+		CheckIcon,
+		PhotoIcon
 	} from 'heroicons-svelte/24/outline';
 	import MapLoadingOverlay from '$lib/components/MapLoadingOverlay.svelte';
 	import StoryHeroTile from '$lib/components/StoryHeroTile.svelte';
@@ -196,6 +197,13 @@
 			shareTimer = setTimeout(() => (shareCopied = false), 2000);
 		}).catch(() => {});
 	}
+
+	/** URL der Titelseite als Bild — für WhatsApp-Status und Instagram. */
+	const editionImageUrl = $derived.by(() => {
+		const ort = place.city || place.region;
+		if (!ort || !place.lat) return '';
+		return `${base}/api/edition-card?ort=${encodeURIComponent(ort)}&lat=${place.lat.toFixed(4)}&lng=${place.lng.toFixed(4)}`;
+	});
 
 	// ---- Ortssuche ----
 
@@ -515,6 +523,16 @@
 					<Icon icon={shareCopied ? CheckIcon : ShareIcon} size="0.85rem" />
 					{shareCopied ? 'Link kopiert' : 'Ausgabe teilen'}
 				</button>
+				{#if editionImageUrl}
+					<!-- Die Titelseite als Bild: für WhatsApp-Status und Instagram,
+					     wo ein Link nichts zeigt, ein Bild aber alles. -->
+					<a href={editionImageUrl} target="_blank" rel="noopener"
+						class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium transition-all hover:opacity-80"
+						style="border: 1px solid var(--color-rule); color: var(--color-ink-soft);">
+						<Icon icon={PhotoIcon} size="0.85rem" />
+						Titelseite als Bild
+					</a>
+				{/if}
 				{#if isManualPlace}
 					<button type="button" onclick={backToMe}
 						class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium transition-all hover:opacity-80"

@@ -46,6 +46,10 @@ export function placeDetail(s: PlaceLike): string {
 		ctx = ctx.slice(name.length + 1).trim();
 	}
 	if (ctx.split(',').length > 2) ctx = ctx.split(',')[0].trim();
+	// "Lankwitz" + "Berlin-Lankwitz" -> "Berlin"
+	if (ctx.toLowerCase().endsWith('-' + name.toLowerCase())) {
+		ctx = ctx.slice(0, -(name.length + 1)).trim();
+	}
 
 	if (!ctx || ctx.toLowerCase() === name.toLowerCase()) return '';
 	if (ctx.length > 40) return '';

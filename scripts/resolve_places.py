@@ -290,7 +290,12 @@ def clean_context(raw: Any, name: str) -> str | None:
         # Landes — "Westkap" sagt mehr als "Südafrika".
         context = parts[-2] if len(parts) >= 3 else parts[0]
 
-    if context.casefold() == name.casefold():
+    # "Lankwitz" + "Berlin-Lankwitz" -> "Berlin". Der Kontext soll die
+    # übergeordnete Stadt nennen, nicht den Ortsnamen wiederholen.
+    if context.casefold().endswith("-" + name.casefold()):
+        context = context[: -(len(name) + 1)].strip()
+
+    if not context or context.casefold() == name.casefold():
         return None
     # Ein Kontext, der den Namen bloß umschließt ("Camberwell, Groß-London"
     # -> "Groß-London" ist ok; "Berlin" bei place_name "Berlin" nicht).

@@ -19,6 +19,11 @@ export type SupabaseStory = {
   category: string;
   region: string | null;
   region_code: string | null;
+  // Optional, weil sie erst mit Migration 00048 dazukamen: Fixtures und ältere
+  // Zeilen kennen sie nicht. Fehlend wird wie "kein Ort" behandelt.
+  place_name?: string | null;
+  place_context?: string | null;
+  place_scope?: string | null;
   lat: number | null;
   lng: number | null;
   impact_score: number;
@@ -71,6 +76,11 @@ export type StoryResult = {
   category: string;
   region: string;
   country: string;
+  /** Ortsname passend zur Reichweite der Story. '' = überregional, kein Ort. */
+  placeName: string;
+  /** Einordnung für Ortsfremde ("Berlin-Steglitz"). Optional. */
+  placeContext: string;
+  placeScope: 'neighbourhood' | 'city' | 'region' | 'none';
   coords: [number, number];
   coordsX: number;
   coordsY: number;
@@ -154,6 +164,12 @@ function mapStory(row: SupabaseStory): StoryResult {
     category: row.category,
     region: row.region_code || '',
     country: row.region || '',
+    // Der ECHTE Ort, sofern die Story überhaupt einen hat (siehe
+    // scripts/resolve_places.py). Leerer String heißt: überregional — dann
+    // zeigt die Anzeige bewusst keinen Ort statt einen zu erfinden.
+    placeName: row.place_name || '',
+    placeContext: row.place_context || '',
+    placeScope: (row.place_scope as StoryResult['placeScope']) || 'none',
     coords: [lat, lng] as [number, number],
     coordsX: lat,
     coordsY: lng,
@@ -248,6 +264,7 @@ const LIST_COLUMNS =
 // impact_score+durability — so those source columns must be present.
 const MARKER_COLUMNS =
   'id,title,subtitle,category,region,region_code,lat,lng,' +
+  'place_name,place_context,place_scope,' +
   'impact_score,impact_durability,reading_time_min,image_url,sensitive,' +
   'published_at,created_at';
 
@@ -796,6 +813,9 @@ export type MapMarker = Pick<
   | 'dek'
   | 'category'
   | 'country'
+  | 'placeName'
+  | 'placeContext'
+  | 'placeScope'
   | 'tone'
   | 'hero'
   | 'impactScore'
@@ -815,6 +835,9 @@ function toMarker(s: StoryResult): MapMarker {
     dek: s.dek,
     category: s.category,
     country: s.country,
+    placeName: s.placeName,
+    placeContext: s.placeContext,
+    placeScope: s.placeScope,
     tone: s.tone,
     hero: s.hero,
     impactScore: s.impactScore,

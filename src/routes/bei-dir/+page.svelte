@@ -11,10 +11,14 @@
 		ChevronRightIcon,
 		MagnifyingGlassIcon,
 		MapPinIcon,
-		XMarkIcon
+		XMarkIcon,
+		ShareIcon,
+		CheckIcon
 	} from 'heroicons-svelte/24/outline';
 	import MapLoadingOverlay from '$lib/components/MapLoadingOverlay.svelte';
 	import StoryHeroTile from '$lib/components/StoryHeroTile.svelte';
+	import PaperMasthead from '$lib/components/PaperMasthead.svelte';
+	import PaperStory from '$lib/components/PaperStory.svelte';
 	import { createGlowMarker, highlightGlow } from '$lib/map/glow-marker';
 	import { createUserMarker, createDistanceRings, DISTANCE_RINGS } from '$lib/map/user-marker';
 	import { addBaseTiles, addLabelTiles } from '$lib/map/basemap';
@@ -31,6 +35,7 @@
 		type GeoSource,
 		type PlaceSuggestion
 	} from '$lib/geo';
+	import { newspaperName, hasRealPlace } from '$lib/place';
 
 	// ---- Types ----
 
@@ -134,10 +139,63 @@
 		);
 	}
 
+	/**
+	 * Geteilter Link: /bei-dir?ort=Teltow&lat=…&lng=…
+	 * Hat Vorrang vor der eigenen Ortung — wer den Link öffnet, soll DIE Ausgabe
+	 * sehen, die geteilt wurde, nicht seine eigene. Ohne Koordinaten im Link
+	 * wird der Name über Nominatim aufgelöst.
+	 */
+	async function applySharedPlace(): Promise<boolean> {
+		if (!browser) return false;
+		const q = new URLSearchParams(window.location.search);
+		const ort = q.get('ort')?.trim();
+		if (!ort) return false;
+
+		const lat = Number(q.get('lat')), lng = Number(q.get('lng'));
+		if (Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0)) {
+			const resolved = await reverseGeocode(lat, lng);
+			applyPlace(
+				{ lat, lng, city: resolved.city || ort, region: resolved.region ?? '', countryCode: resolved.countryCode ?? '' },
+				'manual'
+			);
+			return true;
+		}
+		const hits = await searchPlaces(ort);
+		if (hits.length === 0) return false;
+		const p = hits[0];
+		applyPlace({ lat: p.lat, lng: p.lng, city: p.city || ort, region: p.region, countryCode: p.countryCode }, 'manual');
+		return true;
+	}
+
 	let geoStarted = false;
 	$effect(() => {
-		if (browser && !geoStarted) { geoStarted = true; detectLocation(); }
+		if (!browser || geoStarted) return;
+		geoStarted = true;
+		applySharedPlace().then((shared) => { if (!shared) detectLocation(); });
 	});
+
+	// ---- Ausgabe teilen ----
+
+	let shareCopied = $state(false);
+	let shareTimer: ReturnType<typeof setTimeout>;
+
+	function shareEdition(): void {
+		const ort = place.city || place.region;
+		if (!ort) return;
+		// Koordinaten mitgeben: der Empfänger sieht exakt dieselbe Ausgabe, ohne
+		// dass Nominatim den Namen anders auflöst als bei uns.
+		const url = `https://nureine.de/bei-dir?ort=${encodeURIComponent(ort)}&lat=${place.lat.toFixed(4)}&lng=${place.lng.toFixed(4)}`;
+		const title = newspaperName(ort);
+		if (typeof navigator !== 'undefined' && navigator.share) {
+			navigator.share({ title, text: `Gute Nachrichten aus ${ort}`, url }).catch(() => {});
+			return;
+		}
+		navigator.clipboard?.writeText(url).then(() => {
+			shareCopied = true;
+			clearTimeout(shareTimer);
+			shareTimer = setTimeout(() => (shareCopied = false), 2000);
+		}).catch(() => {});
+	}
 
 	// ---- Ortssuche ----
 
@@ -223,7 +281,19 @@
 		cardLimit = CARD_STEP;
 	});
 
-	const shownStories = $derived(visibleStories.slice(0, cardLimit));
+	/**
+	 * Der Aufmacher: die nächstgelegene Meldung, die einen ECHTEN Ort hat —
+	 * eine Titelseite lebt davon, dass oben ein Ort steht, den man kennt.
+	 * Hat keine einen Ort, nimmt sie die nächstgelegene überhaupt.
+	 */
+	const leadStory = $derived(
+		visibleStories.find((s) => hasRealPlace(s)) ?? visibleStories[0] ?? null
+	);
+
+	// Der Aufmacher steht oben groß — in den Spalten darunter wäre er doppelt.
+	const shownStories = $derived(
+		visibleStories.filter((s) => s.slug !== leadStory?.slug).slice(0, cardLimit)
+	);
 	const moreCount = $derived(Math.max(0, visibleStories.length - cardLimit));
 
 	/** Liste in Distanz-Bänder gruppiert — leere Bänder fallen raus. */
@@ -246,6 +316,10 @@
 
 	// ---- Karte ----
 
+	// Karte ist zugeklappt, bis sie gebraucht wird — die Zeitung ist der
+	// Hauptinhalt. Leaflet darf NICHT in einem versteckten (0×0) Container
+	// starten, sonst rechnet fitBounds gegen ein leeres Viewport.
+	let mapOpen = $state(false);
 	let mapContainer = $state<HTMLDivElement | null>(null);
 	let map: any = null;
 	let leaflet: any = null;
@@ -276,11 +350,15 @@
 		labelLayer = null;
 	}
 
-	/** Karte einmal anlegen, sobald ein Standort und der Container da sind. */
+	/**
+	 * Karte anlegen, sobald Standort, Container UND aufgeklappter Zustand da
+	 * sind. Erst beim Aufklappen zu starten spart obendrein die Tile-Requests
+	 * für alle, die die Karte nie öffnen.
+	 */
 	let mapInitStarted = false;
 	$effect(() => {
 		const el = mapContainer;
-		const ready = geoStatus === 'ready' && !!place.lat && !!place.lng;
+		const ready = geoStatus === 'ready' && !!place.lat && !!place.lng && mapOpen;
 		if (!browser || !el || !ready || mapInitStarted) return;
 		mapInitStarted = true;
 
@@ -416,30 +494,27 @@
 			</div>
 		</div>
 	{:else}
-		<div class="flex flex-wrap items-end justify-between gap-4">
-			<div>
-				<p class="eyebrow rise" style="color: var(--color-amber);">
-					{isManualPlace ? 'Ausgewählter Ort' : 'Bei dir'}
-				</p>
-				<h1 class="display mt-2.5 leading-tight text-[1.6rem] sm:text-[2rem] lg:text-[3rem] rise rise-d1" style="color: var(--color-ink); font-weight: 600;">
-					Gutes rund um
-					<span style="color: var(--color-amber);">{place.city || place.region || 'dich'}</span>
-				</h1>
-				{#if closest}
-					<p class="mt-3 max-w-[58ch] text-base leading-relaxed rise rise-d2" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
-						Die n&auml;chste gute Nachricht liegt
-						<strong style="color: var(--color-ink); font-weight: 600;">{formatDistance(closest.distance)}</strong>
-						von dir entfernt.
-					</p>
-				{:else}
-					<p class="mt-3 max-w-[58ch] text-base leading-relaxed rise rise-d2" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
-						Wir sortieren jede Geschichte nach ihrer Entfernung zu dir.
-					</p>
-				{/if}
-			</div>
+		<div class="rise">
+			<PaperMasthead
+				place={place.city || place.region || 'dich'}
+				count={ranked.length}
+				nearestKm={closest?.distance ?? null}
+			/>
+		</div>
 
-			<!-- Ortswechsel -->
+		<div class="flex flex-wrap items-center justify-between gap-3 pt-3">
+			<p class="text-xs" style="color: var(--color-muted); font-family: var(--font-sans);">
+				{isManualPlace ? 'Ausgewählter Ort' : 'Zusammengestellt für deinen Standort'}
+			</p>
+
+			<!-- Ortswechsel + Teilen -->
 			<div class="flex items-center gap-2 rise rise-d2">
+				<button type="button" onclick={shareEdition}
+					class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium transition-all hover:opacity-80"
+					style="border: 1px solid var(--color-rule); color: var(--color-ink-soft);">
+					<Icon icon={shareCopied ? CheckIcon : ShareIcon} size="0.85rem" />
+					{shareCopied ? 'Link kopiert' : 'Ausgabe teilen'}
+				</button>
 				{#if isManualPlace}
 					<button type="button" onclick={backToMe}
 						class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium transition-all hover:opacity-80"
@@ -516,7 +591,7 @@
 {#if geoStatus === 'ready'}
 	<section class="mx-auto max-w-[1240px] px-4 sm:px-6 lg:px-10 pb-8">
 		<!-- Ton-Filter -->
-		<div class="mb-4 flex flex-wrap gap-2">
+		<div class="mb-4 flex flex-wrap items-center gap-2">
 			<button class="chip" class:active={filterTone === null} onclick={() => (filterTone = null)}>Alle</button>
 			{#each Object.entries(toneColors) as [key, color]}
 				<button class="chip" class:active={filterTone === key}
@@ -524,9 +599,17 @@
 					<span class="chip-dot" style="background:{color}"></span>{toneLabels[key] ?? key}
 				</button>
 			{/each}
+
+			<!-- Die Zeitung ist der Hauptinhalt; die Karte ist das Nachschlagewerk
+			     dazu. Darum zugeklappt, bis jemand sie wirklich sehen will. -->
+			<button class="chip ml-auto" class:active={mapOpen}
+				onclick={() => (mapOpen = !mapOpen)} aria-expanded={mapOpen}>
+				<Icon icon={MapPinIcon} size="0.8rem" />
+				{mapOpen ? 'Karte ausblenden' : 'Auf der Karte zeigen'}
+			</button>
 		</div>
 
-		<div class="radar-grid">
+		<div class="radar-grid" class:hidden={!mapOpen}>
 			<!-- Karte -->
 			<div class="map-frame" bind:this={mapContainer}>
 				{#if !mapReady}
@@ -622,70 +705,35 @@
 				</div>
 			</div>
 		{:else}
-			{#each bandedStories as group (group.band.key)}
-				<div class="mb-10 sm:mb-14">
-					<div class="mb-5 flex flex-wrap items-baseline gap-x-3 gap-y-1 pb-3" style="border-bottom: 1px solid var(--color-rule);">
-						<h2 class="display text-[1.15rem] sm:text-[1.35rem]" style="color: var(--color-ink); font-weight: 600;">
-							{group.band.label}
-						</h2>
-						<span class="text-xs" style="color: var(--color-muted);">{group.band.blurb}</span>
-						<span class="tnum ml-auto text-xs" style="color: var(--color-muted);">
-							{group.total} {group.total === 1 ? 'Geschichte' : 'Geschichten'}
-						</span>
+			<!-- AUFMACHER: die nächste Meldung mit echtem Ort. Fällt auf die
+			     nächstgelegene zurück, wenn keine einen Ort hat. -->
+			{#if leadStory}
+				<div class="lead-slot">
+					<div class="ressort">
+						<span class="ressort-label">Aufmacher</span>
+						<span class="ressort-rule"></span>
 					</div>
-
-					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-						{#each group.stories as story (story.slug)}
-							{@const hex = toneColors[story.tone] ?? '#c87340'}
-							{@const hasImg = !!storyImageSrc(story.hero, base, 760)}
-							<a href={base + '/geschichte/' + story.slug}
-								class="group block paper rounded-[6px] overflow-hidden transition-all duration-500 story-card"
-								style="--accent:{hex}; border: 1px solid var(--color-rule);">
-								<div class="relative aspect-[4/3] overflow-hidden" style="background: var(--color-paper);">
-									<StoryHeroTile {story} width={760} />
-									{#if hasImg}
-										<!-- Ohne Bild trägt die Rubrik-Fläche den Kategorienamen schon
-										     selbst — das Badge wäre eine Dopplung. -->
-										<div class="absolute top-3 left-3">
-											<span class="badge px-2.5 py-1 rounded-full backdrop-blur-sm"
-												style="background: color-mix(in srgb, var(--color-paper) 78%, transparent); color: {hex}; border: 1px solid color-mix(in srgb, {hex} 45%, transparent);">
-												{story.category}
-											</span>
-										</div>
-									{/if}
-									<div class="absolute top-3 right-3">
-										<span class="badge px-2.5 py-1 rounded-full backdrop-blur-sm tnum"
-											style="background: color-mix(in srgb, var(--color-ink) 72%, transparent); color: var(--color-on-ink);">
-											{formatDistance(story.distance)}
-										</span>
-									</div>
-								</div>
-								<div class="p-4 sm:p-5 lg:p-6">
-									<div class="flex items-center gap-2 text-xs" style="color: var(--color-faint);">
-										<span>{story.country}</span>
-										<span>&middot;</span>
-										<span>{formatDate(story.publishedAt, 'short')}</span>
-										<span>&middot;</span>
-										<span>{story.readingMinutes} Min.</span>
-									</div>
-									<h3 class="serif mt-3 leading-[1.18] tracking-tight text-[1.2rem] sm:text-[1.28rem] lg:text-[1.35rem]" style="color: var(--color-ink); font-weight: 500;">
-										{story.title}
-									</h3>
-									<p class="card-dek mt-3 leading-relaxed line-clamp-3" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
-										{story.dek}
-									</p>
-									<div class="mt-5 pt-4 flex items-center justify-between text-xs" style="border-top: 1px solid var(--color-rule); color: var(--color-muted);">
-										<span class="flex items-center gap-2">
-											<span class="inline-block w-1.5 h-1.5 rounded-full" style="background: {hex};" aria-hidden="true"></span>
-											Wirkung {story.impactScore}/100
-										</span>
-										<span class="tnum">{story.impactNote}</span>
-									</div>
-								</div>
-							</a>
-						{/each}
-					</div>
+					<PaperStory story={leadStory} variant="lead" />
 				</div>
+			{/if}
+
+			{#each bandedStories as group (group.band.key)}
+				{#if group.stories.length > 0}
+					<section class="band">
+						<div class="ressort">
+							<span class="ressort-label">{group.band.label}</span>
+							<span class="ressort-blurb">{group.band.blurb}</span>
+							<span class="ressort-rule"></span>
+							<span class="tnum ressort-count">{group.total}</span>
+						</div>
+
+						<div class="columns">
+							{#each group.stories as story (story.slug)}
+								<PaperStory {story} />
+							{/each}
+						</div>
+					</section>
+				{/if}
 			{/each}
 
 			{#if moreCount > 0}
@@ -716,6 +764,10 @@
 
 	/* ---- Radar-Layout ---- */
 	.radar-grid { display: grid; gap: 1.25rem; grid-template-columns: 1fr; }
+	/* display:none statt visibility: der Leaflet-Container soll gar nicht erst
+	   Platz belegen, solange die Karte zu ist. Die Init wartet ohnehin auf
+	   mapOpen, es startet also nichts in einem 0×0-Container. */
+	.radar-grid.hidden { display: none; }
 	@media (min-width: 1024px) { .radar-grid { grid-template-columns: 1fr 340px; } }
 
 	.map-frame {
@@ -810,7 +862,44 @@
 	.det-go { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--accent); font-weight: 600; font-size: 0.9rem; }
 	.detail:hover .det-go { gap: 0.55rem; }
 
-	.story-card:hover { border-color: color-mix(in srgb, var(--accent) 55%, transparent) !important; }
+	/* ---- Zeitungssatz ---- */
+
+	/* Aufmacher: über die volle Breite, klar abgesetzt vom Spaltensatz. */
+	.lead-slot { padding-bottom: 1.5rem; margin-bottom: 1.75rem; border-bottom: 3px double var(--color-rule-strong); }
+	@media (min-width: 900px) {
+		/* Der Aufmachertext liest sich in halber Breite besser als über 1240px. */
+		.lead-slot :global(.story.lead .dek) { column-count: 2; column-gap: 2rem; -webkit-line-clamp: unset; }
+	}
+
+	/* Ressortzeile: Label, dünne Linie bis zum Rand, Zähler — wie ein Zeitungsressort. */
+	.ressort { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 0.9rem; }
+	.ressort-label {
+		font-family: var(--font-sans); font-size: 0.68rem; font-weight: 700;
+		letter-spacing: 0.18em; text-transform: uppercase; color: var(--color-ink);
+		white-space: nowrap;
+	}
+	.ressort-blurb { font-family: var(--font-sans); font-size: 0.66rem; color: var(--color-muted); white-space: nowrap; }
+	.ressort-rule { flex: 1; height: 1px; background: var(--color-rule-strong); }
+	.ressort-count { font-family: var(--font-sans); font-size: 0.66rem; color: var(--color-muted); }
+
+	.band { margin-bottom: 2.25rem; }
+
+	/* Der eigentliche Spaltensatz. Spaltenlinie zwischen den Spalten — das ist
+	   das Merkmal, das eine Seite sofort wie Zeitung aussehen lässt. */
+	.columns {
+		column-gap: 2rem;
+		column-rule: 1px solid var(--color-rule);
+		column-count: 1;
+	}
+	@media (min-width: 640px) { .columns { column-count: 2; } }
+	@media (min-width: 1100px) { .columns { column-count: 3; } }
+	/* Meldungen dürfen nicht über den Spaltenumbruch zerrissen werden. */
+	.columns :global(.story) {
+		break-inside: avoid;
+		padding-bottom: 1rem;
+		margin-bottom: 1rem;
+		border-bottom: 1px solid var(--color-rule);
+	}
 
 	/* ---- Karten-Overlays (global, weil Leaflet sie außerhalb der Komponente einhängt) ---- */
 	:global(.user-tooltip) {

@@ -33,3 +33,16 @@ jobs:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           FAL_KEY: ${{ secrets.FAL_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+
+      # Ortsauflösung für die eben geholten Stories — /bei-dir zeigt sonst nur
+      # "Deutschland" statt des echten Schauplatzes. Bewusst KEIN eigener Cron:
+      # läuft im selben Lauf direkt hinter dem Fetch. Limit deckt einen
+      # Fetch-Zyklus locker ab; Nominatim erlaubt ~1 Anfrage/s.
+      # `|| true`: eine fehlgeschlagene Ortsauflösung darf den Fetch nicht
+      # rot färben — die Stories sind da, nur ohne Ortsmarke.
+      - name: Resolve story places
+        run: python scripts/resolve_places.py --limit 60 || true
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}

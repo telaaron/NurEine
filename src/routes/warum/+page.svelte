@@ -91,15 +91,15 @@
 			class="display mx-auto mt-5 leading-[0.98] text-[2.6rem] sm:text-[3.6rem] lg:text-[5rem] max-w-[18ch] rise rise-d1"
 			style="color: var(--color-ink); font-weight: 600;"
 		>
-			Die Welt ist besser, als deine Nachrichten dir sagen.
+			Dein Weltbild ist falsch. Und es macht dich kaputt.
 		</h1>
 		<p
 			class="mx-auto mt-6 sm:mt-8 text-lg sm:text-xl lg:text-2xl leading-[1.5] max-w-[52ch] rise rise-d2"
 			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 		>
-			Wir behaupten nicht, die Welt sei gut. Wir zeigen, <span style="color: var(--color-amber);">wo
-			sie besser wird</span> — täglich eine belegte Geschichte, in zwei Minuten. Kein Feed, kein
-			Algorithmus, kein Sog.
+			Fast alle schätzen die Welt düsterer ein, als sie belegbar ist — das ist gemessen, nicht
+			behauptet. Wir korrigieren es: <span style="color: var(--color-amber);">ein Beleg pro
+			Tag</span>, in zwei Minuten. Kein Feed, kein Algorithmus, kein Sog.
 		</p>
 		<div class="mt-9 sm:mt-11 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 rise rise-d3">
 			<a
@@ -127,8 +127,14 @@
 	<div class="mx-auto max-w-[1000px] px-4 sm:px-6 lg:px-10 py-16 sm:py-24">
 		<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">Das Problem</span>
 		<h2 class="display mt-4 text-2xl sm:text-3xl lg:text-[2.6rem] leading-[1.1] max-w-[20ch]" style="color: var(--color-ink); font-weight: 600;">
-			Schlechte Nachrichten verkaufen sich besser.
-		</h2>
+			Du liegst falsch — und weißt nicht, wie sehr.
+			</h2>
+			<p class="mt-6 text-base sm:text-lg leading-[1.6] max-w-[58ch]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
+				Der Statistiker Hans Rosling stellte zehntausenden Menschen einfache Faktenfragen über die
+				Welt — Armut, Bildung, Gesundheit. Die meisten lagen schlechter als der Zufall: Schimpansen,
+				die zufällig raten, schlugen Nobelpreisträger, Journalisten und Ärzte. Nicht aus Dummheit —
+				weil ihr Bild von der Welt <span style="color: var(--color-amber);">systematisch zu düster</span> ist.
+			</p>
 		<div class="mt-8 grid sm:grid-cols-3 gap-px" style="background: var(--color-rule);">
 			{#each [
 				{ k: '−27 %', l: 'Lebenszufriedenheit bei intensiven Nachrichten-Nutzern (Studienlage)' },

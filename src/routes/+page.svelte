@@ -314,16 +314,20 @@
 		</div>
 		<div class="lg:col-span-8">
 			<p class="serif text-xl sm:text-2xl lg:text-[1.85rem] leading-snug" style="color: var(--color-ink);">
-				Wir behaupten nicht, die Welt sei gut. Wir zeigen, <span style="color: var(--color-amber);">wo
-				sie besser wird</span> — belegt, in zwei Minuten. Kein Feed, kein Algorithmus, kein Sog.
-				Eine Geschichte. Für das Gespräch heute.
+				Dein Weltbild ist nachweislich falsch — <span style="color: var(--color-amber);">und es macht
+				dich kaputt.</span> Fast alle schätzen die Welt düsterer ein, als sie belegbar ist. Wir
+				korrigieren das: ein Beleg pro Tag, in zwei Minuten. Kein Feed, kein Algorithmus, kein Sog.
+			</p>
+			<p class="mt-3 text-sm sm:text-base leading-relaxed" style="color: var(--color-muted);">
+				Das ist keine Schönfärberei. Die Welt ist zugleich schlecht <em>und</em> besser — beides
+				stimmt. Wir zeigen den Teil, den die Schlagzeilen dir verschweigen.
 			</p>
 			<a
-				href={base + '/manifest'}
+				href={base + '/warum'}
 				class="mt-4 sm:mt-6 inline-flex items-center gap-2 text-xs sm:text-sm hover:opacity-70"
 				style="color: var(--color-ink-soft); border-bottom: 1px solid var(--color-rule-strong);"
 			>
-				Vollständiges Manifest lesen <span aria-hidden="true">→</span>
+				Warum dein Kopf dich täuscht <span aria-hidden="true">→</span>
 			</a>
 		</div>
 	</div>

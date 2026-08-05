@@ -356,6 +356,7 @@ export function buildB2CHtml(
         <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid rgba(26,24,21,0.10);margin:0;" /></td></tr>
 
         <tr><td style="padding:22px 40px 30px;">
+          <p class="nur-eine-text-muted" style="margin:0 0 12px;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:13px;color:#6b6359;line-height:1.6;">Dein Weltbild ist d&uuml;sterer als die Welt. Das ist ein Beleg dagegen.</p>
           <p class="nur-eine-text-faint" style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">KI-recherchiert &amp; -geschrieben, Quellen offen, von Menschen verantwortet &mdash; <a href="${BASE_URL}/methodik" target="_blank" class="nur-eine-link" style="color:#c87340;text-decoration:none;border-bottom:1px solid rgba(200,115,64,0.3);">so arbeiten wir</a>.</p>
           <p class="nur-eine-text-faint" style="margin:0 0 8px;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">Du erh&auml;ltst diese E-Mail, weil du den NurEine-Newsletter abonniert hast.</p>
           <p class="nur-eine-text-faint" style="margin:0;font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#9a9087;line-height:1.6;">

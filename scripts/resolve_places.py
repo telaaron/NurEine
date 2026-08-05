@@ -181,8 +181,12 @@ HARTE REGELN
 1. Erfinde NICHTS. Nur Namen aus der Liste oben.
 2. Zu genau ist FALSCH. Eine Meldung über ganz Berlin ist "Berlin", niemals
    "Mitte" — auch wenn die Koordinate in Mitte liegt.
-3. Im Zweifel die gröbere Ebene. Im starken Zweifel "none".
-4. Eine Universitätsstudie ist KEINE Lokalnachricht, nur weil die Uni
+3. Den Stadtteil NUR dann, wenn der Text ihn selbst nennt ODER es klar um
+   eine einzelne Einrichtung/Straße dort geht. Steht im Text nur die Stadt
+   ("in London", "in Berlin"), ist die Antwort die STADT — auch wenn oben ein
+   Stadtteil angeboten wird. Die Koordinate ist kein Beleg für den Stadtteil.
+4. Im Zweifel die gröbere Ebene. Im starken Zweifel "none".
+5. Eine Universitätsstudie ist KEINE Lokalnachricht, nur weil die Uni
    irgendwo steht -> "none".
 
 Antworte NUR mit JSON:
@@ -225,7 +229,9 @@ def ask_llm(story: dict[str, Any], cand: dict[str, str]) -> dict[str, Any] | Non
         return None
 
 
-def validate(result: dict[str, Any], cand: dict[str, str]) -> dict[str, Any]:
+def validate(
+    result: dict[str, Any], cand: dict[str, str], story_text: str = ""
+) -> dict[str, Any]:
     """Modellantwort gegen die Kandidaten prüfen — kein erfundener Ort kommt durch."""
     scope = (result.get("scope") or "none").strip()
     if scope not in {"neighbourhood", "city", "region", "none"}:
@@ -242,10 +248,57 @@ def validate(result: dict[str, Any], cand: dict[str, str]) -> dict[str, Any]:
         print(f"    ! '{name}' nicht in Kandidaten {sorted(allowed)} — verworfen")
         return {"place_scope": "none", "place_name": None, "place_context": None}
 
-    context = (result.get("place_context") or "").strip() or None
-    if context == name:  # Kontext, der nur den Namen wiederholt, hilft niemandem
-        context = None
+    # Stadtteil nur mit Beleg im Text. Sonst entsteht der Fehler, den die
+    # Koordinate nahelegt: "Biber lösen Überschwemmungsproblem in London" lag
+    # zufällig in Millbank und wurde zu "Millbank". Nennt der Text den
+    # Stadtteil nicht, ist die Stadt die richtige Antwort.
+    if scope == "neighbourhood" and name.casefold() not in story_text.casefold():
+        city = (cand.get("city") or "").strip()
+        if city:
+            print(f"    ! Stadtteil '{name}' steht nicht im Text — nutze '{city}'")
+            return {
+                "place_scope": "city",
+                "place_name": city,
+                "place_context": clean_context(cand.get("state"), city),
+            }
+        return {"place_scope": "none", "place_name": None, "place_context": None}
+
+    context = clean_context(result.get("place_context"), name)
     return {"place_scope": scope, "place_name": name, "place_context": context}
+
+
+def clean_context(raw: Any, name: str) -> str | None:
+    """Kontext auf das reduzieren, was in einer Ortszeile stehen darf.
+
+    Das Modell reicht gern die volle Nominatim-Adresskette durch
+    ("Overstrand Ward 10, Overstrand Local Municipality, Overberg District
+    Municipality, Westkap, Südafrika"). Als Einordnung taugt aber nur ein
+    kurzer Zusatz — und einer, der nicht bloß den Ortsnamen wiederholt.
+    """
+    context = (raw or "").strip().strip(",")
+    if not context:
+        return None
+
+    # Adresskette -> nur die gröbste sinnvolle Ebene behalten. Die vorderen
+    # Glieder wiederholen meist den Ort selbst.
+    if context.count(",") >= 1:
+        parts = [p.strip() for p in context.split(",") if p.strip()]
+        parts = [p for p in parts if p.casefold() != name.casefold()]
+        if not parts:
+            return None
+        # Bei langen Ketten das vorletzte Glied (Bundesland/Region) statt des
+        # Landes — "Westkap" sagt mehr als "Südafrika".
+        context = parts[-2] if len(parts) >= 3 else parts[0]
+
+    if context.casefold() == name.casefold():
+        return None
+    # Ein Kontext, der den Namen bloß umschließt ("Camberwell, Groß-London"
+    # -> "Groß-London" ist ok; "Berlin" bei place_name "Berlin" nicht).
+    if name.casefold() in context.casefold() and len(context) <= len(name) + 3:
+        return None
+    if len(context) > 40:
+        return None
+    return context
 
 
 def save(story_id: str, fields: dict[str, Any]) -> bool:
@@ -315,7 +368,11 @@ def main() -> int:
             print(f"[{i}/{len(stories)}] {title}\n    → übersprungen (LLM-Fehler)")
             continue
 
-        fields = validate(raw, cand)
+        # Titel + Text als Beleg für die Stadtteil-Prüfung.
+        evidence = " ".join(
+            str(story.get(k) or "") for k in ("title", "summary", "subtitle")
+        )
+        fields = validate(raw, cand, evidence)
         if not args.dry_run and not save(story["id"], fields):
             stats["fehler"] += 1
             continue

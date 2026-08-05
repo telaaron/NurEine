@@ -35,8 +35,20 @@ export function placeLine(s: PlaceLike): string {
  */
 export function placeDetail(s: PlaceLike): string {
 	if (!hasRealPlace(s)) return '';
-	const ctx = s.placeContext?.trim();
-	if (!ctx || ctx === s.placeName) return '';
+	const name = (s.placeName ?? '').trim();
+	let ctx = (s.placeContext ?? '').trim().replace(/^,|,$/g, '').trim();
+	if (!ctx) return '';
+
+	// Letzte Verteidigungslinie gegen durchgerutschte Adressketten. Der
+	// Resolver räumt das schon auf (scripts/resolve_places.py::clean_context),
+	// aber die Ortszeile darf unter keinen Umständen zur Adresse werden.
+	if (ctx.toLowerCase().startsWith(name.toLowerCase() + ',')) {
+		ctx = ctx.slice(name.length + 1).trim();
+	}
+	if (ctx.split(',').length > 2) ctx = ctx.split(',')[0].trim();
+
+	if (!ctx || ctx.toLowerCase() === name.toLowerCase()) return '';
+	if (ctx.length > 40) return '';
 	return ctx;
 }
 

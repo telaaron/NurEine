@@ -49,6 +49,10 @@ def norm(s: str) -> str:
     # Wort und das Gate schlägt falsch Alarm. Zusammenziehen VOR dem Tokenisieren.
     s = re.sub(r"(?<=[a-zäöüß])-(?=[a-zäöüß])", "", s)
     s = s.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+    # "%" MUSS vor der Interpunktions-Regex zu "prozent" werden, sonst streicht die
+    # Regex das Zeichen ersatzlos und die TOLERATED-Zuordnung unten laeuft nie (belegt
+    # 2026-08-06: "80%" wurde zu "80", das Gate meldete "prozent" faelschlich als fehlend).
+    s = s.replace("%", " prozent ")
     s = unicodedata.normalize("NFKD", s)
     s = "".join(c for c in s if not unicodedata.combining(c))
     s = re.sub(r"[^a-z0-9 ]+", " ", s)

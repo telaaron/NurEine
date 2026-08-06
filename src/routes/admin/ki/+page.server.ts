@@ -86,6 +86,18 @@ export async function load() {
 	const lastByAgent = new Map<string, (typeof runs)[number]>();
 	for (const r of runs) if (!lastByAgent.has(r.agent)) lastByAgent.set(r.agent, r);
 
+	// Hängende Läufe (Verbesserung #39): ein abgestürzter Agent bleibt sonst für
+	// immer auf 'running' stehen — die DB sieht dann nicht leer, sondern
+	// fälschlich beschäftigt aus, und ein stiller Ausfall bleibt unsichtbar.
+	const STALE_AFTER_MIN = 90;
+	const staleRuns = runs
+		.filter((r) => r.status === 'running' && !r.finished_at)
+		.map((r) => ({
+			...r,
+			ageMinutes: Math.round((Date.now() - new Date(r.started_at).getTime()) / 60000)
+		}))
+		.filter((r) => r.ageMinutes > STALE_AFTER_MIN);
+
 	// Improvement-Pipeline nach Status
 	const improvementStats = { proposed: 0, applied: 0, verified: 0, rejected: 0 };
 	let improvedCount = 0;
@@ -97,6 +109,7 @@ export async function load() {
 	return {
 		runs,
 		lastByAgent: Array.from(lastByAgent.values()),
+		staleRuns,
 		improvements,
 		improvementStats,
 		improvedCount,

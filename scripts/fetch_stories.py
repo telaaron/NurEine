@@ -1073,6 +1073,14 @@ impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
     Wirkung auf das Leben von heute. NIEMALS 90+ nur weil peer-reviewed und das Thema groß ist.
   • 1-24: Minimaler Impact, Grenzfall der gerade noch reinkommt.
 
+  ⚠️ WETTER IST KEINE DAUERHAFTE WIRKUNG (Verbesserung #43): Beruht eine positive Entwicklung
+  überwiegend auf einem Wetterereignis (El Niño/La Niña, ungewöhnlich starker Regen, Dürre-Ende
+  durch Regen) statt auf einer politischen/technischen/menschlichen Maßnahme, ist der Effekt NICHT
+  dauerhaft — er kehrt sich beim nächsten Wetterumschwung um. impact_score MAX 52, auch wenn die
+  Zahl selbst beeindruckend klingt (weniger Waldbrände, mehr Regen). Beispiele: „Amazonas-Waldbrände
+  stark zurückgegangen" (Ursache laut Artikel: La Niña) → max 52; „Mexikos Dürre endet durch starken
+  Regen" → max 52. impact_durability muss diese Vergänglichkeit ehrlich niedrig widerspiegeln.
+
   Merksatz: Frag „Wird das Leben von irgendwem morgen messbar besser?" Wenn nein → max 44, egal wie gut belegt.
   impact_reach/durability/evidence fülle separat ehrlich aus — aber der impact_score folgt dem Wirkungs-Maßstab
   oben, NICHT einer Multiplikation der drei.

@@ -186,7 +186,6 @@ SOURCE_CONFIG: dict[str, dict[str, int]] = {
     "Anthropocene Magazine":  {"max_per_run": 6,  "priority": 2},
     "Yale Environment 360":   {"max_per_run": 6,  "priority": 2},
     "Grist":                  {"max_per_run": 6,  "priority": 2},
-    "Spektrum Wissenschaft":  {"max_per_run": 6,  "priority": 2},
     "Perspective Daily":      {"max_per_run": 5,  "priority": 2},
     "Our World in Data":      {"max_per_run": 4,  "priority": 2},
     "ScienceDaily":           {"max_per_run": 5,  "priority": 3},
@@ -205,6 +204,12 @@ SOURCE_CONFIG: dict[str, dict[str, int]] = {
     # heruntergestuft (wird nach den relevanten Quellen verarbeitet) + Durchsatz 5→3,
     # ohne die Quelle abzuschalten (die seltene echte Perle kommt weiter durch).
     "ScienceDaily Tech":      {"max_per_run": 3,  "priority": 3},
+    # improvement #17 (Verbesserer-Agent): Spektrum Wissenschaft war P2/6, lieferte
+    # in der 7-Tage-Sub-55-Analyse aber 17 Sub-55-Stories bei Ø impact 38.4 (min 28)
+    # — Rang 2 hinter ScienceDaily Tech (#12), reine Wissenschafts-Kuriosität ohne
+    # menschliche Resonanz (IG-Kategorie wissenschaft: 0 Likes/0 Kommentare). Gleiches
+    # Muster, gleicher Fix: auf P3 herunterstufen + Durchsatz 6→3, Quelle bleibt aktiv.
+    "Spektrum Wissenschaft":  {"max_per_run": 3,  "priority": 3},
     "The Conversation":       {"max_per_run": 6,  "priority": 2},
     "Medical Xpress":         {"max_per_run": 6,  "priority": 3},
     "STAT News":              {"max_per_run": 5,  "priority": 3},

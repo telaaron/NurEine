@@ -1102,6 +1102,14 @@ impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
     Wirkung auf das Leben von heute. NIEMALS 90+ nur weil peer-reviewed und das Thema groß ist.
   • 1-24: Minimaler Impact, Grenzfall der gerade noch reinkommt.
 
+  ⚠️ AUSSICHT IST NICHT WIRKUNG (harte Obergrenze, Verbesserung #37): Reine Labor-/Zellkultur-/
+  Tiermodell-Ergebnisse OHNE Nachweis am Menschen/in der Praxis, sowie bloß ANGEKÜNDIGTE/GEPLANTE
+  Maßnahmen (noch nicht in Betrieb) sind eine AUSSICHT, keine belegte Wirkung — impact_score MAX 55,
+  egal wie vielversprechend das Ergebnis klingt oder wie groß die potenzielle Zielgruppe ist.
+  Beispiele: ein Wirkstoff nur „im Labor" oder „an Mäusen" getestet; eine neue Zuglinie, die erst
+  „ab 2027 fahren soll". Über 55 geht der Score erst, wenn der Nutzen tatsächlich an Menschen/in
+  der realen Praxis nachgewiesen ist.
+
   Merksatz: Frag „Wird das Leben von irgendwem morgen messbar besser?" Wenn nein → max 44, egal wie gut belegt.
   impact_reach/durability/evidence fülle separat ehrlich aus — aber der impact_score folgt dem Wirkungs-Maßstab
   oben, NICHT einer Multiplikation der drei.

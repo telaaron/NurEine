@@ -587,12 +587,15 @@ async function sendBrevoEmail(toEmail: string, subject: string, html: string): P
 export async function selectApprovedOrBestHero(): Promise<string | null> {
   const today = new Date().toISOString().slice(0, 10);
 
-  // 1) Freigegeben (jeder Kanal zählt — hero/email/instagram führen auf dieselbe Story).
+  // 1) Freigegeben, NUR Kanal "hero" — sonst zieht die Query ohne ORDER BY
+  // undefiniert irgendeine approved Zeile (z.B. "instagram"), wenn an einem Tag
+  // mehrere Kanäle freigegeben sind (Blocker #153, Team-Board 2026-08-04).
   const { data: approved } = await supabaseAdmin
     .from('nureine_curation_queue')
     .select('story_id')
     .eq('for_date', today)
     .eq('status', 'approved')
+    .eq('channel', 'hero')
     .not('story_id', 'is', null)
     .limit(1)
     .maybeSingle();

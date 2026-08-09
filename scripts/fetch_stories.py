@@ -724,6 +724,35 @@ def upload_audio_to_storage(audio_bytes: bytes, filename: str) -> str | None:
     return public_url
 
 
+def generate_audio_via_edge_function(text: str, story_id: Any) -> str | None:
+    """Fallback-TTS via die Supabase Edge Function 'generate-audio' (OpenAI gpt-4o-mini-tts).
+
+    Wird nur aufgerufen, wenn ElevenLabs nicht verfügbar ist (Board-Blocker
+    2026-07-23: Funktion fehlte komplett, NameError beim Fallback).
+    """
+    url = f"{SUPABASE_URL}/functions/v1/generate-audio"
+    headers = {
+        "apikey": SUPABASE_SERVICE_KEY,  # type: ignore[arg-type]
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": "application/json",
+    }
+    try:
+        resp = requests.post(
+            url,
+            headers=headers,
+            json={"text": text, "slug": str(story_id)},
+            timeout=60,
+        )
+        resp.raise_for_status()
+        audio_url = resp.json().get("audio_url")
+        if audio_url:
+            log.info("  Audio via Edge Function generiert: %s", audio_url)
+        return audio_url
+    except (requests.RequestException, ValueError) as exc:
+        log.error("  Edge-Function-TTS-Fallback fehlgeschlagen: %s", exc)
+        return None
+
+
 def source_exists(source_url: str) -> bool:
     """Return True if a story with this source_url already exists in Supabase."""
     params = {"source_url": f"eq.{source_url}", "select": "id", "limit": "1"}

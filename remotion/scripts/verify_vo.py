@@ -53,6 +53,12 @@ def norm(s: str) -> str:
     # Regex das Zeichen ersatzlos und die TOLERATED-Zuordnung unten laeuft nie (belegt
     # 2026-08-06: "80%" wurde zu "80", das Gate meldete "prozent" faelschlich als fehlend).
     s = s.replace("%", " prozent ")
+    # Tausender-Punkt MUSS vor der Interpunktions-Regex verschwinden, sonst wird er zu
+    # einem Leerzeichen und "8.000" zerfaellt in die zwei Tokens "8"/"000" statt EINER
+    # Zahl "8000" -- numeric_key() kann das gesprochene "achttausend" dann nie matchen
+    # (belegt 2026-08-07: "achttausend Arbeitsplaetze" wurde als "achttausend"/"000"
+    # fehlend/erfunden gemeldet, obwohl die Aussprache korrekt war).
+    s = re.sub(r"(?<=\d)\.(?=\d{3}(?:\D|$))", "", s)
     s = unicodedata.normalize("NFKD", s)
     s = "".join(c for c in s if not unicodedata.combining(c))
     s = re.sub(r"[^a-z0-9 ]+", " ", s)

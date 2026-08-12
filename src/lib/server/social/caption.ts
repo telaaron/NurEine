@@ -8,7 +8,11 @@
  * Regeln: kein Emoji-Spam, kein "Folgt uns", kein Ausrufezeichen, max 5 Hashtags.
  */
 
-export type HookType = 'zahl' | 'frage' | 'kontrast';
+// 'zahl' | 'frage' | 'kontrast' sind die ursprüngliche A/B-Achse (pickHookType-
+// Fallback). 'sieg' | 'wow' | 'mensch' | 'charme' kommen aus dem echten
+// ig_hook_type der Rotation (queries.ts::selectInstagramStory) — fehlen sie hier,
+// fällt jeder Case unten auf den 'zahl'/'kontrast'-Default zurück (siehe #7).
+export type HookType = 'zahl' | 'frage' | 'kontrast' | 'sieg' | 'wow' | 'mensch' | 'charme';
 
 /** Story-Felder, die der Generator braucht (Subset von StoryResult). */
 export interface CaptionStoryInput {

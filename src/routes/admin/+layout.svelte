@@ -175,6 +175,12 @@
 	</div>
 {/snippet}
 
+{#if $page.url.pathname.endsWith('/admin/login')}
+	<!-- Login steht VOR der Anmeldung → keine Admin-Chrome (Sidebar/Topbar),
+	     sonst sieht man die Nav, bevor man drin ist, und das Layout verschiebt
+	     die Login-Card. Nur der Seiteninhalt, volle Höhe. -->
+	{@render children()}
+{:else}
 <div class="min-h-screen flex" style="background: var(--color-canvas);">
 	<!-- Sidebar (Desktop) -->
 	<aside class="hidden lg:flex flex-col w-60 shrink-0 border-r sticky top-0 h-screen" style="background: var(--color-paper); border-color: var(--color-rule);">
@@ -206,3 +212,4 @@
 		</main>
 	</div>
 </div>
+{/if}

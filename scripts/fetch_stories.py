@@ -1073,6 +1073,14 @@ impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
     Wirkung auf das Leben von heute. NIEMALS 90+ nur weil peer-reviewed und das Thema groß ist.
   • 1-24: Minimaler Impact, Grenzfall der gerade noch reinkommt.
 
+  ⚠️ ZUSAGE IST NICHT WIRKUNG (Verbesserung #27): Eine Finanzierungszusage, ein unterzeichnetes
+  Abkommen oder eine angekündigte Investitionssumme ist für sich genommen NOCH KEIN Nutzen — der
+  Nutzen entsteht erst, wenn das Geld/die Maßnahme tatsächlich bei konkreten Menschen ankommt.
+  Verwechsle die Größe der Zahl (Millionen Dollar, viele beteiligte Staaten) NICHT mit belegter
+  Wirkung: eine reine Finanzierungs-/Absichtserklärung ohne nachgewiesenen Einzelnutzen bekommt
+  impact_score MAX 55, auch wenn das Thema wichtig klingt. Beispiel: „260 Mio. Dollar für
+  Meeresschutz-Abkommen" (reine Zusage, kein belegtes Ergebnis) → max 55, NICHT 68.
+
   Merksatz: Frag „Wird das Leben von irgendwem morgen messbar besser?" Wenn nein → max 44, egal wie gut belegt.
   impact_reach/durability/evidence fülle separat ehrlich aus — aber der impact_score folgt dem Wirkungs-Maßstab
   oben, NICHT einer Multiplikation der drei.

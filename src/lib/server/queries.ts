@@ -310,13 +310,21 @@ function beschreibeWirkung(score: number, durability: number | null): string {
 // brauchen das nicht.
 const PAGE_SIZE = 1000;
 
-async function fetchAllRows<T>(columns: string): Promise<T[]> {
+// 3-Stufen-Qualitätsmodell Stufe 1 (docs/AI_QUALITY_SYSTEM.md): impact_score < 55
+// darf nie ausgeliefert werden. Das Ingest-Gate in scripts/fetch_stories.py hält das
+// beim Einfügen ein, aber der Chefredakteur kalibriert impact_score danach oft nach
+// unten — ohne Filter an der Auslieferung blieb die Story trotzdem live (Idee #47).
+const PUBLIC_IMPACT_GATE = 55;
+
+async function fetchAllRows<T>(columns: string, gate = false): Promise<T[]> {
   const out: T[] = [];
   for (let from = 0; ; from += PAGE_SIZE) {
-    const { data, error } = await supabaseAdmin
+    let query = supabaseAdmin
       .from('nureine_stories')
       .select(columns)
-      .is('duplicate_of', null) // thematische Dubletten ausblenden
+      .is('duplicate_of', null); // thematische Dubletten ausblenden
+    if (gate) query = query.gte('impact_score', PUBLIC_IMPACT_GATE);
+    const { data, error } = await query
       .order('published_at', { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
 
@@ -331,8 +339,10 @@ async function fetchAllRows<T>(columns: string): Promise<T[]> {
   return out;
 }
 
-export async function getAllStories(): Promise<StoryResult[]> {
-  const rows = await fetchAllRows<SupabaseStory>('*');
+// includeSubGate=true überspringt den PUBLIC_IMPACT_GATE-Filter — nur für
+// Admin-/Redaktions-Ansichten, die auch Stories unter 55 sehen/bearbeiten müssen.
+export async function getAllStories(includeSubGate = false): Promise<StoryResult[]> {
+  const rows = await fetchAllRows<SupabaseStory>('*', !includeSubGate);
   if (rows.length === 0) return fixtureStories(); // DB gesperrt/leer → Beispiel-Stories
   return rows.map(mapStory);
 }
@@ -346,7 +356,8 @@ export async function getAllStories(): Promise<StoryResult[]> {
 export async function getStoryList(): Promise<StoryResult[]> {
   // Paginiert (siehe fetchAllRows) — sonst deckelt PostgREST die Sitemap/Archiv-
   // Liste bei 1000 und alle älteren Stories werden nie gecrawlt.
-  const rows = await fetchAllRows<Partial<SupabaseStory>>(LIST_COLUMNS);
+  // Nur öffentliche Aufrufer (Sitemaps, /warum, Länder-Seiten) — daher gegated.
+  const rows = await fetchAllRows<Partial<SupabaseStory>>(LIST_COLUMNS, true);
   return rows.map(mapListRow);
 }
 
@@ -359,6 +370,7 @@ export async function getRecentStories(limit = 12): Promise<StoryResult[]> {
     .from('nureine_stories')
     .select(LIST_COLUMNS)
     .is('duplicate_of', null) // thematische Dubletten ausblenden
+    .gte('impact_score', PUBLIC_IMPACT_GATE)
     .order('published_at', { ascending: false })
     .limit(limit);
 
@@ -383,6 +395,7 @@ export async function getDailyMainStories(days = 7): Promise<{ day: string; stor
     .select(LIST_COLUMNS)
     .is('duplicate_of', null)
     .not('sensitive', 'is', true)
+    .gte('impact_score', PUBLIC_IMPACT_GATE)
     .gte('published_at', since)
     .order('published_at', { ascending: false })
     .limit(300);

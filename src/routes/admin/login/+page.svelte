@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { base } from '$app/paths';
+	import { startAuthentication } from '@simplewebauthn/browser';
 
 	let username = $state('');
 	let password = $state('');
 	let error = $state('');
 	let loading = $state(false);
+	let passkeyLoading = $state(false);
+	let showPassword = $state(false); // Passwort ist der Rückfall, standardmäßig eingeklappt.
 
 	async function handleSubmit(e: Event) {
 		e.preventDefault();
@@ -29,6 +32,40 @@
 			loading = false;
 		}
 	}
+
+	// Face ID / Touch ID: Challenge holen → Gerät entsperren → verifizieren.
+	async function handlePasskey() {
+		if (passkeyLoading) return;
+		passkeyLoading = true;
+		error = '';
+		try {
+			const begin = await fetch(base + '/api/auth/passkey/auth-begin', { method: 'POST' });
+			if (!begin.ok) throw new Error('begin');
+			const { challengeId, options } = await begin.json();
+
+			const response = await startAuthentication({ optionsJSON: options });
+
+			const finish = await fetch(base + '/api/auth/passkey/auth-finish', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ challengeId, response })
+			});
+			if (finish.ok) {
+				window.location.href = base + '/admin';
+			} else {
+				const data = await finish.json().catch(() => ({}));
+				error = data.error || 'Anmeldung mit Face ID fehlgeschlagen.';
+			}
+		} catch (e) {
+			// Abbruch durch den Nutzer ist kein Fehler, den man anzeigen muss.
+			const name = e instanceof Error ? e.name : '';
+			if (name !== 'NotAllowedError' && name !== 'AbortError') {
+				error = 'Face ID nicht verfügbar. Bitte mit Passwort anmelden.';
+			}
+		} finally {
+			passkeyLoading = false;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -46,39 +83,57 @@
 			<span class="brand-sub">Cockpit</span>
 		</div>
 
-		<form onsubmit={handleSubmit} class="form" autocomplete="on">
-			<label class="field">
-				<span class="label">Benutzername</span>
-				<input
-					type="text"
-					name="username"
-					autocomplete="username"
-					autocapitalize="none"
-					autocorrect="off"
-					spellcheck="false"
-					bind:value={username}
-					required
-				/>
-			</label>
-			<label class="field">
-				<span class="label">Passwort</span>
-				<input
-					type="password"
-					name="password"
-					autocomplete="current-password"
-					bind:value={password}
-					required
-				/>
-			</label>
+		<!-- Hauptweg: Face ID / Touch ID -->
+		<button type="button" class="passkey" onclick={handlePasskey} disabled={passkeyLoading}>
+			<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path d="M4 8V6a2 2 0 0 1 2-2h2" /><path d="M4 16v2a2 2 0 0 0 2 2h2" />
+				<path d="M16 4h2a2 2 0 0 1 2 2v2" /><path d="M16 20h2a2 2 0 0 0 2-2v-2" />
+				<path d="M9 10a3 3 0 0 1 6 0" /><path d="M12 13v2" />
+				<path d="M8.5 16.5a5 5 0 0 0 7 0" />
+			</svg>
+			{passkeyLoading ? 'Warte auf Face ID …' : 'Mit Face ID anmelden'}
+		</button>
 
-			{#if error}
-				<p class="error" role="alert">{error}</p>
-			{/if}
+		{#if error}
+			<p class="error" role="alert">{error}</p>
+		{/if}
 
-			<button type="submit" class="submit" disabled={loading}>
-				{loading ? 'Anmelden …' : 'Anmelden'}
+		<!-- Rückfall: Passwort (eingeklappt, bis man es braucht) -->
+		{#if !showPassword}
+			<button type="button" class="fallback-toggle" onclick={() => (showPassword = true)}>
+				Mit Passwort anmelden
 			</button>
-		</form>
+		{:else}
+			<form onsubmit={handleSubmit} class="form" autocomplete="on">
+				<label class="field">
+					<span class="label">Benutzername</span>
+					<input
+						type="text"
+						name="username"
+						autocomplete="username"
+						autocapitalize="none"
+						autocorrect="off"
+						spellcheck="false"
+						bind:value={username}
+						required
+					/>
+				</label>
+				<label class="field">
+					<span class="label">Passwort</span>
+					<input
+						type="password"
+						name="password"
+						autocomplete="current-password"
+						bind:value={password}
+						required
+					/>
+				</label>
+
+				<button type="submit" class="submit" disabled={loading}>
+					{loading ? 'Anmelden …' : 'Anmelden'}
+				</button>
+			</form>
+		{/if}
 	</div>
 </div>
 
@@ -131,7 +186,44 @@
 		border-color: var(--color-amber);
 		box-shadow: 0 0 0 3px var(--color-amber-soft);
 	}
-	.error { font-size: 0.85rem; color: var(--color-rose); margin: 0; }
+	/* Hauptweg: Face ID — dunkler, primärer Button ganz oben. */
+	.passkey {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.55rem;
+		width: 100%;
+		font-size: 15px;
+		font-weight: 600;
+		font-family: var(--font-sans);
+		padding: 0.85rem;
+		border: none;
+		border-radius: 10px;
+		background: var(--color-ink);
+		color: var(--color-paper);
+		cursor: pointer;
+		transition: opacity 0.15s, transform 0.1s;
+	}
+	.passkey:hover { opacity: 0.9; }
+	.passkey:active { transform: scale(0.99); }
+	.passkey:disabled { opacity: 0.6; cursor: default; }
+
+	/* Rückfall-Link: dezent, textartig. */
+	.fallback-toggle {
+		width: 100%;
+		margin-top: 0.9rem;
+		background: none;
+		border: none;
+		font-family: var(--font-sans);
+		font-size: 0.85rem;
+		color: var(--color-muted);
+		cursor: pointer;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.fallback-toggle:hover { color: var(--color-ink); }
+
+	.error { font-size: 0.85rem; color: var(--color-rose); margin: 0.9rem 0 0; }
 	.submit {
 		margin-top: 0.4rem;
 		width: 100%;

@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual, randomBytes } from 'node:crypto';
 import { env } from '$env/dynamic/private';
+import type { Cookies } from '@sveltejs/kit';
 
 /**
  * Stateless admin session tokens (HMAC-signed). No DB table needed.
@@ -70,6 +71,24 @@ export function verifySessionToken(token: string | undefined | null): boolean {
 
 export const SESSION_COOKIE = COOKIE_NAME;
 export const SESSION_TTL_MS = DEFAULT_TTL_MS;
+
+/**
+ * Setzt das signierte Admin-Session-Cookie. Genau EIN Ort für die Cookie-Flags,
+ * damit Passwort- und Passkey-Login dieselbe Session-Ausstellung teilen.
+ * Gibt false zurück, wenn kein Secret konfiguriert ist (fail closed).
+ */
+export function issueSessionCookie(cookies: Cookies): boolean {
+	const token = createSessionToken();
+	if (!token) return false;
+	cookies.set(COOKIE_NAME, token, {
+		path: '/',
+		httpOnly: true,
+		secure: process.env.NODE_ENV === 'production',
+		sameSite: 'strict',
+		maxAge: Math.floor(DEFAULT_TTL_MS / 1000)
+	});
+	return true;
+}
 
 /**
  * Guard for admin API endpoints. Returns true if the request carries a valid

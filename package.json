@@ -45,6 +45,8 @@
 		"@capacitor/splash-screen": "^8.0.1",
 		"@capacitor/status-bar": "^8.0.2",
 		"@resvg/resvg-js": "^2.6.2",
+		"@simplewebauthn/browser": "^13.3.0",
+		"@simplewebauthn/server": "^13.3.2",
 		"@supabase/supabase-js": "^2.105.3",
 		"@vercel/analytics": "^2.0.1",
 		"heroicons-svelte": "^2.0.2",

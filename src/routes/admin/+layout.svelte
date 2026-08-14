@@ -11,6 +11,7 @@
 		DocumentTextIcon,
 		HeartIcon,
 		InboxIcon,
+		LockClosedIcon,
 		MagnifyingGlassIcon,
 		PaperAirplaneIcon,
 		ShareIcon,
@@ -46,7 +47,8 @@
 		{ href: '/admin/audience', label: 'Audience', icon: 'users', badge: 0 },
 		{ href: '/admin/submissions', label: 'Einsendungen', icon: 'inbox', badge: 0 },
 		{ href: '/admin/audio', label: 'Vorlesen', icon: 'volume', badge: 0 },
-		{ href: '/admin/b2b', label: 'B2B', icon: 'briefcase', badge: 0 }
+		{ href: '/admin/b2b', label: 'B2B', icon: 'briefcase', badge: 0 },
+		{ href: '/admin/sicherheit', label: 'Sicherheit', icon: 'lock', badge: 0 }
 	];
 
 	function isActive(path: string) {
@@ -79,6 +81,8 @@
 		<Icon icon={CurrencyEuroIcon} size="1rem" />
 	{:else if name === 'heart'}
 		<Icon icon={HeartIcon} size="1rem" />
+	{:else if name === 'lock'}
+		<Icon icon={LockClosedIcon} size="1rem" />
 	{/if}
 {/snippet}
 

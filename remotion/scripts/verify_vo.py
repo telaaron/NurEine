@@ -44,6 +44,16 @@ FILLER = {"und", "der", "die", "das", "den", "dem", "ein", "eine", "einen", "ist
 def norm(s: str) -> str:
     """Vergleichsform: klein, ohne Interpunktion, Umlaute aufgelöst, Zahlen als Wort-Rest."""
     s = s.lower().strip()
+    # Whisper schreibt "47%" als ein Token direkt an die Ziffer angehängt — die generische
+    # Interpunktions-Bereinigung unten würde das "%" ersatzlos löschen (nicht durch ein
+    # Leerzeichen ersetzen), bevor TOLERATED es zu "prozent" auflösen kann. Deshalb hier
+    # VOR dem Strip in Textform bringen (belegt 2026-08-15: "47%" != "Siebenundvierzig Prozent").
+    s = s.replace("%", " prozent ")
+    # Deutsche Tausendertrennpunkte ("500.000") sind nie Dezimalpunkte (die nutzen im
+    # Deutschen ein Komma) — als Zifferngruppe zusammenziehen, sonst zerfällt die Zahl in
+    # "500"+"000" und matcht nicht mehr gegen das gesprochene Zahlwort "fünfhunderttausend"
+    # (belegt 2026-08-15).
+    s = re.sub(r"(?<=\d)\.(?=\d{3}(\D|$))", "", s)
     # Sprech-Silben-Bindestriche aus dem Lexikon ("Tra-kom", "Gebär-mutter-hals-krebs")
     # sind eine AUSSPRACHE-Hilfe, kein Wort-Trenner — sonst zählt jede Silbe als eigenes
     # Wort und das Gate schlägt falsch Alarm. Zusammenziehen VOR dem Tokenisieren.

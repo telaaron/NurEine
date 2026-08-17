@@ -1,16 +1,16 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-17T11:30:01Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-17T19:30:01Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 4 weeks, 5 days, 22 hours, 14 minutes |
+| Läuft seit | up 4 weeks, 6 days, 6 hours, 14 minutes |
 | Speicherplatz | 838G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
-| Auslastung | load average: 0,00, 0,00, 0,00 |
+| Auslastung | load average: 0,01, 0,01, 0,00 |
 | Tailscale-Adresse | `100.123.159.38` |
 | Claude Code | 2.1.209 (Claude Code) |
 | cron-Dienst | active (17 Jobs) |
@@ -20,13 +20,13 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `471ab1d chore(state): Zustandsbericht mac-mini-server 2026-08-17T06:48:27Z` |
-| vom | 2026-08-17 08:49:04 +0200 |
+| Aktueller Commit | `6e584d1 chore(state): Zustandsbericht mac-mini-server 2026-08-17T11:30:01Z` |
+| vom | 2026-08-17 13:30:39 +0200 |
 | Hinter origin/main | 0 Commits |
 | Vor origin/main | 0 Commits |
 | Uncommittete Dateien | 0 |
 | Branches nur lokal (ungesichert) | 0 |
-| Letzter Pull | aktuell (471ab1d) |
+| Letzter Pull | aktuell (6e584d1) |
 
 ## Letzte Agenten-Läufe
 

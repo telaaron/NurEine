@@ -1,16 +1,16 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-17T06:45:55Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-17T06:48:27Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 4 weeks, 5 days, 17 hours, 30 minutes |
+| Läuft seit | up 4 weeks, 5 days, 17 hours, 32 minutes |
 | Speicherplatz | 840G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
-| Auslastung | load average: 0,02, 0,05, 0,14 |
+| Auslastung | load average: 0,03, 0,06, 0,13 |
 | Tailscale-Adresse | `100.123.159.38` |
 | Claude Code | 2.1.209 (Claude Code) |
 | cron-Dienst | active (17 Jobs) |
@@ -20,13 +20,13 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `3f63797 test(ops): Fernwartungs-Testmarker (wird gleich wieder entfernt)` |
-| vom | 2026-08-17 08:45:42 +0200 |
+| Aktueller Commit | `5d9eba2 docs(ops): Runbook — Fernzugriff via Tailscale + Fernwartung über GitHub` |
+| vom | 2026-08-17 08:48:11 +0200 |
 | Hinter origin/main | 0 Commits |
 | Vor origin/main | 0 Commits |
 | Uncommittete Dateien | 0 |
 | Branches nur lokal (ungesichert) | 1 |
-| Letzter Pull | aktualisiert e72f5dc → 3f63797 |
+| Letzter Pull | aktualisiert 80d1efa → 5d9eba2 |
 
 ## Letzte Agenten-Läufe
 

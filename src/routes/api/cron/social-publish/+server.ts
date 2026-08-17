@@ -7,7 +7,11 @@ import { json } from '@sveltejs/kit';
 import { CRON_SECRET } from '$env/static/private';
 import { publishDue } from '$lib/server/social/queue';
 
-export const config = { maxDuration: 60 };
+// Team-Board (reel-regie, 2026-08-17): 4x FUNCTION_INVOCATION_TIMEOUT bei 60s —
+// Reel-Container brauchen bei Meta oft länger bis FINISHED als der bisherige
+// Container-Poll (25s) + Publish-Retries + Netzwerk-Overhead in 60s passen.
+// 120s wie bei /api/cron/social-insights, dort erwiesen im selben Vercel-Plan.
+export const config = { maxDuration: 120 };
 
 export async function POST({ request }) {
 	if (!CRON_SECRET) return json({ error: 'Server misconfigured' }, { status: 500 });

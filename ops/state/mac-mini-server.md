@@ -1,32 +1,32 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-17T06:41:29Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-17T06:43:37Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 4 weeks, 5 days, 17 hours, 25 minutes |
+| Läuft seit | up 4 weeks, 5 days, 17 hours, 28 minutes |
 | Speicherplatz | 840G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
-| Auslastung | load average: 0,18, 0,07, 0,18 |
+| Auslastung | load average: 0,06, 0,07, 0,17 |
 | Tailscale-Adresse | `100.123.159.38` |
 | Claude Code | 2.1.209 (Claude Code) |
-| cron-Dienst | active (15 Jobs) |
+| cron-Dienst | active (17 Jobs) |
 
 ## Code-Stand
 
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `1ad82df fix(reel): Ernita (Bäuerin, Elefanten-Story) ins Aussprache-Lexikon` |
-| vom | 2026-08-17 08:40:12 +0200 |
-| Hinter origin/main | 0 Commits |
+| Aktueller Commit | `7af2d8f chore(state): Zustandsbericht mac-mini-server 2026-08-17T06:41:29Z` |
+| vom | 2026-08-17 08:42:06 +0200 |
+| Hinter origin/main | 1 Commits |
 | Vor origin/main | 0 Commits |
-| Uncommittete Dateien | 0 |
+| Uncommittete Dateien | 1 |
 | Branches nur lokal (ungesichert) | 1 |
-| Letzter Pull | aktuell (1ad82df) |
+| Letzter Pull | kein Pull — uncommittete Änderungen im Arbeitsbaum |
 
 ## Letzte Agenten-Läufe
 

@@ -36,6 +36,13 @@ TOLERATED = {
     "mio": "millionen",
     "mrd": "milliarden",
     "tsd": "tausend",
+    # Whisper schreibt gesprochenes "Quadratkilometer" nach einer Zahl als Einheiten-
+    # Abkuerzung statt es auszuschreiben, obwohl die Stimme das Wort voll spricht
+    # (belegt 2026-08-18, "700.000 Quadratkilometer" -> je nach Versuch Whisper "700.000
+    # km²" ODER "700.000 qkm", nicht deterministisch). Nach norm()/NFKD wird "km²" zu "km2"
+    # (Zifferndekomposition des Hochzeichens).
+    "km2": "quadratkilometer",
+    "qkm": "quadratkilometer",
 }
 
 FILLER = {"und", "der", "die", "das", "den", "dem", "ein", "eine", "einen", "ist", "sind"}

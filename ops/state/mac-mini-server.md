@@ -1,13 +1,13 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-19T11:30:01Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-19T19:30:01Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 5 weeks, 22 hours, 14 minutes |
+| Läuft seit | up 5 weeks, 1 day, 6 hours, 14 minutes |
 | Speicherplatz | 838G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
 | Auslastung | load average: 0,00, 0,00, 0,00 |
@@ -20,8 +20,8 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `76bf2d7 chore(state): Zustandsbericht mac-mini-server 2026-08-19T04:30:01Z` |
-| vom | 2026-08-19 06:30:38 +0200 |
+| Aktueller Commit | `84c5fa2 chore(state): Zustandsbericht mac-mini-server 2026-08-19T11:30:01Z` |
+| vom | 2026-08-19 13:30:40 +0200 |
 | Hinter origin/main | 0 Commits |
 | Vor origin/main | 0 Commits |
 | Uncommittete Dateien | 1 |

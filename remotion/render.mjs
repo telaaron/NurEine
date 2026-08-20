@@ -65,7 +65,16 @@ const TTS_RATE = env.REEL_RATE || (TIKTOK ? '+16%' : '+4%');
 // Fachwörter NICHT sicher ('Trachom' -> 'Trakum'/'Track Home'/polnisch klingend), und
 // kein Silbenhack im Lexikon löst das (siehe _regel_fachwoerter). REEL_TTS=edge als
 // Notausgang, falls das ElevenLabs-Kontingent leer ist.
-const TTS_ENGINE = env.REEL_TTS || 'eleven';
+// KONTINGENT-SCHUTZ (Aaron 2026-08-20): ElevenLabs Starter hat 30.000 Zeichen/Monat,
+// ein Reel kostet ~450. Das reicht fuer ~66 Reels — im Juli/August war es nach 13 Tagen
+// leer, weil JEDER Testrender die Premium-Stimme zog (Analyse: 9.815 Zeichen allein fuer
+// die verworfene Stimme "George", dazu 8-11 Renders an einzelnen Entwicklungstagen).
+// Ohne --upload/--queue ist ein Lauf ein TEST → dort automatisch die kostenlose Stimme.
+// Klang und Timing pruefen sich damit genauso; nur der finale Master zahlt.
+// REEL_TTS setzt das explizit ausser Kraft (beide Richtungen).
+const IST_TEST = !arg('upload') && !arg('queue');
+const TTS_ENGINE = env.REEL_TTS || (IST_TEST ? 'edge' : 'eleven');
+if (!env.REEL_TTS && IST_TEST) console.log('Testlauf → edge-tts (spart ElevenLabs-Kontingent; REEL_TTS=eleven erzwingt die Marken-Stimme)');
 
 // ── Extraktion (Fallbacks ohne LLM) ─────────────────────────────────────────
 

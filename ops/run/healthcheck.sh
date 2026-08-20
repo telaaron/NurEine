@@ -87,6 +87,32 @@ else
   [ "$S" = "0" ] && PROBLEME+=("Seit 48h keine neue Story|Der Fetch-Job liefert keinen Nachschub — ohne Stories gibt es auch keine Reels.|tail -40 ~/nureine-logs/agent-fetch.log")
 fi
 
+# ── 3b. ElevenLabs-Kontingent ──────────────────────────────────────────────
+# Warum (Vorfall 2026-08-15): Das Kontingent lief leer, die Pipeline fiel still auf
+# edge-tts zurueck. Folge: andere Stimme, Aussprachefehler, und weil edge langsamer
+# spricht, kuerzte die Regie den Text — aus 30-Sekuendern wurden 19-Sekuender. Der
+# Agent MELDETE das taeglich in seinem Log, aber niemand las es. Jetzt kommt es per Mail,
+# BEVOR die Qualitaet kippt.
+if [ -n "${ELEVENLABS_API_KEY:-}" ]; then
+  EL="$(curl -sS --max-time 25 "https://api.elevenlabs.io/v1/user" \
+        -H "xi-api-key: $ELEVENLABS_API_KEY" 2>/dev/null | python3 -c "
+import json,sys
+try: s=json.load(sys.stdin).get('subscription',{})
+except Exception: print('-1 0'); raise SystemExit
+u,l=s.get('character_count',0),s.get('character_limit',0)
+print(f'{u} {l}')" 2>/dev/null)"
+  set -- $EL
+  U="${1:--1}"; L="${2:-0}"
+  if [ "$U" = "-1" ]; then
+    PROBLEME+=("ElevenLabs nicht abfragbar|Kontingent-Stand unbekannt — moeglicherweise Key ungueltig.|Key in $ROOT/.env pruefen: curl -H \"xi-api-key: \$ELEVENLABS_API_KEY\" https://api.elevenlabs.io/v1/user")
+  elif [ "$L" -gt 0 ]; then
+    REST=$(( L - U )); PROZ=$(( 100 * REST / L ))
+    if [ "$PROZ" -lt 10 ]; then
+      PROBLEME+=("ElevenLabs-Kontingent bei $PROZ % ($REST von $L Zeichen)|Reicht noch fuer ~$(( REST / 450 )) Reels. Ist es leer, faellt die Pipeline auf edge-tts zurueck: andere Stimme, Aussprachefehler, und die Videos werden kuerzer (~20s statt 30s).|Testrenders laufen automatisch mit edge. Bis zum Reset entweder pausieren oder bewusst mit edge weiterproduzieren.")
+    fi
+  fi
+fi
+
 # ── 4. Nacht-Routinen ──────────────────────────────────────────────────────
 for a in fetch chefredakteur reel-regie; do
   L="${NUREINE_LOGDIR:-$HOME/nureine-logs}/agent-${a}.log"

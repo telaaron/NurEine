@@ -1094,8 +1094,10 @@ impact_explainer: EIN deutscher Satz, der die RELEVANZ übersetzt (nicht die Met
 
 share_hook: EIN fertiger Chat-Satz zum WEITERGEBEN (WhatsApp-ready), den man einem Freund schickt. Neugierig,
   menschlich, überraschend — KEINE Schlagzeile, KEINE Werbung, kein Hashtag, kein Link. Max 160 Zeichen.
-  So formuliert, dass der Empfänger sofort mehr wissen will. GUT: „Stell dir vor: Eine Spritze, zweimal im Jahr,
-  und HIV hat kaum noch eine Chance. Genau das wurde gerade zugelassen."
+  So formuliert, dass der Empfänger sofort mehr wissen will. GUT: „Eine Spritze, zweimal im Jahr — und HIV hat
+  kaum noch eine Chance. Genau das wurde gerade zugelassen."
+  ⚠️ KEIN „Stell dir vor..."-Einstieg: direkt mit der Sache einsteigen, nicht mit der Aufforderung
+  (Newsletter-Öffnungsrate 30 Tage: 32,6% mit diesem Einstieg vs. 43,7% ohne, nureine_improvements #61).
   ⚠️ FAKTEN-TREUE (Pflicht): Erfinde NIEMALS Zahlen, Vergleiche oder Steigerungen, die nicht
   wörtlich im Artikel stehen. Vor allem KEINE vagen Vergleiche ohne Bezugsgröße:
   „doppelt so schnell", „so viel wie nie", „schneller als je" sind VERBOTEN, außer der

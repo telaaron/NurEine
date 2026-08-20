@@ -1,13 +1,13 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-20T04:30:01Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-20T11:30:01Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 5 weeks, 1 day, 15 hours, 14 minutes |
+| Läuft seit | up 5 weeks, 1 day, 22 hours, 14 minutes |
 | Speicherplatz | 838G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
 | Auslastung | load average: 0,00, 0,00, 0,00 |
@@ -20,8 +20,8 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `4e06bb2 chore(state): Zustandsbericht mac-mini-server 2026-08-19T19:30:01Z` |
-| vom | 2026-08-19 21:30:46 +0200 |
+| Aktueller Commit | `141e728 chore(state): Zustandsbericht mac-mini-server 2026-08-20T04:30:01Z` |
+| vom | 2026-08-20 06:30:39 +0200 |
 | Hinter origin/main | 0 Commits |
 | Vor origin/main | 0 Commits |
 | Uncommittete Dateien | 1 |
@@ -36,8 +36,8 @@
 | chefredakteur | 20260820T012603Z | ✅ exit=0 |
 | redaktion | 20260819T013353Z | ✅ exit=0 |
 | analyst | 20260819T014417Z | ✅ exit=0 |
-| reel-regie | 20260819T060001Z | ✅ exit=0 |
-| verbesserer | 20260819T081701Z | ✅ exit=0 |
+| reel-regie | 20260820T060001Z | ✅ exit=0 |
+| verbesserer | 20260820T081701Z | ✅ exit=0 |
 
 
 ## Fernwartung

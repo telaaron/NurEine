@@ -1,13 +1,13 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-20T11:30:01Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-20T19:30:01Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 5 weeks, 1 day, 22 hours, 14 minutes |
+| Läuft seit | up 5 weeks, 2 days, 6 hours, 14 minutes |
 | Speicherplatz | 838G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
 | Auslastung | load average: 0,00, 0,00, 0,00 |
@@ -20,13 +20,13 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `141e728 chore(state): Zustandsbericht mac-mini-server 2026-08-20T04:30:01Z` |
-| vom | 2026-08-20 06:30:39 +0200 |
+| Aktueller Commit | `4eda51f fix(reel): veraltete Wortzahl war die Wurzel der 20-Sekunden-Videos` |
+| vom | 2026-08-20 19:52:44 +0200 |
 | Hinter origin/main | 0 Commits |
 | Vor origin/main | 0 Commits |
-| Uncommittete Dateien | 1 |
+| Uncommittete Dateien | 0 |
 | Branches nur lokal (ungesichert) | 0 |
-| Letzter Pull | kein Pull — uncommittete Änderungen im Arbeitsbaum |
+| Letzter Pull | aktuell (4eda51f) |
 
 ## Letzte Agenten-Läufe
 

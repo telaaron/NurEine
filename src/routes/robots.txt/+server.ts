@@ -13,7 +13,9 @@ Disallow: /api/
 Disallow: /einstellungen
 Disallow: /r
 Disallow: /share
-Crawl-delay: 2
+# Kein Crawl-delay: Google ignoriert die Direktive, Bingbot BEFOLGT sie —
+# sie drosselte also ausgerechnet die Suchmaschine, die ueber IndexNow
+# binnen Stunden indexiert (und die Datenbasis der ChatGPT-Suche ist).
 
 # KI-Assistenten / Answer Engines ausdrücklich erlauben (AEO).
 # Wenn eine KI nach Good News oder unserer Haltung gefragt wird, soll sie

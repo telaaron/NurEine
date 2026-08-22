@@ -1,189 +1,112 @@
 <script lang="ts">
 	let { data } = $props();
 
-	// ElevenLabs Free-Tier ≈ 10.000 Zeichen/Monat (gleicher Richtwert wie /admin/audio).
-	const ELEVEN_FREE_LIMIT = 10000;
-	const elevenUsed = $derived(data.elevenChars ?? 0);
-	const elevenPct = $derived(Math.min(100, Math.round((elevenUsed / ELEVEN_FREE_LIMIT) * 100)));
-
-	function money(v: number, currency: string): string {
-		try {
-			return new Intl.NumberFormat('de-DE', { style: 'currency', currency, maximumFractionDigits: 2 }).format(v);
-		} catch {
-			return `${v.toFixed(2)} ${currency}`;
-		}
+	function usd(v: number): string {
+		return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'USD', maximumFractionDigits: v < 10 ? 2 : 0 }).format(v);
 	}
+	const s = $derived(data.summary);
 
-	const num = (v: number) => v.toLocaleString('de-DE');
+	// Dienste nach Gesamtkosten sortiert (größter Posten oben) — das ist der Effizienz-Blick.
+	const ranked = $derived([...data.services].sort((a, b) => b.total - a.total));
+	const maxTotal = $derived(Math.max(1, ...data.services.map((x) => x.total)));
 
-	const falEmpty = $derived(data.fal.configured && data.fal.balance !== null && data.fal.balance <= 0);
-	const deepseekEmpty = $derived(data.deepseek.configured && !data.deepseek.error && !data.deepseek.available);
+	const kindColor: Record<string, string> = {
+		'Abo (fix)': 'var(--color-rose)',
+		'nach Nutzung': 'var(--color-amber)',
+		'Free-Tier': 'var(--color-sage)',
+		'gratis (lokal)': 'var(--color-sky)'
+	};
 </script>
 
 <p class="text-xs uppercase tracking-[0.18em] mb-2" style="color: var(--color-amber); font-family: var(--font-mono);">Cockpit</p>
 <h1 class="display text-3xl" style="color: var(--color-ink); font-weight: 600;">Kosten</h1>
-<p class="mt-2 text-sm" style="color: var(--color-muted);">Guthaben aller Dienste live, Nutzung der letzten 30 Tage und was das ungefähr kostet.</p>
+<p class="mt-2 text-sm" style="color: var(--color-muted);">Wo Geld fließt, wie viel ihr nutzt und was es kostet — seit dem {new Date(data.projectStart).toLocaleDateString('de-DE')} ({data.months} Monate).</p>
 
-<!-- Guthaben-Karten -->
-<div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-	<!-- DeepSeek -->
-	<div class="paper rounded-[10px] p-5" style="border: 1px solid {deepseekEmpty ? 'var(--color-rose)' : 'var(--color-rule)'};">
-		<p class="text-xs uppercase tracking-wider" style="color: var(--color-amber); font-family: var(--font-mono);">DeepSeek · Guthaben</p>
-		{#if !data.deepseek.configured}
-			<p class="mt-3 text-sm" style="color: var(--color-faint);">Key nicht gesetzt.</p>
-		{:else if data.deepseek.error}
-			<p class="mt-3 text-sm" style="color: var(--color-rose);">Nicht abrufbar (API-Fehler).</p>
-		{:else}
-			{#each data.deepseek.balances as b}
-				<p class="mt-2 display text-2xl" style="color: var(--color-ink); font-weight: 600;">{money(b.total, b.currency)}</p>
-				<p class="text-xs mt-0.5" style="color: var(--color-faint);">davon aufgeladen {money(b.toppedUp, b.currency)} · Geschenk {money(b.granted, b.currency)}</p>
-			{:else}
-				<p class="mt-3 text-sm" style="color: var(--color-faint);">Kein Guthaben-Eintrag.</p>
-			{/each}
-			{#if deepseekEmpty}
-				<p class="mt-2 text-xs font-medium" style="color: var(--color-rose);">Guthaben erschöpft — Story-Scoring blockiert.</p>
-			{/if}
-		{/if}
+<!-- Die zwei großen Zahlen -->
+<div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+	<div class="hero-stat">
+		<span class="hs-label">Bisher reingesteckt</span>
+		<span class="hs-val">{usd(s.totalInvested)}</span>
+		<span class="hs-sub">seit Projektstart, alle Posten zusammen</span>
 	</div>
-
-	<!-- fal.ai -->
-	<div class="paper rounded-[10px] p-5" style="border: 1px solid {falEmpty ? 'var(--color-rose)' : 'var(--color-rule)'};">
-		<p class="text-xs uppercase tracking-wider" style="color: var(--color-amber); font-family: var(--font-mono);">fal.ai · Guthaben</p>
-		{#if !data.fal.configured}
-			<p class="mt-3 text-sm" style="color: var(--color-faint);">Key nicht gesetzt.</p>
-		{:else if data.fal.error === 'unauthorized'}
-			<p class="mt-3 text-sm" style="color: var(--color-muted);">Key hat keine Account-Berechtigung — Guthaben nur im <a href="https://fal.ai/dashboard/billing" target="_blank" class="underline">fal-Dashboard</a> sichtbar.</p>
-		{:else if data.fal.error}
-			<p class="mt-3 text-sm" style="color: var(--color-rose);">Nicht abrufbar (API-Fehler).</p>
-		{:else if data.fal.balance !== null}
-			<p class="mt-2 display text-2xl" style="color: var(--color-ink); font-weight: 600;">{money(data.fal.balance, data.fal.currency)}</p>
-			{#if falEmpty}
-				<p class="mt-2 text-xs font-medium" style="color: var(--color-rose);">Guthaben leer — alle Bild-Generierungen blockiert (Backfill + Fetch-Cron).</p>
-			{:else}
-				<p class="text-xs mt-0.5" style="color: var(--color-faint);">reicht für ~{num(Math.floor(data.fal.balance / data.est.falPerImage))} Bilder</p>
-			{/if}
-		{:else}
-			<p class="mt-3 text-sm" style="color: var(--color-faint);">Kein Guthaben-Eintrag.</p>
-		{/if}
-	</div>
-
-	<!-- Brevo -->
-	<div class="paper rounded-[10px] p-5" style="border: 1px solid var(--color-rule);">
-		<p class="text-xs uppercase tracking-wider" style="color: var(--color-amber); font-family: var(--font-mono);">Brevo · Plan</p>
-		{#if !data.brevo.configured}
-			<p class="mt-3 text-sm" style="color: var(--color-faint);">Key nicht gesetzt.</p>
-		{:else if data.brevo.error}
-			<p class="mt-3 text-sm" style="color: var(--color-rose);">Nicht abrufbar (API-Fehler).</p>
-		{:else}
-			{#each data.brevo.plans as p}
-				<p class="mt-2 display text-2xl" style="color: var(--color-ink); font-weight: 600;">{num(p.credits)} <span class="text-sm font-normal" style="color: var(--color-muted);">Credits</span></p>
-				<p class="text-xs mt-0.5" style="color: var(--color-faint);">{p.type} · {p.creditsType}</p>
-			{:else}
-				<p class="mt-3 text-sm" style="color: var(--color-faint);">Kein Plan-Eintrag.</p>
-			{/each}
-		{/if}
+	<div class="hero-stat">
+		<span class="hs-label">Brennrate / Monat</span>
+		<span class="hs-val" style="color: var(--color-amber-deep);">{usd(s.monthlyBurn)}</span>
+		<span class="hs-sub">was der Betrieb aktuell pro Monat kostet</span>
 	</div>
 </div>
 
-<!-- Geschätzte Ausgaben -->
-<div class="mt-6 paper rounded-[10px] p-5" style="border: 1px solid var(--color-rule);">
-	<div class="flex items-baseline justify-between mb-3">
-		<p class="text-xs uppercase tracking-wider" style="color: var(--color-amber); font-family: var(--font-mono);">Geschätzte Ausgaben (30 Tage)</p>
-		<span class="display text-xl" style="color: var(--color-ink); font-weight: 600;">≈ {money(data.est.totalUsd, 'USD')}</span>
-	</div>
-	<div class="flex flex-col divide-y" style="--tw-divide-opacity: 1;">
-		<div class="flex items-center justify-between py-2.5" style="border-color: var(--color-rule);">
-			<div>
-				<p class="text-sm font-medium" style="color: var(--color-ink);">fal.ai — Bilder (FLUX.1 pro)</p>
-				<p class="text-xs" style="color: var(--color-faint);">{num(data.usage30d.images)} Bilder × {money(data.est.falPerImage, 'USD')}</p>
-			</div>
-			<span class="text-sm font-medium" style="color: var(--color-ink);">≈ {money(data.est.falUsd, 'USD')}</span>
-		</div>
-		<div class="flex items-center justify-between py-2.5 border-t" style="border-color: var(--color-rule);">
-			<div>
-				<p class="text-sm font-medium" style="color: var(--color-ink);">DeepSeek — Story-Scoring</p>
-				<p class="text-xs" style="color: var(--color-faint);">{num(data.usage30d.deepseekCalls)} Calls × {money(data.est.deepseekPerCall, 'USD')} (ohne Backfill-Skripte)</p>
-			</div>
-			<span class="text-sm font-medium" style="color: var(--color-ink);">≈ {money(data.est.deepseekUsd, 'USD')}</span>
-		</div>
-		<div class="flex items-center justify-between py-2.5 border-t" style="border-color: var(--color-rule);">
-			<div>
-				<p class="text-sm font-medium" style="color: var(--color-ink);">ElevenLabs — Vorlesen</p>
-				<p class="text-xs" style="color: var(--color-faint);">{num(elevenUsed)} Zeichen · Free-Tier</p>
-			</div>
-			<span class="text-sm font-medium" style="color: var(--color-ink);">0&nbsp;€</span>
-		</div>
-		<div class="flex items-center justify-between py-2.5 border-t" style="border-color: var(--color-rule);">
-			<div>
-				<p class="text-sm font-medium" style="color: var(--color-ink);">Brevo — Newsletter</p>
-				<p class="text-xs" style="color: var(--color-faint);">{num(data.brevo.stats?.requests ?? 0)} Mails versendet · Free-Tier</p>
-			</div>
-			<span class="text-sm font-medium" style="color: var(--color-ink);">0&nbsp;€</span>
-		</div>
-	</div>
-	<p class="mt-3 text-xs" style="color: var(--color-faint);">Schätzwerte aus eigenen Logs × Stückpreis (Stand Juni 2026). Exakte Abrechnung steht im Dashboard des jeweiligen Anbieters.</p>
+<!-- Der eine Effizienz-Satz -->
+<div class="insight">
+	<strong>{s.claudeShare}%</strong> deiner Gesamtausgaben ist das Claude-Abo — ein Fixposten.
+	Alles Variable (Bilder, Audio) zusammen ist der kleinere Teil. Der größte Spar-Hebel liegt
+	also nicht im Betrieb, sondern in der Frage: Läuft das Abo für genug Projekte?
 </div>
 
-<!-- Nutzungs-Details -->
-<div class="mt-6 grid gap-4 lg:grid-cols-2">
-	<!-- DeepSeek-Pipeline -->
-	<div class="paper rounded-[10px] p-5" style="border: 1px solid var(--color-rule);">
-		<p class="text-xs uppercase tracking-wider mb-3" style="color: var(--color-amber); font-family: var(--font-mono);">Pipeline (30 Tage)</p>
-		<div class="grid grid-cols-3 gap-3 text-center">
-			<div>
-				<p class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">{num(data.usage30d.stories)}</p>
-				<p class="text-xs mt-0.5" style="color: var(--color-faint);">Stories neu</p>
+<!-- Dienste, nach Kosten sortiert -->
+<h2 class="section-h">Wo das Geld fließt</h2>
+<div class="services">
+	{#each ranked as svc (svc.key)}
+		<div class="svc">
+			<div class="svc-bar-track"><div class="svc-bar" style="width: {(svc.total / maxTotal) * 100}%; background: {kindColor[svc.kind] || 'var(--color-muted)'}"></div></div>
+			<div class="svc-head">
+				<span class="svc-name">{svc.name}</span>
+				<span class="svc-kind" style="color: {kindColor[svc.kind] || 'var(--color-muted)'}">{svc.kind}</span>
+				<span class="svc-total">{svc.total > 0 ? usd(svc.total) : 'gratis'}</span>
 			</div>
-			<div>
-				<p class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">{num(data.usage30d.accepted)}</p>
-				<p class="text-xs mt-0.5" style="color: var(--color-faint);">KI angenommen</p>
+			<div class="svc-meta">
+				<span class="svc-usage">{svc.usage}</span>
+				{#if svc.monthly > 0}<span class="svc-mo">· {usd(svc.monthly)}/Mon.</span>{/if}
+				{#if svc.live}<span class="svc-live">· {svc.live}</span>{/if}
 			</div>
-			<div>
-				<p class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">{num(data.usage30d.rejectedAi)}</p>
-				<p class="text-xs mt-0.5" style="color: var(--color-faint);">KI abgelehnt</p>
-			</div>
+			<p class="svc-note">{svc.note}</p>
 		</div>
-		<p class="mt-3 text-xs" style="color: var(--color-faint);">{num(data.usage30d.images)} Stories mit Bild erstellt. Jede KI-Entscheidung = 1 DeepSeek-Call.</p>
-	</div>
-
-	<!-- ElevenLabs-Kontingent -->
-	<div class="paper rounded-[10px] p-5" style="border: 1px solid var(--color-rule);">
-		<div class="flex items-baseline justify-between mb-2">
-			<p class="text-xs uppercase tracking-wider" style="color: var(--color-amber); font-family: var(--font-mono);">ElevenLabs (30 Tage)</p>
-			<span class="text-xs" style="color: var(--color-muted);">{num(elevenUsed)} / ~{num(ELEVEN_FREE_LIMIT)} Zeichen</span>
-		</div>
-		{#if data.elevenConfigured && data.elevenChars !== null}
-			<div class="h-3 rounded-full overflow-hidden" style="background: var(--color-rule);">
-				<div class="h-full rounded-full" style="width: {elevenPct}%; background: {elevenPct > 85 ? 'var(--color-rose)' : 'var(--color-amber)'};"></div>
-			</div>
-			<p class="mt-2 text-xs" style="color: var(--color-faint);">{elevenPct}% des Free-Tier-Richtwerts. Details und Test-Vertonung unter <a href="/admin/audio" class="underline">Vorlesen</a>.</p>
-		{:else}
-			<p class="text-sm" style="color: var(--color-faint);">{data.elevenConfigured ? 'Nutzung nicht abrufbar.' : 'Key nicht gesetzt.'}</p>
-		{/if}
-	</div>
+	{/each}
 </div>
 
-<!-- Brevo-Details -->
-{#if data.brevo.stats}
-	<div class="mt-4 paper rounded-[10px] p-5" style="border: 1px solid var(--color-rule);">
-		<p class="text-xs uppercase tracking-wider mb-3" style="color: var(--color-amber); font-family: var(--font-mono);">Newsletter-Versand (30 Tage)</p>
-		<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-			<div>
-				<p class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">{num(data.brevo.stats.requests)}</p>
-				<p class="text-xs mt-0.5" style="color: var(--color-faint);">versendet</p>
-			</div>
-			<div>
-				<p class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">{num(data.brevo.stats.delivered)}</p>
-				<p class="text-xs mt-0.5" style="color: var(--color-faint);">zugestellt</p>
-			</div>
-			<div>
-				<p class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">{num(data.brevo.stats.uniqueOpens)}</p>
-				<p class="text-xs mt-0.5" style="color: var(--color-faint);">geöffnet (unique)</p>
-			</div>
-			<div>
-				<p class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">{num(data.brevo.stats.hardBounces)}</p>
-				<p class="text-xs mt-0.5" style="color: var(--color-faint);">Hard Bounces</p>
-			</div>
-		</div>
-	</div>
-{/if}
+<!-- Stückkosten -->
+<h2 class="section-h">Was eine Einheit kostet</h2>
+<div class="units">
+	<div class="unit"><span class="u-val">{usd(data.unit.perStory)}</span><span class="u-label">eine bebilderte Story</span></div>
+	<div class="unit"><span class="u-val">{usd(data.unit.perImage)}</span><span class="u-label">ein KI-Bild (fal.ai)</span></div>
+	<div class="unit"><span class="u-val">gratis</span><span class="u-label">ein Reel (lokal gerendert)</span></div>
+	<div class="unit"><span class="u-val">gratis</span><span class="u-label">1000 Newsletter-Mails</span></div>
+</div>
+
+<p class="mt-6 text-xs" style="color: var(--color-faint); line-height: 1.6;">
+	Fixkosten (Claude, Domain) sind Aarons Eingabe. Nutzungskosten sind aus der DB gemessen und mit
+	Stückpreis-Schätzwerten (fal ~${data.unit.perImage.toFixed(2)}/Bild) hochgerechnet — die echten
+	Abrechnungen liegen in den Anbieter-Dashboards. Free-Tier-Dienste (Brevo, Supabase, Vercel) kosten
+	0 €, solange die Kontingente reichen; Supabase-Storage ist der einzige reale Engpass.
+</p>
+
+<style>
+	.hero-stat { background: var(--color-surface-ink); color: var(--color-on-ink); border-radius: 14px; padding: 1.4rem 1.6rem; display: flex; flex-direction: column; }
+	.hs-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-on-ink); opacity: 0.6; font-family: var(--font-mono); }
+	.hs-val { font-family: var(--font-display); font-size: 2.6rem; font-weight: 700; line-height: 1.05; margin: 0.4rem 0 0.3rem; }
+	.hs-sub { font-size: 0.8rem; opacity: 0.7; }
+
+	.insight { margin-top: 1rem; background: var(--color-paper); border: 1px solid var(--color-rule); border-left: 3px solid var(--color-amber); border-radius: 0 10px 10px 0; padding: 0.9rem 1.2rem; font-size: 0.9rem; line-height: 1.6; color: var(--color-ink-soft); }
+	.insight strong { color: var(--color-amber-deep); font-family: var(--font-display); }
+
+	.section-h { font-family: var(--font-display); font-size: 1.3rem; font-weight: 600; color: var(--color-ink); margin: 2.2rem 0 1rem; }
+
+	.services { display: flex; flex-direction: column; gap: 0.7rem; }
+	.svc { position: relative; background: var(--color-paper); border: 1px solid var(--color-rule); border-radius: 12px; padding: 0.9rem 1.1rem; overflow: hidden; }
+	.svc-bar-track { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; }
+	.svc-bar { position: absolute; left: 0; top: 0; bottom: 0; opacity: 0.08; }
+	.svc-head { position: relative; display: flex; align-items: baseline; gap: 0.7rem; }
+	.svc-name { font-weight: 600; color: var(--color-ink); }
+	.svc-kind { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-family: var(--font-mono); }
+	.svc-total { margin-left: auto; font-family: var(--font-display); font-weight: 700; color: var(--color-ink); }
+	.svc-meta { position: relative; margin-top: 0.3rem; font-size: 0.82rem; color: var(--color-muted); display: flex; flex-wrap: wrap; gap: 0.3rem; }
+	.svc-live { color: var(--color-sage); }
+	.svc-note { position: relative; margin: 0.5rem 0 0; font-size: 0.82rem; color: var(--color-faint); line-height: 1.5; }
+
+	.units { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.7rem; }
+	.unit { background: var(--color-canvas-soft); border-radius: 10px; padding: 1rem 1.1rem; display: flex; flex-direction: column; }
+	.u-val { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--color-ink); }
+	.u-label { font-size: 0.82rem; color: var(--color-muted); margin-top: 0.2rem; }
+
+	@media (min-width: 640px) { .units { grid-template-columns: repeat(4, 1fr); } }
+</style>

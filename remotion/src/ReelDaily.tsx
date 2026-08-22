@@ -27,6 +27,13 @@ export interface SceneVo {
 	file: string; // unter public/ (z.B. "vo/slug-hook.mp3")
 	words: CaptionWord[];
 	durFrames: number;
+	/**
+	 * Startframe INNERHALB der Audiodatei (Ganz-Aufnahme, seit 2026-08-22).
+	 * Alle Szenen teilen sich dieselbe ungeschnittene Aufnahme und spielen nur ihren
+	 * Abschnitt daraus — vorher wurde pro Szene eine eigene Datei geschnitten, wodurch
+	 * der Atemzug am Segmentrand doppelt zu hören war.
+	 */
+	startFrom?: number;
 }
 
 interface SceneBase {

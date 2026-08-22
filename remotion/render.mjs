@@ -591,6 +591,15 @@ function synthWholeTake(plan, slug) {
 	// Rest-Wörter (Stimme hat am Ende ergänzt) der letzten Szene zuschlagen.
 	if (cursor < spoken.length) counts[counts.length - 1] += spoken.length - cursor;
 
+	// KEIN SCHNITT MEHR (Aaron 2026-08-22): Frueher wurde die Aufnahme in Einzeldateien
+	// zerschnitten. Jeder Schnitt nahm 120 ms Vorlauf mit — und darin steckte der Atemzug
+	// vor dem Satz. Beim naechsten Segment kam derselbe Atmer nochmal, weil er dort am
+	// Ende lag. Gemessen an kinderlungen-neu: Stille am Anfang UND Ende fast jedes Segments.
+	//
+	// Jetzt spielt jede Szene DIESELBE Originaldatei ab, nur mit eigenem Startpunkt
+	// (startFrom). Kein ffmpeg, kein Neu-Kodieren, kein Atmer-Dopplung — die Tonspur ist
+	// exakt das, was ElevenLabs geliefert hat. Das Tempo (REEL_TEMPO) bleibt erhalten,
+	// weil es VOR diesem Schritt auf die ganze Aufnahme angewandt wird.
 	const out = [];
 	let idx = 0;
 	let ci = 0; // Zähler über die Szenen MIT voText — counts[] folgt derselben Reihenfolge.
@@ -600,33 +609,21 @@ function synthWholeTake(plan, slug) {
 		const slice = take.words.slice(idx, idx + n);
 		idx += n;
 		if (!slice.length) { out.push(null); continue; }
-		// Schnittfenster: vom ersten Wort bis kurz hinter das letzte (VO_TAIL wie sonst).
-		// LEAD: 120 ms Vorlauf, sonst frisst der Schnitt den Anlaut des ersten Wortes
-		// („Welthunger" wurde zu „Elthunger", belegt 2026-07-31). Die Wort-Timings
-		// markieren den Vokal-Einsatz, nicht den Konsonanten davor.
-		const LEAD = 0.12;
-		const startSec = Math.max(0, slice[0].start / FPS - LEAD);
-		const endSec = slice[slice.length - 1].end / FPS + VO_TAIL;
-		const file = `vo/${slug}-cut${i}.mp3`;
-		try {
-			// NICHT -c copy: MP3-Frames sind ~26 ms lang, ein Kopier-Schnitt rastet auf die
-			// nächste Frame-Grenze und schneidet damit erneut in den Anlaut. Neu kodieren.
-			execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', `${dir}${slug}-take.mp3`,
-				'-ss', String(startSec), '-to', String(endSec), '-c:a', 'libmp3lame', '-q:a', '2',
-				`${dir}${slug}-cut${i}.mp3`], { timeout: 60000 });
-		} catch {
-			return null; // Schnitt fehlgeschlagen → sauberer Rückfall
-		}
-		// Timings relativ zum SCHNITT-Anfang neu setzen — inklusive LEAD, sonst laufen
-		// die Karaoke-Captions um den Vorlauf voraus.
-		const off = Math.round(startSec * FPS);
+		// Die Szene beginnt dort, wo ihr erstes Wort anfaengt — minus einem kleinen
+		// Vorlauf, damit der Anlaut nicht abgeschnitten klingt. Die Szene ENDET dort, wo
+		// die naechste beginnt: kein Nachlauf, keine doppelte Pause.
+		const LEAD = 3; // Frames (~100 ms)
+		const from = Math.max(0, slice[0].start - LEAD);
+		const naechste = take.words[idx];
+		const bis = naechste ? naechste.start - LEAD : slice[slice.length - 1].end + Math.round(VO_TAIL * FPS);
 		out.push({
-			file,
-			words: slice.map((w) => ({ ...w, start: w.start - off, end: w.end - off })),
-			durFrames: Math.round((endSec - startSec) * FPS)
+			file: take.file,          // IMMER dieselbe Datei — die ungeschnittene Aufnahme
+			startFrom: from,          // Remotion spielt sie ab diesem Frame
+			words: slice.map((w) => ({ ...w, start: w.start - from, end: w.end - from })),
+			durFrames: Math.max(1, bis - from)
 		});
 	}
-	console.log(`OK ganz-aufnahme: 1 Call, ${out.filter(Boolean).length} Szenen geschnitten (gleichmäßige Stimme)`);
+	console.log(`OK ganz-aufnahme: 1 Call, ${out.filter(Boolean).length} Szenen — Originalton ungeschnitten`);
 	return out;
 }
 

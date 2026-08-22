@@ -146,7 +146,7 @@ const SceneVoice: React.FC<{ vo: SceneVo | null | undefined; dark?: boolean; cap
 	const pop = current ? interpolate(frame, [current[0].start, current[0].start + 4], [0.82, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' }) : 1;
 	return (
 		<>
-			<Audio src={staticFile(vo.file)} volume={1} />
+			<Audio src={staticFile(vo.file)} volume={1} startFrom={vo.startFrom ?? undefined} />
 			{captions && current ? (
 				<div style={{ position: 'absolute', left: align === 'left' ? M : 60, right: align === 'left' ? 380 : 60, bottom: SAFE_BOTTOM + 70 + raise, display: 'flex', justifyContent: align === 'left' ? 'flex-start' : 'center', zIndex: 20, transform: `scale(${pop})`, transformOrigin: align === 'left' ? 'left bottom' : 'center bottom' }}>
 					<div style={{ background: dark ? 'rgba(244,239,230,0.96)' : 'rgba(22,20,15,0.9)', borderRadius: 18, padding: '16px 30px', maxWidth: 940, boxShadow: '0 10px 30px rgba(0,0,0,0.35)' }}>

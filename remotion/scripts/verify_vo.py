@@ -36,6 +36,13 @@ TOLERATED = {
     "mio": "millionen",
     "mrd": "milliarden",
     "tsd": "tausend",
+    # Whisper schreibt gesprochenes "Quadratkilometer" nach einer Zahl als Einheiten-
+    # Abkuerzung statt es auszuschreiben, obwohl die Stimme das Wort voll spricht
+    # (belegt 2026-08-18, "700.000 Quadratkilometer" -> je nach Versuch Whisper "700.000
+    # km²" ODER "700.000 qkm", nicht deterministisch). Nach norm()/NFKD wird "km²" zu "km2"
+    # (Zifferndekomposition des Hochzeichens).
+    "km2": "quadratkilometer",
+    "qkm": "quadratkilometer",
 }
 
 FILLER = {"und", "der", "die", "das", "den", "dem", "ein", "eine", "einen", "ist", "sind"}
@@ -44,11 +51,31 @@ FILLER = {"und", "der", "die", "das", "den", "dem", "ein", "eine", "einen", "ist
 def norm(s: str) -> str:
     """Vergleichsform: klein, ohne Interpunktion, Umlaute aufgelöst, Zahlen als Wort-Rest."""
     s = s.lower().strip()
+    # Whisper schreibt "47%" als ein Token direkt an die Ziffer angehängt — die generische
+    # Interpunktions-Bereinigung unten würde das "%" ersatzlos löschen (nicht durch ein
+    # Leerzeichen ersetzen), bevor TOLERATED es zu "prozent" auflösen kann. Deshalb hier
+    # VOR dem Strip in Textform bringen (belegt 2026-08-15: "47%" != "Siebenundvierzig Prozent").
+    s = s.replace("%", " prozent ")
+    # Deutsche Tausendertrennpunkte ("500.000") sind nie Dezimalpunkte (die nutzen im
+    # Deutschen ein Komma) — als Zifferngruppe zusammenziehen, sonst zerfällt die Zahl in
+    # "500"+"000" und matcht nicht mehr gegen das gesprochene Zahlwort "fünfhunderttausend"
+    # (belegt 2026-08-15).
+    s = re.sub(r"(?<=\d)\.(?=\d{3}(\D|$))", "", s)
     # Sprech-Silben-Bindestriche aus dem Lexikon ("Tra-kom", "Gebär-mutter-hals-krebs")
     # sind eine AUSSPRACHE-Hilfe, kein Wort-Trenner — sonst zählt jede Silbe als eigenes
     # Wort und das Gate schlägt falsch Alarm. Zusammenziehen VOR dem Tokenisieren.
     s = re.sub(r"(?<=[a-zäöüß])-(?=[a-zäöüß])", "", s)
     s = s.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
+    # "%" MUSS vor der Interpunktions-Regex zu "prozent" werden, sonst streicht die
+    # Regex das Zeichen ersatzlos und die TOLERATED-Zuordnung unten laeuft nie (belegt
+    # 2026-08-06: "80%" wurde zu "80", das Gate meldete "prozent" faelschlich als fehlend).
+    s = s.replace("%", " prozent ")
+    # Tausender-Punkt MUSS vor der Interpunktions-Regex verschwinden, sonst wird er zu
+    # einem Leerzeichen und "8.000" zerfaellt in die zwei Tokens "8"/"000" statt EINER
+    # Zahl "8000" -- numeric_key() kann das gesprochene "achttausend" dann nie matchen
+    # (belegt 2026-08-07: "achttausend Arbeitsplaetze" wurde als "achttausend"/"000"
+    # fehlend/erfunden gemeldet, obwohl die Aussprache korrekt war).
+    s = re.sub(r"(?<=\d)\.(?=\d{3}(?:\D|$))", "", s)
     s = unicodedata.normalize("NFKD", s)
     s = "".join(c for c in s if not unicodedata.combining(c))
     s = re.sub(r"[^a-z0-9 ]+", " ", s)

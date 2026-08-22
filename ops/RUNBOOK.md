@@ -14,26 +14,80 @@ Extra-Kosten)** per `claude -p`, gestartet von System-`cron`.
 
 | | |
 |---|---|
-| **Adresse** | `192.168.178.3` (im Heimnetz; Hostname `mac-mini-server`) |
+| **Zuhause** | `192.168.178.3` (Hostname `mac-mini-server`) |
+| **Von überall** | `100.123.159.38` (Tailscale — funktioniert aus jedem Netz) |
 | **Benutzer** | `aaron` |
-| **Login** | `ssh aaron@192.168.178.3` — passwortlos per SSH-Key vom MacBook |
+| **Login** | passwortlos per SSH-Key vom MacBook |
 | **sudo** | passwortlos (`/etc/sudoers.d/aaron-nopasswd`) |
 | **Projekt** | `/home/aaron/NurEine` (Git-Klon von `github.com/telaaron/NurEine`) |
 
 ```bash
-# Vom MacBook aus:
+# Von überall (Tailscale — auch aus dem Café, vom Handy-Hotspot):
+ssh aaron@100.123.159.38
+
+# Zuhause im WLAN:
 ssh aaron@192.168.178.3
 
 # Einzelbefehl ohne Login-Shell:
-ssh aaron@192.168.178.3 'cd ~/NurEine && git log -1 --oneline'
+ssh aaron@100.123.159.38 'cd ~/NurEine && git log -1 --oneline'
 ```
 
-**IP hat sich geändert?** Am Router (Fritzbox) nach `mac-mini-server` suchen.
-Vorbeugen: DHCP-Reservierung setzen. Notfalls Monitor anschließen → `hostname -I`.
+**Voraussetzung für den Fernzugriff:** Tailscale muss auf dem Gerät laufen, von
+dem aus du zugreifst (MacBook: `brew install --cask tailscale-app`, dann App
+öffnen und mit demselben Konto anmelden wie der Mini). Auf dem Handy gibt es die
+Tailscale-App im Store.
+
+**IP hat sich geändert?** Die Tailscale-Adresse `100.123.159.38` bleibt konstant,
+egal wo der Mini steht. Nur die Heimnetz-IP kann wechseln — dann am Router nach
+`mac-mini-server` suchen.
 
 **Mini reagiert nicht?** Ping testen (`ping 192.168.178.3`). Der Ruhezustand ist
 maskiert (sleep/suspend/hibernate → `/dev/null`), der Mini schläft also nie ein.
 Hilft nichts: Stromkabel ziehen/stecken — cron startet automatisch wieder mit.
+
+---
+
+## 1b. Fernwartung — sehen und updaten, ohne im selben WLAN zu sein
+
+Drei Wege, je nachdem was du brauchst:
+
+### 👀 Nur nachsehen, was auf dem Mini läuft — ohne SSH, ohne alles
+
+**[`ops/state/mac-mini-server.md`](state/mac-mini-server.md)** auf GitHub öffnen.
+Der Mini schreibt dort **3× täglich** (06:30/13:30/21:30) seinen Zustand hinein:
+System, Speicher, Code-Stand, die letzten Läufe jedes Agenten. Im Browser lesbar,
+auch vom Handy.
+
+### 🔄 Code-Update auf den Mini bringen
+
+```bash
+# 1. Änderung nach main pushen (von wo auch immer)
+git push origin main
+
+# 2a. Warten — der Mini zieht es beim nächsten selfupdate (max. ~8 h später)
+# 2b. Oder sofort auslösen:
+ssh aaron@100.123.159.38 'cd ~/NurEine && ops/run/selfupdate.sh'
+```
+
+`selfupdate.sh` zieht **nur**, wenn der Mini auf `main` steht und der Arbeitsbaum
+sauber ist — laufende Verbesserer-Arbeit auf Feature-Branches wird nie überfahren.
+Steht etwas im Weg, schreibt es das in den Bericht statt es zu erzwingen.
+
+### 🔧 Direkt eingreifen
+
+```bash
+ssh aaron@100.123.159.38          # volle Shell, von überall
+```
+
+### Wichtig: der Mini kann jetzt pushen
+
+Er hat einen **Deploy-Key mit Schreibrecht** (`~/.ssh/nureine_deploy`, in GitHub
+unter Repo → Settings → Deploy keys). Damit sichert der Verbesserer-Agent seine
+Arbeit selbst — vorher lagen **59 Commits auf 19 Branches** nur auf der Mini-SSD
+und wären bei einem Plattenschaden verloren gewesen (aufgeräumt 2026-08-17).
+
+> **Deploy-Key statt persönlichem Token:** Er gilt nur für dieses eine Repo und
+> läuft nie ab. Ein kompromittierter Mini gefährdet damit nichts anderes.
 
 ---
 

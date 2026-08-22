@@ -239,9 +239,12 @@ Dramaturgie-Regeln (Kurzform von Rezept §C):
    Story-Ort (lat/lng stehen in `nureine_stories`), Ziel-Land in Kategorie-Farbe,
    Puls-Marker + Orts-Chip. Ideal als Wer/Wo-Beat, wenn der ORT die Story trägt oder
    kein starkes Bild existiert (echte Geografie = Anti-Slop-Visual).
-3. Gesamt **45–60 gesprochene Wörter ≈ 19–22 s** (gemessen: deutsche TTS spricht
-   ~2,3 Wörter/s bei +12%; Zahlen wie „97.000" zählen gesprochen als lange Wörter!).
-   Blitz-Variante bei dünner Story: number → beat → proof → end, ~30 Wörter ≈ 13 s.
+3. Gesamt **75–80 gesprochene Woerter ~ 30 s** (gemessen mit ElevenLabs +
+   REEL_TEMPO 1.28: ~2,4 Woerter/s). Die alte Vorgabe 45-60 Woerter / 19-22 s
+   stammt aus der edge-tts-Zeit (~1,66 W/s) und ist seit 2026-08-01 ueberholt —
+   sie erzeugte Stichpunkt-Saetze statt ausformulierter (belegt: alle Reels
+   09.-20.08. kamen mit 46-60 Woertern heraus, das gelobte Referenz-Reel
+   'Baumkaenguru' vom 26.07. hatte 66).
 4. `end` im Loop-Modus: KEIN Send-CTA (`"cta": ""`), keine Figur — voText endet als
    Satzanfang, der in Szene 1 mündet, EXAKT: `Und die nächste gute Nachricht ist schon
    nachgeprüft. Nämlich:` (Loop-Naht; TikTok-Ausnahme von der End-VO-Regel oben).

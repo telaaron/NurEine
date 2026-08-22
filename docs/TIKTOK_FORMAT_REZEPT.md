@@ -160,12 +160,24 @@ Kurz-Anatomien (rekonstruiert aus dokumentierten Analysen, nicht eigener Sichtun
 
 ## C. DAS REZEPT — „Beweis-Loop 20"
 
-**Gesamtlänge: 19–22 s** (600–660 Frames @30fps). Begründung: 21–34 s = Ø 62% Completion,
-gut gebaute 18 s bis 75% (OpusClip); tagesschau-Praxis „15 Sekunden liegt man ganz gut";
-+ Loop-Naht hebt Watch-% Richtung/über 100%. Gesprochene Wortmenge: **45–60 Wörter**
-(im Render gemessen: deutsche edge-tts spricht ~2,3 Wörter/s bei +12% Rate; gesprochene
-Zahlen — „siebenundneunzigtausend" — zählen als lange Wörter. Zack-D-Referenz 65–95
-Wörter ≈ 30 s ist Englisch und schneller gesprochen).
+**Gesamtlänge: ~30 s** (900 Frames @30fps). Gesprochene Wortmenge: **75–80 Wörter**.
+
+> **KORRIGIERT 2026-08-20.** Hier stand bis heute „19–22 s / 45–60 Wörter" — die
+> Werte aus der Anfangszeit, als edge-tts noch ~1,66 Wörter/s sprach. Sie sind seit
+> dem 01.08. überholt (ElevenLabs + `REEL_TEMPO 1.28` ≈ 2,4 W/s), aber nie
+> nachgezogen worden. **Folge:** Die Regie-Routine liest diese Datei als
+> Pflichtlektüre und folgte der alten Zahl — alle Reels vom 09.–20.08. kamen mit
+> 46–60 Wörtern und 17–24 s heraus, also mit Stichpunkt-Sätzen statt ausformulierten.
+> Zum Vergleich das Referenz-Reel „Baumkänguru" (26.07., bestes Publikums-Feedback):
+> **66 Wörter, 28,5 s**, ganze Sätze („Man erwartet: eine Regierung entscheidet über
+> einen Regenwald. Hier war es anders…").
+>
+> Verbindlich ist `docs/REEL_TEXT_REGELN.md` — bei Widerspruch gewinnt jene Datei.
+
+Warum ~30 s und nicht kürzer: Unter ~70 Wörtern bleibt kein Platz für ganze Sätze;
+der Text zerfällt in Stichpunkte, und genau das hat das Publikum bemängelt. Die
+Länge kommt vom TEXT, nicht von langsameren Animationen — kürzer wird ein Reel über
+weniger Wörter, nie über gedehnte Bilder.
 
 **Dramaturgie-Logik (die kreative Hauptentscheidung):** Wir drehen die klassische
 Hook-Frage-Struktur um — **Payoff zuerst, Beweis als Klimax, Loop statt Abspann.**
@@ -226,7 +238,7 @@ Entwurf (Pattern-Interrupts, schnellere Springs, Flash-Wipe) — gute Basis, noc
 6. **`compare`-Baustein** (Zahl → Alltagsgröße, 2 Panels) — Phase 2, nicht Launch-kritisch.
 7. **SEO-Pflichtfeld:** plan.json `seo.keyword`; Regie-Routine erzwingt Dreifach-Präsenz
    (hook-VO, Cold-Open-Overlay, tiktok.caption) — Baukasten-Regel ergänzen.
-8. **VO-Dichte:** Skript-Prompt auf 45–60 Wörter gesamt trimmen; edge-tts-Rate ist im
+8. **VO-Dichte:** Skript-Prompt auf **75–80 Wörter** gesamt (Stand 2026-08-20; die frühere 45–60 galt für edge-tts); edge-tts-Rate ist im
    `--tiktok`-Profil auf +12% gestellt (`REEL_RATE` übersteuert; `scripts/tts.py --rate`).
 9. **KI-Kennzeichnung:** beim Posten TikToks „AI-generated"-Toggle AN (GADMO-Befund —
    Transparenz schützt die Marke; Footer „Illustration & Stimme: KI" existiert schon).

@@ -602,20 +602,32 @@ function synthWholeTake(plan, slug) {
 	// weil es VOR diesem Schritt auf die ganze Aufnahme angewandt wird.
 	const out = [];
 	let idx = 0;
-	let ci = 0; // Zähler über die Szenen MIT voText — counts[] folgt derselben Reihenfolge.
+	let ci = 0;
+	let vorherEnde = 0; // Frame, an dem die vorige Szene endete — die naechste beginnt exakt hier
 	for (let i = 0; i < plan.scenes.length; i++) {
 		if (!plan.scenes[i].voText) { out.push(null); continue; }
 		const n = counts[ci++];
 		const slice = take.words.slice(idx, idx + n);
 		idx += n;
 		if (!slice.length) { out.push(null); continue; }
-		// Die Szene beginnt dort, wo ihr erstes Wort anfaengt — minus einem kleinen
-		// Vorlauf, damit der Anlaut nicht abgeschnitten klingt. Die Szene ENDET dort, wo
-		// die naechste beginnt: kein Nachlauf, keine doppelte Pause.
-		const LEAD = 3; // Frames (~100 ms)
-		const from = Math.max(0, slice[0].start - LEAD);
-		const naechste = take.words[idx];
-		const bis = naechste ? naechste.start - LEAD : slice[slice.length - 1].end + Math.round(VO_TAIL * FPS);
+		// LUECKENLOS ANEINANDER (Aaron 2026-08-22, zweiter Anlauf): Jede Szene beginnt
+		// GENAU dort, wo die vorige endet — kein Vorlauf, kein Nachlauf, keine Ueberlappung.
+		//
+		// Warum das noetig war: Ein LEAD-Vorlauf zieht den Startpunkt zurueck und
+		// ueberlappt damit das vorige Fenster. Gemessen am Vorgaenger-Render: -100 ms,
+		// -133 ms, -67 ms Ueberlappung an den Szenengrenzen. Das ueberlappende Stueck ist
+		// die Atempause — sie wird am Ende der einen Szene UND am Anfang der naechsten
+		// gespielt. Genau das hoert man als doppelten Atemzug.
+		//
+		// Die Grenze liegt in der Mitte zwischen letztem Wort der Szene und erstem Wort
+		// der naechsten: die Atempause wird damit sauber geteilt statt gedoppelt.
+		const letzterFrame = slice[slice.length - 1].end;
+		const naechstes = take.words[idx];
+		const from = vorherEnde;
+		const bis = naechstes
+			? Math.round((letzterFrame + naechstes.start) / 2)
+			: letzterFrame + Math.round(VO_TAIL * FPS);
+		vorherEnde = bis; // naechste Szene setzt exakt hier an
 		out.push({
 			file: take.file,          // IMMER dieselbe Datei — die ungeschnittene Aufnahme
 			startFrom: from,          // Remotion spielt sie ab diesem Frame
@@ -659,8 +671,18 @@ function buildScenesFromPlan(plan, voWanted, slug) {
 		const readDur = readFrames(baseText, minMax[0], minMax[1]);
 		// Die Stimme führt das Timing (min MINF); Endcard hält mind. ihre Lesezeit.
 		// PACE skaliert NUR den No-VO-Zweig (Stimme wird nie abgeschnitten).
+		// GANZ-AUFNAHME (vo.startFrom gesetzt): Die Szene MUSS exakt ihr Audiofenster
+		// sein. Jeder zusaetzliche Frame — durch PAD oder MINF — laesst die Aufnahme
+		// weiterlaufen und schiebt den Atemzug des naechsten Satzes ans Szenenende;
+		// beim naechsten Schnitt kommt derselbe Atmer nochmal (Aaron 2026-08-22:
+		// "zwischen jeder Szene ein Atmen doppelt"). Nur die Endcard darf laenger
+		// stehen, weil dort nach dem letzten Wort nichts mehr folgt.
 		const dur = vo
-			? Math.max(sc.kind === 'end' ? readDur : MINF, vo.durFrames + PAD)
+			? vo.startFrom != null
+				? sc.kind === 'end'
+					? Math.max(readDur, vo.durFrames)
+					: vo.durFrames
+				: Math.max(sc.kind === 'end' ? readDur : MINF, vo.durFrames + PAD)
 			: Math.round(readDur * PACE);
 		scenes.push({ ...sc, vo, start: t, dur });
 		t += dur;

@@ -85,3 +85,46 @@
 .animate-rise-up {
 	animation: rise-up 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
+
+/* === Lebendes Zeitfenster: Puls & Aufblitzen der Story-Punkte ===
+   Die Marker sind SVG-<path> im overlayPane. CSS animiert sie direkt über
+   Klassen, die das Svelte-Bauteil an das Pfad-Element hängt. */
+
+/* Dauer-Puls für die jüngsten Geschichten (Live-Gefühl, immer an). */
+@keyframes dot-breathe {
+	0%,
+	100% {
+		stroke-opacity: 0.9;
+		stroke-width: 1.25;
+	}
+	50% {
+		stroke-opacity: 0.35;
+		stroke-width: 3.5;
+	}
+}
+.glow-dot.is-fresh {
+	animation: dot-breathe 2.4s ease-in-out infinite;
+}
+
+/* Kurzes Aufblitzen, wenn der Zeitraffer-Cursor eine Geschichte gerade
+   „erscheinen" lässt. Wird per Klasse gesetzt und nach dem Lauf entfernt. */
+@keyframes dot-pop {
+	0% {
+		stroke-opacity: 1;
+		stroke-width: 7;
+	}
+	100% {
+		stroke-opacity: 0.9;
+		stroke-width: 1.25;
+	}
+}
+.glow-dot.is-popping {
+	animation: dot-pop 0.9s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.glow-dot.is-fresh,
+	.glow-dot.is-popping {
+		animation: none;
+	}
+}

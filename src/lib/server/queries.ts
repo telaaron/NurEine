@@ -863,15 +863,12 @@ const CARD_COLUMNS = MARKER_COLUMNS + ',summary';
 
 /** All stories as light search-cards (newest first). For /archiv. */
 export async function getStoryCards(): Promise<StoryCard[]> {
-  const { data, error } = await supabaseAdmin
-    .from('nureine_stories')
-    .select(CARD_COLUMNS)
-    .order('published_at', { ascending: false });
-
-  if (error || !data) {
-    console.error('getStoryCards error:', error);
-    return [];
-  }
+  // Paginiert (fetchAllRows) — NICHT als einfaches .select(). PostgREST deckelt
+  // sonst bei 1000 Zeilen, und /archiv verlor still alle aelteren Geschichten
+  // (gemessen 2026-08-22: 1254 in der DB, 1001 im Payload). Dieselbe Falle wie
+  // bei getStoryList(); dort steht die Warnung schon an fetchAllRows.
+  // fetchAllRows blendet Dubletten aus und sortiert nach published_at DESC.
+  const data = await fetchAllRows<Partial<SupabaseStory>>(CARD_COLUMNS);
   return (data as Partial<SupabaseStory>[]).map((r) => {
     const m = mapListRow(r);
     return { ...toMarker(m), summary: m.summary };

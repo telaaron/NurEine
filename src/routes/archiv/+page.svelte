@@ -202,10 +202,16 @@
 		aber Googlebot soll JEDE Geschichte über das Archiv erreichen — sonst
 		hängen hunderte Stories hinter einem JS-„Mehr laden"-Klick. Reiner Text,
 		keine Bilder → vernachlässigbares DOM-Gewicht. Visuell versteckt, Links folgbar.
+
+		WICHTIG: hier `stories` (ungefiltert), NICHT `filtered`. Das Archiv startet
+		mit minImpact = 65 („Nur starke") — haengt die Crawl-Liste am Filter, sieht
+		Google nur die starken Geschichten. Gemessen 2026-08-22: 412 statt 1254 Links.
+		Der Filter ist eine Anzeige-Entscheidung fuer Menschen und darf nie
+		bestimmen, was crawlbar ist.
 	-->
 	<nav aria-label="Alle Geschichten im Archiv" class="archive-crawl-index">
 		<ul>
-			{#each filtered as story (story.slug)}
+			{#each stories as story (story.slug)}
 				<li><a href={base + '/geschichte/' + story.slug}>{story.title}</a></li>
 			{/each}
 		</ul>

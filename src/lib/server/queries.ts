@@ -856,10 +856,13 @@ function toMarker(s: StoryResult): MapMarker {
  * search, which filters client-side over title+dek+summary. Everything else the
  * archive card renders is already in MapMarker. ~13 fields instead of ~40.
  */
-export type StoryCard = MapMarker & { summary: string };
+// summary ist hier BEWUSST nicht mehr drin: es wurde nirgends angezeigt und
+// diente allein der Client-Suche — bei 1260 Zeilen waren das 626 KB von 1,45 MB
+// (gemessen 2026-08-24). Die Suche laeuft jetzt serverseitig ueber
+// /api/archiv-suche (searchStorySlugs), die sogar den Fliesstext mitdurchsucht.
+export type StoryCard = MapMarker;
 
-// Marker fields + summary. summary (~459 B/row) only ships to pages that search.
-const CARD_COLUMNS = MARKER_COLUMNS + ',summary';
+const CARD_COLUMNS = MARKER_COLUMNS;
 
 /** All stories as light search-cards (newest first). For /archiv. */
 /**
@@ -868,6 +871,52 @@ const CARD_COLUMNS = MARKER_COLUMNS + ',summary';
  * bei ~1300 Zeilen macht jede ueberfluessige Spalte die Antwort spuerbar groesser.
  * Paginiert (fetchAllRows), sonst greift der PostgREST-1000er-Deckel.
  */
+/**
+ * Volltextsuche fuer /archiv — serverseitig, damit der Client die Summaries gar
+ * nicht erst laden muss (sie waren 626 KB von 1,45 MB und wurden NIRGENDS
+ * angezeigt, nur durchsucht).
+ *
+ * Sucht in denselben Feldern wie die frühere Client-Suche (title, subtitle,
+ * summary, category, region) — plus body_markdown, was der Client nie hatte.
+ * Mehrere Woerter = UND, wie vorher.
+ *
+ * Kein Volltext-Index noetig: bei ~1300 Zeilen liegt der Seq Scan bei ~24 ms
+ * (gemessen 2026-08-24 per EXPLAIN ANALYZE). Ein GIN-Index waere eine
+ * Schema-Aenderung und damit ruecksprachepflichtig.
+ *
+ * Gibt nur Slugs zurueck — die Karten-Daten hat der Client bereits.
+ */
+export async function searchStorySlugs(query: string): Promise<string[]> {
+  const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean).slice(0, 8);
+  if (terms.length === 0) return [];
+
+  let q = supabaseAdmin
+    .from('nureine_stories')
+    .select('id,title')
+    .is('duplicate_of', null);
+
+  // Ein .or() pro Begriff => UND-Verknuepfung ueber die Begriffe, ODER ueber die
+  // Felder. Kommas und Klammern in Suchbegriffen wuerden die PostgREST-Syntax
+  // zerlegen, darum entfernen.
+  for (const t of terms) {
+    const safe = t.replace(/[,()*\\]/g, ' ').trim();
+    if (!safe) continue;
+    q = q.or(
+      `title.ilike.%${safe}%,subtitle.ilike.%${safe}%,summary.ilike.%${safe}%,` +
+        `category.ilike.%${safe}%,region.ilike.%${safe}%,body_markdown.ilike.%${safe}%`
+    );
+  }
+
+  const { data, error } = await q.order('published_at', { ascending: false }).limit(500);
+  if (error || !data) {
+    console.error('searchStorySlugs error:', error);
+    return [];
+  }
+  return (data as { id: string; title: string }[]).map(
+    (r) => slugify(r.title) + '-' + r.id.slice(0, 8)
+  );
+}
+
 export async function getStoryIndex(): Promise<{ slug: string; title: string; publishedAt: string }[]> {
   const rows = await fetchAllRows<Partial<SupabaseStory>>('id,title,published_at');
   return rows.map((r) => {
@@ -883,10 +932,7 @@ export async function getStoryCards(): Promise<StoryCard[]> {
   // bei getStoryList(); dort steht die Warnung schon an fetchAllRows.
   // fetchAllRows blendet Dubletten aus und sortiert nach published_at DESC.
   const data = await fetchAllRows<Partial<SupabaseStory>>(CARD_COLUMNS);
-  return (data as Partial<SupabaseStory>[]).map((r) => {
-    const m = mapListRow(r);
-    return { ...toMarker(m), summary: m.summary };
-  });
+  return (data as Partial<SupabaseStory>[]).map((r) => toMarker(mapListRow(r)));
 }
 
 /**

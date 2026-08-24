@@ -29,21 +29,51 @@
 	// Suchbegriff aus ?q= übernehmen (Sitelinks-Searchbox / Deep-Links).
 	let query = $state($page.url.searchParams.get('q') ?? '');
 
-	// Suche: über Titel, Untertitel, Zusammenfassung, Kategorie UND Region. Wir nutzen
-	// die KI-Zusammenfassung (summary) statt des vollen Fließtexts — die Listen-Query
-	// lädt body_markdown bewusst nicht (700+ Stories × 2 kB). Mehrere Wörter = UND.
-	function matches(s: (typeof stories)[number], terms: string[]): boolean {
-		const hay = `${s.title} ${s.dek} ${s.summary} ${s.category} ${s.country}`.toLowerCase();
-		return terms.every((t) => hay.includes(t));
-	}
+	// Suche laeuft SERVERSEITIG (/api/archiv-suche). Frueher lag sie im Browser und
+	// brauchte dafuer die Zusammenfassung jeder Story im Payload — 626 KB von
+	// 1,45 MB, die nie angezeigt wurden. Jetzt kommen nur die Treffer-Slugs zurueck;
+	// die Karten hat der Client ohnehin schon. Nebeneffekt: der Server durchsucht
+	// zusaetzlich den Fliesstext, den der Client nie hatte.
+	let treffer = $state<Set<string> | null>(null); // null = keine Suche aktiv
+	let sucheLaeuft = $state(false);
+
+	$effect(() => {
+		const q = query.trim();
+		if (!q) {
+			treffer = null;
+			sucheLaeuft = false;
+			return;
+		}
+		sucheLaeuft = true;
+		// Tippen entprellen + veraltete Antworten verwerfen (abgebrochene Requests
+		// duerfen ein spaeteres Ergebnis nicht ueberschreiben).
+		const ctrl = new AbortController();
+		const t = setTimeout(async () => {
+			try {
+				const res = await fetch(`${base}/api/archiv-suche?q=${encodeURIComponent(q)}`, {
+					signal: ctrl.signal
+				});
+				const { slugs } = await res.json();
+				treffer = new Set<string>(slugs);
+			} catch (e) {
+				if ((e as Error)?.name !== 'AbortError') treffer = new Set();
+			} finally {
+				sucheLaeuft = false;
+			}
+		}, 250);
+		return () => {
+			clearTimeout(t);
+			ctrl.abort();
+		};
+	});
 
 	// Die Zeitreise-Ansichten ordnen selbst nach Datum/Monat — hier nur FILTERN,
-	// nicht sortieren.
+	// nicht sortieren. Kategorie + Wirkung bleiben rein clientseitig (sofort),
+	// nur die Textsuche fragt den Server.
 	const filtered = $derived.by(() => {
-		const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
 		let list = active === 'Alle' ? stories : stories.filter((s) => s.category.toLowerCase() === active.toLowerCase());
 		if (minImpact > 0) list = list.filter((s) => (s.impactScore ?? 0) >= minImpact);
-		if (terms.length) list = list.filter((s) => matches(s, terms));
+		if (treffer) list = list.filter((s) => treffer!.has(s.slug));
 		return list;
 	});
 

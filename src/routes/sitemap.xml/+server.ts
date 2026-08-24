@@ -60,6 +60,8 @@ export async function GET() {
 		{ loc: `${BASE_URL}/nutzungsbedingungen`, priority: '0.2', changefreq: 'yearly' },
 		{ loc: `${BASE_URL}/stand-der-welt`, priority: '0.8', changefreq: 'monthly' },
 		{ loc: `${BASE_URL}/archiv`, priority: '0.8', changefreq: 'daily' },
+		// Vollstaendiges Verzeichnis: der Crawl-Einstieg zu JEDER Geschichte.
+		{ loc: `${BASE_URL}/archiv/alle`, priority: '0.8', changefreq: 'daily' },
 		...['klima', 'gesundheit', 'wissenschaft', 'gemeinschaft', 'tiere', 'kultur', 'innovation'].map(
 			(c) => ({ loc: `${BASE_URL}/archiv/${c}`, priority: '0.7', changefreq: 'daily' })
 		),

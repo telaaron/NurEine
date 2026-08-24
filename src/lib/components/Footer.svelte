@@ -35,6 +35,7 @@
 					<li><a class="hover:opacity-70" href={base + '/roadmap'}>Roadmap & Feedback</a></li>
 					<li><a class="hover:opacity-70" href={base + '/stand-der-welt'}>Der Stand der Welt</a></li>
 					<li><a class="hover:opacity-70" href={base + '/archiv'}>Archiv</a></li>
+					<li><a class="hover:opacity-70" href={base + '/archiv/alle'}>Alle Geschichten</a></li>
 					<li><a class="hover:opacity-70" href={base + '/karte'}>Karte der Hoffnung</a></li>
 					<li><a class="hover:opacity-70" href={base + '/bei-dir'}>Gute Nachrichten vor Ort</a></li>
 					<li><a class="hover:opacity-70" href={base + '/preise'}>Preise & Abos</a></li>

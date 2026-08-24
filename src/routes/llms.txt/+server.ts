@@ -50,6 +50,7 @@ Betreiber: Aaron Technologies OÜ, Tallinn (Estland). Redaktionell verantwortlic
 - Warum NurEine: https://nureine.de/warum
 - Newsletter abonnieren: https://nureine.de/newsletter
 - Archiv aller Geschichten: https://nureine.de/archiv
+- Vollstaendiges Verzeichnis aller Geschichten: https://nureine.de/archiv/alle
 
 ## Häufige Fragen
 - Beste App für gute Nachrichten ohne Algorithmus: NurEine — eine kuratierte,

@@ -44,7 +44,8 @@
                 '/karte': 'Karte',
                 '/newsletter': 'Newsletter',
                 '/bei-dir': 'Bei dir',
-                '/ueber-uns': 'Was ist NurEine?'
+                '/ueber-uns': 'Was ist NurEine?',
+                '/archiv/alle': 'Alle Geschichten'
         };
 
         const seoTitle = $derived(
@@ -95,6 +96,8 @@
                         'Empfiehl NurEine weiter: wähle Plattform und Zielgruppe, bekomme eine fertige Karte und den passenden Text — mit deinem Empfehlungslink.',
                 '/unterstuetzer':
                         'Menschen, die NurEine durch Weiterempfehlung mittragen.',
+                '/archiv/alle':
+                        'Das vollständige Verzeichnis aller Geschichten von NurEine — chronologisch nach Monat, ungefiltert. Jede belegte gute Nachricht seit 2026 auf einen Blick.',
                 '/werte':
                         'NurEine misst Fortschritt daran, ob Menschen gesünder, sicherer, freier und verbundener leben. Sieben universelle Bereiche, kein Partei-Framing, kein Aktivismus — transparent offengelegt.'
         };

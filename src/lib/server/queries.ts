@@ -862,6 +862,20 @@ export type StoryCard = MapMarker & { summary: string };
 const CARD_COLUMNS = MARKER_COLUMNS + ',summary';
 
 /** All stories as light search-cards (newest first). For /archiv. */
+/**
+ * Nur Slug + Titel + Datum, fuer die reine Crawl-Linkliste unter /archiv/alle.
+ * Bewusst NICHT CARD_COLUMNS: die Liste rendert weder Bilder noch Summaries, und
+ * bei ~1300 Zeilen macht jede ueberfluessige Spalte die Antwort spuerbar groesser.
+ * Paginiert (fetchAllRows), sonst greift der PostgREST-1000er-Deckel.
+ */
+export async function getStoryIndex(): Promise<{ slug: string; title: string; publishedAt: string }[]> {
+  const rows = await fetchAllRows<Partial<SupabaseStory>>('id,title,published_at');
+  return rows.map((r) => {
+    const m = mapListRow(r);
+    return { slug: m.slug, title: m.title, publishedAt: m.publishedAt };
+  });
+}
+
 export async function getStoryCards(): Promise<StoryCard[]> {
   // Paginiert (fetchAllRows) — NICHT als einfaches .select(). PostgREST deckelt
   // sonst bei 1000 Zeilen, und /archiv verlor still alle aelteren Geschichten

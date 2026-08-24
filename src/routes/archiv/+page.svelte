@@ -198,38 +198,15 @@
 	{/if}
 
 	<!--
-		Crawl-only Linkliste: nur 24 Karten werden visuell gerendert (DOM-Größe),
-		aber Googlebot soll JEDE Geschichte über das Archiv erreichen — sonst
-		hängen hunderte Stories hinter einem JS-„Mehr laden"-Klick. Reiner Text,
-		keine Bilder → vernachlässigbares DOM-Gewicht. Visuell versteckt, Links folgbar.
-
-		WICHTIG: hier `stories` (ungefiltert), NICHT `filtered`. Das Archiv startet
-		mit minImpact = 65 („Nur starke") — haengt die Crawl-Liste am Filter, sieht
-		Google nur die starken Geschichten. Gemessen 2026-08-22: 412 statt 1254 Links.
-		Der Filter ist eine Anzeige-Entscheidung fuer Menschen und darf nie
-		bestimmen, was crawlbar ist.
+		Das vollstaendige Verzeichnis liegt auf /archiv/alle. Frueher stand die
+		komplette Linkliste (~1300 Titel) hier inline — das blies JEDE Archiv-
+		Ansicht auf 1,7 MB / ~3 s auf. Ein Link genuegt: Crawler erreichen von
+		hier aus jede Geschichte ueber genau einen Klick.
 	-->
-	<nav aria-label="Alle Geschichten im Archiv" class="archive-crawl-index">
-		<ul>
-			{#each stories as story (story.slug)}
-				<li><a href={base + '/geschichte/' + story.slug}>{story.title}</a></li>
-			{/each}
-		</ul>
-	</nav>
+	<p class="mt-10 text-sm" style="color: var(--color-muted);">
+		<a href={base + '/archiv/alle'} class="hover:opacity-70" style="color: var(--color-amber);">
+			Alle {stories.length} Geschichten als Verzeichnis →
+		</a>
+	</p>
 </section>
 
-<style>
-	/* Sichtbar für Crawler, unsichtbar für Menschen (kein display:none — sonst
-	   würden manche Bots die Links ignorieren). Klassisches sr-only-Muster. */
-	.archive-crawl-index {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		white-space: nowrap;
-		border: 0;
-	}
-</style>

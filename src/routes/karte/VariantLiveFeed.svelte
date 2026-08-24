@@ -48,11 +48,14 @@
 	let mapContainer = $state<HTMLDivElement | null>(null);
 
 	// --- Zeitraffer-Zustand ------------------------------------------------
+	// Einmaliger Intro-Zeitraffer beim Laden — KEINE Bedienleiste. Der Cursor
+	// wandert einmal von „damals" nach „jetzt", dann bleibt es im Live-Zustand.
 	let playing = $state(false);
 	// cursor = 0..1 Position im Zeitfenster (1 = heute/alle sichtbar).
 	let cursor = $state(1);
-	const PLAY_MS = 32_000; // Dauer eines vollen Durchlaufs
-	const WINDOW_DAYS = 5; // Breite des „aktiven" Fensters im Zeitraffer
+	let introDone = $state(false); // läuft nur EINMAL pro Mount
+	const PLAY_MS = 14_000; // Dauer des Intro-Durchlaufs
+	const WINDOW_DAYS = 6; // Breite des „aktiven" Fensters im Zeitraffer
 
 	const cursorTime = $derived(tMin + (tMax - tMin) * cursor);
 	const cursorDate = $derived(
@@ -94,7 +97,7 @@
 			(window as any).L = L;
 			addBaseTiles(m);
 			for (const s of stories) {
-				const mk = createGlowMarker(s, m, (slug) => (activeSlug = slug));
+				const mk = createGlowMarker(s, m, (slug) => { skipIntro(); activeSlug = slug; });
 				if (mk) {
 					markerBySlug.set(s.slug, mk);
 					markerTime.set(s.slug, storyTime(s));
@@ -103,7 +106,7 @@
 			addLabelTiles(m);
 			requestAnimationFrame(() => {
 				m.invalidateSize();
-				applyLivePulse();
+				startIntro();
 			});
 			map = m;
 			mapReady = true;
@@ -144,7 +147,7 @@
 		cursor = Math.min(1, cursor + dt / PLAY_MS);
 		renderCursor();
 		if (cursor >= 1) {
-			stop();
+			endIntro();
 			return;
 		}
 		raf = requestAnimationFrame(tick);
@@ -173,10 +176,20 @@
 		}
 	}
 
-	function play() {
-		if (!map || playing) return;
-		// Bei Start vom Ende: von vorne beginnen.
-		if (cursor >= 1) cursor = 0;
+	function prefersReducedMotion(): boolean {
+		return browser && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	}
+
+	// Einmaliger Intro-Durchlauf beim Laden. Kein Steuerelement — läuft von
+	// selbst von „damals" nach „jetzt" und endet im Live-Zustand.
+	function startIntro() {
+		if (!map || introDone || playing) return;
+		if (prefersReducedMotion() || timed.length < 8) {
+			// Ohne Animation direkt in den Live-Zustand.
+			endIntro();
+			return;
+		}
+		cursor = 0;
 		popped.clear();
 		playing = true;
 		lastTs = 0;
@@ -190,37 +203,18 @@
 		lastTs = 0;
 	}
 
-	function togglePlay() {
-		if (playing) stop();
-		else play();
-	}
-
-	// Scrubben: Cursor manuell setzen (stoppt das Abspielen).
-	function scrubTo(value: number) {
+	// Intro beenden → Live-Zustand: alles sichtbar, jüngste pulsieren.
+	function endIntro() {
 		stop();
-		cursor = value;
-		popped.clear();
-		// Alles bis zum Cursor als sichtbar markieren (kein Aufblitzen beim Scrub).
-		if (map) {
-			const ct = cursorTime;
-			const windowStart = ct - WINDOW_DAYS * DAY;
-			for (const [slug, mk] of markerBySlug) {
-				const t = markerTime.get(slug) ?? 0;
-				popped.add(slug);
-				if (t > ct) setTimeState(mk, 'hidden');
-				else if (t < windowStart) setTimeState(mk, 'ghost');
-				else setTimeState(mk, 'active');
-				setFresh(mk, false);
-			}
-		}
-	}
-
-	// Zurück in den „Live"-Zustand: alles sichtbar, jüngste pulsieren.
-	function resetToLive() {
-		stop();
+		introDone = true;
 		cursor = 1;
 		popped.clear();
 		applyLivePulse();
+	}
+
+	// Jede Nutzer-Interaktion überspringt den Intro-Zeitraffer sofort.
+	function skipIntro() {
+		if (playing || cursor < 1) endIntro();
 	}
 
 	onDestroy(() => { if (raf) cancelAnimationFrame(raf); });
@@ -261,58 +255,31 @@
 
 	<!-- tone filters -->
 	<div class="filters">
-		<button class="chip" class:active={filterTone === null} onclick={() => (filterTone = null)}>Alle</button>
+		<button class="chip" class:active={filterTone === null} onclick={() => { skipIntro(); filterTone = null; }}>Alle</button>
 		{#each Object.entries(toneColors) as [key, color]}
-			<button class="chip" class:active={filterTone === key} style="--c:{color}" onclick={() => (filterTone = filterTone === key ? null : key)}>
+			<button class="chip" class:active={filterTone === key} style="--c:{color}" onclick={() => { skipIntro(); filterTone = filterTone === key ? null : key; }}>
 				<span class="chip-dot" style="background:{color}"></span>{toneLabels[key] ?? key}
 			</button>
 		{/each}
 	</div>
 
 	<div class="grid">
-		<!-- MAP + TIMELINE -->
+		<!-- MAP -->
 		<div class="map-col">
 			<div class="map-frame" bind:this={mapContainer}>
 				{#if !mapReady}
 					<div class="loading"><div class="spinner"></div><span>Karte wird geladen…</span></div>
 				{/if}
-			</div>
 
-			<!-- Zeitleiste / Zeitraffer -->
-			<div class="timeline" class:playing>
-				<button class="play" onclick={togglePlay} aria-label={playing ? 'Pause' : 'Zeitreise abspielen'}>
-					{#if playing}
-						<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><rect x="3" y="2" width="4" height="12" rx="1"/><rect x="9" y="2" width="4" height="12" rx="1"/></svg>
-					{:else}
-						<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M4 2.5v11a1 1 0 0 0 1.5.87l9-5.5a1 1 0 0 0 0-1.74l-9-5.5A1 1 0 0 0 4 2.5Z"/></svg>
-					{/if}
-				</button>
-
-				<div class="track-wrap">
-					<div class="track">
-						<div class="track-fill" style="width:{cursor * 100}%"></div>
-						<div class="track-head" style="left:{cursor * 100}%"></div>
+				<!-- Dezente, schwebende Datumsanzeige NUR während des Intro-Zeitraffers.
+				     Kein Steuerelement, keine Leiste — nur ein Hauch von „wann". -->
+				{#if playing}
+					<div class="ticker" role="status" aria-live="off">
+						<span class="ticker-dot"></span>
+						<span class="ticker-date">{cursorDate}</span>
+						<span class="ticker-bar"><span class="ticker-bar-fill" style="width:{cursor * 100}%"></span></span>
 					</div>
-					<input
-						class="scrub"
-						type="range"
-						min="0"
-						max="1"
-						step="0.001"
-						value={cursor}
-						oninput={(e) => scrubTo(+e.currentTarget.value)}
-						aria-label="Zeitpunkt wählen"
-					/>
-				</div>
-
-				<div class="tl-meta">
-					<span class="tl-date">{cursorDate || 'heute'}</span>
-					{#if playing || cursor < 1}
-						<button class="tl-live" onclick={resetToLive}>Zurück ins Jetzt →</button>
-					{:else}
-						<span class="tl-hint">Play = Hoffnung im Zeitraffer</span>
-					{/if}
-				</div>
+				{/if}
 			</div>
 		</div>
 
@@ -320,8 +287,8 @@
 		<div class="feed">
 			<div class="feed-head">
 				<div class="feed-toggle">
-					<button class:on={feedSort === 'time'} onclick={() => (feedSort = 'time')}>Nach Zeit</button>
-					<button class:on={feedSort === 'impact'} onclick={() => (feedSort = 'impact')}>Nach Wirkung</button>
+					<button class:on={feedSort === 'time'} onclick={() => { skipIntro(); feedSort = 'time'; }}>Nach Zeit</button>
+					<button class:on={feedSort === 'impact'} onclick={() => { skipIntro(); feedSort = 'impact'; }}>Nach Wirkung</button>
 				</div>
 				<span class="feed-count">{feed.length}</span>
 			</div>
@@ -333,7 +300,7 @@
 						class="feed-item"
 						class:active={activeSlug === s.slug}
 						style="--accent:{hex}"
-						onclick={() => (activeSlug = s.slug)}
+						onclick={() => { skipIntro(); activeSlug = s.slug; }}
 					>
 						<span class="fi-tick" style="background:{hex}"></span>
 						<div class="fi-body">
@@ -399,27 +366,22 @@
 	.spinner { width: 1.75rem; height: 1.75rem; border: 2px solid var(--color-rule); border-top-color: var(--color-amber); border-radius: 999px; animation: spin 0.8s linear infinite; }
 	@keyframes spin { to { transform: rotate(360deg); } }
 
-	/* --- Zeitleiste --- */
-	.timeline { display: flex; align-items: center; gap: 0.9rem; padding: 0.6rem 0.85rem; border-radius: 999px; border: 1px solid var(--color-rule); background: var(--color-paper); }
-	.timeline.playing { border-color: color-mix(in srgb, var(--color-amber) 45%, var(--color-rule)); }
-	.play { flex-shrink: 0; width: 2.3rem; height: 2.3rem; border-radius: 999px; border: none; display: grid; place-items: center; cursor: pointer; background: var(--color-surface-ink); color: var(--color-on-ink); transition: transform 0.15s; }
-	.play:hover { transform: scale(1.06); }
-
-	.track-wrap { position: relative; flex: 1; height: 1.6rem; display: flex; align-items: center; }
-	.track { position: absolute; left: 0; right: 0; height: 4px; border-radius: 999px; background: var(--color-rule); overflow: visible; }
-	.track-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, color-mix(in srgb, var(--color-amber) 55%, transparent), var(--color-amber)); }
-	.track-head { position: absolute; top: 50%; width: 12px; height: 12px; border-radius: 999px; background: var(--color-amber); transform: translate(-50%, -50%); box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-amber) 22%, transparent); pointer-events: none; }
-	.scrub { position: absolute; left: 0; right: 0; width: 100%; margin: 0; opacity: 0; height: 1.6rem; cursor: pointer; }
-
-	.tl-meta { flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 0.1rem; min-width: 8.5rem; }
-	.tl-date { font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-ink); font-weight: 600; white-space: nowrap; }
-	.tl-hint { font-size: 0.66rem; color: var(--color-faint); white-space: nowrap; }
-	.tl-live { font-size: 0.68rem; color: var(--color-amber); background: none; border: none; cursor: pointer; padding: 0; white-space: nowrap; }
-	.tl-live:hover { text-decoration: underline; }
-	@media (max-width: 560px) {
-		.timeline { flex-wrap: wrap; border-radius: 16px; }
-		.tl-meta { min-width: 0; align-items: flex-start; width: 100%; flex-direction: row; justify-content: space-between; }
+	/* --- Intro-Ticker: schwebend über der Karte, nur während des Zeitraffers --- */
+	.ticker {
+		position: absolute; z-index: 500; left: 50%; bottom: 1rem; transform: translateX(-50%);
+		display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.9rem;
+		border-radius: 999px; pointer-events: none;
+		background: color-mix(in srgb, var(--color-paper) 82%, transparent);
+		backdrop-filter: blur(12px) saturate(1.3); -webkit-backdrop-filter: blur(12px) saturate(1.3);
+		border: 1px solid color-mix(in srgb, var(--color-amber) 30%, var(--color-rule));
+		box-shadow: 0 10px 30px -14px rgba(0,0,0,0.55);
+		animation: ticker-in 0.4s ease both;
 	}
+	@keyframes ticker-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+	.ticker-dot { width: 0.5rem; height: 0.5rem; border-radius: 999px; background: var(--color-amber); flex-shrink: 0; box-shadow: 0 0 0 0 var(--color-amber); animation: pulse 1.6s infinite; }
+	.ticker-date { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--color-ink); white-space: nowrap; }
+	.ticker-bar { width: 5rem; height: 3px; border-radius: 999px; background: var(--color-rule); overflow: hidden; flex-shrink: 0; }
+	.ticker-bar-fill { display: block; height: 100%; border-radius: 999px; background: var(--color-amber); }
 
 	/* --- Feed --- */
 	.feed { border: 1px solid var(--color-rule); border-radius: 12px; overflow: hidden; background: var(--color-paper); }

@@ -114,12 +114,22 @@
 	// --- Idle: jüngste Geschichten pulsieren dauerhaft ---------------------
 	function applyLivePulse() {
 		if (!map) return;
+		const cut = freshFrom;
 		for (const [slug, mk] of markerBySlug) {
-			const fresh = (markerTime.get(slug) ?? 0) >= freshFrom;
+			const fresh = (markerTime.get(slug) ?? 0) >= cut;
 			setFresh(mk, fresh);
 			setTimeState(mk, 'active');
 		}
 	}
+
+	// Sobald die Karte bereit ist (und wir nicht im Zeitraffer sind), den
+	// Live-Puls setzen. mapReady ist reaktiv, freshFrom auch — so greift der
+	// Puls auch, wenn die Daten erst nach dem Karten-Setup „settlen".
+	$effect(() => {
+		if (!mapReady || playing || cursor < 1) return;
+		freshFrom; // Abhängigkeit registrieren
+		applyLivePulse();
+	});
 
 	// --- Zeitraffer-Engine (rAF, nur während playing) ----------------------
 	let raf = 0;

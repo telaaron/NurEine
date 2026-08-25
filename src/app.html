@@ -7,22 +7,29 @@
 		<meta name="robots" content="max-image-preview:large" />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<!--
+			Schriften nicht render-blockierend laden: als `print` anfordern, per onload
+			auf `all` umschalten. Der Browser rendert dann sofort mit den Fallback-Fonts
+			(font-display:swap sorgt fuer den Tausch) statt auf Google zu warten —
+			das Stylesheet kostete ~0,45 s vor dem ersten Bildaufbau.
+			<noscript> als Fallback, damit die Schriften auch ohne JS kommen.
+		-->
 		<link
 			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..600&family=Inter:wght@300..800&family=JetBrains+Mono:wght@400;500&display=swap"
 			rel="stylesheet"
+			media="print"
+			onload="this.media='all'"
 		/>
-		<!-- Google Reader Revenue Manager (SwG) — Publisher-Center-Integration. -->
-		<script async type="application/javascript" src="https://news.google.com/swg/js/v1/swg-basic.js"></script>
-		<script>
-			(self.SWG_BASIC = self.SWG_BASIC || []).push((basicSubscriptions) => {
-				basicSubscriptions.init({
-					type: 'NewsArticle',
-					isPartOfType: ['Product'],
-					isPartOfProductId: 'CAow69zLDA:openaccess',
-					clientOptions: { theme: 'light', lang: 'de' }
-				});
-			});
-		</script>
+		<noscript>
+			<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..600&family=Inter:wght@300..800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+		</noscript>
+		<!--
+			Google Reader Revenue Manager (SwG) 2026-08-25 entfernt: 282 KB auf JEDER
+			Seite (14x das HTML) fuer eine Integration, die gar nicht lief — die Konsole
+			meldete durchgehend CORS/4xx ("publisher or domain is not configured in
+			Publisher Center"). Groesster Einzelposten fuer LCP 5,3 s / FCP 4,4 s.
+			Wieder aktivieren erst, wenn das Publisher Center wirklich eingerichtet ist.
+		-->
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover" class="bg-[var(--color-canvas)]">

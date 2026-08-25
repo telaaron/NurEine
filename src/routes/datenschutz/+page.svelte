@@ -75,16 +75,8 @@
 			Interesse an lokalem Inhalt.
 		</p>
 
-		<h2 class="display text-lg mt-8" style="color: var(--color-ink); font-weight: 600;">8. Google Reader Revenue Manager</h2>
-		<p>
-			Wir binden den Dienst „Reader Revenue Manager" der Google Ireland Ltd. ein
-			(swg-basic.js). Er dient der Anbindung an Google News/Discover. Dabei kann Google
-			technische Verbindungsdaten verarbeiten. Rechtsgrundlage: berechtigtes Interesse an
-			Reichweite (Art. 6 Abs. 1 lit. f DSGVO). Details:
-			<a href="https://policies.google.com/privacy" target="_blank" rel="noopener" style="color: var(--color-amber);">policies.google.com/privacy</a>.
-		</p>
 
-		<h2 class="display text-lg mt-8" style="color: var(--color-ink); font-weight: 600;">9. Deine Rechte</h2>
+		<h2 class="display text-lg mt-8" style="color: var(--color-ink); font-weight: 600;">8. Deine Rechte</h2>
 		<p>
 			Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
 			Datenübertragbarkeit und Widerspruch sowie das Recht, eine erteilte Einwilligung jederzeit
@@ -92,7 +84,7 @@
 			Wende dich für alle Anliegen an <a href="mailto:admin@must-seen.com" style="color: var(--color-amber);">admin@must-seen.com</a>.
 		</p>
 
-		<h2 class="display text-lg mt-8" style="color: var(--color-ink); font-weight: 600;">10. Speicherdauer</h2>
+		<h2 class="display text-lg mt-8" style="color: var(--color-ink); font-weight: 600;">9. Speicherdauer</h2>
 		<p>
 			Newsletter-Daten speichern wir, bis du dich abmeldest bzw. deine Einwilligung widerrufst.
 			Server-Logs werden nach kurzer Zeit automatisch gelöscht oder anonymisiert.

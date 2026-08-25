@@ -1,13 +1,13 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-25T04:30:01Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-25T11:30:01Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 5 weeks, 6 days, 15 hours, 14 minutes |
+| Läuft seit | up 5 weeks, 6 days, 22 hours, 14 minutes |
 | Speicherplatz | 838G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
 | Auslastung | load average: 0,00, 0,00, 0,00 |
@@ -20,13 +20,13 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `9c2e53f feat(karte): Zeitraffer spielt einmal beim Laden automatisch — statt Player-Leiste` |
-| vom | 2026-08-24 22:52:44 +0100 |
+| Aktueller Commit | `7515e70 Merge remote-tracking branch 'origin/main'` |
+| vom | 2026-08-25 12:25:51 +0100 |
 | Hinter origin/main | 0 Commits |
 | Vor origin/main | 0 Commits |
 | Uncommittete Dateien | 0 |
 | Branches nur lokal (ungesichert) | 0 |
-| Letzter Pull | aktualisiert 3323a00 → 9c2e53f |
+| Letzter Pull | aktualisiert 944be9c → 7515e70 |
 
 ## Letzte Agenten-Läufe
 
@@ -36,8 +36,8 @@
 | chefredakteur | 20260825T012720Z | ✅ exit=0 |
 | redaktion | 20260825T013032Z | ✅ exit=0 |
 | analyst | 20260825T014257Z | ✅ exit=0 |
-| reel-regie | 20260824T060001Z | ✅ exit=0 |
-| verbesserer | 20260824T081701Z | ✅ exit=0 |
+| reel-regie | 20260825T060001Z | ✅ exit=0 |
+| verbesserer | 20260825T081701Z | ✅ exit=0 |
 
 
 ## Fernwartung

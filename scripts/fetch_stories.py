@@ -297,14 +297,86 @@ def _safe_kid_age(value: Any) -> int | None:
     return n
 
 
+def strip_dashes(text: str) -> str:
+    """Gedankenstriche entfernen (docs/STIMME.md § 6).
+
+    Die Prompt-Regel allein reicht nicht: Im Test standen trotz explizitem Verbot
+    noch in vier von neun Feldern Gedankenstriche. Deutsche Typografie sitzt im
+    Modell zu tief, also wird hier deterministisch nachgeräumt.
+
+    „Wort – Wort" wird zu „Wort, Wort" (Satztrenner), ein Gedankenstrich direkt
+    vor einem Doppelpunkt oder Satzende fällt weg. Bindestriche in Komposita
+    („US-Staat") bleiben unberührt, weil sie ein anderes Zeichen sind.
+    """
+    s = re.sub(r"\s+[–—]\s+", ", ", text)
+    s = re.sub(r"\s*[–—]\s*(?=[:.!?])", "", s)
+    s = s.replace("–", "-").replace("—", "-")
+    return re.sub(r",\s*,", ",", s)
+
+
+# Rhetorische Fragen, die das Modell als Überleitung einbaut, obwohl der Prompt
+# sie verbietet (docs/STIMME.md § 8b). Sie lesen sich wie eine Zwischenüberschrift
+# in Satzform. Der Satz DAHINTER ist meist gut, also wird nur die Frage entfernt.
+_FILLER_QUESTIONS = re.compile(
+    r"(?:^|(?<=\n\n))\s*(?:Und\s+)?(?:Was|Warum)\s+(?:hat\s+das\s+mit\s+(?:uns|dir|mir)|"
+    r"bedeutet\s+das\s+für\s+(?:uns|dich)|geht\s+(?:uns|dich)\s+das\s+an|"
+    r"uns\s+das\s+angeht)[^.?!:]*[?.!:]\s*",
+    re.IGNORECASE,
+)
+
+
+def strip_filler_questions(text: str) -> str:
+    """Rhetorische Überleitungsfragen entfernen, den Folgesatz behalten."""
+    return _FILLER_QUESTIONS.sub("", text).strip()
+
+
 def _safe_text(value: Any, max_len: int) -> str | None:
     """Trimmed string up to max_len, or None for empty/non-string/'null'."""
     if not isinstance(value, str):
         return None
-    s = value.strip()
+    s = strip_dashes(value.strip())
     if not s or s.lower() == "null":
         return None
     return s[:max_len]
+
+
+SHARE_HOOK_MAX = 70
+
+
+def _hook_is_title_echo(hook: str, title: str) -> bool:
+    """True, wenn share_hook nur der Titel ist (docs/STIMME.md § 9.3).
+
+    Titel und share_hook stehen im Postfach und in der Push-Nachricht direkt
+    untereinander. Ist der Hook eine Kopie, ist die Zeile verschenkt. Verglichen
+    wird auf Wortmengen-Ebene, damit auch "... gefangen" am Ende noch greift.
+    """
+    norm = lambda s: set(re.findall(r"\w+", s.lower()))
+    t, h = norm(title), norm(hook)
+    if not t or not h:
+        return False
+    return len(t & h) / len(h) >= 0.85
+
+
+def _safe_hook(value: Any) -> str | None:
+    """share_hook auf Betreffzeilen-Länge bringen (docs/STIMME.md § 9.3).
+
+    Das Feld wird als E-Mail-Betreff, Push-Text, WhatsApp-Satz und Reel-Endcard
+    benutzt. newsletter.ts kappt bei 70 Zeichen — vorher lag der Schnitt bei 134,
+    also wurde rund jeder zweite Betreff mitten im Wort abgeschnitten.
+
+    Hier wird an der WORTGRENZE gekürzt statt mitten im Wort, und ein Schlusspunkt
+    fällt weg (Betreffzeilen enden ohne Punkt). Der Prompt fordert bereits 70
+    Zeichen an; das hier ist das Netz für den Fall, dass er es überschreitet.
+    """
+    s = _safe_text(value, 400)
+    if not s:
+        return None
+    if len(s) > SHARE_HOOK_MAX:
+        cut = s[:SHARE_HOOK_MAX + 1]
+        space = cut.rfind(" ")
+        s = (cut[:space] if space > 40 else s[:SHARE_HOOK_MAX]).rstrip(" ,;:")
+        log.info("  share_hook auf %d Zeichen gekürzt (Betreff-Grenze)", len(s))
+    return s.rstrip(".").strip() or None
 
 
 _ALLOWED_EMOTIONS = {"relief", "wonder", "hope", "pride", "warmth"}
@@ -874,32 +946,159 @@ def call_deepseek(prompt: str) -> str | None:
 
 
 # ---------------------------------------------------------------------------
+# Der Stimm-Kanon — Single Source of Truth: docs/STIMME.md
+#
+# WICHTIG: Dieser Block wird WORTGLEICH auch in scripts/fetch_worldbank.py und
+# remotion/render.mjs verwendet. Wer ihn hier ändert, muss docs/STIMME.md
+# aktualisieren und die anderen beiden Stellen mitziehen — sonst entstehen
+# konkurrierende Redakteure mit widersprüchlichen Regeln.
+#
+# Keine geschweiften Klammern in diesem Text: Er wird per .format() in
+# Templates eingesetzt, dort müssten sie verdoppelt werden.
+# ---------------------------------------------------------------------------
+VOICE_BLOCK = """\
+=== DIE STIMME VON NURENE (gilt für JEDES Textfeld) ===
+
+Ein kluger Mensch erzählt dir am Küchentisch, was er herausgefunden hat: ruhig,
+genau, ohne dich zu belehren und ohne sich selbst zu feiern.
+Nicht: Behörde. Nicht: Aktivist. Nicht: Nachrichtensprecher. Nicht: Werbetexter.
+
+--- WARUM WIR SCHREIBEN ---
+Wir sind nicht "eine gute Nachricht als Tagesration". Wir sind die eine Quelle,
+die zeigt, wohin sich die Welt tatsächlich bewegt. Jede Geschichte muss deshalb
+über sich hinaus zeigen: der 26. Bundesstaat, der dritte Fluss dieses Jahr, das
+zwölfte Land seit 2019. Wir behaupten nicht, dass die Welt gut ist. Wir zeigen
+eine Richtung, die im Nachrichtenbild systematisch fehlt.
+
+--- REGEL 1: SO DARSTELLEN, WIE ES IST (wichtigste Regel) ---
+Nichts größer, dringlicher oder emotionaler machen, als es ist. VERBOTEN:
+- Erfundene Vorgeschichte: "seit Jahren gefordert", "lang ersehnt", "endlich".
+- Erfundene Reaktion: "große Erleichterung", "Aufatmen", "Jubel", "Menschen feiern".
+  Wird niemand zitiert, hat niemand reagiert.
+- Erfundene Leser-Erfahrung: "man liest viel über", "wir alle kennen das".
+- Dramatisierung durch Satzbau: abgehackte Dreiwortsätze als Effekt
+  ("Nicht die Interessierten. Alle."). Ein Kontrast muss aus der Sache kommen.
+- Superlativ ohne Zahl: "historisch", "beispiellos", "revolutionär", "bahnbrechend".
+TEST: Steht diese Behauptung im Artikel? Wenn nein, ist sie erfunden.
+Untertreiben wirkt stärker: Der Leser soll selbst "krass" denken. Sagst du es
+ihm, nimmst du ihm die Schlussfolgerung ab, und er glaubt dir weniger.
+
+--- REGEL 2: DIE BRÜCKE (bei dach_relevanz unter 70 PFLICHT) ---
+Das häufigste Problem ist nicht Stil, sondern Distanz: "Cool, aber interessiert
+mich nicht, und ich verstehe den Zusammenhang nicht." Distanz ist kein Grund,
+die Story wegzulassen, sondern ein Schreibauftrag.
+Bei Stories, die für Leser in Deutschland, Österreich und der Schweiz fern oder
+erklärungsbedürftig sind, MUSS früh (spätestens im zweiten Absatz) ein Satz
+stehen, der die Distanz überbrückt. Vier erlaubte Wege:
+ 1. WELTBILD-KORREKTUR (stärkster Weg): Der Leser hat ein Bild im Kopf, die
+    Story widerlegt es. "Die Sahelzone gilt seit Jahrzehnten als Beispiel dafür,
+    dass die Wüste vorrückt. Dieses Bild ist überholt."
+ 2. ÜBERTRAGBARKEIT: Die Methode kommt hierher oder wird hier gebraucht.
+ 3. GRÖSSENORDNUNG: Die Zahl in eine fühlbare Einheit übersetzen.
+    "5 Millionen Hektar sind etwa die Fläche Niedersachsens."
+ 4. GEMEINSAMES PROBLEM: Dasselbe Problem, hier nur weniger sichtbar.
+⚠️ DIE BRÜCKE IST EINE AUSSAGE, KEINE FRAGE. Schreibe NIEMALS "Was hat das mit uns
+zu tun?" oder "Warum uns das angeht" als Überleitung in den Text. Das ist eine
+Zwischenüberschrift in Satzform und wirkt wie ein Schulaufsatz. Die Brücke steht
+als normaler Aussagesatz mitten im Fließtext, ohne sich anzukündigen.
+⚠️ VERBOTEN ist außerdem der billige Weg: "Auch in Deutschland..." drangeklebt,
+wenn es keinen echten Bezug gibt, und jede Allerwelts-Lehre ("das beweist, dass
+sich Investitionen lohnen"). Die Brücke darf nichts erfinden, um Nähe herzustellen.
+ SCHLECHT: "Was hat das mit uns zu tun? Auch in Deutschland ist die Geburt nicht
+ ohne Risiko, und jede Verbesserung zeigt: Mit gezielten Maßnahmen lässt sich Leben retten."
+ GUT: "Usbekistan liegt damit heute ungefähr dort, wo Deutschland Anfang der
+ achtziger Jahre stand. Der Abstand, der lange als selbstverständlich galt,
+ schrumpft schneller, als die meisten annehmen."
+TEST (nur für dich, NICHT in den Text schreiben): Könnte ein Leser nach Absatz zwei
+fragen "was hat das mit mir zu tun?", fehlt die Brücke.
+
+--- REGEL 3: PERSPEKTIVE ---
+- KEIN ICH im redaktionellen Text. Niemals. Keine erfundene Erinnerung, kein
+  "als ich das las". Ein erfundenes Gefühl ist der deutlichste KI-Verrat.
+- WIR nur für Belegbares, höchstens einmal, nur im Schlussteil:
+  "Wir sehen solche Beschlüsse inzwischen fast monatlich."
+- DU für echte Betroffenheit des Lesers.
+- Wärme entsteht über konkrete Menschen aus der Story, nicht über Ich-Gefühle.
+  Nicht "das ist bewegend", sondern "für eine Familie in Jackson heißt das:
+  Das Wasser aus dem Hahn ist nicht mehr braun."
+(Ausnahme: wa_opener ist Aarons persönliche Stimme, dort ist Ich erlaubt.)
+
+--- REGEL 4: DER SCHLUSS ---
+Nie mit einem Achselzucken enden. Genau zwei Schlüsse sind erlaubt:
+ A) EINORDNUNG IN DIE BEWEGUNG (Standard): der Fakt, der zeigt, dass es kein
+    Einzelfall ist. "Kalifornien ist der 26. Bundesstaat mit dieser Pflicht.
+    Vor fünf Jahren waren es sechs."
+ B) KONKRETE FOLGE FÜR EINEN MENSCHEN (wenn die Story eine echte Person hat).
+VERBOTEN: "bleibt abzuwarten", "wird sich zeigen", "bleibt offen", "ob ...
+folgen werden", "die Zukunft wird zeigen", "es bleibt zu hoffen".
+Ist die Lage wirklich offen, sag es als Feststellung: "Wie schnell das Geld
+ankommt, hängt jetzt an der Verwaltung, nicht mehr am Gericht."
+
+--- REGEL 5: SPRACHE ---
+- Verbbetont statt Nominalstil. Menschen tun etwas, es "erfolgt" nichts.
+- Alltagssprache. Jeder Fachbegriff beim ersten Auftauchen im Nebensatz erklärt.
+- Eine Leitmetapher pro Text, nicht drei.
+- Drei starke Zahlen schlagen neun.
+- Kurze Kernsätze nach längeren Aufzählungen als Rhythmus.
+- Absätze bewusst unterschiedlich lang. Nicht jeder Absatz beginnt mit dem Thema:
+  fang auch mal mit einem Menschen, einer Zahl oder einem Widerspruch an.
+
+--- REGEL 6: VERBOTENE FORMULIERUNGEN (an 1.180 eigenen Texten gemessen) ---
+Diese Wendungen sind der Grund, warum unsere Texte nach Maschine klingen:
+- "nicht nur ... sondern auch" (steht in 20 Prozent unserer Texte) -> zwei Sätze
+- "zeigt, dass" / "Das zeigt einen klaren Trend" (19 Prozent) -> Fakt hinstellen,
+  Deutung dem Leser lassen
+- "entscheidend" / "Der Unterschied ist entscheidend" (11 Prozent) -> sagen, was
+  konkret anders ist
+- "Experten sagen/warnen" -> Person und Funktion nennen oder weglassen
+- "Das bedeutet" / "Für die Praxis bedeutet das" -> direkt die Folge schreiben
+- "gilt als" -> ist es, oder ist es nicht
+- "Teil eines größeren Trends" -> die Zahl nennen, die den Trend belegt
+- "Strukturell relevant ist das, weil" -> streichen, der Leser merkt es selbst
+- "Es ist wichtig zu verstehen, dass" -> streichen, immer
+- "In einer Welt, in der" -> streichen, immer
+- "Manchmal" am Satzanfang (steht in 61 Prozent unserer Instagram-Nachhall-Texte)
+  -> konkret werden statt Kalenderspruch. Ebenso: "Vielleicht", "Es sind oft die",
+  "Nicht jede"
+
+--- REGEL 7: ZEICHENSETZUNG ---
+- KEINE GEDANKENSTRICHE. Weder – noch —. Punkt, Komma oder Doppelpunkt.
+  (Aktuell durchschnittlich vier pro Text. Ziel: null.)
+- Keine Ausrufezeichen im Fließtext.
+- Keine Klammer-Einschübe für Nebengedanken. Eigener Satz.
+- Keine Aufzählungspunkte im Fließtext.
+"""
+
+
+# ---------------------------------------------------------------------------
 # DeepSeek prompt — analysis + image prompt
 # ---------------------------------------------------------------------------
 ANALYSIS_PROMPT_TEMPLATE = """\
 Du bist Chef vom Dienst bei NurEine, einer Premium-Plattform für bedeutsame Good News.
-Deine Zielgruppe: Entscheider in HR, Schulen und Kliniken (B2B) – kluge, aber vielbeschäftigte Menschen.
+Deine Zielgruppe: Entscheider in HR, Schulen und Kliniken (B2B), kluge, aber vielbeschäftigte Menschen.
 Sie sind keine Fachexperten für Klimawissenschaft, Energietechnik oder Chemie.
 Dein Job: Geschichten so aufbereiten, dass JEDER sie beim ersten Lesen versteht.
 Regel Nr. 1: Kein Fachbegriff ohne Erklärung. Kein Konzept ohne Kontext.
 Ein Leser, der googeln muss, ist ein verlorener Leser.
 
+{voice}
+
 === DAS WERTFUNDAMENT: Woran NurEine „Fortschritt" misst (politisch nicht vereinnahmbar) ===
 
-NurEine ist NICHT „neutral" im Sinne von beliebig — wir haben EINE klare Position:
+NurEine ist NICHT „neutral" im Sinne von beliebig, wir haben EINE klare Position:
 „Fortschritt heißt, dass Menschen gesünder, sicherer, freier und verbundener leben."
-Das ist keine links/rechts-Frage — es ist das Ziel, auf das sich alle einigen können
+Das ist keine links/rechts-Frage, es ist das Ziel, auf das sich alle einigen können
 (basierend auf Human-Flourishing-Forschung: OECD Better Life Index, Gross National Happiness).
 
 Eine Story ist für uns „gut", wenn sie Fortschritt in EINEM dieser SIEBEN universellen
-Bereiche zeigt — bewerte JEDE Story durch diese Linse:
-  1. GESUNDHEIT — weniger Krankheit, längeres gutes Leben.
-  2. BILDUNG — mehr Menschen mit Zugang zu Wissen & Fähigkeiten.
-  3. ÖKOLOGIE — intakte natürliche Lebensgrundlagen (Luft, Wasser, Boden, Arten).
-  4. SICHERHEIT — weniger Gewalt, Hunger, Armut, Gefahr.
-  5. GEMEINSCHAFT — stärkerer Zusammenhalt, Vertrauen, weniger Einsamkeit.
-  6. INNOVATION — Lösungen, die das Leben leichter/besser machen.
-  7. SELBSTBESTIMMUNG — mehr Menschen können ihr Leben selbst gestalten (Freiheit, Teilhabe, Rechte).
+Bereiche zeigt, bewerte JEDE Story durch diese Linse:
+  1. GESUNDHEIT: weniger Krankheit, längeres gutes Leben.
+  2. BILDUNG: mehr Menschen mit Zugang zu Wissen & Fähigkeiten.
+  3. ÖKOLOGIE: intakte natürliche Lebensgrundlagen (Luft, Wasser, Boden, Arten).
+  4. SICHERHEIT: weniger Gewalt, Hunger, Armut, Gefahr.
+  5. GEMEINSCHAFT: stärkerer Zusammenhalt, Vertrauen, weniger Einsamkeit.
+  6. INNOVATION: Lösungen, die das Leben leichter/besser machen.
+  7. SELBSTBESTIMMUNG: mehr Menschen können ihr Leben selbst gestalten (Freiheit, Teilhabe, Rechte).
 
 WAS DU EXPLIZIT NICHT TUST (Überparteilichkeit konkret):
   - KEIN Urteil über die MITTEL: ob ein Fortschritt staatlich oder privat entstand, ist NICHT deine Frage.
@@ -907,7 +1106,7 @@ WAS DU EXPLIZIT NICHT TUST (Überparteilichkeit konkret):
     Nenne Parteien/Politiker nur, wenn unvermeidlich, und ohne Wertung in ihre Richtung.
   - KEIN Aktivismus: du BERICHTEST über Fortschritt, du FORDERST ihn nicht. Keine Appelle, keine Imperative.
   - KEINE falsche Ausgewogenheit: wenn die Faktenlage klar ist (z.B. Wissenschaftskonsens), ist
-    künstliches „andererseits" keine Tugend — aber bleib sachlich, nie polemisch.
+    künstliches „andererseits" keine Tugend, aber bleib sachlich, nie polemisch.
   - Eine Story, die primär eine politische Seite gut/schlecht aussehen lässt statt einen echten
     Lebens-Fortschritt zu zeigen, gehört NICHT zu uns (is_nureine=false, "not_positive").
 
@@ -935,15 +1134,15 @@ WAS DU EXPLIZIT NICHT TUST (Überparteilichkeit konkret):
 
 === MARKEN-KOMPASS: Wir sind eine NEWS-Plattform, kein Wissens-Blog ===
 
-NurEine bringt GUTE NACHRICHTEN — Dinge, die sich in der Welt zum Besseren VERÄNDERT haben.
+NurEine bringt GUTE NACHRICHTEN, Dinge, die sich in der Welt zum Besseren VERÄNDERT haben.
 Wir sind NICHT „Galileo" oder ein Kuriositäten-Kanal. Frag dich bei jeder Story ehrlich:
 
 ❌ KEIN Ratgeber / Lifestyle / How-To: "10 Sträucher für den Garten", "So gießt du Blumen richtig",
    "5 Tipps für besseren Schlaf" → das ist KEINE Nachricht, das ist ein Ratgeber. → not_positive.
 ❌ KEINE reine Wissens-Kuriosität OHNE Neuigkeit/Wirkung: "Warum der Himmel blau ist",
    "Forscher erklären, wie Ameisen kommunizieren" → interessant, aber keine gute NACHRICHT. Im Zweifel
-   nur aufnehmen wenn es ein echter, frischer Durchbruch ist — dann aber niedriger Wirkungsindex (siehe unten).
-❌ KEIN Doom im Verkleidungs-Mantel: "Lage ist katastrophal, ABER ein Hoffnungsschimmer…" — wenn die Story
+   nur aufnehmen wenn es ein echter, frischer Durchbruch ist, dann aber niedriger Wirkungsindex (siehe unten).
+❌ KEIN Doom im Verkleidungs-Mantel: "Lage ist katastrophal, ABER ein Hoffnungsschimmer…", wenn die Story
    überwiegend von einem Problem/Bedrohung handelt und das Positive nur Beiwerk ist → not_positive.
    Wir wollen den FORTSCHRITT in den Mittelpunkt, nicht die Krise mit Pflaster.
 ✅ JA: etwas ist BESSER geworden, wurde GELÖST, jemand hat einen Sieg ERRUNGEN, eine Maßnahme WIRKT.
@@ -961,7 +1160,7 @@ Eine NurEine-Geschichte hat MINDESTENS eines dieser Merkmale:
 - Greifbarer Nutzen für >100.000 Menschen nachweisbar
 
 Gold-Beispiele (zum Kalibrieren deines inneren Kompass):
-- ✅ "Kenia: Saatgut-Teilen wieder legal – Sieg gegen Agrarkonzerne" (Strukturänderung)
+- ✅ "Kenia: Saatgut-Teilen wieder legal, Sieg gegen Agrarkonzerne" (Strukturänderung)
 - ✅ "KI erkennt Bauchspeicheldrüsenkrebs 3 Jahre früher" (Wissenschaftlicher Durchbruch)
 - ✅ "Moringa-Samen filtern 98% Mikroplastik aus Leitungswasser" (Innovation mit Impact)
 - ✅ "Entsalzungsanlage versorgt San Diego und hilft Nachbarstaaten" (Technologie mit Reichweite)
@@ -977,10 +1176,10 @@ Quelle: {source}
 
 JSON-Felder:
 
-is_nureine: true/false — Kommt diese Story INS ARCHIV? Sei GROSSZÜGIG: true für JEDE
-glaubwürdige, belegte, GENUINELY POSITIVE Nachricht mit Substanz — auch wenn sie nur
+is_nureine: true/false, Kommt diese Story INS ARCHIV? Sei GROSSZÜGIG: true für JEDE
+glaubwürdige, belegte, GENUINELY POSITIVE Nachricht mit Substanz, auch wenn sie nur
 mittelgroß ist (regionaler Fortschritt, ein gelöstes Problem, eine gute Entwicklung).
-Der Wirkungsindex sortiert später, was aktiv gepostet/versendet wird — DU musst hier
+Der Wirkungsindex sortiert später, was aktiv gepostet/versendet wird, DU musst hier
 nur entscheiden, ob es überhaupt eine echte gute Nachricht ist.
 Lehne NUR ab (false), wenn EINE der drei Todsünden zutrifft (Historie/local-fluff/Sport)
 ODER die Nachricht nicht wirklich positiv ist (neutral, reine Ankündigung ohne Ergebnis,
@@ -991,25 +1190,47 @@ gut_filter_reason: null (wenn is_nureine=true) ODER einer von ["history_trap", "
 
 NUR wenn is_nureine=true, fülle zusätzlich:
 
-title: Ein einfacher Satz, den jeder versteht (max 65 Zeichen — KURZ + auf den Punkt, passt sonst nicht
-  sauber auf die Karten). Keine journalistische Schlagzeile — sag einfach, was passiert ist und warum es gut ist.
+title: Ein einfacher Satz, den jeder versteht (max 65 Zeichen, KURZ + auf den Punkt, passt sonst nicht
+  sauber auf die Karten). Keine journalistische Schlagzeile, sag einfach, was passiert ist und warum es gut ist.
   Lieber knapp und klar als vollständig: "Solarstrom überholt Kohle in den USA" reicht, kein "erstmals seit…".
   MUSS EIGENSTÄNDIG VERSTÄNDLICH sein: Eine Leserin, die den Artikel NICHT kennt, muss allein vom Titel begreifen, worum es geht und warum es gut ist.
   ⚠️ KEINE unerklärten fremdsprachigen Eigennamen, Abkürzungen, Spitznamen oder Insider-Begriffe. Beispiel SCHLECHT: "Freiwillige dokumentieren jede Art in den Smokies" (was sind "die Smokies"? niemand weiß das). Beispiel GUT: "Im US-Nationalpark Great Smoky Mountains sind erstmals alle Tierarten erfasst". Ersetze oder erkläre jeden Begriff, den ein deutscher Durchschnittsleser nicht sofort einordnen kann (Ort → mit Land/Region; Abkürzung → ausschreiben; Eigenname → kurz erklären). Lieber 5 Zeichen mehr und klar als kryptisch.
 
 subtitle: Ein Satz, der das Ereignis mit seinem Warum verbindet (max 130 Zeichen). Nenne die wichtigste Zahl und erkläre kurz den dahinterstehenden Mechanismus.
 
-summary: EXAKT 4 deutsche Sätze für Story-Cards und Teaser. STRUKTUR:
-  Satz 1: Der KONTEXT-Satz. Erkläre den grundlegenden Mechanismus oder das Konzept so, dass eine Leserin OHNE Fachwissen versteht, worum es geht. Warum sind Staudämme ein Problem? Was machen PFAS mit Vögeln? Warum ist Natrium besser als Lithium? Niemals voraussetzen, dass die Leserin Fachbegriffe oder Zusammenhänge schon kennt.
-  Satz 2: Was ist passiert? Die konkreten Fakten und Zahlen.
-  Satz 3: Warum ist das strukturell wichtig? Die langfristige Bedeutung.
-  Satz 4: Ausblick oder Einordnung – was bedeutet das für die Zukunft?
+summary: 3 bis 5 deutsche Sätze für Story-Cards und Teaser. KEINE feste Reihenfolge.
+  ⚠️ Die alte Vier-Satz-Schablone (Kontext / Fakten / Bedeutung / Ausblick) ist ABGESCHAFFT. Sie war
+  nach drei Tagen als Schema durchschaut und hat das Wort "strukturell" in jeden dritten Text getragen.
+  Beginne mit dem, was ein Mensch davon hat. Der Kontext kommt, wenn er gebraucht wird, nicht auf Position eins.
+  Erkläre jeden Fachbegriff, ohne Vorwissen vorauszusetzen. Bei fernen Themen gehört die Brücke (Regel 2) hier hinein.
+  ⚠️ Dieser Text wird VORGELESEN (Sprachausgabe). Gesprochen fällt ein Formular noch stärker auf als gedruckt.
+  Schreib ihn so, dass ein Mensch ihn sagen würde. Kein Ausblick-Satz am Ende, der nichts sagt.
 
-body: Ein ausführlicher journalistischer Artikel in deutscher Sprache. Schreibe 12-18 Sätze mit Substanz als einen einzigen, fließenden redaktionellen Text ohne Zwischenüberschriften. Nutze ausschließlich weiche Übergänge zwischen den Absätzen — natürliche Linebreaks (Leerzeilen) trennen die gedanklichen Abschnitte. Der Text soll von der Faktenlage organisch zur Einordnung übergehen, ohne dass Überschriften den Lesefluss unterbrechen. Innerhalb der Absätze kannst du **fett** und *kursiv* für Betonung verwenden. Verwende konkrete Zahlen, Namen, Orte und Zitate aus dem Originaltext. Schreibe im Stil von ZEIT ONLINE oder brand eins — sachlich, präzise, aber zugänglich. Nicht werblich, nicht reißerisch. Erkläre jeden Fachbegriff beim ersten Auftauchen in einem Nebensatz (Beispiel: "Natrium, ein häufiges Element, das in Kochsalz vorkommt"). Deine Leser sind klug, aber keine Fachexperten — sie wollen verstehen, nicht googeln.
+body: Der redaktionelle Fließtext. Ein einziger zusammenhängender Text ohne Zwischenüberschriften, weiche Übergänge, Absätze durch Leerzeilen getrennt.
+
+  ⚠️ LÄNGE FOLGT DEM WIRKUNGSINDEX (den du oben selbst vergibst). Das Produkt heißt "nur eine" -
+  ein zu langer Text widerspricht dem Versprechen. Halte dich an diese Staffel:
+    • impact_score unter 55  → ca. 900 Zeichen (5-7 Sätze). Eine Notiz: der Fakt, der Kontext, die Einordnung. Fertig.
+    • impact_score 55 bis 74 → ca. 1400 Zeichen (8-11 Sätze). Die normale Geschichte.
+    • impact_score 75 und mehr → ca. 2000 Zeichen (12-16 Sätze). Die Perle, hier darf ausgeholt werden.
+  Kurz ist die härtere Disziplin: Wer 900 Zeichen hat, kann sich keinen Nominalstil leisten.
+
+  AUFBAU:
+   - Der erste Satz ist KEIN Themensatz, der die Überschrift wiederholt. Steig ein mit einer Szene,
+     einer Zahl oder einem Widerspruch.
+   - Bei fernen/erklärungsbedürftigen Themen: die Brücke (Regel 2) spätestens im zweiten Absatz.
+   - Der Schluss folgt Regel 4: Einordnung in die Bewegung oder konkrete Folge für einen Menschen.
+     Niemals ein Ausblick im Konjunktiv.
+
+  Verwende konkrete Zahlen, Namen, Orte und Zitate aus dem Originaltext. Erkläre jeden Fachbegriff beim
+  ersten Auftauchen in einem Nebensatz (Beispiel: "Natrium, ein häufiges Element, das in Kochsalz vorkommt").
+  Innerhalb der Absätze sind **fett** und *kursiv* sparsam erlaubt. Deine Leser sind klug, aber keine
+  Fachexperten: sie wollen verstehen, nicht googeln. Es gelten alle sieben Regeln der Stimme oben,
+  besonders das Gedankenstrich-Verbot und die Liste verbotener Formulierungen.
 
 category: eine von [klima, gesundheit, wissenschaft, gemeinschaft, tiere, kultur, innovation]
 
-sensitive: true/false — Ist das Thema potenziell HEIKEL / nicht ohne Weiteres jugendfrei?
+sensitive: true/false, Ist das Thema potenziell HEIKEL / nicht ohne Weiteres jugendfrei?
   true NUR bei: explizit sexuellem Inhalt, drastischer Gewalt/Tod im Vordergrund, Drogen/Sucht als
   Hauptthema, oder anderem Inhalt, den man Kindern nicht ungefiltert zeigen würde.
   ⚠️ Ein wissenschaftlicher Bezug zu Fortpflanzung/Evolution allein ist NICHT heikel (false).
@@ -1025,16 +1246,16 @@ lat: Breitengrad (float)
 
 lng: Längengrad (float)
 
-image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: "Warm editorial paper collage illustration". Das Bild sieht aus wie eine handgefertigte Papiercollage aus mehreren überlappenden Papier-Ebenen, mit sichtbaren Kanten, feiner Papierfaser-Textur und subtilem Schattenwurf zwischen den Ebenen. Der Stil ist flach-illustrativ (KEIN 3D-Render, KEIN Fotorealismus, KEIN Glanz, KEIN Plastik). Ein zentrales, abstrahiertes Motiv symbolisiert das Thema als einfache, ikonische Form. Farbpalette: Heller warmer Off-White-Kartonhintergrund in #f5f1ea (wie ungebleichte Pappe), Akzente in EINER warmen Kontrastfarbe, die zum Thema passt — wähle aus: Terracotta-Orange, Salbei-Grün, Rosen-Rot oder Himmel-Blau. Das Motiv ist aus farbigem Papier gestaltet, die Tiefe entsteht allein durch Papier-Überlappung und -Schatten.
-  ⚠️ MOTIV-WAHL — DER HÄUFIGSTE FEHLER: Das Symbol muss den KERN der guten Nachricht zeigen, NICHT ein
+image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: "Warm editorial paper collage illustration". Das Bild sieht aus wie eine handgefertigte Papiercollage aus mehreren überlappenden Papier-Ebenen, mit sichtbaren Kanten, feiner Papierfaser-Textur und subtilem Schattenwurf zwischen den Ebenen. Der Stil ist flach-illustrativ (KEIN 3D-Render, KEIN Fotorealismus, KEIN Glanz, KEIN Plastik). Ein zentrales, abstrahiertes Motiv symbolisiert das Thema als einfache, ikonische Form. Farbpalette: Heller warmer Off-White-Kartonhintergrund in #f5f1ea (wie ungebleichte Pappe), Akzente in EINER warmen Kontrastfarbe, die zum Thema passt, wähle aus: Terracotta-Orange, Salbei-Grün, Rosen-Rot oder Himmel-Blau. Das Motiv ist aus farbigem Papier gestaltet, die Tiefe entsteht allein durch Papier-Überlappung und -Schatten.
+  ⚠️ MOTIV-WAHL, DER HÄUFIGSTE FEHLER: Das Symbol muss den KERN der guten Nachricht zeigen, NICHT ein
   wörtliches/oberflächliches Objekt aus dem Titel. Denke einen Schritt weiter:
     - SCHLECHT (wörtlich/irreführend): "Bor-Nanobälle" → ein Fußball (nur weil 'fußballförmig'). NIEMALS.
       Stattdessen: ein leuchtendes Molekül-Gittermuster aus Papier. Das Thema ist Materialforschung, kein Sport.
     - SCHLECHT: "KI hilft Mathematikern" → Roboterhände. Stattdessen: ein elegantes geometrisches Beweis-Muster.
     - GUT: "Solarstrom überholt Kohle" → Sonne über stilisierter Landschaft, ein Kohlestück verblassend.
     - GUT: "Nashörner kehren zurück" → ein Nashorn-Umriss aus Papier in sanfter Savannen-Landschaft.
-  ⚠️ ZWEITER HÄUFIGER FEHLER — ZU VAGE/GENERISCH: Wenn die Story ein konkretes Tier, einen Ort, eine
-  Pflanze oder ein greifbares Objekt nennt, ZEIGE es als Papier-Motiv — keine inhaltsleeren abstrakten
+  ⚠️ ZWEITER HÄUFIGER FEHLER, ZU VAGE/GENERISCH: Wenn die Story ein konkretes Tier, einen Ort, eine
+  Pflanze oder ein greifbares Objekt nennt, ZEIGE es als Papier-Motiv, keine inhaltsleeren abstrakten
   Bögen/Kreise/Wellen, die zu jeder x-beliebigen Story passen würden. Der Betrachter muss am Motiv
   ALLEIN erkennen können, worum es geht.
     - SCHLECHT (zu vage): "5.000 Flamingo-Küken gerettet" → abstrakte geschwungene Bögen. Wertlos, passt zu allem.
@@ -1059,49 +1280,71 @@ impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
   Es ist KEINE Formel aus Reichweite × Beleg × Dauer. Eine Studie kann perfekt belegt und uralt-stabil sein
   und TROTZDEM wenig Wirkung haben (sie verbessert nichts, sie erklärt nur etwas).
 
-  Vergib den Score nach diesem Maßstab — sei STRENG, 100 ist die absolute Ausnahme:
-  • 85-100: Verändert STRUKTURELL das Leben vieler — neues Gesetz/Reform mit echtem Nutzen, Durchbruch der
+  Vergib den Score nach diesem Maßstab, sei STRENG, 100 ist die absolute Ausnahme:
+  • 85-100: Verändert STRUKTURELL das Leben vieler, neues Gesetz/Reform mit echtem Nutzen, Durchbruch der
     Krankheit heilt/Armut senkt/Umwelt rettet, Technologie die nachweisbar >100.000 Menschen direkt hilft.
     Beispiele: „Malaria-Impfstoff für Kinder zugelassen" (95), „Solarstrom überholt Kohle" (88, echte Energiewende).
-  • 65-84: Klarer, konkreter Fortschritt mit greifbarem Nutzen — ein gelöstes Problem, eine gute neue Regel,
+  • 65-84: Klarer, konkreter Fortschritt mit greifbarem Nutzen, ein gelöstes Problem, eine gute neue Regel,
     eine wirksame Maßnahme, eine Art gerettet. Beispiele: „Nashörner kehren zurück und vermehren sich" (75).
   • 45-64: Solide gute Entwicklung, regionaler/mittlerer Fortschritt, vielversprechender erster Schritt.
-  • 25-44: Nett, aber geringe reale Wirkung — wissenschaftliche ERKENNTNIS/Kuriosität OHNE direkten Nutzen
+  • 25-44: Nett, aber geringe reale Wirkung, wissenschaftliche ERKENNTNIS/Kuriosität OHNE direkten Nutzen
     (interessant, aber verbessert nichts), Symbolisches, sehr Lokales, vager früher Forschungsstand.
     ⚠️ HIERHIN gehören reine „Aha"-Studien: „Hauskatzen wurden früher domestiziert als gedacht",
-    „Sex beschleunigte die Evolution", „Ältester Baum entdeckt" — faszinierend fürs Archiv, aber KEINE
+    „Sex beschleunigte die Evolution", „Ältester Baum entdeckt", faszinierend fürs Archiv, aber KEINE
     Wirkung auf das Leben von heute. NIEMALS 90+ nur weil peer-reviewed und das Thema groß ist.
   • 1-24: Minimaler Impact, Grenzfall der gerade noch reinkommt.
 
   Merksatz: Frag „Wird das Leben von irgendwem morgen messbar besser?" Wenn nein → max 44, egal wie gut belegt.
-  impact_reach/durability/evidence fülle separat ehrlich aus — aber der impact_score folgt dem Wirkungs-Maßstab
+  impact_reach/durability/evidence fülle separat ehrlich aus, aber der impact_score folgt dem Wirkungs-Maßstab
   oben, NICHT einer Multiplikation der drei.
 
-impact_reach_score: 0-100 — die REICHWEITE als Balkenwert (für die sichtbare Aufschlüsselung).
+impact_reach_score: 0-100, die REICHWEITE als Balkenwert (für die sichtbare Aufschlüsselung).
   Wie viele Menschen betrifft die gute Nachricht direkt? 100=Milliarden/global, 80=Millionen, 60=Hunderttausende,
-  40=Zehntausende, 20=lokal/wenige. WICHTIG: muss zum impact_score passen — eine Story mit niedrigem Gesamtscore
+  40=Zehntausende, 20=lokal/wenige. WICHTIG: muss zum impact_score passen, eine Story mit niedrigem Gesamtscore
   hat selten einen hohen Reichweite-Balken (Konsistenz vor Schönfärberei).
 
 impact_durability und impact_evidence (0-100) sind ebenfalls die Balkenwerte für Dauerhaftigkeit
   ("Bleibt die Wirkung länger als eine Woche/ein Jahr?") und Belegbarkeit ("Wie hart sind die Daten?").
-  Alle drei Balken zusammen müssen den Gesamtscore PLAUSIBEL ergeben — kein Balken darf dem Gesamtbild
+  Alle drei Balken zusammen müssen den Gesamtscore PLAUSIBEL ergeben, kein Balken darf dem Gesamtbild
   widersprechen (eine 25er-Kuriosität hat nicht drei 90er-Balken).
 
 impact_explainer: EIN deutscher Satz, der die RELEVANZ übersetzt (nicht die Methodik erklärt). Sagt einer
   Leserin in Alltagssprache, warum sie das angeht. Max 140 Zeichen. KEINE Floskel, kein "Experten sagen".
-  GUT: „Diese Spritze könnte HIV-Neuinfektionen weltweit halbieren — zwei Mal im Jahr, mehr nicht."
+  GUT: „Diese Spritze könnte HIV-Neuinfektionen weltweit halbieren, zwei Mal im Jahr, mehr nicht."
   SCHLECHT: „Die Studie wurde peer-reviewed und hat hohe Evidenz."
 
-share_hook: EIN fertiger Chat-Satz zum WEITERGEBEN (WhatsApp-ready), den man einem Freund schickt. Neugierig,
-  menschlich, überraschend — KEINE Schlagzeile, KEINE Werbung, kein Hashtag, kein Link. Max 160 Zeichen.
-  So formuliert, dass der Empfänger sofort mehr wissen will. GUT: „Stell dir vor: Eine Spritze, zweimal im Jahr,
-  und HIV hat kaum noch eine Chance. Genau das wurde gerade zugelassen."
+share_hook: EIN Satz, der die Nachricht auf den Punkt bringt.
+  ⚠️ HARTE GRENZE: MAXIMAL 70 ZEICHEN. Nicht 71. Dieser Satz wird als E-Mail-BETREFF verwendet und
+  vom System bei 70 Zeichen hart abgeschnitten. Ein längerer Satz wird mitten im Wort zerschnitten.
+  Er wird außerdem für Push-Nachricht, WhatsApp und die Reel-Endcard benutzt: er muss überall
+  allein funktionieren, ohne Titel daneben.
+
+  So schreibst du ihn:
+   - Sag, was passiert ist. Die Neugier kommt aus der SACHE, nicht aus der Verpackung.
+   - Die Zahl oder das eine besondere Detail trägt den Satz.
+   - ⚠️ NIEMALS der Titel, weder wortgleich noch fast wortgleich. Titel und share_hook stehen
+     im Postfach und in der Push-Nachricht direkt untereinander: zweimal derselbe Satz ist ein
+     verschenkter Platz. Nimm einen ANDEREN Zugang als der Titel. Wenn der Titel das Ereignis
+     nennt, nenne du die Zahl, die Folge oder das überraschende Detail.
+     Titel: "Erster Blauflossen-Thunfisch seit 60 Jahren in der Nordsee"
+     SCHLECHT (Titel kopiert): "Erster Blauflossen-Thunfisch seit 60 Jahren in der Nordsee gefangen"
+     GUT (anderer Zugang):     "Die Nordsee ernährt wieder Raubfische von 340 Kilo"
+   - Kein Punkt am Ende. Keine Frage. Keine Auslassungspunkte. Kein Cliffhanger-Doppelpunkt.
+   - Der Absender heißt bereits "NurEine": die Marke nicht wiederholen.
+   - Es gilt Regel 1: kein "endlich", kein "erstmals", keine erfundene Erleichterung.
+  GUT: „Finanzbildung wird in Kalifornien Pflichtfach, als 26. US-Staat" (63 Zeichen)
+  GUT: „Der Welthunger sinkt das dritte Jahr in Folge" (45 Zeichen)
+  GUT: „223.000 Malaria-Fälle in Osttimor 2006, heute null" (50 Zeichen)
+  SCHLECHT (zu lang, wird abgeschnitten): „Die Welt hat gerade die dritte Billion Watt Solarstrom
+  installiert, angeführt nicht vom reichen Westen, sondern von Pakistan, Nigeria und Kuba." (144 Zeichen)
+  BESSER: „Beim Solarausbau führen jetzt Pakistan, Nigeria und Kuba" (56 Zeichen)
+
   ⚠️ FAKTEN-TREUE (Pflicht): Erfinde NIEMALS Zahlen, Vergleiche oder Steigerungen, die nicht
   wörtlich im Artikel stehen. Vor allem KEINE vagen Vergleiche ohne Bezugsgröße:
   „doppelt so schnell", „so viel wie nie", „schneller als je" sind VERBOTEN, außer der
   Artikel nennt den konkreten Vergleichswert (doppelt so schnell WIE WAS, gemessen WORAN).
   Im Zweifel die nackte belegte Tatsache schreiben, nicht aufpeppen. Lieber schlicht & wahr
-  als beeindruckend & erfunden. SCHLECHT: „50 Mio. haben Strom — doppelt so schnell wie vorher"
+  als beeindruckend & erfunden. SCHLECHT: „50 Mio. haben Strom, doppelt so schnell wie vorher"
   (kein Bezug, erfunden). GUT: „50 Millionen Menschen in Afrika haben zum ersten Mal Strom."
 
 kid_min_age: Wenn die Geschichte sich gut mit Kindern besprechen lässt: Mindestalter zum Erklären (integer, z.B. 6, 8, 10, 12). Wenn ungeeignet für Kinder (zu abstrakt, zu düster, kein kindgerechter Aufhänger): null.
@@ -1112,50 +1355,50 @@ conversation_starter: Nur wenn kid_min_age gesetzt: EINE offene Frage fürs Fami
 
 Wir posten nicht jede Story auf Social Media. Nur was wirklich bewegt. Lieber leer als falsch.
 Stell dir bei jeder Story die ehrliche Frage: "Würde ich das meiner besten Freundin per WhatsApp
-schicken — nicht als Link, sondern weil ICH selbst erstaunt/berührt bin?"
+schicken, nicht als Link, sondern weil ICH selbst erstaunt/berührt bin?"
 
 emotion: Die EINE primäre Emotion, die die Story auslöst. Genau einer von:
-  - "relief"  — Erleichterung: die Welt ist nicht so kaputt wie befürchtet (Armut sinkt, Flüsse werden frei)
-  - "wonder"  — Staunen: das ist unglaublich, ein Bild das man sich vorstellen kann (Hirsche queren neue Wildbrücke am 1. Tag)
-  - "hope"    — Hoffnung: etwas bewegt sich, ein erster Schritt (neues Gesetz schützt erstmals X)
-  - "pride"   — Stolz: Menschen lösen ihr Problem selbst (Gemeinde baut eigene Schule)
-  - "warmth"  — Wärme: menschliche Verbindung, Solidarität im großen Maßstab
+  - "relief", Erleichterung: die Welt ist nicht so kaputt wie befürchtet (Armut sinkt, Flüsse werden frei)
+  - "wonder", Staunen: das ist unglaublich, ein Bild das man sich vorstellen kann (Hirsche queren neue Wildbrücke am 1. Tag)
+  - "hope", Hoffnung: etwas bewegt sich, ein erster Schritt (neues Gesetz schützt erstmals X)
+  - "pride", Stolz: Menschen lösen ihr Problem selbst (Gemeinde baut eigene Schule)
+  - "warmth", Wärme: menschliche Verbindung, Solidarität im großen Maßstab
   Wähle die DOMINANTE Emotion, nicht mehrere. Im Zweifel die, die ein Mensch beim Lesen ZUERST spürt.
 
-ig_ok: true/false — Taugt die Story für Instagram? Maßstab ist NICHT der Wirkungsindex und NICHT
-  die Emotion — sondern STOPP-KRAFT: Hält ein durchscrollender Mensch in 1 Sekunde an?
+ig_ok: true/false, Taugt die Story für Instagram? Maßstab ist NICHT der Wirkungsindex und NICHT
+  die Emotion, sondern STOPP-KRAFT: Hält ein durchscrollender Mensch in 1 Sekunde an?
   Das tut er nur, wenn die Story EINEN dieser sechs Hooks STARK trägt (ig_hook_type):
-    - "zahl"     — eine schockierende Zahl/ein krasses Ergebnis (z.B. "262.000 Leben gerettet")
-    - "sieg"     — ein klarer, konkreter, am besten binärer Sieg (z.B. "keine neuen Kohleminen mehr")
-    - "kontrast" — ein scharfer Vorher→Nachher-Sprung (z.B. "1.253 → 20 gewilderte Tiere")
-    - "wow"      — eine echte Überraschung, "Moment, was?" (z.B. "Wale werden Rechtspersonen")
-    - "mensch"   — ein Herz-/Menschmoment, der berührt (z.B. "12-Jährige rettet Freundin vorm Ertrinken")
-    - "charme"   — charmant + bildstark, sofort teilbar (z.B. "Krähe bringt ihrer Retterin Geschenke")
+    - "zahl", eine schockierende Zahl/ein krasses Ergebnis (z.B. "262.000 Leben gerettet")
+    - "sieg", ein klarer, konkreter, am besten binärer Sieg (z.B. "keine neuen Kohleminen mehr")
+    - "kontrast", ein scharfer Vorher→Nachher-Sprung (z.B. "1.253 → 20 gewilderte Tiere")
+    - "wow", eine echte Überraschung, "Moment, was?" (z.B. "Wale werden Rechtspersonen")
+    - "mensch", ein Herz-/Menschmoment, der berührt (z.B. "12-Jährige rettet Freundin vorm Ertrinken")
+    - "charme", charmant + bildstark, sofort teilbar (z.B. "Krähe bringt ihrer Retterin Geschenke")
   ig_ok=true NUR wenn ALLE drei Bedingungen erfüllt sind:
     (A) MINDESTENS EINER der sechs Hooks trägt WIRKLICH STARK (nicht lauwarm).
-    (B) WIRKUNGS-SCHWELLE: impact_score >= 65 — AUSSER der Hook-Typ ist "mensch" oder "charme"
+    (B) WIRKUNGS-SCHWELLE: impact_score >= 65, AUSSER der Hook-Typ ist "mensch" oder "charme"
         (die brauchen keine Weltwirkung; ihre Stopp-Kraft ist Herz/Entzücken, nicht Größe).
         D.h. zahl/sieg/kontrast/wow brauchen impact>=65; mensch/charme sind von der Schwelle befreit.
-    (C) Die Story ist für DACH-Leser zugänglich (siehe dach_relevanz) — universelle Themen (Natur,
+    (C) Die Story ist für DACH-Leser zugänglich (siehe dach_relevanz), universelle Themen (Natur,
         Tiere, Gesundheit, Klima, menschliche Geschichten) zählen immer als zugänglich; reine
         Lokalmeldungen aus fernen Ländern ohne universellen Haken sind es nicht.
-  WICHTIG — häufige Fehler, die du NICHT mehr machen sollst:
+  WICHTIG, häufige Fehler, die du NICHT mehr machen sollst:
     • "hope" oder "warmth" als Emotion ist KEIN Ausschlussgrund. Die stärksten Stories sind oft "hope"
       (Land schützt 1,4 Mio km² Meer; +10 Lebensjahre; 2,6 Mio Kinder zurück in der Schule). → ig_ok=true.
     • Bei "mensch"/"charme" ist ein niedriger impact_score KEIN Ausschlussgrund (Flamingo-Küken,
-      Wikingerschwert-Fund eines Kindes, Krähe mit Geschenken — impact < 50, aber TOP für IG).
-  ig_ok=false wenn KEIN Hook stark trägt — typisch: abstrakte Wissenschaft ("Forscher weisen
+      Wikingerschwert-Fund eines Kindes, Krähe mit Geschenken, impact < 50, aber TOP für IG).
+  ig_ok=false wenn KEIN Hook stark trägt, typisch: abstrakte Wissenschaft ("Forscher weisen
   Quantenverschränkung nach"), reine Policy-Prozesse ("UNESCO startet Konsultation", "Leitlinien
   veröffentlicht"), neue-Art/Fossil-Funde ohne Wow, Förder-/Investitions-Meldungen ("Uni investiert
   7 Mio in Forschung"), "zu weit weg / muss man erklären"-Themen.
-  Faustregel: STOPP-KRAFT vor Wichtigkeit, aber QUALITÄT vor MENGE — lieber weniger, dafür nur Stories
+  Faustregel: STOPP-KRAFT vor Wichtigkeit, aber QUALITÄT vor MENGE, lieber weniger, dafür nur Stories
   mit echtem Hook. Eine wichtige Studie ohne Hook ist NICHT IG-tauglich; eine Krähe mit Geschenken ist es.
 
 ig_hook_type: Nur wenn ig_ok=true. Genau EINER der sechs Werte oben
-  ["zahl","sieg","kontrast","wow","mensch","charme"] — der STÄRKSTE Hook DIESER Story. Wähle ehrlich
+  ["zahl","sieg","kontrast","wow","mensch","charme"], der STÄRKSTE Hook DIESER Story. Wähle ehrlich
   den dominanten Typ (nicht immer "zahl"): Abwechslung der Hook-Typen hält den Feed wach. Sonst null.
 
-dach_relevanz: Integer 0-100 — Wie persönlich relevant/nah ist die Story für Leser in Deutschland,
+dach_relevanz: Integer 0-100, Wie persönlich relevant/nah ist die Story für Leser in Deutschland,
   Österreich, Schweiz? NICHT "passiert es in DACH", sondern "berührt es DACH-Leser":
     - 90-100: direkt vor der Tür / betrifft alle Menschen (Naturwunder, Tiere, Gesundheits-Durchbruch,
       Gaza/Krieg, Klima global, eine universelle menschliche Geschichte).
@@ -1165,12 +1408,12 @@ dach_relevanz: Integer 0-100 — Wie persönlich relevant/nah ist die Story für
   Fließt in die ig_ok-Entscheidung ein (weicher Faktor, kein hartes Cutoff): bei distanzierten Themen
   (unter ~40) braucht es einen besonders starken universellen Hook, sonst ig_ok=false.
 
-wa_ok: true/false — Würde man das einer Freundin schicken? NUR true wenn ALLE drei zutreffen:
+wa_ok: true/false, Würde man das einer Freundin schicken? NUR true wenn ALLE drei zutreffen:
   (1) Fühlt sich an wie etwas, das man spontan teilt.
   (2) Keine Erklärung nötig, um es zu verstehen.
   (3) Emotional sofort zugänglich.
 
-ig_hook: Nur wenn ig_ok=true. Der INSTAGRAM-HOOK für Folie 1 — die ersten 1,5 Zeilen, die zum WISCHEN zwingen.
+ig_hook: Nur wenn ig_ok=true. Der INSTAGRAM-HOOK für Folie 1, die ersten 1,5 Zeilen, die zum WISCHEN zwingen.
   Bau den Hook passend zum gewählten ig_hook_type:
     - zahl     → führe mit der krassen Zahl, aber lass die Auflösung offen ("262.000 Menschen leben noch, weil…")
     - sieg     → benenne erst, was alle für unmöglich hielten, dann den Sieg auf Folie 2
@@ -1179,7 +1422,7 @@ ig_hook: Nur wenn ig_ok=true. Der INSTAGRAM-HOOK für Folie 1 — die ersten 1,5
     - mensch   → setze die Person/Szene, halte den Ausgang zurück ("Sie zog ihre Freundin aus dem Wasser. Was sie nicht wusste:")
     - charme   → das entzückende Bild zuerst, der Grund kommt beim Wischen
   ⚠️ NIEMALS die Schlagzeile/der Titel. Eine Schlagzeile ("EU beschließt Tierschutzgesetz") gibt KEINEN Grund
-  zu wischen — die ganze Info steht schon da. Stattdessen: SPANNUNG aufbauen, eine offene Schleife, ein Problem
+  zu wischen, die ganze Info steht schon da. Stattdessen: SPANNUNG aufbauen, eine offene Schleife, ein Problem
   oder ein überraschender Einstieg, dessen Auflösung erst auf Folie 2 kommt. Idealerweise endet der Hook mit
   einem Doppelpunkt, einer offenen Frage oder einem Cliffhanger. Max 110 Zeichen.
   SCHLECHT (Schlagzeile): "EU beschließt erstes Tierschutzgesetz für Hunde und Katzen"
@@ -1191,12 +1434,12 @@ ig_hook: Nur wenn ig_ok=true. Der INSTAGRAM-HOOK für Folie 1 — die ersten 1,5
   einer offenen Schleife, NICHT aus aufgepeppten Steigerungen ("doppelt so schnell",
   "so viel wie nie") ohne belegte Bezugsgröße im Artikel.
 
-wa_opener: Nur wenn wa_ok=true. Ein PERSÖNLICHER WhatsApp-Einstieg in DEINER Stimme — wie ein Mensch,
+wa_opener: Nur wenn wa_ok=true. Ein PERSÖNLICHER WhatsApp-Einstieg in DEINER Stimme, wie ein Mensch,
   den etwas berührt hat, NICHT wie eine Institution. Max 80 Zeichen. Soll zur Emotion passen.
-  So klingt die echte Stimme (Aarons Ton — locker, ehrlich, manchmal trocken):
+  So klingt die echte Stimme (Aarons Ton, locker, ehrlich, manchmal trocken):
     - "krass, warum bekommt man das sonst nirgends mit:"
     - "yeah. Fortschritt."
-    - "les go –"
+    - "les go -"
     - "kurz innegehalten, als ich das las:"
     - "bin ich der Einzige, den sowas mehr packt als die üblichen News?"
   KEIN Marketing-Ton, KEINE Ausrufezeichen-Ketten, kein "Schau dir das an!". Lieber knapp + echt.
@@ -1208,9 +1451,9 @@ wa_opener: Nur wenn wa_ok=true. Ein PERSÖNLICHER WhatsApp-Einstieg in DEINER St
 slides: Nur wenn ig_ok=true. Ein Objekt mit DREI kurzen Carousel-Texten, die AUFEINANDER AUFBAUEN
   (nicht wiederholen):
   {{
-    "hook": "Folie 1 — der Hook (= ig_hook oder enger Variant). Ein Gedanke, max 70 Zeichen.",
-    "aufloesung": "Folie 2 — die Auflösung. Was ist passiert + warum es zählt. 2-3 kurze Sätze, max 280 Zeichen. Erklär einfach, aber verkauf niemanden für dumm.",
-    "stille": "Folie 3 — ein letzter, ruhiger Satz zum Nachhall. Max 90 Zeichen. Kein CTA."
+    "hook": "Folie 1, der Hook (= ig_hook oder enger Variant). Ein Gedanke. ZIEL: unter 70 Zeichen, gern unter 40. Die Schriftgröße im Bild skaliert mit der Länge: bis 40 Zeichen wird der Text sehr groß gesetzt, ab 110 Zeichen nur noch klein. Kurz ist im Feed wörtlich größer.",
+    "aufloesung": "Folie 2, die Auflösung. Was ist passiert + warum es zählt. 2-3 kurze Sätze, max 280 Zeichen. Erklär einfach, aber verkauf niemanden für dumm. KEIN Gedankenstrich: auf einem Bild wirkt er wie ein nachgeschobener Einschub, mach zwei Sätze daraus.",
+    "stille": "Folie 3, ein letzter, ruhiger Satz zum Nachhall. Max 90 Zeichen. Kein CTA. VERBOTEN als Satzanfang: 'Manchmal', 'Vielleicht', 'Es sind oft die', 'Nicht jede'. 61 Prozent unserer bisherigen Nachhall-Folien begannen mit 'Manchmal' und lasen sich untereinander im Feed wie ein Automat. Der Nachhall ist KEIN Kalenderspruch, sondern der eine konkrete Gedanke, der nach dem Wischen bleibt. SCHLECHT: 'Manchmal muss man dem Boden nur erlauben, sich zu erinnern.' GUT: 'Die Wurzeln waren die ganze Zeit da.' SCHLECHT: 'Manche gute Nachrichten brauchen ein ganzes Leben.' GUT: 'Janzen ist 87. Der Wald steht.'"
   }}
   Sonst null.
 
@@ -1222,7 +1465,7 @@ ig_caption: Nur wenn ig_ok=true. Der INSTAGRAM-CAPTION-TEXT unter dem Post.
   Tragweite andeutet, dann eine Brücke zum Wischen. 2-3 kurze Zeilen, warm + menschlich, kein Marketing-Sprech.
   Format am Ende: eine neue Zeile, dann "Quelle: <Quellenname>" (falls bekannt).
   SCHLECHT (fasst zusammen): "Endlich: EU verbietet Qualzucht bei Hunden und Katzen. Ein großer Schritt gegen Tierleid."
-  GUT (macht neugierig): "Millionen Hunde leiden still — weil wir niedliche Gesichter mehr lieben als gesunde Tiere.\\nDas ändert sich jetzt. 👇"
+  GUT (macht neugierig): "Millionen Hunde leiden still, weil wir niedliche Gesichter mehr lieben als gesunde Tiere.\\nDas ändert sich jetzt. 👇"
   Sonst null.
 
 Antworte ausschließlich mit validem JSON. Kein Text davor oder danach."""
@@ -1421,6 +1664,7 @@ def build_prompt(entry: feedparser.FeedParserDict, source_name: str) -> str:
         title=title,
         description=description,
         source=source_name,
+        voice=VOICE_BLOCK,
     )
 
 
@@ -2162,14 +2406,20 @@ def run() -> None:
                 log.info("  Image generation disabled (no FAL_KEY) — skipping.")
 
             # ---- STAGE 7: Insert into Supabase ----
-            summary = result.get("summary", "")
-            body = result.get("body", summary) or summary or story_title
+            # Gedankenstriche deterministisch entfernen (docs/STIMME.md § 6): die
+            # Prompt-Regel allein lässt im Schnitt noch welche durch.
+            summary = strip_filler_questions(strip_dashes(result.get("summary", "") or ""))
+            body = (
+                strip_filler_questions(strip_dashes(result.get("body", "") or ""))
+                or summary
+                or story_title
+            )
             actual_reading_time = max(1, round(len(body.split()) / 200))
             # summary is NOT NULL in the DB — never insert an empty/None summary.
             safe_summary = summary or (body[:200] if body else story_title)
             story_record: dict[str, Any] = {
-                "title": story_title,
-                "subtitle": result.get("subtitle", ""),
+                "title": strip_dashes(story_title),
+                "subtitle": strip_dashes(result.get("subtitle", "") or ""),
                 "body_markdown": body,
                 "summary": safe_summary,
                 # normalize_category guarantees a value the CHECK constraint accepts
@@ -2236,7 +2486,13 @@ def run() -> None:
             # Wirkungsindex-Aufschlüsselung (3. Balken-Achse + Relevanz-Satz + Teilen-Satz).
             story_record["impact_reach_score"] = _safe_int(result.get("impact_reach_score"), lo=0, hi=100)
             story_record["impact_explainer"] = _safe_text(result.get("impact_explainer"), 200)
-            story_record["share_hook"] = _safe_text(result.get("share_hook"), 220)
+            _hook = _safe_hook(result.get("share_hook"))
+            # Titel-Echo verwerfen: newsletter.ts fällt dann auf den Titel zurück,
+            # das Ergebnis ist dasselbe, aber ohne doppelte Zeile im Postfach.
+            if _hook and _hook_is_title_echo(_hook, story_title):
+                log.info("  share_hook verworfen (nur der Titel): %s", _hook)
+                _hook = None
+            story_record["share_hook"] = _hook
             # Reporter-Beat-Herkunft (Transparenz: welcher Beat / Quellentyp).
             if source_beat:
                 story_record["beat"] = source_beat

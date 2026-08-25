@@ -38,8 +38,11 @@ wa_ok, wa_opener`. → Tabelle `nureine_stories`.
 Weitere DeepSeek-Stellen:
 - `scripts/image_quality.py` — Prompt-Review (Text) vor FLUX + Regenerierung.
 - `scripts/fetch_worldbank.py` — baut Stories aus Weltbank-Daten.
-- Backfill/Rescore-Skripte (`backfill_social.mjs`, `backfill_breakdown.mjs`,
-  `regenerate_drafts.mjs`, `rescore_impact.mjs`, `backfill_images.py`, …).
+- Backfill/Rescore-Skripte (`backfill_breakdown.mjs`, `rescore_impact.mjs`,
+  `backfill_images.py`, …).
+  (`seed_stories.py`, `backfill_social.mjs` und `regenerate_drafts.mjs` wurden am
+  2026-08-25 gelöscht: sie liefen in keinem Workflow, waren seit drei Monaten
+  unangefasst und trugen widersprüchliche IG-Regeln plus den alten Bildstil.)
 - `src/lib/server/social/comments.ts` — IG-Kommentar-Antworten (Human-in-loop).
 
 **Bild = fal.ai FLUX.1 [pro]** (Prompt kommt aus dem DeepSeek-Call),

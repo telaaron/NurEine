@@ -125,6 +125,55 @@ function fallbackScript(story) {
 }
 
 /**
+ * Der Stimm-Kanon für gesprochenen Text. Single Source of Truth: docs/STIMME.md
+ * (§ 9.7), verbindlich ergänzt durch docs/REEL_TEXT_REGELN.md.
+ *
+ * ACHTUNG: Dieselben Regeln stehen als VOICE_BLOCK in scripts/fetch_stories.py.
+ * Hier bewusst gekürzt auf das, was für gesprochene Sprache zählt: Der
+ * Auto-Modus schreibt kein Fließtext-Feld, also entfallen Länge-Staffel und
+ * Absatz-Regeln. Wer hier ändert, zieht docs/STIMME.md mit.
+ */
+const VOICE_BLOCK = `=== DIE STIMME VON NURENE (gesprochen) ===
+
+Ein kluger Mensch erzählt dir, was er herausgefunden hat: ruhig, genau, ohne dich
+zu belehren und ohne sich selbst zu feiern. Nicht: Nachrichtensprecher. Nicht: Werbetexter.
+
+REGEL 1, SO DARSTELLEN WIE ES IST (wichtigste Regel):
+Untertreiben, nicht aufblasen. Der Zuschauer soll SELBST "krass" denken. Sagt die
+Stimme ihm, dass es krass ist, nimmt sie ihm die Schlussfolgerung ab, und er glaubt weniger.
+- Die Zahl steht ALLEIN, ohne Adjektiv davor. "43 Millionen weniger", nicht "unglaubliche 43 Millionen".
+- Kein Superlativ, keine Wertung: kein "bahnbrechend", "unglaublich", "endlich", "historisch".
+- Keine erfundene Reaktion ("große Erleichterung", "Jubel") und keine erfundene
+  Vorgeschichte ("seit Jahren gefordert"), wenn die Quelle das nicht hergibt.
+- Punkt statt Ausrufezeichen. Das zwingt die Stimme zum Absetzen.
+TEST: Steht diese Behauptung in der Story? Wenn nein, ist sie erfunden.
+
+REGEL 2, DIE BRÜCKE:
+Wenn die Story weit weg wirkt (fernes Land, abstraktes Thema), MUSS der Einstieg die
+Distanz überbrücken. Nicht ein Gefühl spiegeln, sondern das falsche Bild im Kopf des
+Zuschauers benennen und dann kippen.
+ BEISPIEL: "Über die Sahelzone hört man immer dasselbe. Die Wüste rückt vor, und niemand
+ hält sie auf." Kipp-Satz: "Die Zahlen sagen etwas anderes."
+Andere erlaubte Wege: die Zahl in eine fühlbare Größe übersetzen ("etwa die Fläche
+Niedersachsens") oder zeigen, dass es dasselbe Problem auch hier gibt.
+⚠️ Die Brücke ist eine AUSSAGE, keine Frage. Niemals "Was hat das mit uns zu tun?"
+sagen. Gesprochen klingt so eine Frage wie ein Lehrer, der abfragt.
+
+REGEL 3, GESPROCHENE SPRACHE:
+- EIN GEDANKE, EIN SATZ. Keine Nebensatz-Stapel. Was man beim Lesen entwirren kann,
+  ist beim Hören verloren.
+- Kein Nominalstil. Menschen tun etwas, es "erfolgt" nichts. Gesprochen ist Nominalstil
+  unerträglich.
+- KEIN GEDANKENSTRICH im vo-Text. Er hat keine hörbare Entsprechung. Punkt oder Komma.
+- Kein nacktes Substantiv am Satzanfang (die Stimme kippt sonst ins Englische). Artikel davor.
+
+REGEL 4, VERBOTENE FORMULIERUNGEN:
+"nicht nur ... sondern auch", "zeigt, dass", "entscheidend", "Experten sagen",
+"Das bedeutet", "gilt als", "Teil eines größeren Trends", "Es ist wichtig zu verstehen",
+"In einer Welt, in der", "Manchmal" am Satzanfang.
+Kein Medien-Vorwurf ("war klar, dass das untergeht", "gut, dass es uns gibt").`;
+
+/**
  * EIN Skript für Screen UND Stimme: jede Szene hat 'screen' (kurzer Text im
  * Bild) und 'vo' (der gesprochene Satz, der EXAKT dasselbe sagt, nur
  * ausformuliert). Die Stimme liest also immer das, was gerade zu sehen ist —
@@ -139,9 +188,20 @@ async function generateScript(story) {
 	}
 	const prompt = `Du schreibst das Skript für ein 20-Sekunden-Instagram-Reel von "NurEine" (deutschsprachige Good-News-Plattform, Positionierung: "ehrlicher Fortschritt", belegt statt behauptet, warm aber nie kitschig, duzt).
 
+${VOICE_BLOCK}
+
+=== AUFBAU DES REELS ===
+
 Das Reel hat feste Szenen. Pro Szene gibt es "screen" (Text im Bild) und "vo" (der gesprochene Satz eines Moderators). REGELN:
-- "screen" ist die ESSENZ (kurz, plakativ), "vo" ERZÄHLT denselben Fakt ausformuliert — NICHT wortgleich, aber niemals andere Fakten oder andere Reihenfolge. Die Untertitel zeigen das Gesprochene, der Screen-Text ergänzt.
-- "vo" enthält NUR deutsche Wörter — keine englischen Namen/Begriffe (die Stimme kippt sonst in englische Aussprache). Englische Eigennamen nur in "screen", im VO umschreiben ("eine Jugend-Tanzkompanie" statt "National Youth Dance Company").
+- "screen" ist die ESSENZ (kurz, plakativ), "vo" ERZÄHLT denselben Fakt ausformuliert, NICHT wortgleich, aber niemals andere Fakten oder andere Reihenfolge. Die Untertitel zeigen das Gesprochene, der Screen-Text ergänzt.
+- "vo" enthält NUR deutsche Wörter, keine englischen Namen/Begriffe (die Stimme kippt sonst in englische Aussprache). Englische Eigennamen nur in "screen", im VO umschreiben ("eine Jugend-Tanzkompanie" statt "National Youth Dance Company").
+- Zahl im Bild = Zahl im Ton, EXAKT. Niemals runden.
+
+Die Dramaturgie folgt dieser Kette (docs/REEL_TEXT_REGELN.md):
+  hook   = EINSTIEG. Nicht die Zahl, sondern das falsche Bild im Kopf des Zuschauers
+           oder sein Alltagsgefühl. Danach kippt es (siehe Regel 2, die Brücke).
+  number = KERN. Jetzt die Zahl, allein stehend, plus der Mechanismus dahinter.
+  beats  = was daraus folgt. NEUE Information, nicht den Hook wiederholen.
 
 STORY:
 Titel: ${story.title}

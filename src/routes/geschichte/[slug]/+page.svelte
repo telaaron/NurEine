@@ -3,7 +3,6 @@
 	import { formatDate, inline, sections, toneStyles } from '$lib/utils';
 	import { track } from '$lib/track';
 	import { recordRead, weekStats, type WeekStats } from '$lib/readingStreak';
-	import { sitePrefs } from '$lib/sitePrefs.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { CheckIcon, ClipboardIcon, MagnifyingGlassIcon, PlayIcon, ShareIcon } from 'heroicons-svelte/24/outline';
 	import StoryCard from '$lib/components/StoryCard.svelte';
@@ -28,15 +27,6 @@
 	// (Laden / Spielen) sichtbar, damit der Klick sofort eine Reaktion zeigt.
 	let audioEl = $state<HTMLAudioElement | null>(null);
 	let audioState = $state<'idle' | 'loading' | 'playing' | 'paused'>('idle');
-
-	// Vorlesen ist standardmäßig AUS. Der Player erscheint erst, wenn der Leser
-	// ihn unter /einstellungen einschaltet (localStorage, gilt pro Browser).
-	// Bewusst nicht server-seitig gerendert: SSR kennt die Präferenz nicht, ein
-	// kurz aufblitzender Player wäre schlimmer als ein spät erscheinender.
-	$effect(() => {
-		sitePrefs.hydrate();
-	});
-	const showAudio = $derived(Boolean(story.audioUrl) && sitePrefs.readAloud);
 
 	function toggleAudio() {
 		const el = audioEl;
@@ -268,10 +258,8 @@
 				<ShareBar url={storyUrl} title={story.title} text={story.dek} showLabel={true} />
 			</div>
 
-			{#if showAudio}
-				<!-- Vorlesen: dezenter Player, nur für die wenigen vertonten Top-Stories
-				     — und nur, wenn der Leser das Vorlesen in den Einstellungen
-				     aktiviert hat (Default: aus). -->
+			{#if story.audioUrl}
+				<!-- Vorlesen: dezenter Player, nur für die wenigen vertonten Top-Stories. -->
 				<div class="mt-6 rise rise-d4 flex flex-col gap-3 p-4 rounded-[8px]" style="background: var(--color-canvas-soft); border: 1px solid var(--color-rule);">
 					<div class="flex items-center gap-3">
 						<button

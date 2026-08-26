@@ -5,14 +5,12 @@
 	import { onMount } from 'svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { CheckIcon } from 'heroicons-svelte/24/outline';
-	import { sitePrefs } from '$lib/sitePrefs.svelte';
 
 	let { data } = $props();
 
 	// Eigenen Referral-Code lokal merken, damit der Teilen-Reflex auf jeder
 	// Story-Seite den Link automatisch dem Leser zuschreibt (?ref=).
 	onMount(() => {
-		sitePrefs.hydrate();
 		if (data.ok && data.referralCode) {
 			try {
 				localStorage.setItem('nureine_my_ref', data.referralCode);
@@ -147,42 +145,6 @@
 					</button>
 				{/each}
 			</div>
-		</div>
-
-		<!-- Vorlesen: reine Anzeige-Präferenz, gilt pro Browser (localStorage) und
-		     wird deshalb sofort gespeichert — nicht über "Einstellungen speichern". -->
-		<div class="mt-10 pt-8" style="border-top: 1px solid var(--color-rule);">
-			<div class="flex items-start justify-between gap-6">
-				<div class="flex-1">
-					<p class="text-base font-medium" style="color: var(--color-ink);">Geschichten vorlesen</p>
-					<p class="mt-1 text-sm leading-relaxed max-w-[42ch]" style="color: var(--color-muted); font-family: var(--font-serif);">
-						Zeigt bei vertonten Geschichten einen Player zum Anhören. Standardmäßig aus —
-						schalte ihn ein, wenn du lieber hörst als liest. Gilt für diesen Browser.
-					</p>
-				</div>
-				<button
-					type="button"
-					role="switch"
-					aria-checked={sitePrefs.readAloud}
-					aria-label="Geschichten vorlesen"
-					onclick={() => sitePrefs.toggleReadAloud()}
-					class="relative shrink-0 mt-1 w-[52px] h-[30px] rounded-full transition-all active:scale-[0.97]"
-					style="background: {sitePrefs.readAloud ? 'var(--color-amber)' : 'var(--color-rule)'};
-						border: 1px solid {sitePrefs.readAloud ? 'var(--color-amber)' : 'var(--color-rule-strong)'};"
-				>
-					<span
-						class="absolute top-1/2 -translate-y-1/2 w-[22px] h-[22px] rounded-full"
-						style="left: {sitePrefs.readAloud ? '26px' : '3px'};
-							background: var(--color-paper);
-							box-shadow: var(--shadow-sm);
-							transition: left 0.18s ease;"
-						aria-hidden="true"
-					></span>
-				</button>
-			</div>
-			<p class="mt-3 text-xs" style="color: var(--color-faint); font-family: var(--font-mono); letter-spacing: 0.03em;">
-				{sitePrefs.readAloud ? 'Vorlesen ist an.' : 'Vorlesen ist aus.'}
-			</p>
 		</div>
 
 		<div class="mt-8 flex items-center gap-4 flex-wrap">

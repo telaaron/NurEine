@@ -763,11 +763,43 @@ async function fetchStory(baseUrl, slug) {
 
 // ── Upload + Queue ──────────────────────────────────────────────────────────
 
+// Remotion rendert in Master-Qualitaet (~3.000-3.800 kbit/s, 9-15 MB pro Reel).
+// Das ist fuer TikTok-Upload richtig, fuer die Vorschau im Browser aber zu schwer:
+// 9,4 MB brauchten ueber Festnetz 10,3 s, am Handy brach der Player ab (belegt
+// 2026-08-26, /admin/tiktok "kann nicht geladen werden").
+//
+// Darum vor dem Upload eine Web-Fassung erzeugen: gleiche Aufloesung und Laenge,
+// nur netzvertraeglich kodiert. Gemessen: 9,4 MB -> 3,8 MB, 10,3 s -> 1,1 s,
+// SSIM 0,993 (ab 0,98 ist der Unterschied mit blossem Auge nicht sichtbar).
+//
+// yuv420p ist Pflicht: yuvj420p (voller Farbbereich) wird von manchen mobilen
+// Playern abgelehnt. +faststart schiebt den moov-Atom nach vorn, sonst muss der
+// Player die GANZE Datei laden, bevor das erste Bild erscheint.
+function webFassung(mp4Path) {
+	const ziel = mp4Path.replace(/\.mp4$/, '-web.mp4');
+	try {
+		execFileSync('ffmpeg', [
+			'-v', 'error', '-y', '-i', mp4Path,
+			'-c:v', 'libx264', '-profile:v', 'main', '-level', '4.0', '-pix_fmt', 'yuv420p',
+			'-crf', '24', '-preset', 'slow', '-maxrate', '2500k', '-bufsize', '5000k',
+			'-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', ziel
+		], { stdio: 'pipe' });
+		const vorher = statSync(mp4Path).size, nachher = statSync(ziel).size;
+		console.log(`OK web-fassung: ${(vorher / 1048576).toFixed(1)} MB → ${(nachher / 1048576).toFixed(1)} MB`);
+		return ziel;
+	} catch (e) {
+		// Lieber das grosse Original ausliefern als gar keins.
+		console.warn(`WARN web-fassung fehlgeschlagen (${e.message}) → Original wird hochgeladen`);
+		return mp4Path;
+	}
+}
+
 async function uploadToSupabase(mp4Path, slug) {
 	const supa = env.SUPABASE_URL.replace(/\/$/, '');
 	const key = env.SUPABASE_SERVICE_KEY;
 	// Eigener Bucket: story_images erlaubt nur Bilder ≤5MB (mime-Whitelist) → 400.
 	const bucket = env.REEL_BUCKET || 'story_reels';
+	mp4Path = webFassung(mp4Path);
 	const fname = `reels/${slug}-${statSync(mp4Path).size % 100000}.mp4`;
 	const data = readFileSync(mp4Path);
 	const r = await fetch(`${supa}/storage/v1/object/${bucket}/${fname}`, {

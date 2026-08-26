@@ -843,12 +843,30 @@ const SoftCta: React.FC<{ text: string; fromFrame: number; toFrame: number }> = 
 	const frame = useCurrentFrame();
 	if (frame < fromFrame || frame > toFrame) return null;
 	const op = interpolate(frame, [fromFrame, fromFrame + 10, toFrame - 10, toFrame], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-	const y = interpolate(frame, [fromFrame, fromFrame + 12], [16, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
+	// Von unten hereinschieben statt von oben — der Streifen "waechst" aus dem Rand.
+	const y = interpolate(frame, [fromFrame, fromFrame + 14], [22, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 	return (
-		<div style={{ position: 'absolute', left: 60, right: 60, bottom: SAFE_BOTTOM - 30, display: 'flex', justifyContent: 'center', zIndex: 25, opacity: op, transform: `translateY(${y}px)` }}>
-			<div style={{ background: 'rgba(22,20,15,0.82)', borderRadius: 16, padding: '14px 26px', display: 'flex', alignItems: 'center', gap: 12 }}>
-				<div style={{ width: 8, height: 8, borderRadius: 4, background: AMBER }} />
-				<div style={{ fontFamily: FF.interSemi, fontSize: 32, color: '#fff', letterSpacing: '-0.01em' }}>{text}</div>
+		// GANZ NACH UNTEN (Aaron 2026-08-26): Vorher sass der Streifen bei
+		// SAFE_BOTTOM-30 und damit direkt unter den Captions (SAFE_BOTTOM+70) — er
+		// verdeckte Bildinhalt. Jetzt sitzt er unterhalb der Safe-Zone am Rand, wo
+		// TikTok ohnehin nichts Eigenes einblendet.
+		<div style={{ position: 'absolute', left: M, right: M, bottom: 96, display: 'flex', justifyContent: 'center', zIndex: 25, opacity: op, transform: `translateY(${y}px)` }}>
+			<div
+				style={{
+					// Schmaler, heller Streifen statt dunklem Kasten: liegt ruhiger im Bild
+					// und nimmt die Marken-Papierfarbe auf, statt ein Fremdkoerper zu sein.
+					background: 'rgba(251,248,241,0.94)',
+					borderRadius: 999,
+					padding: '12px 24px 12px 18px',
+					display: 'flex',
+					alignItems: 'center',
+					gap: 12,
+					boxShadow: '0 6px 22px rgba(22,20,15,0.28)'
+				}}
+			>
+				{/* Akzent-Punkt als ruhiger Marker — kein Icon, keine Ablenkung */}
+				<div style={{ width: 10, height: 10, borderRadius: 5, background: AMBER, flexShrink: 0 }} />
+				<div style={{ fontFamily: FF.interSemi, fontSize: 27, color: INK, letterSpacing: '-0.005em', lineHeight: 1.15, whiteSpace: 'nowrap' }}>{text}</div>
 			</div>
 		</div>
 	);

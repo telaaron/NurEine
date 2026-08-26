@@ -43,6 +43,15 @@ TOLERATED = {
     # (Zifferndekomposition des Hochzeichens).
     "km2": "quadratkilometer",
     "qkm": "quadratkilometer",
+    # Das kleine Whisper-Modell verschluckt bei medizinischen Fremdwoertern gern ein "r"
+    # und variiert die Endung — NICHT deterministisch: derselbe Ton wurde einmal als
+    # "Nakolepsie", einmal als "NACOLEPSI" transkribiert. Mit dem medium-Modell
+    # gegengeprueft (2026-08-26): die Stimme spricht "Narkolepsie" KORREKT.
+    # Kein Aussprachefehler, nur eine Schwaeche der Transkription.
+    "nakolepsie": "narkolepsie",
+    "nacolepsi": "narkolepsie",
+    "nacolepsie": "narkolepsie",
+    "nakolepsi": "narkolepsie",
 }
 
 FILLER = {"und", "der", "die", "das", "den", "dem", "ein", "eine", "einen", "ist", "sind"}
@@ -143,36 +152,22 @@ def numeric_key(w: str):
     return "#" + str(n) if n is not None else w
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--audio", required=True)
-    ap.add_argument("--text", required=True)
-    ap.add_argument("--model", default="small")
-    ap.add_argument("--json", action="store_true")
-    a = ap.parse_args()
+def transkribiere(audio: str, modell: str) -> str:
+    """Ton -> Text. Wirft bei Fehlern, der Aufrufer entscheidet ueber WARN/Abbruch."""
+    # download_root explizit setzen: whisper legt sonst ~/.cache/whisper per
+    # os.makedirs OHNE exist_ok an und wirft "[Errno 17] File exists", sobald der
+    # Ordner schon da ist (belegt 2026-07-30 — das Gate fiel dadurch still auf
+    # "nicht lauffähig" zurück und hätte ungeprüften Ton durchgelassen).
+    import whisper
+    cache = os.path.expanduser("~/.cache/whisper")
+    os.makedirs(cache, exist_ok=True)
+    model = whisper.load_model(modell, download_root=cache)
+    return model.transcribe(audio, language="de", fp16=False)["text"].strip()
 
-    try:
-        import warnings
-        warnings.filterwarnings("ignore")
-        import whisper
-    except Exception as e:  # Gate nicht lauffähig -> WARN, nicht Abbruch
-        print(f"verify_vo: Whisper nicht verfügbar ({e})", file=sys.stderr)
-        return 2
 
-    try:
-        # download_root explizit setzen: whisper legt sonst ~/.cache/whisper per
-        # os.makedirs OHNE exist_ok an und wirft "[Errno 17] File exists", sobald der
-        # Ordner schon da ist (belegt 2026-07-30 — das Gate fiel dadurch still auf
-        # "nicht lauffähig" zurück und hätte ungeprüften Ton durchgelassen).
-        cache = os.path.expanduser("~/.cache/whisper")
-        os.makedirs(cache, exist_ok=True)
-        model = whisper.load_model(a.model, download_root=cache)
-        heard_raw = model.transcribe(a.audio, language="de", fp16=False)["text"].strip()
-    except Exception as e:
-        print(f"verify_vo: Transkription fehlgeschlagen ({e})", file=sys.stderr)
-        return 2
-
-    want, got = tokens(a.text), tokens(heard_raw)
+def vergleiche(geplant: str, heard_raw: str) -> tuple:
+    """Vergleicht Plan und Gehoertes. Gibt (missing, extra) zurueck."""
+    want, got = tokens(geplant), tokens(heard_raw)
 
     # Zahlwort <-> Ziffer auf denselben Schluessel bringen ("dreiundvierzig" == "43").
     wantk = [numeric_key(w) for w in want]
@@ -196,8 +191,89 @@ def main() -> int:
     # zusaetzlich gegen den zusammengezogenen Gesamtstring pruefen.
     wjoin, gjoin = "".join(wf), "".join(gf)
 
-    missing = [w for w, k in zip(want, wf) if k not in gf and k not in FILLER and k not in gjoin]
-    extra = [w for w, k in zip(got, gf) if k not in wf and k not in FILLER and k not in wjoin]
+    # Getrennt/zusammen ist kein Aussprachefehler ("dranbleibt" == "dran bleibt").
+    # Dafuer pruefen wir, ob ein nicht gefundenes Wort mit seinem NACHBARN verschmolzen
+    # bzw. aufgeteilt wurde — statt es blind im gesamten zusammengezogenen Text zu suchen.
+    #
+    # Der frueher genutzte Gesamtstring-Vergleich liess kurze Woerter durchrutschen:
+    # ElevenLabs fuegte "um" hinzu ("nur, um Symptome zu lindern" statt "nur, Symptome
+    # zu lindern"), und das Gate meldete OK, weil "um" zufaellig in "zum" und "Nummer"
+    # steckte (belegt 2026-08-26).
+    def nachbar_paar(i: int, liste: list) -> set:
+        """Das Wort mit seinem linken bzw. rechten Nachbarn verschmolzen."""
+        paare = set()
+        if i > 0:
+            paare.add(liste[i - 1] + liste[i])
+        if i + 1 < len(liste):
+            paare.add(liste[i] + liste[i + 1])
+        return paare
+
+    def erklaerbar(i: int, k: str, eigene: list, andere: list) -> bool:
+        """Wort fehlt nur scheinbar: es wurde drueben zusammengezogen oder aufgeteilt."""
+        # a) DRUEBEN verschmolzen: "dran"+"bleibt" -> hier steht "dranbleibt"
+        if nachbar_paar(i, eigene) & set(andere):
+            return True
+        # b) HIER verschmolzen: "dranbleibt" -> drueben "dran"+"bleibt"
+        for j in range(len(andere) - 1):
+            if andere[j] + andere[j + 1] == k:
+                return True
+        # c) Teil eines laengeren Wortes (nur ab 4 Zeichen, sonst rutschen kurze durch)
+        return any(k in a and len(k) >= 4 for a in andere)
+
+    missing = [
+        w for i, (w, k) in enumerate(zip(want, wf))
+        if k not in gf and k not in FILLER and not erklaerbar(i, k, wf, gf)
+    ]
+    extra = [
+        w for i, (w, k) in enumerate(zip(got, gf))
+        if k not in wf and k not in FILLER and not erklaerbar(i, k, gf, wf)
+    ]
+
+    return missing, extra
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--audio", required=True)
+    ap.add_argument("--text", required=True)
+    ap.add_argument("--model", default="small")
+    ap.add_argument("--gegenprobe", default="medium",
+                    help='Modell fuer die zweite Meinung ("" schaltet sie ab)')
+    ap.add_argument("--json", action="store_true")
+    a = ap.parse_args()
+
+    try:
+        import warnings
+        warnings.filterwarnings("ignore")
+        import whisper  # noqa: F401  (nur Verfuegbarkeitspruefung)
+    except Exception as e:  # Gate nicht lauffähig -> WARN, nicht Abbruch
+        print(f"verify_vo: Whisper nicht verfügbar ({e})", file=sys.stderr)
+        return 2
+
+    try:
+        heard_raw = transkribiere(a.audio, a.model)
+    except Exception as e:
+        print(f"verify_vo: Transkription fehlgeschlagen ({e})", file=sys.stderr)
+        return 2
+
+    missing, extra = vergleiche(a.text, heard_raw)
+
+    # GEGENPROBE: Das kleine Modell verhoert sich bei Fachwoertern — und zwar NICHT
+    # reproduzierbar: derselbe Ton wurde einmal "Nakolepsie", einmal "NACOLEPSI"
+    # transkribiert (belegt 2026-08-26). Eine gepflegte Toleranzliste kommt dagegen
+    # nie hinterher, sie waere Symptombekaempfung. Darum wird JEDER Befund vom
+    # groesseren Modell gegengeprueft; nur was BEIDE bemaengeln, stoppt den Render.
+    # Kosten entstehen nur im Fehlerfall, der Normalfall bleibt schnell.
+    gegen = ""
+    if (missing or extra) and a.gegenprobe:
+        try:
+            gegen = transkribiere(a.audio, a.gegenprobe)
+            m2, e2 = vergleiche(a.text, gegen)
+            missing = [w for w in missing if w in m2]
+            extra = [w for w in extra if w in e2]
+        except Exception as e:
+            # Zweitmodell nicht ladbar -> beim strengeren Erstbefund bleiben.
+            print(f"verify_vo: Gegenprobe nicht möglich ({e})", file=sys.stderr)
 
     ok = not missing and not extra
     out = {
@@ -207,10 +283,14 @@ def main() -> int:
         "missing": missing,
         "extra": extra,
     }
+    if gegen:
+        out["gegenprobe"] = gegen
     if a.json:
         print(json.dumps(out, ensure_ascii=False))
     else:
         print(("OK  " if ok else "ABWEICHUNG  ") + f'gehört: "{heard_raw}"')
+        if gegen:
+            print(f'  gegengeprüft ({a.gegenprobe}): "{gegen}"')
         if missing:
             print("  nicht gesprochen:", ", ".join(missing))
         if extra:

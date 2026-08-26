@@ -464,3 +464,29 @@ Beides zusammen, belegt, in unter zwei Minuten: das ist NurEine.
 Alles andere im Produkt (Newsletter-Templates, OG-Karten, TikTok-Caption, App,
 Threads) **wählt nur Felder aus** und schreibt keinen eigenen Text. Wer den
 Kanon an der Quelle ändert, ändert ihn überall.
+
+---
+
+## 12. Ausgangswerte (Messlatte)
+
+Gemessen am 2026-08-26, unmittelbar vor Einführung des Kanons. Die Zahlen sind
+die Vergleichsbasis: In einer Woche sollten sie deutlich niedriger liegen.
+
+| Kennzahl | Vorher (53 Stories, 10 Tage) | Ziel |
+|---|---|---|
+| `share_hook` über 70 Zeichen | 50 von 53 (94 %) | 0 |
+| Durchschnittliche Hook-Länge | 133 Zeichen | unter 70 |
+| Fließtext mit Gedankenstrich | 44 von 53 (83 %) | 0 |
+| Zusammenfassung mit exakt 4 Sätzen | 27 von 53 (51 %) | keine Häufung |
+| „nicht nur … sondern auch" | 20 % (1.180 Texte) | unter 3 % |
+| „zeigt, dass" | 19 % | unter 3 % |
+| „Manchmal" am Anfang der Stille-Folie | 218 von 357 (61 %) | 0 |
+| Stories unter DACH-Relevanz 70 | 331 von 575 (58 %) | unverändert, aber mit Brücke |
+
+Nachmessen mit `ops/` oder direkt per SQL gegen `nureine_stories`.
+
+⚠️ **Offene Baustelle:** Die nächtlichen Agenten auf dem Mac Mini
+(`ops/prompts/*.md`, per `.gitignore` nicht im Repo) kennen diesen Kanon noch
+nicht. `redaktion.md` schreibt die Texte nach dem Fetcher **komplett neu** und
+fordert in Zeile 63 weiterhin „summary: exakt 4 Sätze". Solange das so ist,
+überschreibt die Redaktion nachts, was der Fetcher morgens richtig gemacht hat.

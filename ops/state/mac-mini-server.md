@@ -1,16 +1,16 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-26T10:25:24Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-26T11:08:09Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 6 weeks, 21 hours, 9 minutes |
+| Läuft seit | up 6 weeks, 21 hours, 52 minutes |
 | Speicherplatz | 838G frei von 915G (4% belegt) |
-| Arbeitsspeicher | 12Gi verfügbar von 15Gi |
-| Auslastung | load average: 0.29, 0.08, 0.02 |
+| Arbeitsspeicher | 13Gi verfügbar von 15Gi |
+| Auslastung | load average: 0.06, 1.19, 1.01 |
 | Tailscale-Adresse | `100.123.159.38` |
 | Claude Code | 2.1.209 (Claude Code) |
 | cron-Dienst | active (17 Jobs) |
@@ -20,13 +20,13 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `97bcdc8 Merge remote-tracking branch 'origin/main'` |
-| vom | 2026-08-26 11:25:19 +0100 |
-| Hinter origin/main | 0 Commits |
+| Aktueller Commit | `93c386c chore(state): Zustandsbericht mac-mini-server 2026-08-26T10:25:24Z` |
+| vom | 2026-08-26 12:26:12 +0200 |
+| Hinter origin/main | 2 Commits |
 | Vor origin/main | 0 Commits |
-| Uncommittete Dateien | 0 |
+| Uncommittete Dateien | 2 |
 | Branches nur lokal (ungesichert) | 0 |
-| Letzter Pull | aktualisiert 677055a → 97bcdc8 |
+| Letzter Pull | kein Pull — uncommittete Änderungen im Arbeitsbaum |
 
 ## Letzte Agenten-Läufe
 

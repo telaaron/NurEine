@@ -1,16 +1,16 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-26T04:30:01Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-26T09:54:36Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 6 weeks, 15 hours, 14 minutes |
+| Läuft seit | up 6 weeks, 20 hours, 39 minutes |
 | Speicherplatz | 838G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
-| Auslastung | load average: 0,00, 0,00, 0,00 |
+| Auslastung | load average: 0.09, 0.03, 0.01 |
 | Tailscale-Adresse | `100.123.159.38` |
 | Claude Code | 2.1.209 (Claude Code) |
 | cron-Dienst | active (17 Jobs) |
@@ -20,13 +20,13 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `e8aed38 chore(state): Zustandsbericht mac-mini-server 2026-08-25T19:30:01Z` |
-| vom | 2026-08-25 21:30:48 +0200 |
+| Aktueller Commit | `40a873e Merge remote-tracking branch 'origin/main'` |
+| vom | 2026-08-26 10:53:08 +0100 |
 | Hinter origin/main | 0 Commits |
 | Vor origin/main | 0 Commits |
 | Uncommittete Dateien | 0 |
 | Branches nur lokal (ungesichert) | 0 |
-| Letzter Pull | aktuell (e8aed38) |
+| Letzter Pull | aktualisiert d4f1e48 → 40a873e |
 
 ## Letzte Agenten-Läufe
 
@@ -36,8 +36,8 @@
 | chefredakteur | 20260826T013159Z | ✅ exit=0 |
 | redaktion | 20260826T013439Z | ✅ exit=0 |
 | analyst | 20260826T014722Z | ✅ exit=0 |
-| reel-regie | 20260825T060001Z | ✅ exit=0 |
-| verbesserer | 20260825T081701Z | ✅ exit=0 |
+| reel-regie | 20260826T060001Z | ✅ exit=0 |
+| verbesserer | 20260826T081701Z | ✅ exit=0 |
 
 
 ## Fernwartung

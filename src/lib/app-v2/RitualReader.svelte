@@ -5,7 +5,7 @@
 	import type { StoryResult } from '$lib/server/queries';
 	import { onDestroy } from 'svelte';
 	import { animate, easeOut, prefersReducedMotion, formatDeNumber } from './motion';
-	import { whoosh, thud, chime, tick, haptic } from './audio';
+	import { whoosh, thud, chime, tick, haptic, countUpSound } from '$lib/sound';
 	import { accentVar, proxied, impactBars, shortDate } from './story';
 
 	let { story, onDone }: { story: StoryResult; onDone?: () => void } = $props();
@@ -71,14 +71,17 @@
 			return;
 		}
 		T(() => whoosh(), 120);
+		// Die Zahl klingt jetzt mit: aufsteigende Pentatonik während des Hochlaufs,
+		// weiche Quinte beim Einrasten. Ersetzt den einzelnen tick() am Ende —
+		// der markierte nur das Ende, ohne den Anstieg hörbar zu machen.
+		const sfx = countUpSound();
 		const c = animate(
 			1100,
 			(p) => {
 				shownScore = Math.round(story.impactScore * easeOut(p, 2));
+				sfx(p);
 			},
-			() => {
-				tick();
-			}
+			sfx.done
 		);
 		cancels.push(c);
 	}

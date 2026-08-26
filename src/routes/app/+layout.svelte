@@ -6,7 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { prefs } from '$lib/app-v2/prefs.svelte';
-	import { tick as tickSound } from '$lib/app-v2/audio';
+	import { tick as tickSound } from '$lib/sound';
 	import Icon from '$lib/components/Icon.svelte';
 	import { SpeakerWaveIcon, SpeakerXMarkIcon } from 'heroicons-svelte/24/outline';
 

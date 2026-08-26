@@ -5,7 +5,7 @@
 	import { onMount } from 'svelte';
 	import type { Light } from './collection.svelte';
 	import { shortDate } from './story';
-	import { chime } from './audio';
+	import { chime } from '$lib/sound';
 	import { prefersReducedMotion } from './motion';
 
 	let {

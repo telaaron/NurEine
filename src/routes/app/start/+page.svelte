@@ -12,7 +12,7 @@
 	import { collection } from '$lib/app-v2/collection.svelte';
 	import { prefs } from '$lib/app-v2/prefs.svelte';
 	import { animate, easeOut, prefersReducedMotion } from '$lib/app-v2/motion';
-	import { whoosh, thud, chime, tick, haptic } from '$lib/app-v2/audio';
+	import { whoosh, thud, chime, tick, haptic } from '$lib/sound';
 
 	const reduced = prefersReducedMotion();
 

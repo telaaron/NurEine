@@ -7,6 +7,8 @@
 	import { toneColors, toneLabels } from '$lib/tone-constants';
 	import { createGlowMarker, highlightGlow, setFresh, popMarker, setTimeState } from '$lib/map/glow-marker';
 	import { addBaseTiles, addLabelTiles } from '$lib/map/basemap';
+	import { livePulse } from '$lib/sound';
+	import SoundToggle from '$lib/components/SoundToggle.svelte';
 
 	let { stories = [] }: { stories?: any[] } = $props();
 	const storyCount = $derived(stories.length);
@@ -153,6 +155,17 @@
 		raf = requestAnimationFrame(tick);
 	}
 
+	// Klang-Drossel für den Zeitraffer: im Intro poppen an dichten Tagen ein
+	// Dutzend Marker gleichzeitig — ungedrosselt wäre das Prasseln statt Puls.
+	// Mindestens 90 ms Abstand, damit einzelne Tropfen hörbar bleiben.
+	let lastPulseAt = 0;
+	function pulseSound() {
+		const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+		if (now - lastPulseAt < 90) return;
+		lastPulseAt = now;
+		livePulse();
+	}
+
 	function renderCursor() {
 		if (!map) return;
 		const ct = cursorTime;
@@ -171,6 +184,7 @@
 				if (!popped.has(slug)) {
 					popped.add(slug);
 					popMarker(mk);
+					pulseSound();
 				}
 			}
 		}
@@ -261,6 +275,9 @@
 				<span class="chip-dot" style="background:{color}"></span>{toneLabels[key] ?? key}
 			</button>
 		{/each}
+		<!-- Klang gehört hierher, nicht in die globale Navigation: die Karte ist
+		     die einzige Website-Ansicht, die überhaupt klingt. -->
+		<SoundToggle />
 	</div>
 
 	<div class="grid">

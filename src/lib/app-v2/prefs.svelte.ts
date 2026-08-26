@@ -1,7 +1,7 @@
 // Lokale App-Präferenzen (v1: alles localStorage, KEIN Schema-Touch — Aarons Vorgabe).
 // Svelte-5-Runes-Store, client-seitig. SSR-sicher (Guards auf window/localStorage).
 
-import { setSoundEnabled } from './audio';
+import { setSoundEnabled } from '$lib/sound';
 
 const LS_KEY = 'nureine.app.prefs.v1';
 

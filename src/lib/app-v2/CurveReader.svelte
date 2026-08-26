@@ -6,7 +6,7 @@
 	import { onDestroy } from 'svelte';
 	import type { WorldMetric } from '$lib/server/queries';
 	import { animate, easeOut, prefersReducedMotion, formatDeNumber } from './motion';
-	import { whoosh, thud, chime, tick, haptic } from './audio';
+	import { whoosh, thud, chime, tick, haptic, countUpSound } from '$lib/sound';
 
 	let { metric, onDone }: { metric: WorldMetric; onDone?: () => void } = $props();
 
@@ -98,6 +98,10 @@
 			runNextReady = true;
 			return;
 		}
+		// Klang folgt der Kurve: mehr Ticks als bei einer reinen Zahl (2,6 s statt
+		// 1,1 s), sonst klaffen hörbare Lücken im Lauf. Der Abschluss bleibt der
+		// chime() — countLand() wäre hier eine zweite Auflösung zu viel.
+		const sfx = countUpSound(20);
 		const c = animate(
 			2600,
 			(p) => {
@@ -110,6 +114,7 @@
 					const pt = pathEl.getPointAtLength(pathLen * e);
 					dotXY = { x: pt.x, y: pt.y };
 				}
+				sfx(e);
 			},
 			() => {
 				verdictOn = true;

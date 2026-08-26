@@ -154,7 +154,7 @@ function storySlide(s: DigestStory, index: number, total: number, logoDataUri?: 
 
 /** ENDCARD (letzte Folie) — Wertversprechen + Touch-Button. */
 function endcardSlide(input: DigestInput): string {
-	const line = input.shareLine || 'Jede Woche eine Handvoll gute Nachrichten — mit Quelle, nicht mit Bauchgefühl.';
+	const line = input.shareLine || 'Jede Woche eine Handvoll gute Nachrichten. Mit Quelle, nicht mit Bauchgefühl.';
 	const promise = (t: string) =>
 		`<div style="display:flex;align-items:center;margin-bottom:14px;"><div style="display:flex;font-family:'Inter';font-size:30px;font-weight:700;color:${AMBER};margin-right:14px;">✓</div><div style="font-family:'Inter';font-size:30px;font-weight:500;color:${INK};">${t}</div></div>`;
 	return `<!DOCTYPE html><html><body style="margin:0;width:${W}px;height:${H}px;display:flex;flex-direction:column;position:relative;overflow:hidden;font-family:'Inter';background:linear-gradient(160deg,${CANVAS} 0%,#efe7d8 100%);">

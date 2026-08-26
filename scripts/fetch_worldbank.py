@@ -28,7 +28,13 @@ log = logging.getLogger("worldbank")
 # Der Stimm-Kanon (docs/STIMME.md). BEWUSST nicht in einem try/except: ein
 # stiller Fallback würde markenfremde Texte erzeugen, ohne dass es jemand merkt.
 # Lieber hart scheitern als leise den falschen Ton schreiben.
-from fetch_stories import VOICE_BLOCK
+from fetch_stories import (
+    VOICE_BLOCK,
+    _hook_is_title_echo,
+    _safe_hook,
+    strip_dashes,
+    strip_filler_questions,
+)
 
 # Bild-Pipeline aus fetch_stories wiederverwenden (FLUX + Supabase-Upload + Quali-Check).
 # Optional: ohne FAL_KEY / bei Import-Fehler laufen Stories mit Gradient-Fallback.
@@ -197,11 +203,20 @@ def main() -> None:
             except Exception as exc:  # noqa: BLE001
                 log.warning("    image gen failed: %s", exc)
 
-        body = s.get("body") or s.get("summary", "")
+        # Stimm-Kanon deterministisch durchsetzen (docs/STIMME.md § 6, § 8b, § 9.3).
+        # Dieselbe Nachbearbeitung wie in fetch_stories.py: die Prompt-Regel allein
+        # lässt erfahrungsgemäß Gedankenstriche und Überleitungsfragen durch.
+        title = strip_dashes(s["title"])
+        summary = strip_filler_questions(strip_dashes(s.get("summary") or title))
+        body = strip_filler_questions(strip_dashes(s.get("body") or summary))
+        hook = _safe_hook(s.get("share_hook"))
+        if hook and _hook_is_title_echo(hook, title):
+            log.info("  share_hook verworfen (nur der Titel): %s", hook)
+            hook = None
         record = {
-            "title": s["title"][:80],
-            "subtitle": s.get("subtitle", "")[:200],
-            "summary": (s.get("summary") or s["title"])[:1000],
+            "title": title[:80],
+            "subtitle": strip_dashes(s.get("subtitle", ""))[:200],
+            "summary": summary[:1000],
             "body_markdown": body,
             "category": ind["category"],
             "region": "Welt",
@@ -215,8 +230,8 @@ def main() -> None:
             "impact_reach_score": clamp(s.get("impact_reach_score"), 0, 100),
             "impact_durability": clamp(s.get("impact_durability"), 0, 100),
             "impact_evidence": clamp(s.get("impact_evidence"), 0, 100) or 95,
-            "impact_explainer": (s.get("impact_explainer") or "")[:200] or None,
-            "share_hook": (s.get("share_hook") or "")[:220] or None,
+            "impact_explainer": strip_dashes(s.get("impact_explainer") or "")[:200] or None,
+            "share_hook": hook,
             "beat": ind["beat"],
             "source_type": "official_stats",
             "sensitive": False,

@@ -194,7 +194,7 @@ function typeC(input: ReelFrameInput, frame: ReelFrame): string {
 // ─── geteilte Endcard (schickbar, share_hook) ───────────────────────────────
 function endcard(input: ReelFrameInput): string {
 	const accent = CATEGORY_ACCENT[input.category] || AMBER;
-	const line = input.shareHook || 'Falls du heute nur eine gute Nachricht brauchst — die hier.';
+	const line = input.shareHook || 'Falls du heute nur eine gute Nachricht brauchst: die hier.';
 	return wrapRaw(
 		CANVAS,
 		`<div style="position:absolute;display:flex;top:-160px;right:-160px;width:620px;height:620px;border-radius:620px;background:${accent};opacity:0.12;"></div>

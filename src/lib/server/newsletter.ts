@@ -107,7 +107,7 @@ const COMPANY_NAME_FULL = 'NurEine';
 const COMPANY_ADDRESS = 'Teltow, Brandenburg';
 const COMPANY_EMAIL = 'newsletter@nureine.de';
 
-const SUBJECT_DAILY = 'NurEine – Gute Nachrichten. Jeden Tag exakt eine.';
+const SUBJECT_DAILY = 'NurEine: Gute Nachrichten. Jeden Tag exakt eine.';
 
 /**
  * Betreff pro Story statt täglich identischem Text: identische Betreffs

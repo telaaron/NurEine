@@ -192,7 +192,7 @@ function methodikSlide(input: CarouselInput): string {
  */
 function endcardSlide(input: CarouselInput): string {
 	const accent = CATEGORY_ACCENT[input.category] || AMBER;
-	const line = input.shareHook || input.stille || 'Falls du heute nur eine gute Nachricht brauchst — die hier.';
+	const line = input.shareHook || input.stille || 'Falls du heute nur eine gute Nachricht brauchst: die hier.';
 	return `<!DOCTYPE html><html><body style="margin:0;width:${W}px;height:${H}px;display:flex;flex-direction:column;position:relative;overflow:hidden;font-family:'Inter';background:linear-gradient(160deg,${CANVAS} 0%,#efe7d8 100%);">
   <div style="position:absolute;display:flex;top:-140px;right:-140px;width:560px;height:560px;border-radius:560px;background:${accent};opacity:0.12;"></div>
   ${brandRow(input.logoDataUri)}

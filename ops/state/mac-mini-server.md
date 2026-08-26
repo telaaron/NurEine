@@ -1,16 +1,16 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-26T09:58:57Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-08-26T10:02:33Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 6 weeks, 20 hours, 43 minutes |
+| Läuft seit | up 6 weeks, 20 hours, 46 minutes |
 | Speicherplatz | 838G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
-| Auslastung | load average: 0.00, 0.03, 0.00 |
+| Auslastung | load average: 0.72, 0.23, 0.07 |
 | Tailscale-Adresse | `100.123.159.38` |
 | Claude Code | 2.1.209 (Claude Code) |
 | cron-Dienst | active (17 Jobs) |
@@ -20,13 +20,13 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `62d540c docs(stil): Ausgangswerte und offene Baustelle Mac-Mini-Agenten` |
-| vom | 2026-08-26 10:58:48 +0100 |
+| Aktueller Commit | `56b0051 Merge remote-tracking branch 'origin/main'` |
+| vom | 2026-08-26 11:02:20 +0100 |
 | Hinter origin/main | 0 Commits |
 | Vor origin/main | 0 Commits |
 | Uncommittete Dateien | 0 |
 | Branches nur lokal (ungesichert) | 0 |
-| Letzter Pull | aktualisiert 303120b → 62d540c |
+| Letzter Pull | aktualisiert 72c20ce → 56b0051 |
 
 ## Letzte Agenten-Läufe
 

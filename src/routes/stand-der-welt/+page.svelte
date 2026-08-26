@@ -3,6 +3,10 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { ArrowTopRightOnSquareIcon, XMarkIcon } from 'heroicons-svelte/24/outline';
 	import ShareBar from '$lib/components/ShareBar.svelte';
+	import CountUp from '$lib/components/CountUp.svelte';
+	import DrawPath from '$lib/components/DrawPath.svelte';
+	import SoundToggle from '$lib/components/SoundToggle.svelte';
+	import { chime } from '$lib/sound';
 
 	type Metric = {
 		metric_key: string;
@@ -70,6 +74,13 @@
 	// Detail modal
 	let active = $state<Metric | null>(null);
 
+	function openDetail(m: Metric) {
+		active = m;
+		// Leiser Zwei-Ton beim Öffnen — markiert den Moduswechsel, bevor die
+		// Kurve losläuft. chime() ist selbst stumm, wenn Klang aus ist.
+		chime();
+	}
+
 	// Larger detail chart: real value axis (not flipped), gridlines, year labels.
 	function detailPath(m: Metric, w: number, h: number, pad = 4): string {
 		const s = m.series;
@@ -95,12 +106,26 @@
 	</h1>
 
 	{#if headline}
+		<!-- Die Leitzahl zählt herunter statt einfach dazustehen: der Weg von 1990
+		     nach heute IST die Nachricht. Nur diese eine Zahl klingt beim Hochlauf —
+		     sie steht allein und ist der Einstieg in die Seite. -->
 		<p class="mt-6 text-xl sm:text-2xl lg:text-3xl leading-[1.35] max-w-[24ch]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
 			Extreme Armut: <span style="color: var(--color-amber);">{fmt(headline.baseline_value, '%')}</span> ({headline.baseline_year})
-			→ <span style="color: var(--color-amber);">{fmt(headline.latest_value, '%')}</span> ({headline.latest_year}).
+			→ <CountUp
+				value={headline.latest_value}
+				format={(v) => fmt(v, '%')}
+				duration={1600}
+				style="color: var(--color-amber);"
+			/> ({headline.latest_year}).
 			Dieselbe Welt. Eine andere Geschichte.
 		</p>
 	{/if}
+
+	<!-- Klang-Schalter direkt unter der Leitzahl: dort passiert der erste Ton,
+	     also gehört die Kontrolle auch dorthin. Default aus. -->
+	<div class="mt-5">
+		<SoundToggle />
+	</div>
 
 	<!-- Metric cards, grouped by category -->
 	{#each grouped as group (group.cat)}
@@ -108,7 +133,7 @@
 			<h2 class="eyebrow mb-5" style="color: var(--color-amber); font-family: var(--font-mono);">{catLabels[group.cat] ?? group.cat}</h2>
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
 				{#each group.items as m (m.metric_key)}
-					<button type="button" onclick={() => (active = m)}
+					<button type="button" onclick={() => openDetail(m)}
 						class="paper rounded-2xl p-6 flex flex-col text-left transition-all hover:-translate-y-0.5"
 						style="border: 1px solid var(--color-rule); box-shadow: var(--shadow-sm); cursor: pointer;">
 						<div class="flex items-center justify-between gap-2">
@@ -118,11 +143,20 @@
 							{/if}
 						</div>
 						<div class="mt-2 flex items-baseline gap-2">
-							<span class="display tnum text-3xl" style="color: var(--color-ink); font-weight: 600;">{fmt(m.latest_value, m.unit)}</span>
+							<!-- Karten-Zahlen laufen hoch, aber STUMM: beim Scrollen werden
+							     mehrere gleichzeitig sichtbar — gleichzeitige Tonleitern
+							     wären Lärm statt Akzent. -->
+							<CountUp
+								value={m.latest_value}
+								format={(v) => fmt(v, m.unit)}
+								sound={false}
+								class="display tnum text-3xl"
+								style="color: var(--color-ink); font-weight: 600;"
+							/>
 							<span class="tnum" style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--color-faint);">{m.latest_year}</span>
 						</div>
 						<svg viewBox="0 0 260 64" class="mt-4 w-full" style="height: 56px;" preserveAspectRatio="none" aria-hidden="true">
-							<path d={sparkline(m)} fill="none" stroke="var(--color-amber)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+							<DrawPath d={sparkline(m)} duration={1200} />
 						</svg>
 						<span class="mt-3 text-xs" style="font-family: var(--font-mono); color: var(--color-faint);">Details ansehen →</span>
 					</button>
@@ -151,16 +185,30 @@
 				</div>
 
 				<div class="mt-4 flex items-baseline gap-3">
-					<span class="display tnum text-4xl" style="color: var(--color-ink); font-weight: 600;">{fmt(m.latest_value, m.unit)}</span>
+					<!-- Im Detail-Fenster steht die Zahl allein — hier darf sie klingen. -->
+					{#key m.metric_key}
+						<CountUp
+							value={m.latest_value}
+							format={(v) => fmt(v, m.unit)}
+							duration={1200}
+							class="display tnum text-4xl"
+							style="color: var(--color-ink); font-weight: 600;"
+						/>
+					{/key}
 					<span class="tnum" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--color-faint);">{m.latest_year}</span>
 					{#if improvement(m)}<span class="ml-auto uppercase" style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--color-sage);">↑ {improvement(m)}</span>{/if}
 				</div>
 
 				<!-- full detail chart -->
 				<div class="mt-5 rounded-xl p-4" style="background: var(--color-canvas-soft);">
-					<svg viewBox="0 0 600 220" class="w-full" style="height: 200px;" preserveAspectRatio="none">
-						<path d={detailPath(m, 600, 220)} fill="none" stroke="var(--color-amber)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
-					</svg>
+					<!-- Die große Kurve zeichnet sich MIT Tonleiter: sie steht allein im
+					     Fenster, hier kollidiert nichts. {#key} sorgt dafür, dass beim
+					     Wechsel auf eine andere Metrik neu gezeichnet wird. -->
+					{#key m.metric_key}
+						<svg viewBox="0 0 600 220" class="w-full" style="height: 200px;" preserveAspectRatio="none">
+							<DrawPath d={detailPath(m, 600, 220)} duration={1600} sound={true} width={2.5} />
+						</svg>
+					{/key}
 					<div class="flex justify-between mt-2 tnum" style="font-family: var(--font-mono); font-size: 0.62rem; color: var(--color-faint);">
 						<span>{m.series[0]?.year}: {fmt(m.series[0]?.value, m.unit)}</span>
 						<span>{m.series[m.series.length - 1]?.year}: {fmt(m.series[m.series.length - 1]?.value, m.unit)}</span>

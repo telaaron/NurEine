@@ -27,6 +27,8 @@ ops/env.runner
 # Secrets (nur `source .env`-Referenzen), steuern aber die komplette nächtliche
 # Redaktion. Unversioniert lagen sie nur auf dem Mini — ohne Backup und ohne
 # Historie, und Widersprüche zum Stil-Kanon (docs/STIMME.md) fielen niemandem auf.
+# Abgelöste Prompts archiviert der Mini lokal, die brauchen wir nicht.
+ops/prompts/_ersetzt/
 
 # Vite
 vite.config.js.timestamp-*

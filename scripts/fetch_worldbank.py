@@ -25,6 +25,11 @@ import requests
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("worldbank")
 
+# Der Stimm-Kanon (docs/STIMME.md). BEWUSST nicht in einem try/except: ein
+# stiller Fallback würde markenfremde Texte erzeugen, ohne dass es jemand merkt.
+# Lieber hart scheitern als leise den falschen Ton schreiben.
+from fetch_stories import VOICE_BLOCK
+
 # Bild-Pipeline aus fetch_stories wiederverwenden (FLUX + Supabase-Upload + Quali-Check).
 # Optional: ohne FAL_KEY / bei Import-Fehler laufen Stories mit Gradient-Fallback.
 try:
@@ -109,26 +114,36 @@ def is_improvement(direction: str, latest: float, prev: float) -> bool:
 def build_story_via_deepseek(ind: dict[str, Any], year: int, latest: float, prev: float, prev_year: int) -> dict[str, Any] | None:
     direction_word = "gesunken" if ind["direction"] == "down" else "gestiegen"
     prompt = f"""Du bist Chef vom Dienst bei NurEine (Good-News-Plattform). Aus einem offiziellen Weltbank-Datenpunkt
-sollst du eine echte, sachliche gute Nachricht machen — eine Entwicklung, die in den Medien fast nie auftaucht.
+sollst du eine echte, sachliche gute Nachricht machen, eine Entwicklung, die in den Medien fast nie auftaucht.
+
+{VOICE_BLOCK}
+
+=== DER DATENPUNKT ===
 
 Indikator: {ind['name']}
 Region: Welt
 Neuester Wert ({year}): {latest} {ind['unit']}
 Vorwert ({prev_year}): {prev} {ind['unit']}
-Die Zahl ist {direction_word} — das ist ein Fortschritt für menschliches Aufblühen.
+Die Zahl ist {direction_word}, das ist ein Fortschritt für menschliches Aufblühen.
+
+⚠️ BESONDERHEIT DIESER STORY-ART: Eine nackte Statistik hat KEINEN Schauplatz und KEINE Person.
+Damit ist sie automatisch fern für die Leserin. Die Brücke (Regel 2) ist hier deshalb PFLICHT,
+nicht optional. Übersetze die Zahl in etwas Fühlbares: Wie viele Menschen sind das pro Tag?
+Wie sah dieselbe Zahl aus, als die Leserin ein Kind war? Welches verbreitete Bild im Kopf
+widerlegt dieser Wert? Ohne diese Übersetzung ist die Story wertlos.
 
 Schreibe NUR ein JSON-Objekt:
 {{
   "title": "max 65 Zeichen, klar, kein Fachjargon, sagt was besser wurde",
   "subtitle": "max 130 Zeichen, nennt die konkrete Zahl + Zeitraum",
-  "summary": "EXAKT 4 deutsche Sätze: (1) Kontext warum der Indikator zählt, (2) die konkreten Zahlen, (3) strukturelle Bedeutung, (4) Ausblick. Sachlich, nicht reißerisch, kein Aktivismus.",
-  "body": "8-12 Sätze fließender redaktioneller Text, ZEIT-ONLINE-Stil, erklärt jeden Begriff, nennt die Weltbank als Quelle, ordnet ein OHNE zu beschönigen (Grenzen erwähnen).",
+  "summary": "3 bis 5 deutsche Sätze, freie Reihenfolge, KEINE Schablone. Beginne mit dem, was ein Mensch davon hat. Sachlich, nicht reißerisch, kein Aktivismus. Dieser Text wird vorgelesen: schreib ihn so, dass man ihn sagen kann.",
+  "body": "Fließender redaktioneller Text, ca. 1400 Zeichen (8-11 Sätze). Erklärt jeden Begriff, nennt die Weltbank als Quelle, ordnet ein OHNE zu beschönigen (Grenzen erwähnen). Die Brücke steht spätestens im zweiten Absatz. Schluss nach Regel 4: Einordnung in die Bewegung, niemals ein Ausblick im Konjunktiv.",
   "impact_score": "Integer 1-100 nach NurEine-Wirkungsindex (verbessert es konkret Leben? globale Gesundheits-/Armutsindikatoren betreffen Millionen → meist 70-90, aber sei ehrlich)",
   "impact_reach_score": "0-100 Reichweite-Balken",
   "impact_durability": "0-100",
   "impact_evidence": "0-100 (offizielle Weltbank-Statistik = hoch)",
   "impact_explainer": "1 Satz, warum es die Leserin angeht, max 140 Zeichen",
-  "share_hook": "1 Chat-Satz zum Weitergeben, neugierig, max 160 Zeichen",
+  "share_hook": "1 Satz, HARTE GRENZE 70 ZEICHEN (wird als E-Mail-Betreff verwendet und sonst abgeschnitten). Kein Punkt am Ende, keine Frage, kein Cliffhanger. Die Zahl trägt den Satz. Beispiel: 'Der Welthunger sinkt das dritte Jahr in Folge' (45 Zeichen)",
   "image_prompt": "englischer FLUX-Prompt im Stil 'Warm paper collage editorial illustration of [KERN-SYMBOL der guten Entwicklung], made of layered matte paper cutouts on warm off-white #f5f1ea canvas. Accented in [warm color]. Visible paper grain texture, soft cast shadows. Flat semi-abstract premium magazine style. No text. No 3D, no photorealism.'"
 }}"""
     try:

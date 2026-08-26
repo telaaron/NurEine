@@ -21,10 +21,12 @@ Thumbs.db
 !.env.example
 !.env.test
 
-# Mac-Mini-Runner (ops/) — Secrets & echte Agenten-Prompts nie committen
+# Mac-Mini-Runner (ops/) — Secrets nie committen
 ops/env.runner
-ops/prompts/*.md
-!ops/prompts/README.md
+# Die Agenten-Prompts SIND versioniert (seit 2026-08-26): sie enthalten keine
+# Secrets (nur `source .env`-Referenzen), steuern aber die komplette nächtliche
+# Redaktion. Unversioniert lagen sie nur auf dem Mini — ohne Backup und ohne
+# Historie, und Widersprüche zum Stil-Kanon (docs/STIMME.md) fielen niemandem auf.
 
 # Vite
 vite.config.js.timestamp-*

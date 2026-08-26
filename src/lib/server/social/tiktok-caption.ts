@@ -15,6 +15,8 @@
  * keine DB-Calls, keine Seiteneffekte.
  */
 
+import { pickNonEcho } from '$lib/server/text-echo';
+
 export interface TikTokStoryInput {
 	title: string;
 	subtitle: string | null;
@@ -23,6 +25,14 @@ export interface TikTokStoryInput {
 	category: string | null;
 	source_name: string | null;
 	impact_score: number | null;
+	/**
+	 * Texte, die IM VIDEO stehen (Hook-Szene, Auflösung, Endcard). Die Caption
+	 * wiederholt sie nicht: Video und Caption sieht der Zuschauer gleichzeitig
+	 * auf einem Bildschirm. Ohne diese Angabe stand `share_hook` als Endcard im
+	 * Video UND als erste Zeile der Caption darunter.
+	 * Optional, damit bestehende Aufrufer unverändert weiterlaufen.
+	 */
+	video_texte?: (string | null | undefined)[];
 }
 
 export interface TikTokCaption {
@@ -171,11 +181,19 @@ function keywordInFirstChars(text: string, keyword: string, n: number): boolean 
 }
 
 /**
- * Hook verdichten: nutze share_hook, sonst subtitle, sonst title. Auf einen
- * knackigen ersten Satz kürzen (kein Roman). TikTok will den Payoff sofort.
+ * Hook verdichten: Auf einen knackigen ersten Satz kürzen (kein Roman).
+ * TikTok will den Payoff sofort.
+ *
+ * Kaskade share_hook > subtitle > title, ABER: Texte, die schon im Video stehen,
+ * werden übersprungen (`video_texte`). Der Zuschauer sieht Video und Caption
+ * gleichzeitig; derselbe Satz zweimal ist verschenkter Platz und wirkt wie ein
+ * Automat. Ohne `video_texte` bleibt es bei der alten Kaskade.
  */
 function buildHook(story: TikTokStoryInput): string {
-	const raw = normalize(story.share_hook || story.subtitle || story.title || '');
+	const imVideo = story.video_texte ?? [];
+	const raw = normalize(
+		pickNonEcho(imVideo, [story.share_hook, story.subtitle, story.title]) || ''
+	);
 	if (!raw) return '';
 	// Ersten Satz nehmen (bis zum ersten Satzende), aber mind. etwas Substanz behalten.
 	const firstSentenceMatch = raw.match(/^.*?[.!?…](?:\s|$)/);

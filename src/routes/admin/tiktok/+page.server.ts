@@ -22,13 +22,15 @@ import type { Actions, PageServerLoad } from './$types';
 interface StoryRow extends TikTokStoryInput {
 	id: string;
 	image_url: string | null;
+	/** Folientexte, die im Reel zu sehen sind (Hook, Auflösung, Nachhall). */
+	slides: { hook?: string; aufloesung?: string; stille?: string } | null;
 	tiktok_caption: string | null;
 	tiktok_hashtags: string[] | null;
 	tiktok_video_url: string | null;
 }
 
 const STORY_COLS =
-	'id,title,subtitle,share_hook,summary,category,source_name,impact_score,image_url,tiktok_caption,tiktok_hashtags,tiktok_video_url';
+	'id,title,subtitle,share_hook,summary,category,source_name,impact_score,image_url,slides,tiktok_caption,tiktok_hashtags,tiktok_video_url';
 
 export interface TikTokReelCard {
 	postId: number;
@@ -187,7 +189,11 @@ function storyInput(s: StoryRow): TikTokStoryInput {
 		summary: s.summary,
 		category: s.category,
 		source_name: s.source_name,
-		impact_score: s.impact_score
+		impact_score: s.impact_score,
+		// Was im Video steht, wiederholt die Caption nicht (docs/STIMME.md § 9.8).
+		// Die Endcard zeigt share_hook, Szene 1 den Folien-Hook: beides sieht der
+		// Zuschauer gleichzeitig mit der Caption.
+		video_texte: [s.slides?.hook, s.slides?.aufloesung, s.slides?.stille, s.share_hook]
 	};
 }
 

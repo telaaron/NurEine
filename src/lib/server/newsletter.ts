@@ -19,6 +19,7 @@ import { normalizeResonance, RESONANCE_HERO_THRESHOLD } from './resonance';
 import { BREVO_API_KEY, BREVO_FROM_EMAIL, BREVO_FROM_NAME, BREVO_REPLY_TO_EMAIL } from '$env/static/private';
 import { env } from '$env/dynamic/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
+import { isEcho } from '$lib/server/text-echo';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -252,8 +253,15 @@ export function buildB2CHtml(
   const color = categoryColor(category);
   const header = headerHtml(story.image_url);
   // Der Newsletter teasert NUR an — kein Summary mehr. Ein Satz, dann Website.
-  // Reihenfolge der Präferenz: share_hook (schickbar, Aaron-Ton) > subtitle/dek.
-  const teaser = (story.share_hook || story.subtitle || '').trim();
+  //
+  // WICHTIG (docs/STIMME.md § 9.3): share_hook ist bereits die BETREFFZEILE
+  // (dailySubject). Stünde er hier nochmal, läse der Empfänger denselben Satz
+  // zweimal im Abstand von zwei Zentimetern. Der Teaser nimmt deshalb den
+  // subtitle und weicht nur dann auf share_hook aus, wenn kein subtitle da ist.
+  const subject = dailySubject(story);
+  const dek = (story.subtitle || '').trim();
+  const hook = (story.share_hook || '').trim();
+  const teaser = (isEcho(dek, subject) ? hook : dek || hook).trim();
   const impact = story.impact_score ?? null;
   const minutes = story.reading_time_min ?? null;
 

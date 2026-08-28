@@ -221,6 +221,19 @@ Dramaturgie-Regeln (Kurzform von Rezept §C):
 - **Anti-Regeln:** keine offene Lücke am Ende (Clickbait-Backfire), keine gespielte
   Überraschung (liest sich als Slop), Interrupt-Arten variieren (Habituation),
   Hoch-Arousal-positiv statt Rührseligkeit (deaktivierende Traurigkeit senkt Shares).
+   **⛔ KEINE Vorrats-Bilder (Aaron 2026-08-28):** `remotion/public/reel-assets/bg-*.jpg`
+   sind für Reels GESPERRT. Es sind je 4 Varianten aus EINEM Seedream-Call pro
+   Kategorie — dadurch zeigen sie dieselbe Person am selben Ort, nur aus anderem
+   Winkel (belegt: bg-gesundheit-1/-2 = identische Krankenschwester, gleiche Bank).
+   Über mehrere Reels hinweg entsteht so eine "Hauptdarstellerin", die es nicht gibt.
+   Das untergräbt den USP „belegt": ein wiederkehrendes Gesicht liest sich als
+   inszeniert. Die Dateien bleiben nur als Textur-/Notfall-Reserve liegen.
+   **Stattdessen pro Story ein EIGENES Bild** — Seedream-Prompt aus DIESER Story
+   (Ort, Handlung, Entität konkret), `num_images: 4` als Best-of-N: EINES auswählen,
+   die anderen drei verwerfen (nicht als Vorrat behalten — genau so ist der Einheits-
+   Look entstanden). Kein passendes Bild? Typo-Beat oder Karten-Zoom, nie ein
+   themenfremdes Vorratsbild.
+
    **Bild-Gate:** nur fotorealistische Story-Bilder verwenden — die nächtlichen
    Perlen-Bilder der Bild-Regie (Seedream, Fotografen-DNA) sind erste Wahl;
    Metaphern-Clipart (Glühbirnen, Symbolgrafiken) NIE — ein slop-verdächtiges Bild

@@ -3,7 +3,7 @@
 		"id": "1f1919c2-fff6-497a-97eb-69c71356fe47",
 		"slug": "welthunger-drittes-jahr",
 		"category": "gesundheit",
-		"image": "reel-assets/bg-hunger-1.jpg",
+		"image": "reel-assets/_gesperrt-einheitsperson/bg-hunger-1.jpg",
 		"source": "Vereinte Nationen",
 		"impactScore": 72,
 		"shareHook": "43 Millionen Menschen weniger hungern als 2022."
@@ -30,7 +30,7 @@
 			"value": "43 Mio.",
 			"unit": "weniger",
 			"context": "Welthunger — drittes Jahr in Folge",
-			"image": "reel-assets/bg-hunger-1.jpg",
+			"image": "reel-assets/_gesperrt-einheitsperson/bg-hunger-1.jpg",
 			"voText": "Welthunger fühlt sich an, wie ein Problem ohne Ausgang."
 		},
 		{
@@ -43,7 +43,7 @@
 		{
 			"kind": "beat",
 			"text": "43 Millionen weniger als 2022.",
-			"image": "reel-assets/bg-hunger-1.jpg",
+			"image": "reel-assets/_gesperrt-einheitsperson/bg-hunger-1.jpg",
 			"full": true,
 			"voText": "43 Millionen weniger als 2022. Drittes Jahr in Folge weniger."
 		},
@@ -56,7 +56,7 @@
 		{
 			"kind": "beat",
 			"text": "Gezielte Politik. Geld an den richtigen Stellen.",
-			"image": "reel-assets/bg-archiv-1.jpg",
+			"image": "reel-assets/_gesperrt-einheitsperson/bg-archiv-1.jpg",
 			"full": true,
 			"voText": "Der Grund: gezielte Politik, und Investitionen an den richtigen Stellen. Es ist lösbar, wenn man dranbleibt."
 		},

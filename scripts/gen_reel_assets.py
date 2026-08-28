@@ -2,6 +2,24 @@
 """
 Generiert die REEL-HINTERGRUND-ASSETS via Seedream v4.5 (fal.ai).
 
+⛔ NICHT MEHR FUER REEL-HINTERGRUENDE VERWENDEN (Aaron 2026-08-28).
+
+Dieses Skript legt pro Kategorie 4 Varianten aus EINEM Seedream-Call ab. In einem
+Call haelt Seedream Person, Ort und Kleidung konstant — die 4 Bilder zeigen also
+DIESELBE Person aus anderem Winkel (belegt: bg-gesundheit-1/-2, identische
+Krankenschwester an derselben Bank). Werden diese Bilder als Vorrat ueber viele
+Reels verteilt, entsteht eine wiederkehrende "Hauptdarstellerin", die es nicht
+gibt — bei einer Marke mit dem USP "belegt" liest sich das als inszeniert.
+
+Der Kopf sagte "Best-of-N: num_images 4", der Code speicherte aber ALLE vier
+(Zeile ~142). Genau diese Luecke hat den Einheits-Look erzeugt.
+
+Richtig ist: pro Story ein EIGENES Bild aus einem Prompt zu DIESER Story,
+num_images=4 nur zur AUSWAHL — eines behalten, drei verwerfen. Siehe
+docs/REEL_BAUKASTEN.md, Abschnitt Bild-Gate.
+
+Fuer reine Texturen (tex-paper, tex-linen) ohne Menschen bleibt das Skript nutzbar.
+
 WICHTIG — was hier bewusst NICHT generiert wird:
   Keine Dokumente, keine Zahlen, keine Schrift, keine Diagramme, keine Logos.
   Die Collage-/Beleg-Optik entsteht in Remotion aus ECHTEN Daten (Quellenname,
@@ -125,6 +143,12 @@ def main():
     only = sys.argv[2] if len(sys.argv) > 2 else None
     os.makedirs(outdir, exist_ok=True)
     total = 0
+    menschen = [a for a in ASSETS if a["key"].startswith("bg-")]
+    if menschen:
+        print("WARNUNG: bg-* Motive erzeugen 4 Varianten DERSELBEN Person aus einem")
+        print("         Call. Als Reel-Vorrat gesperrt (siehe Kopf). Nur fortfahren,")
+        print("         wenn du bewusst Texturen/Ersatz baust.")
+
     for spec in ASSETS:
         if only and spec["key"] != only:
             continue

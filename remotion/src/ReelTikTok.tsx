@@ -53,9 +53,22 @@ export const TIKTOK_FPS = 30;
 // Muss zu LOOP_TAIL in render.mjs passen.
 export const TIKTOK_LOOP_TAIL = 14;
 
-// IG/TikTok-Safe-Zones bei 1080×1920 (identisch zu ReelDaily)
-const SAFE_TOP = 210;
-const SAFE_BOTTOM = 420;
+// TikTok-Safe-Zones bei 1080×1920.
+//
+// Nicht geschaetzt, sondern an Screenshots der laufenden App ausgemessen
+// (2026-08-26, iPhone, Videoansicht mit Suchleiste). Umgerechnet auf 1080 Breite:
+//   oben   Suchleiste endet bei          270 px
+//   rechts Aktionsspalte beginnt bei     141 px vom Rand (Avatar/Herz/Kommentar)
+//   unten  Caption-Block beginnt bei     393 px, KI-Label bis 235 px
+// Auf jede Messung kommt Reserve, weil die Leisten je nach Geraet, Schriftgroesse
+// und Caption-Laenge wandern.
+//
+// Vorher lief Inhalt in genau diese Zonen: die Untertitel-Pille kollidierte mit
+// dem Kommentar-Icon, "Illustration: KI" verschwand unter der Suchleiste und der
+// Soft-CTA lag mitten in TikToks eigener Caption.
+const SAFE_TOP = 300; // Suchleiste (270) + Reserve
+const SAFE_BOTTOM = 440; // Caption-Block (393) + Reserve
+const SAFE_RIGHT = 200; // Aktionsspalte (141) + Reserve — Textbreite MUSS hier enden
 const M = 84; // Seitenrand
 
 export const reelTikTokDefault: ReelDailyProps = reelDailyDefault;
@@ -148,8 +161,8 @@ const SceneVoice: React.FC<{ vo: SceneVo | null | undefined; dark?: boolean; cap
 		<>
 			<Audio src={staticFile(vo.file)} volume={1} startFrom={vo.startFrom ?? undefined} />
 			{captions && current ? (
-				<div style={{ position: 'absolute', left: align === 'left' ? M : 60, right: align === 'left' ? 380 : 60, bottom: SAFE_BOTTOM + 70 + raise, display: 'flex', justifyContent: align === 'left' ? 'flex-start' : 'center', zIndex: 20, transform: `scale(${pop})`, transformOrigin: align === 'left' ? 'left bottom' : 'center bottom' }}>
-					<div style={{ background: dark ? 'rgba(244,239,230,0.96)' : 'rgba(22,20,15,0.9)', borderRadius: 18, padding: '16px 30px', maxWidth: 940, boxShadow: '0 10px 30px rgba(0,0,0,0.35)' }}>
+				<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, bottom: SAFE_BOTTOM + 70 + raise, display: 'flex', justifyContent: align === 'left' ? 'flex-start' : 'center', zIndex: 20, transform: `scale(${pop})`, transformOrigin: align === 'left' ? 'left bottom' : 'center bottom' }}>
+					<div style={{ background: dark ? 'rgba(244,239,230,0.96)' : 'rgba(22,20,15,0.9)', borderRadius: 18, padding: '16px 30px', maxWidth: 1080 - M - SAFE_RIGHT, boxShadow: '0 10px 30px rgba(0,0,0,0.35)' }}>
 						<div style={{ fontFamily: FF.interSemi, fontSize: 42, lineHeight: 1.22, color: dark ? INK : '#fff', textAlign: align === 'left' ? 'left' : 'center' }}>
 							{current.map((w, i) => {
 								// WACHSENDE CAPTION (Aaron 2026-07-26, Vorbild InsiderForce): das Wort
@@ -211,7 +224,7 @@ const HookScene: React.FC<Extract<DailyScene, { kind: 'hook' }>> = ({ text, punc
 				<div style={{ width: 18, height: 18, background: accent, borderRadius: 3, marginRight: 16 }} />
 				<div style={{ fontFamily: FF.interSemi, fontSize: 32, letterSpacing: '0.14em', color: AMBER_DEEP, fontWeight: 700 }}>{kicker}</div>
 			</div>
-			<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 220, bottom: SAFE_BOTTOM + 120, display: 'flex', alignItems: 'center', transform: `scale(${settle})`, transformOrigin: 'left center' }}>
+			<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, top: SAFE_TOP + 220, bottom: SAFE_BOTTOM + 120, display: 'flex', alignItems: 'center', transform: `scale(${settle})`, transformOrigin: 'left center' }}>
 				<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: Math.round(size * 1.16), lineHeight: 1.05, letterSpacing: '-0.035em', color: INK, wordBreak: 'break-word' }}>
 					{pre}
 					{hit ? (
@@ -299,7 +312,7 @@ const NumberScene: React.FC<Extract<DailyScene, { kind: 'number' }> & { category
 					<div style={{ fontFamily: FF.interSemi, fontSize: 32, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.85)', fontWeight: 700 }}>{kicker}</div>
 				</div>
 			) : null}
-			<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 170, transform: `scale(${punchScale})`, transformOrigin: 'left center' }}>
+			<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, top: SAFE_TOP + 170, transform: `scale(${punchScale})`, transformOrigin: 'left center' }}>
 				{snap ? <SnapValue value={value} unit={unit} /> : <TikTokCountUp value={value} unit={unit} category={category} />}
 				<div style={{ height: 14, background: accent, marginTop: 30, width: lineW, borderRadius: 8 }} />
 				<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 68, lineHeight: 1.1, letterSpacing: '-0.02em', color: '#fff', marginTop: 42, wordBreak: 'break-word', opacity: ctxOp, transform: `scale(${ctxPop})`, transformOrigin: 'left center' }}>
@@ -331,7 +344,15 @@ const TikTokCountUp: React.FC<{ value: string; unit: string | null; category: st
 			: value;
 	const blur = interpolate(prog, [0, 0.6, 1], [14, 3, 0]);
 	const scale = interpolate(prog, [0, 0.8, 1], [0.55, 1.12, 1]);
-	const size = value.length <= 4 ? 380 : value.length <= 7 ? 270 : 200;
+	// Groesse aus der TATSAECHLICHEN Breite ableiten, nicht aus der Zeichenzahl:
+	// "120.000" (7 Zeichen) brauchte bei fixen 270px rund 980px und lief rechts
+	// aus dem Bild — im TikTok-Screenshot vom 26.08. sichtbar abgeschnitten.
+	// Ziffern sind breit (~0.58em), Punkt/Komma/Leerzeichen schmal (~0.32em);
+	// 0.955 gleicht das negative letterSpacing aus.
+	const PLATZ = 1080 - M - SAFE_RIGHT;
+	const einheiten = [...value].reduce((n, c) => n + (/[0-9]/.test(c) ? 0.58 : 0.32), 0);
+	const roh = value.length <= 4 ? 380 : value.length <= 7 ? 270 : 200;
+	const size = Math.min(roh, Math.floor((PLATZ * 0.96) / (einheiten * 0.955)));
 	return (
 		<div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap' }}>
 			<div style={{ fontFamily: FF.grotesk, fontSize: size, fontWeight: 800, color: '#fff', lineHeight: 0.9, letterSpacing: '-0.045em', filter: `blur(${blur}px)`, transform: `scale(${scale})`, transformOrigin: 'left center' }}>{shown}</div>
@@ -389,7 +410,15 @@ const SnapValue: React.FC<{ value: string; unit: string | null }> = ({ value, un
 	const frame = useCurrentFrame();
 	const scale = interpolate(frame, [0, 5, 9], [0.92, 1.03, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 	const blur = interpolate(frame, [0, 6], [4, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
-	const size = value.length <= 4 ? 380 : value.length <= 7 ? 270 : 200;
+	// Groesse aus der TATSAECHLICHEN Breite ableiten, nicht aus der Zeichenzahl:
+	// "120.000" (7 Zeichen) brauchte bei fixen 270px rund 980px und lief rechts
+	// aus dem Bild — im TikTok-Screenshot vom 26.08. sichtbar abgeschnitten.
+	// Ziffern sind breit (~0.58em), Punkt/Komma/Leerzeichen schmal (~0.32em);
+	// 0.955 gleicht das negative letterSpacing aus.
+	const PLATZ = 1080 - M - SAFE_RIGHT;
+	const einheiten = [...value].reduce((n, c) => n + (/[0-9]/.test(c) ? 0.58 : 0.32), 0);
+	const roh = value.length <= 4 ? 380 : value.length <= 7 ? 270 : 200;
+	const size = Math.min(roh, Math.floor((PLATZ * 0.96) / (einheiten * 0.955)));
 	// KEIN Odometer im Cold-Open: die Zahl MUSS ab Frame 0 lesbar sein (3,75s
 	// Ø-Wiedergabe → hochrollen von 0 verschenkt die Kern-Info). Snap = sofort da,
 	// nur kurzer Blur-Einrast. Der Odometer lebt im Count-up-Modus (Mittel-Szenen).
@@ -425,21 +454,21 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 					<Img src={imgSrc(image)} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${1.02 + frame * 0.0016})` }} />
 					{/* Verlauf nur unten: Motiv bleibt oben frei lesbar, Text unten sicher kontrastiert */}
 					<AbsoluteFill style={{ background: 'linear-gradient(180deg, rgba(22,20,15,0) 38%, rgba(22,20,15,0.72) 68%, rgba(22,20,15,0.93) 100%)' }} />
-					<div style={{ position: 'absolute', left: M, right: M, bottom: SAFE_BOTTOM + 170, transform: `scale(${textPop})`, transformOrigin: 'left bottom', opacity: interpolate(textS, [0, 0.35], [0, 1]) }}>
+					<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, bottom: SAFE_BOTTOM + 170, transform: `scale(${textPop})`, transformOrigin: 'left bottom', opacity: interpolate(textS, [0, 0.35], [0, 1]) }}>
 						<div style={{ width: 110, height: 10, background: accent, marginBottom: 26, borderRadius: 5 }} />
 						<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 76, lineHeight: 1.08, letterSpacing: '-0.03em', color: '#fff', textShadow: '0 2px 24px rgba(0,0,0,0.5)', wordBreak: 'break-word' }}>{text}</div>
 					</div>
-					<div style={{ position: 'absolute', right: M, top: SAFE_TOP + 8, fontFamily: FF.inter, fontSize: 20, color: 'rgba(255,255,255,0.6)', textShadow: '0 1px 8px rgba(0,0,0,0.6)' }}>Illustration: KI · NurEine</div>
+					<div style={{ position: 'absolute', right: SAFE_RIGHT, top: SAFE_TOP + 8, fontFamily: FF.inter, fontSize: 20, color: 'rgba(255,255,255,0.6)', textShadow: '0 1px 8px rgba(0,0,0,0.6)' }}>Illustration: KI · NurEine</div>
 				</>
 			) : image ? (
 				<>
-					<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 30, height: 720, transform: `translateY(${panelY}px) rotate(-1.6deg) scale(${panelScale})`, opacity: panelOp, background: PAPER, padding: 22, boxShadow: '0 34px 80px rgba(60,40,20,0.3)', borderRadius: 6 }}>
+					<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, top: SAFE_TOP + 30, height: 720, transform: `translateY(${panelY}px) rotate(-1.6deg) scale(${panelScale})`, opacity: panelOp, background: PAPER, padding: 22, boxShadow: '0 34px 80px rgba(60,40,20,0.3)', borderRadius: 6 }}>
 						<div style={{ width: '100%', height: '100%', overflow: 'hidden', borderRadius: 3 }}>
 							<Img src={imgSrc(image)} style={{ width: '100%', height: '100%', objectFit: 'cover', transform: `scale(${zoom})` }} />
 						</div>
 						<div style={{ position: 'absolute', bottom: 30, left: 34, fontFamily: FF.inter, fontSize: 22, color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 8px rgba(0,0,0,0.5)' }}>Illustration: KI · NurEine</div>
 					</div>
-					<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 820, transform: `scale(${textPop})`, transformOrigin: 'left center', opacity: interpolate(textS, [0, 0.35], [0, 1]) }}>
+					<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, top: SAFE_TOP + 820, transform: `scale(${textPop})`, transformOrigin: 'left center', opacity: interpolate(textS, [0, 0.35], [0, 1]) }}>
 						<div style={{ width: 110, height: 10, background: accent, marginBottom: 26, borderRadius: 5 }} />
 						<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 62, lineHeight: 1.1, letterSpacing: '-0.03em', color: INK, wordBreak: 'break-word' }}>{text}</div>
 					</div>
@@ -447,7 +476,7 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 			) : (
 				// KEINE Figur auf TikTok (Panel-Befund 2026-07-11: 3D-Avatar = stärkster
 				// „Werbung/Slop"-Marker der Skip-Personas) → Text nimmt die volle Breite.
-				<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 60, bottom: SAFE_BOTTOM + 260, display: 'flex', alignItems: 'center', transform: `scale(${textPop})`, transformOrigin: 'left center', opacity: interpolate(textS, [0, 0.35], [0, 1]) }}>
+				<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, top: SAFE_TOP + 60, bottom: SAFE_BOTTOM + 260, display: 'flex', alignItems: 'center', transform: `scale(${textPop})`, transformOrigin: 'left center', opacity: interpolate(textS, [0, 0.35], [0, 1]) }}>
 					<div>
 						<div style={{ width: 110, height: 10, background: accent, marginBottom: 30, borderRadius: 5 }} />
 						<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 82, lineHeight: 1.08, letterSpacing: '-0.03em', color: INK, wordBreak: 'break-word' }}>{text}</div>
@@ -554,7 +583,7 @@ const SourceSnapshot: React.FC<{ snapshot: { title: string; outlet: string; year
 	const checkDraw = interpolate(f, [26, 40], [1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 	const checkOp = interpolate(f, [26, 30], [0, 1], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 	return (
-		<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 560, opacity: op, transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg)`, transformOrigin: 'center' }}>
+		<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, top: SAFE_TOP + 560, opacity: op, transform: `translate(${tx}px, ${ty}px) rotate(${rot}deg)`, transformOrigin: 'center' }}>
 			<div style={{ position: 'relative', background: '#fffdf8', borderRadius: 10, padding: '26px 30px 30px', boxShadow: '0 26px 60px rgba(60,40,20,0.28)', border: '1px solid rgba(22,20,15,0.08)' }}>
 				{/* Kopf: Outlet + Jahr, wie eine Studien-Kopfzeile */}
 				<div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
@@ -629,9 +658,9 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 						<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 96, letterSpacing: '-0.03em', color: accent, lineHeight: 1 }}>Belegt.</div>
 					</div>
 				</div>
-				<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 200, opacity: rowOp, fontFamily: FF.newsreader, fontSize: 42, color: INK }}>Quelle: {source}</div>
+				<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, top: SAFE_TOP + 200, opacity: rowOp, fontFamily: FF.newsreader, fontSize: 42, color: INK }}>Quelle: {source}</div>
 				{/* Der Held: die wachsende Summe */}
-				<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 300, transform: `scale(${interpolate(numPop, [0, 1], [0.85, 1])})`, transformOrigin: 'left center', opacity: interpolate(numPop, [0, 0.35], [0, 1]) }}>
+				<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, top: SAFE_TOP + 300, transform: `scale(${interpolate(numPop, [0, 1], [0.85, 1])})`, transformOrigin: 'left center', opacity: interpolate(numPop, [0, 0.35], [0, 1]) }}>
 					<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 88, letterSpacing: '-0.03em', color: INK, lineHeight: 1.05 }}>
 						Fortschritt <span style={{ color: accent }}>Nr. {n.toLocaleString('de-DE')}</span>
 					</div>
@@ -666,7 +695,7 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 					const reveal = interpolate(frame, [26, 32, 40, 52], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 					const revealPop = 1 + 0.22 * interpolate(frame, [26, 31, 40], [0, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
 					return (
-						<div style={{ position: 'absolute', left: M, right: M, bottom: SAFE_BOTTOM + 60, opacity: rowOp }}>
+						<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, bottom: SAFE_BOTTOM + 60, opacity: rowOp }}>
 							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
 								<div style={{ fontFamily: FF.interSemi, fontSize: 28, color: MUTED }}>Wirkungsindex — nureine.de</div>
 								<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 36, color: INK, position: 'relative', transform: `scale(${impactPop * revealPop})`, transformOrigin: 'right center' }}>
@@ -698,7 +727,7 @@ const ProofScene: React.FC<Extract<DailyScene, { kind: 'proof' }> & { category: 
 					<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: 156, letterSpacing: '-0.03em', color: accent, lineHeight: 1 }}>Belegt.</div>
 				</div>
 			</div>
-			<div style={{ position: 'absolute', left: M, right: M, top: SAFE_TOP + 620, opacity: rowOp }}>
+			<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, top: SAFE_TOP + 620, opacity: rowOp }}>
 				<div style={{ fontFamily: FF.newsreader, fontSize: 52, color: INK, lineHeight: 1.3 }}>Quelle: {source}</div>
 				{impact != null ? (
 					<div style={{ marginTop: 52 }}>
@@ -733,7 +762,7 @@ const EndScene: React.FC<Extract<DailyScene, { kind: 'end' }> & { category: stri
 	return (
 		<AbsoluteFill style={{ background: CANVAS }}>
 			<PaperTextureOverlay kind="halftone" opacity={0.06} />
-			<div style={{ position: 'absolute', left: M, right: loopMode ? M : 300, top: SAFE_TOP + 40, bottom: SAFE_BOTTOM + 340, display: 'flex', alignItems: 'center', transform: `scale(${sharePop})`, transformOrigin: 'left center', opacity: interpolate(s, [0, 0.35], [0, 1]) }}>
+			<div style={{ position: 'absolute', left: M, right: loopMode ? SAFE_RIGHT : 300, top: SAFE_TOP + 40, bottom: SAFE_BOTTOM + 340, display: 'flex', alignItems: 'center', transform: `scale(${sharePop})`, transformOrigin: 'left center', opacity: interpolate(s, [0, 0.35], [0, 1]) }}>
 				<div style={{ fontFamily: FF.grotesk, fontWeight: 800, fontSize: share.length <= 70 ? 76 : 60, lineHeight: 1.1, letterSpacing: '-0.03em', color: INK }}>{share}</div>
 			</div>
 			{loopMode ? null : <Character pose="wave" enterFrame={3} from="bottom" size={680} align="right" seed={seed} person={person} />}
@@ -820,7 +849,8 @@ const RewatchBadge: React.FC<{ value: number; proofStart: number; category: stri
 		<div
 			style={{
 				position: 'absolute',
-				right: M,
+				// Lag auf right:M genau unter TikToks Avatar (Screenshot 26.08.).
+				right: SAFE_RIGHT,
 				top: SAFE_TOP + 34,
 				zIndex: 40,
 				transform: `translate(${interpolate(hand, [0, 1], [0, targetDX])}px, ${interpolate(hand, [0, 1], [0, targetDY])}px) scale(${scale})`,
@@ -850,7 +880,7 @@ const SoftCta: React.FC<{ text: string; fromFrame: number; toFrame: number }> = 
 		// SAFE_BOTTOM-30 und damit direkt unter den Captions (SAFE_BOTTOM+70) — er
 		// verdeckte Bildinhalt. Jetzt sitzt er unterhalb der Safe-Zone am Rand, wo
 		// TikTok ohnehin nichts Eigenes einblendet.
-		<div style={{ position: 'absolute', left: M, right: M, bottom: 96, display: 'flex', justifyContent: 'center', zIndex: 25, opacity: op, transform: `translateY(${y}px)` }}>
+		<div style={{ position: 'absolute', left: M, right: SAFE_RIGHT, bottom: SAFE_BOTTOM - 40, display: 'flex', justifyContent: 'center', zIndex: 25, opacity: op, transform: `translateY(${y}px)` }}>
 			<div
 				style={{
 					// Schmaler, heller Streifen statt dunklem Kasten: liegt ruhiger im Bild

@@ -1,42 +1,74 @@
 # Wikidata-Item für NurEine anlegen
 
-**Warum das der wichtigste Schritt ist.** Google (AI Overview / Knowledge Graph) und
-Perplexity lösen mehrdeutige Markennamen zuerst gegen Wikidata und Wikipedia auf.
-Für „NurEine" gibt es dort **kein Item** (Stand 2026-07-26, per API geprüft: 0 Treffer).
-Deshalb fällt die Auflösung auf die nächststarken Entitäten zurück:
+**Warum das der wichtigste Schritt ist.** Google löst mehrdeutige Markennamen gegen
+Wikidata auf. Für „NurEine" gibt es dort **kein Item** (zuletzt geprüft 2026-08-28:
+0 Treffer). Deshalb gewinnt bei der Suche „nureine" weiterhin der Kinofilm
+„Nur eine Frau" (2019) — der hat einen Wikipedia-Artikel, NurEine hat nichts.
 
-- den Kinofilm „Nur eine Frau" (2019, Sherry Hormann) → Q62006534
-- die Chemikalie „Neurin" / englisch „neurine" → Q408180
-
-Genau das zeigen die beiden Screenshots vom 26.07.2026. Die Seiten-Änderungen
-(`/ueber-uns`, `llms.txt`, `disambiguatingDescription`) liefern die *Belege* — aber
-die Verknüpfung im Entity-Graph entsteht erst mit dem Wikidata-Item.
+Belegt: Bei **„nureine.de"** steht NurEine auf **Platz 1** mit korrekter
+KI-Übersicht. Bei **„nureine"** kommt der Film. Der Unterschied ist allein die
+Eindeutigkeit des Suchbegriffs — genau das repariert ein Wikidata-Item.
 
 ---
 
-## Das musst du selbst machen
+## Weg A: Von Hand anlegen (EMPFOHLEN)
 
-Ich lege keine Accounts an und veröffentliche nichts auf externen Plattformen in
-deinem Namen. Der Batch unten ist fertig — Einfügen und Bestätigen machst du.
+QuickStatements verlangt den Status `autoconfirmed` (auf Wikidata i. d. R. ~4 Tage
+Kontoalter + ~50 Bearbeitungen). **Ein einzelnes Item von Hand anzulegen geht auch
+ohne.** Das ist der schnellere Weg — 15 Minuten.
 
-### Schritt 1 — Account
-Wikidata-Konto anlegen: https://www.wikidata.org/w/index.php?title=Special:CreateAccount
+### Schritt 1 — Item erstellen
+https://www.wikidata.org/wiki/Special:NewItem
 
-### Schritt 2 — QuickStatements autorisieren
-https://quickstatements.toolforge.org/ → oben rechts über OAuth mit dem
-Wikidata-Konto verbinden.
+| Feld | Wert |
+|---|---|
+| Sprache | `de` |
+| Label | `NurEine` |
+| Beschreibung | `deutschsprachige Good-News-Plattform, gegründet 2026` |
+| Aliase | `NurEine.de` · `nureine` · `nureine.de` |
 
-### Schritt 3 — Batch einfügen
-Dort „New batch" → **Import V1 commands** → den kompletten Inhalt von
-[`nureine-quickstatements.txt`](./nureine-quickstatements.txt) einfügen → „Import" →
-„Run".
+Danach oben auf **English** umstellen und ergänzen:
+- Label: `NurEine`
+- Beschreibung: `German-language good news website founded in 2026`
 
-### Schritt 4 — QID notieren
-Nach dem Lauf bekommt NurEine eine QID (Form `Q…`). Die brauchst du für Schritt 5.
+### Schritt 2 — Aussagen hinzufügen
+Auf der neuen Item-Seite jeweils „+ Aussage hinzufügen". Property eintippen, aus
+der Vorschlagsliste wählen, dann den Wert:
+
+| Property | Wert | Was es bedeutet |
+|---|---|---|
+| `instance of` (P31) | **Q17232649** (Nachrichten-Website) | Was NurEine IST |
+| `official website` (P856) | `https://nureine.de` | Verknüpfung zur Domain |
+| `language of work or name` (P407) | **Q188** (Deutsch) | Sprache |
+| `inception` (P571) | `2026` | Gründungsjahr |
+| `country` (P17) | **Q183** (Deutschland) | Land |
+| `headquarters location` (P159) | **Q572512** (Teltow) | Redaktioneller Ursprung |
+| `industry` (P452) | **Q11030** (Journalismus) | Branche |
+
+### Schritt 3 — Die Abgrenzung (der eigentliche Fix)
+Drei Mal die Property **`different from` (P1889)**:
+
+| Wert | Warum |
+|---|---|
+| **Q62006534** | „Nur eine Frau" (Film 2019, Sherry Hormann) |
+| **Q7070005** | „Nur eine Frau" (Film 1958) |
+| **Q408180** | Neurin / neurine (Chemikalie) |
+
+`different from` ist die Wikidata-Property, die exakt für „nicht zu verwechseln
+mit" existiert. **Ohne diese drei Zeilen bringt das Item nur die Hälfte.**
+
+### Schritt 4 — Quellen ergänzen (wichtig gegen Löschung)
+Bei P31, P571 und P159 jeweils auf „Quelle hinzufügen" klicken:
+- Property `reference URL` (P854) → `https://nureine.de/ueber-uns`
+
+Bei P17 zusätzlich: `reference URL` → `https://nureine.de/impressum`
+
+Zusätzlich hilft die openPR-Pressemeldung als unabhängiger Beleg — sie ist die
+Quelle, die Googles KI-Übersicht bereits zitiert.
 
 ### Schritt 5 — QID zurück in die Website
-Sobald die QID existiert, in `src/routes/+layout.svelte` im `sameAs`-Array der
-`NewsMediaOrganization` ergänzen:
+Nach dem Speichern hat das Item eine QID (Form `Q…`). Die in
+`src/routes/+layout.svelte` im `sameAs`-Array ergänzen:
 
 ```
 sameAs: [
@@ -45,61 +77,41 @@ sameAs: [
 ]
 ```
 
-Das schließt den Kreis: Website → Wikidata und Wikidata → Website verweisen
-aufeinander. Erst diese **beidseitige** Verknüpfung wertet Google als bestätigt.
+Erst diese **beidseitige** Verknüpfung (Website → Wikidata → Website) wertet Google
+als bestätigt. Sag mir die QID, dann trage ich sie ein.
 
 ---
 
-## Was im Batch steht (alle IDs gegen die Live-API geprüft)
+## Weg B: QuickStatements (erst wenn autoconfirmed)
 
-| Zeile | Bedeutung |
-|---|---|
-| `Lde` / `Len` | Label „NurEine" (deutsch/englisch) |
-| `Dde` / `Den` | Kurzbeschreibung |
-| `Ade` / `Aen` | Aliase: `NurEine.de`, `nureine`, `Nur Eine` — fängt Falschschreibungen ab |
-| `P31 Q17232649` | ist ein(e): **news website** |
-| `P856` | offizielle Website: https://nureine.de |
-| `P407 Q188` | Sprache des Werks: **Deutsch** |
-| `P571` | Gründung: **2026** (Genauigkeit `/9` = Jahr) |
-| `P17 Q183` | Land: **Deutschland** |
-| `P159 Q572512` | Sitz: **Teltow** |
-| `P452 Q11030` | Branche: **Journalismus** |
-| `P1813` | Kurzname |
-| **`P1889 Q62006534`** | **verschieden von: „A Regular Woman" (Film 2019)** |
-| **`P1889 Q7070005`** | **verschieden von: „Nur eine Frau" (Film 1958)** |
-| **`P1889 Q408180`** | **verschieden von: neurine (Chemikalie)** |
+Falls du das Konto ohnehin weiter nutzt und in ein paar Tagen `autoconfirmed` bist:
+Der fertige Batch liegt in [`nureine-quickstatements.txt`](./nureine-quickstatements.txt).
+Einspielen über https://quickstatements.toolforge.org/ → „New batch" →
+„Import V1 commands" → Inhalt einfügen → Import → Run.
 
-Die drei `P1889`-Zeilen sind der eigentliche Fix. „different from" ist die
-Wikidata-Property, die exakt für diesen Fall existiert — sie sagt dem Entity-Graph
-maschinenlesbar, dass NurEine **nicht** der Film und **nicht** die Chemikalie ist.
-
-`S854` hängt an die Aussagen eine Referenz-URL. Ohne Quellen werden neue Items
-schneller zur Löschung vorgeschlagen.
+Inhaltlich identisch zu Weg A. Kein Vorteil außer Geschwindigkeit — und Weg A
+funktioniert sofort.
 
 ---
 
 ## Realistische Erwartung
 
-**Wikidata-Relevanzkriterien.** Wikidata ist toleranter als Wikipedia, verlangt aber,
-dass ein Item „a serious and publicly available reference" hat. Ein Item, das sich
-ausschließlich auf die eigene Website stützt, **kann als nicht relevant gelöscht
-werden**. Das ist ein reales Risiko, kein theoretisches.
+**Löschrisiko.** Wikidata verlangt „a serious and publicly available reference".
+Ein Item, das sich nur auf die eigene Website stützt, **kann als irrelevant
+gelöscht werden**. Die openPR-Meldung als externe Quelle senkt das Risiko spürbar.
+Falls gelöscht: nicht neu anlegen, erst weitere externe Belege sammeln.
 
-Die Chance steigt deutlich, sobald es unabhängige Belege gibt (Presseerwähnung,
-Verzeichniseintrag, Branchenmedium). Falls das Item gelöscht wird: nicht neu anlegen,
-sondern erst externe Belege sammeln und dann erneut versuchen.
+**Zeit.** Google-Knowledge-Graph-Übernahme dauert typisch Wochen. Perplexity liest
+häufiger live und reagiert eher auf `/ueber-uns` und `llms.txt`.
 
-**Zeit.** Selbst wenn alles durchläuft, ändern sich AI-Antworten nicht sofort.
-Google-Knowledge-Graph-Übernahme dauert typisch Wochen; Perplexity liest häufiger
-live, reagiert also eher auf `/ueber-uns` und `llms.txt`. Rechne in Wochen, nicht Tagen.
+**Was es NICHT löst.** Das Item behebt die Namens-Verwechslung. Es ersetzt keine
+Backlinks und erhöht nicht die Indexierungsquote (aktuell 108 von ~1.325 Seiten).
 
 ---
 
-## Zusätzlich sinnvoll (nicht im Batch, nicht von mir gemacht)
+## Zusätzlich sinnvoll
 
-- **Google Knowledge Panel beanspruchen:** Das Panel für „NurEine" existiert bereits
-  (im Screenshot rechts sichtbar). Über die Search-Console-Verifizierung kannst du es
-  beanspruchen und die Beschreibung korrigieren → https://support.google.com/knowledgepanel/answer/7534902
-- **Bing Places / Bing Webmaster Tools:** speist ChatGPTs Websuche.
-- **Unabhängige Erwähnungen:** der stärkste Hebel für alles oben. Ohne externe
-  Quellen bleibt jede Entity-Behauptung schwach belegt.
+- **Google Knowledge Panel beanspruchen**, sobald es wieder erscheint:
+  https://support.google.com/knowledgepanel/answer/7534902
+- **Weitere Presseerwähnungen** — openPR hat nachweislich gewirkt (Googles
+  KI-Übersicht zitiert es namentlich als Quelle).

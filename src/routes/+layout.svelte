@@ -208,7 +208,14 @@
                                 ethicsPolicy: 'https://nureine.de/werte',
                                 diversityPolicy: 'https://nureine.de/werte',
                                 publishingPrinciples: 'https://nureine.de/methodik',
-                                sameAs: ['https://instagram.com/nureine.de']
+                                sameAs: [
+                                    'https://instagram.com/nureine.de',
+                                    // Wikidata-Item (2026-08-28 angelegt). Schliesst den Kreis:
+                                    // Website -> Wikidata -> Website. Erst diese BEIDSEITIGE Verknuepfung
+                                    // wertet Google als bestaetigt. Das Item traegt P1889 (different from)
+                                    // gegen beide Filme "Nur eine Frau" und die Chemikalie Neurin.
+                                    'https://www.wikidata.org/wiki/Q141203108'
+                                ]
                         },
                         {
                                 '@type': 'WebSite',

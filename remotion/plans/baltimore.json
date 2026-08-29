@@ -1,0 +1,98 @@
+{
+	"story": {
+		"id": "d4a22328-a263-4790-975e-96b6d06a634c",
+		"slug": "baltimore-krisenanrufe",
+		"category": "gemeinschaft",
+		"image": "story/baltimore.jpg",
+		"source": "The Optimist Daily",
+		"impactScore": 68,
+		"shareHook": "Von 12.000 Krisenanrufen brauchten 0,02 Prozent doch die Polizei."
+	},
+	"seo": {
+		"keyword": "psychische Krise"
+	},
+	"loop": true,
+	"softCta": "Sowas steht selten in den Nachrichten. Hier jeden Tag eins.",
+	"caption": "Wer in einer psychischen Krise den Notruf wählt, bekommt meist zuerst Polizei — auch ohne Straftat. Baltimore schickt jetzt rund um die Uhr Kliniker, finanziert aus einer Opioid-Klage. In North Carolina läuft das seit 2021: Von über 12.000 umgeleiteten Anrufen brauchten 0,02 Prozent doch Polizei.\n\nQuelle: The Optimist Daily — von uns nachgeprüft.",
+	"hashtags": [
+		"#gutenachrichten",
+		"#psychischegesundheit",
+		"#usa",
+		"#gemeinschaft"
+	],
+	"tiktok": {
+		"caption": "Psychische Krise, und am Notruf geht die Polizei ran — auch wenn niemand etwas verbrochen hat. Baltimore schickt jetzt rund um die Uhr Kliniker. In North Carolina läuft das Modell seit 2021: Von über 12.000 umgeleiteten Anrufen brauchten am Ende 0,02 Prozent doch die Polizei.\n\nQuelle: The Optimist Daily — von uns nachgeprüft.",
+		"hashtags": [
+			"#gutenachrichten",
+			"#psychischegesundheit",
+			"#usa",
+			"#gemeinschaft"
+		],
+		"location": "Berlin",
+		"soundKeywords": [
+			"calm underscore",
+			"warm human piano",
+			"soft hopeful groove",
+			"quiet resolve"
+		]
+	},
+	"scenes": [
+		{
+			"kind": "number",
+			"snap": true,
+			"kicker": "NUR EINE · GEPRÜFT",
+			"value": "0,02 %",
+			"unit": "brauchten Polizei",
+			"context": "psychische Krise — 12.000 Notrufe",
+			"image": "story/baltimore.jpg",
+			"voText": "Eine psychische Krise, ein Notruf: Von über 12.000 umgeleiteten Anrufen endeten nur 0,02 Prozent bei der Polizei."
+		},
+		{
+			"kind": "hook",
+			"text": "Es kommt jemand anderes.",
+			"punch": "anderes",
+			"kicker": "BALTIMORE · USA",
+			"voText": "Beim Notruf kommt jetzt jemand anderes."
+		},
+		{
+			"kind": "beat",
+			"text": "Wer in der Krise anruft, bekommt meist Polizei.",
+			"image": "story/baltimore.jpg",
+			"full": true,
+			"voText": "Wer in einer psychischen Krise anruft, bekommt meist die Polizei geschickt, auch ohne Straftat."
+		},
+		{
+			"kind": "beat",
+			"text": "Baltimore schickt Kliniker. Rund um die Uhr.",
+			"image": null,
+			"voText": "Baltimore schickt jetzt rund um die Uhr Klinikerinnen statt Streifenwagen."
+		},
+		{
+			"kind": "beat",
+			"text": "400 Millionen Dollar. Aus einer Opioid-Klage.",
+			"image": "story/baltimore.jpg",
+			"full": true,
+			"voText": "Bezahlt wird das aus einer gewonnenen Klage gegen die Hersteller von Schmerzmitteln, 400 Millionen Dollar."
+		},
+		{
+			"kind": "proof",
+			"source": "The Optimist Daily",
+			"impact": 68,
+			"progress": 1304,
+			"snapshot": {
+				"outlet": "The Optimist Daily",
+				"year": "2026",
+				"title": "Baltimore baut Krisendienst statt Polizeieinsatz aus",
+				"quote": "12.000 umgeleitete Notrufe, 0,02 % mit Polizeibedarf"
+			},
+			"voText": "Geprüft am Vergleichsprogramm in North Carolina seit 2021. Nicht erfunden."
+		},
+		{
+			"kind": "end",
+			"share": "Nicht jeder Notruf braucht eine Uniform.",
+			"cta": "",
+			"engage": true,
+			"voText": "Und die nächste gute Nachricht ist schon nachgeprüft. Nämlich:"
+		}
+	]
+}

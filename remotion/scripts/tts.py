@@ -16,7 +16,10 @@ import json
 import os
 import sys
 
-import edge_tts
+# edge_tts NUR fuer die kostenlose Stimme. Frueher stand der Import hier oben —
+# dann scheiterte auch der ElevenLabs-Pfad (der nur urllib braucht) an einem
+# fehlenden edge_tts, und JEDE Szene kam still heraus (belegt 2026-08-28).
+# Import daher erst dort, wo die Engine ihn wirklich benoetigt.
 
 DEFAULT_VOICE = "de-DE-SeraphinaMultilingualNeural"  # warm, klar; Fallback: de-DE-KatjaNeural
 
@@ -63,6 +66,7 @@ def _mark_clause_breaks(words, text):
 
 async def synth(text: str, voice: str, rate: str, out_mp3: str, out_words: str) -> None:
     # boundary explizit auf WordBoundary (edge-tts >= 7 default: SentenceBoundary)
+    import edge_tts  # lokal: nur dieser Pfad braucht die Bibliothek
     communicate = edge_tts.Communicate(text, voice, rate=rate, boundary="WordBoundary")
     words = []
     with open(out_mp3, "wb") as f:

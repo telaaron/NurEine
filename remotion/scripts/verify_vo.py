@@ -54,7 +54,15 @@ TOLERATED = {
     "nakolepsi": "narkolepsie",
 }
 
-FILLER = {"und", "der", "die", "das", "den", "dem", "ein", "eine", "einen", "ist", "sind"}
+FILLER = {"und", "der", "die", "das", "den", "dem", "ein", "eine", "einen", "ist", "sind",
+          # Dezimaltrenner: der Plan schreibt "null Komma null zwei" aus, Whisper
+          # transkribiert "0,02" — das Komma ist dort ein ZEICHEN, kein Wort.
+          # Ohne diesen Eintrag meldet das Gate jede Dezimalzahl als Fehler
+          # (belegt 2026-08-28, Baltimore-Reel "0,02 Prozent").
+          # "koma" ist KEIN Tippfehler: fuzzy() zieht Doppelkonsonanten zusammen,
+          # verglichen wird also "koma". Der Eintrag muss die VERGLICHENE Form
+          # treffen, sonst greift er nie.
+          "komma", "koma"}
 
 
 def norm(s: str) -> str:
@@ -70,6 +78,13 @@ def norm(s: str) -> str:
     # "500"+"000" und matcht nicht mehr gegen das gesprochene Zahlwort "fünfhunderttausend"
     # (belegt 2026-08-15).
     s = re.sub(r"(?<=\d)\.(?=\d{3}(\D|$))", "", s)
+    # Dezimalzahlen: Whisper schreibt "0,02", der Plan spricht "null Komma null zwei".
+    # Als EIN Token matcht das nie gegen die einzelnen Zahlwoerter. Darum in Ziffern
+    # zerlegen und das Komma entfernen — "0,02" -> "0 0 2", was gegen "null null zwei"
+    # aufgeht (belegt 2026-08-28: Baltimore "0,02 Prozent" blockierte den Render,
+    # obwohl die Stimme korrekt sprach).
+    s = re.sub(r"(?<=\d),(?=\d)", " ", s)
+    s = re.sub(r"\b(\d) (\d)(\d)\b", r"\1 \2 \3", s)
     # Sprech-Silben-Bindestriche aus dem Lexikon ("Tra-kom", "Gebär-mutter-hals-krebs")
     # sind eine AUSSPRACHE-Hilfe, kein Wort-Trenner — sonst zählt jede Silbe als eigenes
     # Wort und das Gate schlägt falsch Alarm. Zusammenziehen VOR dem Tokenisieren.

@@ -1,0 +1,98 @@
+{
+	"story": {
+		"id": "49cf18a1-00d7-4590-aeb8-233ad6f65d0a",
+		"slug": "england-hepatitis-c",
+		"category": "gesundheit",
+		"image": "story/hepatitis.jpg",
+		"source": "Positive.News",
+		"impactScore": 76,
+		"shareHook": "100.000 Menschen geheilt — ein WHO-Ziel vier Jahre zu früh."
+	},
+	"seo": {
+		"keyword": "Hepatitis C"
+	},
+	"loop": true,
+	"softCta": "Sowas steht selten in den Nachrichten. Hier jeden Tag eins.",
+	"caption": "Hepatitis C schädigt die Leber jahrelang, ohne Symptome zu machen. England hat in zehn Jahren 100.000 Menschen geheilt und ein WHO-Ziel vier Jahre vor der Frist erreicht. Am stärksten geholfen hat es denen, die sonst durch jedes Raster fallen.\n\nQuelle: Positive.News — von uns nachgeprüft.",
+	"hashtags": [
+		"#gutenachrichten",
+		"#gesundheit",
+		"#england",
+		"#fortschritt"
+	],
+	"tiktok": {
+		"caption": "Hepatitis C merkt man jahrelang nicht — und sie verschwindet gerade aus einem ganzen Land. England hat 100.000 Menschen geheilt und damit ein WHO-Ziel vier Jahre vor der Frist erreicht. Am meisten geholfen hat es denen, die sonst durch jedes Raster fallen.\n\nQuelle: Positive.News — von uns nachgeprüft.",
+		"hashtags": [
+			"#gutenachrichten",
+			"#gesundheit",
+			"#england",
+			"#fortschritt"
+		],
+		"location": "Berlin",
+		"soundKeywords": [
+			"calm hopeful",
+			"soft piano underscore",
+			"warm documentary",
+			"gentle build"
+		]
+	},
+	"scenes": [
+		{
+			"kind": "number",
+			"snap": true,
+			"kicker": "NUR EINE · GEPRÜFT",
+			"value": "100.000",
+			"unit": "geheilt",
+			"context": "Hepatitis C — England",
+			"image": "story/hepatitis.jpg",
+			"voText": "Hepatitis C merkt man jahrelang nicht. 100.000 Menschen in England sind sie jetzt los."
+		},
+		{
+			"kind": "hook",
+			"text": "Vier Jahre vor der Frist.",
+			"punch": "vier Jahre",
+			"kicker": "ENGLAND · NHS",
+			"voText": "Die Weltgesundheitsorganisation hatte dafür bis 2030 Zeit gegeben."
+		},
+		{
+			"kind": "beat",
+			"text": "Das Virus frisst die Leber, still.",
+			"image": "story/hepatitis.jpg",
+			"full": true,
+			"voText": "Das Virus greift die Leber an, oft ohne ein einziges Symptom, bis der Schaden da ist."
+		},
+		{
+			"kind": "beat",
+			"text": "Geholfen hat es denen, die sonst durchs Raster fallen.",
+			"image": null,
+			"voText": "Betroffen sind überdurchschnittlich oft Menschen am Rand, die im Gesundheitssystem sonst kaum ankommen."
+		},
+		{
+			"kind": "beat",
+			"text": "Nicht das Medikament war neu. Der Zugang.",
+			"image": "story/hepatitis.jpg",
+			"full": true,
+			"voText": "Das Programm hat nicht das Mittel verändert, sondern die Hürden davor abgebaut."
+		},
+		{
+			"kind": "proof",
+			"source": "Positive.News",
+			"impact": 76,
+			"progress": 1304,
+			"snapshot": {
+				"outlet": "Positive.News",
+				"year": "2026",
+				"title": "England erreicht WHO-Ziel bei Hepatitis C vorzeitig",
+				"quote": "100.000 Behandlungen in zehn Jahren, NHS-Bericht"
+			},
+			"voText": "Geprüft am Bericht des britischen Gesundheitsdienstes. Nicht erfunden."
+		},
+		{
+			"kind": "end",
+			"share": "Erst der Zugang, dann die Heilung.",
+			"cta": "",
+			"engage": true,
+			"voText": "Und die nächste gute Nachricht ist schon nachgeprüft. Nämlich:"
+		}
+	]
+}

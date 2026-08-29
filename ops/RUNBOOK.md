@@ -23,14 +23,45 @@ Extra-Kosten)** per `claude -p`, gestartet von System-`cron`.
 
 ```bash
 # Von überall (Tailscale — auch aus dem Café, vom Handy-Hotspot):
-ssh aaron@100.123.159.38
+ssh mini
 
 # Zuhause im WLAN:
 ssh aaron@192.168.178.3
 
 # Einzelbefehl ohne Login-Shell:
-ssh aaron@100.123.159.38 'cd ~/NurEine && git log -1 --oneline'
+ssh mini 'cd ~/NurEine && git log -1 --oneline'
 ```
+
+**Warum `ssh mini` und nicht mehr `ssh aaron@100.123.159.38`** (2026-08-29):
+
+Beide Wege führen zum selben Rechner, aber über verschiedene Türen:
+
+| Kürzel | Port | Weg | Verhalten |
+|---|---|---|---|
+| `ssh mini` | 2222 | eigener sshd | **stabil** — keine Fremdprüfung dazwischen |
+| `ssh mini-ts` | 22 | Tailscale SSH | fällt gelegentlich aus |
+
+Tailscale SSH belegt Port 22 und schaltet eine eigene Sitzungsprüfung davor.
+Fällt die aus (`tailscale: failed to fetch next SSH action`), war der Mini aus
+der Ferne **gar nicht mehr erreichbar** — genau dann, wenn man nicht zuhause ist
+und nichts dagegen tun kann. Das ist am 27.–29.08. mehrfach passiert und hat die
+Arbeit blockiert.
+
+Der Geräteschlüssel war **nicht** die Ursache — der läuft bis 02/2027. Ein
+`tailscale login` hätte das Problem also nur zufällig behoben.
+
+Port 2222 geht direkt an den eigenen sshd und hängt nicht an dieser Prüfung.
+Erreichbar bleibt er ausschließlich über das Tailscale-Netz (100.x): Von der
+öffentlichen IP aus sind **beide** Ports zu (geprüft 2026-08-29), Passwort-Login
+ist aus, es zählt nur der hinterlegte Schlüssel.
+
+Die Kurznamen stehen in `~/.ssh/config` auf dem MacBook. Auf einem neuen Rechner
+dort ergänzen — oder direkt: `ssh -p 2222 aaron@100.123.159.38`
+
+Konfiguration am Mini: `/etc/ssh/sshd_config.d/99-ersatzweg.conf`,
+Sicherung der alten Fassung: `/etc/ssh/sshd_config.vor-port2222`.
+Wichtig: `ssh.socket` musste deaktiviert werden — systemd gab den Port sonst
+fest vor und übersteuerte die Konfiguration.
 
 **Voraussetzung für den Fernzugriff:** Tailscale muss auf dem Gerät laufen, von
 dem aus du zugreifst (MacBook: `brew install --cask tailscale-app`, dann App

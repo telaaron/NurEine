@@ -1,5 +1,10 @@
 # STRATEGY.md — NurEine
 
+> ⚠️ **HISTORISCH (Stand Juni 2026).** Die verbindliche Quelle für Zielbild
+> und Roadmap ist seit 2026-08-26 `VISION.md`. Dieses Dokument bleibt als
+> Kontext erhalten, ist aber NICHT mehr maßgeblich. Bei Widerspruch gilt
+> VISION.md. Siehe dort Abschnitt 13, offene Entscheidung E-02.
+
 > Lebendes Strategie-Dokument. Referenz für alle weiteren Sessions.
 > Erstellt: 2026-06-12 (Phase-0-Daten gemessen, Benchmarks live recherchiert).
 > Ergänzt: ROADMAP.md (Produkt), GROWTH.md (Social-Mechanik), BUSINESS.md (B2B), BACKLOG.md (Tasks).

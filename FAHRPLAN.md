@@ -1,5 +1,10 @@
 # FAHRPLAN.md — Aarons Abarbeitungs-Liste
 
+> ⚠️ **HISTORISCH (Stand Juni 2026).** Die verbindliche Quelle für Zielbild
+> und Roadmap ist seit 2026-08-26 `VISION.md`. Dieses Dokument bleibt als
+> Kontext erhalten, ist aber NICHT mehr maßgeblich. Bei Widerspruch gilt
+> VISION.md. Siehe dort Abschnitt 13, offene Entscheidung E-02.
+
 > Streng der Reihe nach. Ein Schritt pro Tag reicht — aber JEDEN Tag einer.
 > Erledigtes abhaken (`[x]`), nicht löschen. Stand: 2026-06-13.
 

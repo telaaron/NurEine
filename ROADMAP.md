@@ -1,5 +1,10 @@
 # NurEine — Roadmap & Wachstumsstrategie
 
+> ⚠️ **HISTORISCH (Stand Juni 2026).** Die verbindliche Quelle für Zielbild
+> und Roadmap ist seit 2026-08-26 `VISION.md`. Dieses Dokument bleibt als
+> Kontext erhalten, ist aber NICHT mehr maßgeblich. Bei Widerspruch gilt
+> VISION.md. Siehe dort Abschnitt 13, offene Entscheidung E-02.
+
 > Ziel: **größte Good-News-Plattform im DACH-Raum** — nicht nur durch Design,
 > Performance und Funktionen, sondern durch **Kundschaft / Reichweite**.
 > Stand: 2026-06-04. Lebendes Dokument.

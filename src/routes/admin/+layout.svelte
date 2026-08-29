@@ -31,6 +31,8 @@
 			title: '',
 			items: [
 				{ href: '/admin', label: 'Übersicht', icon: 'grid', badge: 0 },
+				// Pflichtlektüre — bewusst ganz oben, nicht unter „Selten gebraucht".
+				{ href: '/admin/vision', label: 'Vision & Roadmap', icon: 'doc', badge: 0 },
 				{ href: '/admin/ki', label: 'KI-Cockpit', icon: 'heart', badge: 0 },
 				{ href: '/admin/social', label: 'Social', icon: 'share', badge: 0 },
 				{ href: '/admin/tiktok', label: 'TikTok', icon: 'send', badge: 0, sub: true },

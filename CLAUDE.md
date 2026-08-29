@@ -4,6 +4,22 @@
 Du arbeitest an **NurEine**, einer autonomen Good-News-Plattform.
 Teltow, Brandenburg. Gegründet 2026.
 
+## PFLICHTLEKTÜRE — VISION.md
+**Lies `VISION.md`, BEVOR du irgendetwas tust.** Es ist die einzige verbindliche
+Quelle für Zielbild, Produktausrichtung und interne Roadmap. Bei Widerspruch zu
+einem anderen Dokument (ROADMAP.md, FAHRPLAN.md, STRATEGY.md — alle Stand Juni
+2026) gilt VISION.md.
+
+Besonders **Abschnitt 13 („Evaluierungen & Entscheidungen")**: dort steht, was
+bereits festgelegt ist. Eine dort getroffene Entscheidung nie stillschweigend
+umkehren — Widerspruch benennen und Aaron fragen.
+
+Wird etwas Neues festgelegt: **trag es in Abschnitt 13 ein** (Datum, Entscheidung,
+Begründung) und pflege den Status in Abschnitt 14. Chatverläufe sind flüchtig,
+VISION.md ist das Gedächtnis über alle parallelen Sessions hinweg.
+
+Im Admin sichtbar und bearbeitbar unter `/admin/vision`.
+
 ## Wichtigste Regel
 Bevor du Code schreibst: Lies ARCHITECTURE.md und BUSINESS.md.
 Ändere nie das DB-Schema ohne Rücksprache — RLS-Policies sind sicherheitskritisch.

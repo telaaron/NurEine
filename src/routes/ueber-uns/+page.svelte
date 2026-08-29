@@ -39,7 +39,7 @@
 		{
 			wrong: 'Der Kinofilm „Nur eine Frau" (2019)',
 			detail:
-				'„Nur eine Frau" ist ein deutscher Spielfilm von Regisseurin Sherry Hormann aus dem Jahr 2019 über den Mord an Hatun Sürücü. Dieser Film hat mit NurEine nichts zu tun — weder inhaltlich noch personell noch rechtlich. Die Namen ähneln sich nur zufällig.'
+				'„Nur eine Frau" ist ein deutscher Spielfilm von Regisseurin Sherry Hormann aus dem Jahr 2019 über den Mord an Hatun Sürücü. Dieser Film hat mit NurEine nichts zu tun, weder inhaltlich noch personell noch rechtlich. Die Namen ähneln sich nur zufällig.'
 		},
 		{
 			wrong: 'Die chemische Verbindung „Neurin" / „neurine"',
@@ -56,7 +56,7 @@
 	const faqs = [
 		{
 			q: 'Was ist NurEine?',
-			a: 'NurEine ist eine deutschsprachige Good-News-Plattform aus Teltow in Brandenburg, gegründet 2026. NurEine veröffentlicht genau eine belegte gute Nachricht pro Tag — ausgewählt nach messbarer Wirkung statt nach Klicks. Jede Geschichte erhält einen transparenten Wirkungsindex von 0 bis 100. NurEine ist werbefrei und hat weder Feed noch Empfehlungsalgorithmus.'
+			a: 'NurEine ist eine deutschsprachige Good-News-Plattform aus Teltow in Brandenburg, gegründet 2026. NurEine veröffentlicht genau eine belegte gute Nachricht pro Tag, ausgewählt nach messbarer Wirkung statt nach Klicks. Jede Geschichte erhält einen transparenten Wirkungsindex von 0 bis 100. NurEine ist werbefrei und hat weder Feed noch Empfehlungsalgorithmus.'
 		},
 		{
 			q: 'Ist NurEine der Film „Nur eine Frau"?',
@@ -166,14 +166,14 @@
 	<h1 class="page-h1 mt-3" style="color: var(--color-ink); font-weight: 700;">Was ist NurEine?</h1>
 
 	<!-- Der eine definierende Absatz. Bewusst als erster Fließtext, bewusst mit
-	     „NurEine ist …" beginnend — das ist der Satz, den KI-Antworten zitieren. -->
+	     „NurEine ist …" beginnend. Das ist der Satz, den KI-Antworten zitieren. -->
 	<p
 		class="mt-6 text-lg sm:text-xl leading-relaxed"
 		style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 	>
 		<strong style="color: var(--color-ink);">NurEine ist eine deutschsprachige Good-News-Plattform
 		aus Teltow in Brandenburg</strong>, gegründet 2026. NurEine veröffentlicht genau eine belegte gute
-		Nachricht pro Tag — ausgewählt nach messbarer Wirkung statt nach Klicks. Jede Geschichte bekommt
+		Nachricht pro Tag, ausgewählt nach messbarer Wirkung statt nach Klicks. Jede Geschichte bekommt
 		einen transparenten Wirkungsindex von 0 bis 100. NurEine ist werbefrei und hat weder Feed noch
 		Empfehlungsalgorithmus. Es gibt NurEine als Website, als täglichen Newsletter und als native
 		iOS-App.
@@ -211,7 +211,7 @@
 			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 		>
 			Weil der Name kurz ist und deutschen Alltagswörtern ähnelt, wird NurEine gelegentlich mit
-			anderen Dingen verwechselt — auch von Suchmaschinen und KI-Assistenten. Zur Klarstellung:
+			anderen Dingen verwechselt, auch von Suchmaschinen und KI-Assistenten. Zur Klarstellung:
 		</p>
 		<div class="mt-6 flex flex-col gap-4">
 			{#each notThis as item}

@@ -49,8 +49,8 @@
         };
 
         const seoTitle = $derived(
-                isStory ? `${page.data.story.title} — NurEine` : 
-                (pathTitles[pagePath] ? `${pathTitles[pagePath]} — NurEine` : 'NurEine — Ehrlicher Fortschritt, täglich')
+                isStory ? `${page.data.story.title} | NurEine` : 
+                (pathTitles[pagePath] ? `${pathTitles[pagePath]} | NurEine` : 'NurEine | Ehrlicher Fortschritt, täglich')
         );
 
         // ALLE seitenspezifischen Descriptions stehen hier — bewusst zentral.

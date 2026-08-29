@@ -56,12 +56,12 @@
 		{
 			n: '01',
 			t: 'Wir filtern, was du nicht siehst',
-			d: 'Jeden Tag durchsuchen wir tausende Quellen weltweit — Reuters, Nature, WHO, lokale Redaktionen. Nicht nach dem Lautesten. Nach dem, was zeigt, dass Menschen vorankommen.'
+			d: 'Jeden Tag durchsuchen wir tausende Quellen weltweit: Reuters, Nature, WHO, lokale Redaktionen. Nicht nach dem Lautesten. Nach dem, wo Menschen vorankommen.'
 		},
 		{
 			n: '02',
 			t: 'KI misst die echte Wirkung',
-			d: 'Jede Geschichte bekommt einen Wirkungsindex: Wie viele Menschen profitieren? Ist es belegt? Ist es nachhaltig? Kein Clickbait — gemessene Substanz.'
+			d: 'Jede Geschichte bekommt einen Wirkungsindex: Wie viele Menschen profitieren? Ist es belegt? Ist es nachhaltig? Kein Clickbait, gemessene Substanz.'
 		},
 		{
 			n: '03',
@@ -72,7 +72,7 @@
 </script>
 
 <svelte:head>
-	<title>Warum NurEine — Schluss mit Doomscrolling</title>
+	<title>Warum NurEine: Schluss mit Doomscrolling</title>
 	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 </svelte:head>
 
@@ -97,7 +97,7 @@
 			class="mx-auto mt-6 sm:mt-8 text-lg sm:text-xl lg:text-2xl leading-[1.5] max-w-[52ch] rise rise-d2"
 			style="color: var(--color-ink-soft); font-family: var(--font-serif);"
 		>
-			Fast alle schätzen die Welt düsterer ein, als sie belegbar ist — das ist gemessen, nicht
+			Fast alle schätzen die Welt düsterer ein, als sie belegbar ist. Das ist gemessen, nicht
 			behauptet. Wir korrigieren es: <span style="color: var(--color-amber);">ein Beleg pro
 			Tag</span>, in zwei Minuten. Kein Feed, kein Algorithmus, kein Sog.
 		</p>
@@ -127,12 +127,12 @@
 	<div class="mx-auto max-w-[1000px] px-4 sm:px-6 lg:px-10 py-16 sm:py-24">
 		<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">Das Problem</span>
 		<h2 class="display mt-4 text-2xl sm:text-3xl lg:text-[2.6rem] leading-[1.1] max-w-[20ch]" style="color: var(--color-ink); font-weight: 600;">
-			Du liegst falsch — und weißt nicht, wie sehr.
+			Du liegst falsch, und weißt nicht, wie sehr.
 			</h2>
 			<p class="mt-6 text-base sm:text-lg leading-[1.6] max-w-[58ch]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
 				Der Statistiker Hans Rosling stellte zehntausenden Menschen einfache Faktenfragen über die
-				Welt — Armut, Bildung, Gesundheit. Die meisten lagen schlechter als der Zufall: Schimpansen,
-				die zufällig raten, schlugen Nobelpreisträger, Journalisten und Ärzte. Nicht aus Dummheit —
+				Welt: Armut, Bildung, Gesundheit. Die meisten lagen schlechter als der Zufall: Schimpansen,
+				die zufällig raten, schlugen Nobelpreisträger, Journalisten und Ärzte. Nicht aus Dummheit, sondern
 				weil ihr Bild von der Welt <span style="color: var(--color-amber);">systematisch zu düster</span> ist.
 			</p>
 		<div class="mt-8 grid sm:grid-cols-3 gap-px" style="background: var(--color-rule);">
@@ -148,7 +148,7 @@
 			{/each}
 		</div>
 		<p class="mt-8 text-base sm:text-lg leading-[1.6] max-w-[58ch]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
-			Der Feed ist darauf gebaut, dich zu halten — nicht, dich zu informieren. Angst und Empörung
+			Der Feed ist darauf gebaut, dich zu halten, nicht, dich zu informieren. Angst und Empörung
 			binden Aufmerksamkeit. Das Ergebnis: Du weißt mehr über jede Katastrophe als über jeden
 			Fortschritt. Und fühlst dich machtloser, je mehr du liest.
 		</p>
@@ -198,7 +198,7 @@
 				<ul class="mt-8 space-y-4">
 					{#each [
 						'Informiert sein, ohne in Zynismus zu versinken',
-						'Eine Geschichte — sofort konsumierbar, kein Feed',
+						'Eine Geschichte, sofort konsumierbar, kein Feed',
 						'Belegt, mit Quellen und gemessenem Wirkungsindex',
 						'Werbefrei. Kein Algorithmus, der dich länger hält.'
 					] as point}

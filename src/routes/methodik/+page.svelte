@@ -10,7 +10,7 @@
 			name: 'Reichweite',
 			q: 'Wie viele Menschen werden messbar positiv beeinflusst?',
 			detail:
-				'Geschätzte direkt betroffene Personen — belegt durch offizielle Quellen, NGO-Reports oder peer-reviewte Studien. Eine Therapie für 100.000 wiegt schwerer als ein lokaler Einzelfall.'
+				'Geschätzte direkt betroffene Personen, belegt durch offizielle Quellen, NGO-Reports oder peer-reviewte Studien. Eine Therapie für 100.000 wiegt schwerer als ein lokaler Einzelfall.'
 		},
 		{
 			w: 'Achse 2',
@@ -24,13 +24,13 @@
 			name: 'Belegbarkeit',
 			q: 'Wie hart sind die Daten?',
 			detail:
-				'Datenqualität der Quelle. Peer-reviewt = 100, etablierte Redaktion = 75, lokale Berichterstattung = 50. Reine Erkenntnisse ohne Lebenswirkung werden bewusst niedrig bewertet — auch wenn sie hart belegt sind.'
+				'Datenqualität der Quelle. Peer-reviewt = 100, etablierte Redaktion = 75, lokale Berichterstattung = 50. Reine Erkenntnisse ohne Lebenswirkung werden bewusst niedrig bewertet, auch wenn sie hart belegt sind.'
 		}
 	];
 </script>
 
 <svelte:head>
-	<title>Methodik — Wie der Wirkungsindex funktioniert — NurEine</title>
+	<title>Methodik: Wie der Wirkungsindex funktioniert</title>
 	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 </svelte:head>
 
@@ -41,7 +41,7 @@
 	</h1>
 	<p class="mt-5 text-lg leading-[1.5] max-w-[52ch]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
 		Jede Geschichte bei NurEine bekommt einen <strong>Wirkungsindex</strong> zwischen 1 und 100.
-		Hier steht vollständig, wie er zustande kommt — Quellen, Gewichtungen und wo er an Grenzen
+		Hier steht vollständig, wie er zustande kommt: Quellen, Gewichtungen und wo er an Grenzen
 		stößt. Wenn du skeptisch bist: gut. Lies weiter.
 	</p>
 
@@ -53,8 +53,8 @@
 		</p>
 		<p class="mt-4 text-sm leading-relaxed" style="color: var(--color-muted); font-family: var(--font-serif);">
 			Keine starre Multiplikation: Eine perfekt belegte Studie kann trotzdem wenig Wirkung haben,
-			wenn sie nichts verbessert. Drei Achsen fließen in die Bewertung ein —
-			Reichweite, Dauerhaftigkeit, Belegbarkeit — aber der Index folgt der Frage oben, nicht einer Formel.
+			wenn sie nichts verbessert. Drei Achsen fließen in die Bewertung ein:
+			Reichweite, Dauerhaftigkeit, Belegbarkeit. Aber der Index folgt der Frage oben, nicht einer Formel.
 		</p>
 		<p class="mt-4 text-sm" style="color: var(--color-ink-soft);">
 			<a href={base + '/werte'} style="color: var(--color-amber); border-bottom: 1px solid var(--color-rule-strong);">Woran wir „Fortschritt" überhaupt messen →</a>
@@ -79,7 +79,7 @@
 	<div class="mt-12">
 		<h2 class="display text-2xl" style="color: var(--color-ink); font-weight: 600;">Woher wir filtern</h2>
 		<p class="mt-3 text-base leading-relaxed max-w-[58ch]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
-			Wir durchsuchen täglich tausende RSS-Quellen — darunter Reuters, Nature, WHO, Mongabay,
+			Wir durchsuchen täglich tausende RSS-Quellen, darunter Reuters, Nature, WHO, Mongabay,
 			Good News Network, Positive.News und lokale Redaktionen. Eine KI (DeepSeek) hilft beim
 			Vor-Sortieren nach Substanz statt Sentiment. Die finale Bewertung folgt der obigen Formel.
 			Jede veröffentlichte Geschichte verlinkt auf ihre Originalquelle.
@@ -91,16 +91,16 @@
 		<h2 class="display text-xl sm:text-2xl" style="color: var(--color-ink); font-weight: 600;">Wo der Index an Grenzen stößt</h2>
 		<ul class="mt-4 space-y-3 text-base leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
 			<li>· <strong>Schätzungen bleiben Schätzungen.</strong> „Reichweite" ist oft eine Bandbreite, kein exakter Wert.</li>
-			<li>· <strong>Positiv ≠ unkritisch.</strong> Wir zeigen Fortschritt, nicht die Gesamtlage. Manche Metriken verschlechtern sich — CO₂, Artenvielfalt, Ungleichheit. Für das vollständige Bild empfehlen wir <a href="https://ourworldindata.org" target="_blank" rel="noreferrer" style="color: var(--color-amber); border-bottom: 1px solid var(--color-rule-strong);">Our World in Data</a>.</li>
+			<li>· <strong>Positiv ≠ unkritisch.</strong> Wir zeigen Fortschritt, nicht die Gesamtlage. Manche Metriken verschlechtern sich: CO₂, Artenvielfalt, Ungleichheit. Für das vollständige Bild empfehlen wir <a href="https://ourworldindata.org" target="_blank" rel="noreferrer" style="color: var(--color-amber); border-bottom: 1px solid var(--color-rule-strong);">Our World in Data</a>.</li>
 			<li>· <strong>KI kann irren.</strong> Wo wir KI nutzen, sagen wir es. Wo wir uns irren, korrigieren wir öffentlich.</li>
-			<li>· <strong>Auswahl ist Haltung.</strong> Welche Quellen, welche Gewichtung — das ist eine redaktionelle Entscheidung, keine objektive Wahrheit. Wir legen sie offen, damit du sie beurteilen kannst.</li>
+			<li>· <strong>Auswahl ist Haltung.</strong> Welche Quellen, welche Gewichtung: das ist eine redaktionelle Entscheidung, keine objektive Wahrheit. Wir legen sie offen, damit du sie beurteilen kannst.</li>
 		</ul>
 	</div>
 
 	<div class="mt-10 text-center">
 		<p class="serif text-sm sm:text-base italic" style="color: var(--color-muted);">Transparenz teilen</p>
 		<div class="mt-3 flex items-center justify-center">
-			<ShareBar {url} title="Methodik — NurEine Wirkungsindex" text="Quellen, Gewichtungen, Grenzen — vollständig offengelegt. Keine Blackbox." size={20} />
+			<ShareBar {url} title="Methodik: NurEine Wirkungsindex" text="Quellen, Gewichtungen, Grenzen, vollständig offengelegt. Keine Blackbox." size={20} />
 		</div>
 	</div>
 

@@ -485,8 +485,19 @@ die Vergleichsbasis: In einer Woche sollten sie deutlich niedriger liegen.
 
 Nachmessen mit `ops/` oder direkt per SQL gegen `nureine_stories`.
 
-⚠️ **Offene Baustelle:** Die nächtlichen Agenten auf dem Mac Mini
-(`ops/prompts/*.md`, per `.gitignore` nicht im Repo) kennen diesen Kanon noch
-nicht. `redaktion.md` schreibt die Texte nach dem Fetcher **komplett neu** und
-fordert in Zeile 63 weiterhin „summary: exakt 4 Sätze". Solange das so ist,
-überschreibt die Redaktion nachts, was der Fetcher morgens richtig gemacht hat.
+### Ergebnis nach dem ersten vollen Nachtlauf (27.08.2026)
+
+Fetcher und Redaktion liefen erstmals beide nach Kanon. Gemessen an den Stories,
+die in dieser Nacht entstanden:
+
+| Kennzahl | Vorher | 27.08. |
+|---|---|---|
+| `share_hook` über 70 Zeichen | 94 % | **0 von 5** |
+| Durchschnittliche Hook-Länge | 133 Zeichen | **62** |
+| Fließtext mit Gedankenstrich | 83 % | **0 von 5** |
+| „Manchmal" am Anfang der Stille-Folie | 61 % | **0 von 5** |
+| „nicht nur … sondern auch" / „zeigt, dass" | 20 % / 19 % | **0 von 5** |
+| Durchschnittliche Textlänge | 2.269 Zeichen | **1.557** |
+
+Die Agenten-Prompts (`ops/prompts/*.md`) sind seit dem 26.08. im Repo und lesen
+`docs/STIMME.md` über die Team-Basis. Die Redaktion überschreibt nichts mehr.

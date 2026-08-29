@@ -8,7 +8,7 @@
 	const areas = [
 		{ name: 'Gesundheit', what: 'Weniger Krankheit, längeres gutes Leben.', why: 'Kein Mensch will krank sein.' },
 		{ name: 'Bildung', what: 'Mehr Menschen mit Zugang zu Wissen & Fähigkeiten.', why: 'Wissen ist keine Ideologie.' },
-		{ name: 'Ökologie', what: 'Intakte natürliche Lebensgrundlagen — Luft, Wasser, Boden, Arten.', why: 'Saubere Umwelt betrifft jeden.' },
+		{ name: 'Ökologie', what: 'Intakte natürliche Lebensgrundlagen: Luft, Wasser, Boden, Arten.', why: 'Saubere Umwelt betrifft jeden.' },
 		{ name: 'Sicherheit', what: 'Weniger Gewalt, Hunger, Armut, Gefahr.', why: 'Niemand will in Gefahr leben.' },
 		{ name: 'Gemeinschaft', what: 'Stärkerer Zusammenhalt, Vertrauen, weniger Einsamkeit.', why: 'Einsamkeit schadet allen.' },
 		{ name: 'Innovation', what: 'Lösungen, die das Leben leichter und besser machen.', why: 'Fortschritt ist parteilos.' },
@@ -19,7 +19,7 @@
 	const faqs = [
 		{
 			q: 'Ist NurEine politisch neutral?',
-			a: 'Nein — „neutral" wäre eine Illusion, denn jede Auswahl ist eine Wertentscheidung. NurEine hat eine klare, transparente Position: Fortschritt heißt, dass Menschen gesünder, sicherer, freier und verbundener leben. Das ist keine links/rechts-Frage, sondern ein Ziel, dem alle zustimmen können.'
+			a: 'Nein. „neutral" wäre eine Illusion, denn jede Auswahl ist eine Wertentscheidung. NurEine hat eine klare, transparente Position: Fortschritt heißt, dass Menschen gesünder, sicherer, freier und verbundener leben. Das ist keine links/rechts-Frage, sondern ein Ziel, dem alle zustimmen können.'
 		},
 		{
 			q: 'Woran misst NurEine, ob etwas „gute Nachricht" ist?',
@@ -27,19 +27,19 @@
 		},
 		{
 			q: 'Bevorzugt NurEine eine politische Partei oder Regierung?',
-			a: 'Nein. Wir urteilen nicht über die Mittel — ob ein Fortschritt durch staatliche oder private Initiative entstand, ist nicht unsere Frage. Wir schreiben nie „Regierung X hat…", sondern „In Y ist Folgendes passiert…". Stories, die primär eine politische Seite gut oder schlecht aussehen lassen, nehmen wir nicht auf.'
+			a: 'Nein. Wir urteilen nicht über die Mittel. Ob ein Fortschritt durch staatliche oder private Initiative entstand, ist nicht unsere Frage. Wir schreiben nie „Regierung X hat…", sondern „In Y ist Folgendes passiert…". Stories, die primär eine politische Seite gut oder schlecht aussehen lassen, nehmen wir nicht auf.'
 		},
 		{
 			q: 'Ist NurEine Aktivismus?',
-			a: 'Nein. Wir berichten über Fortschritt, wir fordern ihn nicht. Keine Appelle, keine Imperative. Wir zeigen, was sich zum Besseren verändert hat — die Schlüsse zieht jede Leserin selbst.'
+			a: 'Nein. Wir berichten über Fortschritt, wir fordern ihn nicht. Keine Appelle, keine Imperative. Wir zeigen, was sich zum Besseren verändert hat. Die Schlüsse zieht jede Leserin selbst.'
 		},
 		{
 			q: 'Wie entscheidet NurEine, welche Geschichten wichtig sind?',
-			a: 'Über den Wirkungsindex (0–100): Er misst, wie sehr eine Nachricht konkret das Leben verbessert — gewichtet nach Reichweite (wie viele Menschen betroffen sind), Dauerhaftigkeit (ob die Wirkung anhält) und Belegbarkeit (wie hart die Daten sind). Reine Kuriositäten ohne Lebenswirkung werden niedrig bewertet, auch wenn sie gut belegt sind.'
+			a: 'Über den Wirkungsindex (0–100): Er misst, wie sehr eine Nachricht konkret das Leben verbessert, gewichtet nach Reichweite (wie viele Menschen betroffen sind), Dauerhaftigkeit (ob die Wirkung anhält) und Belegbarkeit (wie hart die Daten sind). Reine Kuriositäten ohne Lebenswirkung werden niedrig bewertet, auch wenn sie gut belegt sind.'
 		},
 		{
 			q: 'Woher kommen die Nachrichten?',
-			a: 'NurEine monitort Primärquellen direkt — offizielle Statistiken, Forschungspublikationen, Register, Fachquellen — statt nur den Medien-Lärm zu wiederholen. Jede Geschichte zeigt transparent, welcher thematische Beat sie gefunden hat und welcher Quellentyp sie belegt.'
+			a: 'NurEine monitort Primärquellen direkt: offizielle Statistiken, Forschungspublikationen, Register, Fachquellen, statt nur den Medien-Lärm zu wiederholen. Jede Geschichte zeigt transparent, welcher thematische Beat sie gefunden hat und welcher Quellentyp sie belegt.'
 		}
 	];
 
@@ -55,7 +55,7 @@
 </script>
 
 <svelte:head>
-	<title>Unsere Werte — Woran NurEine Fortschritt misst</title>
+	<title>Unsere Werte: Woran NurEine Fortschritt misst</title>
 	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 	<link rel="canonical" href={url} />
 	{@html `<script type="application/ld+json">${jsonLd}</scr` + `ipt>`}
@@ -69,7 +69,7 @@
 
 	<p class="mt-6 text-lg sm:text-xl leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
 		„NurEine misst Fortschritt daran, ob Menschen gesünder, sicherer, freier und verbundener
-		leben. Das ist keine politische Position — das ist das Ziel, auf das sich alle einigen können."
+		leben. Das ist keine politische Position, sondern das Ziel, auf das sich alle einigen können."
 	</p>
 
 	<!-- Das Fundament -->
@@ -78,7 +78,7 @@
 			Sieben Bereiche menschlichen Aufblühens
 		</h2>
 		<p class="mt-4 leading-relaxed" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
-			„Politisch neutral" ist eine Illusion — jede Auswahl ist eine Wertentscheidung. Statt so zu
+			„Politisch neutral" ist eine Illusion, denn jede Auswahl ist eine Wertentscheidung. Statt so zu
 			tun, als hätten wir keine Position, legen wir sie offen. Wir bewerten jede Geschichte durch
 			die Linse von sieben Bereichen, in denen Fortschritt universell erkennbar ist. Sie stammen
 			aus der internationalen Forschung zu menschlichem Aufblühen (u. a. OECD Better Life Index,
@@ -140,6 +140,6 @@
 			<a href={base + '/methodik'} class="hover:opacity-70" style="color: var(--color-amber);">Methodik →</a>
 			<a href={base + '/manifest'} class="hover:opacity-70" style="color: var(--color-amber);">Manifest →</a>
 		</div>
-		<ShareBar {url} title="Woran NurEine Fortschritt misst" text="Sieben Bereiche menschlichen Aufblühens — kein Partei-Framing, kein Aktivismus." />
+		<ShareBar {url} title="Woran NurEine Fortschritt misst" text="Sieben Bereiche menschlichen Aufblühens, kein Partei-Framing, kein Aktivismus." />
 	</div>
 </section>

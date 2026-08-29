@@ -209,7 +209,7 @@
 						Heute bleibt es hier still.
 					</h1>
 					<p class="mt-5 serif text-lg sm:text-xl max-w-[46ch] leading-relaxed rise rise-d2" style="color: var(--color-ink-soft);">
-						Wir haben unser Speicher-Kontingent überschritten — deshalb können wir die
+						Wir haben unser Speicher-Kontingent überschritten. Deshalb können wir die
 						Geschichten gerade nicht ausliefern. Kein Datenverlust, nichts kaputt:
 						am <strong style="color: var(--color-ink);">20. Juli</strong> sind wir automatisch
 						wieder da.
@@ -224,7 +224,7 @@
 							class="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-medium transition-transform hover:-translate-y-0.5"
 							style="background: var(--color-ink); color: var(--color-paper);"
 						>
-							Newsletter abonnieren — wir melden uns, wenn's weitergeht →
+							Newsletter abonnieren, wir melden uns, wenn's weitergeht →
 						</a>
 					</div>
 				{/if}
@@ -297,7 +297,7 @@
 			</div>
 			<!-- Vertrauens-Byline: das menschliche Gesicht hinter der autonomen Redaktion. -->
 			<p class="py-3 text-xs text-center" style="color: var(--color-muted); border-top: 1px solid var(--color-rule);">
-				Autonome Redaktion, von einem Menschen verantwortet —
+				Autonome Redaktion, von einem Menschen verantwortet:
 				<a href="/redaktion" class="no-underline hover:opacity-70" style="color: var(--color-ink-soft); border-bottom: 1px solid var(--color-rule-strong);">so arbeiten wir</a>
 			</p>
 		</div>
@@ -314,12 +314,12 @@
 		</div>
 		<div class="lg:col-span-8">
 			<p class="serif text-xl sm:text-2xl lg:text-[1.85rem] leading-snug" style="color: var(--color-ink);">
-				Dein Weltbild ist nachweislich falsch — <span style="color: var(--color-amber);">und es macht
+				Dein Weltbild ist nachweislich falsch, <span style="color: var(--color-amber);">und es macht
 				dich kaputt.</span> Fast alle schätzen die Welt düsterer ein, als sie belegbar ist. Wir
 				korrigieren das: ein Beleg pro Tag, in zwei Minuten. Kein Feed, kein Algorithmus, kein Sog.
 			</p>
 			<p class="mt-3 text-sm sm:text-base leading-relaxed" style="color: var(--color-muted);">
-				Das ist keine Schönfärberei. Die Welt ist zugleich schlecht <em>und</em> besser — beides
+				Das ist keine Schönfärberei. Die Welt ist zugleich schlecht <em>und</em> besser, beides
 				stimmt. Wir zeigen den Teil, den die Schlagzeilen dir verschweigen.
 			</p>
 			<a
@@ -443,7 +443,7 @@
 				class="mt-4 text-sm sm:text-base leading-relaxed max-w-[48ch]"
 				style="color: rgba(251,248,241,0.72); font-family: var(--font-serif);"
 			>
-				Kein Doomscrolling, kein Algorithmus. Eine kuratierte Geschichte pro Tag — mit
+				Kein Doomscrolling, kein Algorithmus. Eine kuratierte Geschichte pro Tag, mit
 				Hintergrund, Quellen und gemessenem Wirkungsindex.
 			</p>
 		</div>
@@ -458,7 +458,7 @@
 					<p class="display text-xl sm:text-2xl" style="color: var(--color-on-ink); font-weight: 600;">Fast geschafft!</p>
 					<p class="mt-2 text-sm sm:text-base leading-relaxed" style="color: rgba(251,248,241,0.88); font-family: var(--font-serif);">
 						Wir haben dir eine <strong>Bestätigungs-Mail</strong> geschickt.<br />
-						Öffne dein Postfach und klick auf den Link darin — dann bist du dabei.
+						Öffne dein Postfach und klick auf den Link darin, dann bist du dabei.
 					</p>
 				</div>
 				<p class="text-xs" style="color: rgba(251,248,241,0.55); font-family: var(--font-mono);">
@@ -519,7 +519,7 @@
 					<Icon icon={CameraIcon} size="0.75rem" />
 					@nureine.de
 				</a>
-				— eine Geschichte, jeden Morgen.
+				Eine Geschichte, jeden Morgen.
 			</p>
 		</form>
 		{/if}

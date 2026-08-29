@@ -95,19 +95,19 @@
 </script>
 
 <svelte:head>
-	<title>Der Stand der Welt — wo sie besser wird — NurEine</title>
+	<title>Der Stand der Welt: wo sie besser wird</title>
 	<!-- description: zentral in +layout.svelte (pathDescriptions) — siehe Kommentar dort -->
 </svelte:head>
 
 <section class="mx-auto max-w-[1100px] px-4 sm:px-6 lg:px-10 py-12 sm:py-20">
 	<span class="eyebrow" style="color: var(--color-amber); font-family: var(--font-mono);">Der Stand der Welt</span>
 	<h1 class="display mt-4 text-3xl sm:text-4xl lg:text-5xl leading-[1.04] max-w-[20ch]" style="color: var(--color-ink); font-weight: 600;">
-		Wo die Welt besser wird — belegt.
+		Wo die Welt besser wird, belegt.
 	</h1>
 
 	{#if headline}
 		<!-- Die Leitzahl zählt herunter statt einfach dazustehen: der Weg von 1990
-		     nach heute IST die Nachricht. Nur diese eine Zahl klingt beim Hochlauf —
+		     nach heute IST die Nachricht. Nur diese eine Zahl klingt beim Hochlauf,
 		     sie steht allein und ist der Einstieg in die Seite. -->
 		<p class="mt-6 text-xl sm:text-2xl lg:text-3xl leading-[1.35] max-w-[24ch]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
 			Extreme Armut: <span style="color: var(--color-amber);">{fmt(headline.baseline_value, '%')}</span> ({headline.baseline_year})
@@ -144,7 +144,7 @@
 						</div>
 						<div class="mt-2 flex items-baseline gap-2">
 							<!-- Karten-Zahlen laufen hoch, aber STUMM: beim Scrollen werden
-							     mehrere gleichzeitig sichtbar — gleichzeitige Tonleitern
+							     mehrere gleichzeitig sichtbar, gleichzeitige Tonleitern
 							     wären Lärm statt Akzent. -->
 							<CountUp
 								value={m.latest_value}
@@ -228,10 +228,10 @@
 	<div class="mt-12 p-6 sm:p-8 rounded-2xl" style="background: var(--color-canvas-soft); border-left: 3px solid var(--color-amber);">
 		<h2 class="display text-xl sm:text-2xl" style="color: var(--color-ink); font-weight: 600;">Was wir nicht zeigen</h2>
 		<p class="mt-3 text-base leading-relaxed max-w-[64ch]" style="color: var(--color-ink-soft); font-family: var(--font-serif);">
-			Es gibt Metriken, die sich verschlechtern — CO₂-Konzentration, Artenvielfalt, Ungleichheit.
+			Es gibt Metriken, die sich verschlechtern: CO₂-Konzentration, Artenvielfalt, Ungleichheit.
 			Wir zeigen sie hier nicht, weil NurEine <strong>Fortschritt dokumentiert, nicht die Gesamtlage</strong>.
 			Das ist keine Schönfärberei: Es ist eine bewusste Auswahl, und wir legen sie offen. Für das
-			vollständige Bild — auch das Schwierige — empfehlen wir
+			vollständige Bild, auch das Schwierige, empfehlen wir
 			<a href="https://ourworldindata.org" target="_blank" rel="noreferrer" style="color: var(--color-amber); border-bottom: 1px solid var(--color-rule-strong);">Our World in Data</a>.
 		</p>
 		<p class="mt-4 text-sm" style="color: var(--color-muted); font-family: var(--font-mono);">
@@ -242,7 +242,7 @@
 	<div class="mt-10 text-center">
 		<p class="serif text-sm sm:text-base italic" style="color: var(--color-muted);">Den Stand der Welt teilen</p>
 		<div class="mt-3 flex items-center justify-center">
-			<ShareBar url="https://nureine.de/stand-der-welt" title="Der Stand der Welt — NurEine" text="Auf den Metriken, die wirklich zählen, wird die Welt besser. Belegt." size={20} />
+			<ShareBar url="https://nureine.de/stand-der-welt" title="Der Stand der Welt" text="Auf den Metriken, die wirklich zählen, wird die Welt besser. Belegt." size={20} />
 		</div>
 	</div>
 

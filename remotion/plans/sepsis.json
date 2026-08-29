@@ -1,0 +1,95 @@
+{
+  "story": {
+    "id": "bfde892d-3502-4874-9f18-c744d5ef19f2",
+    "slug": "ki-sepsis-fruehwarnung",
+    "category": "gesundheit",
+    "image": "story/sepsis.jpg",
+    "source": "Johns Hopkins Hub",
+    "impactScore": 72,
+    "shareHook": "KI erkennt Blutvergiftung früher, 18 Prozent weniger Tote"
+  },
+  "seo": {
+    "keyword": "Sepsis"
+  },
+  "loop": true,
+  "softCta": "Sowas steht selten in den Nachrichten. Hier jeden Tag eins.",
+  "caption": "Sepsis beginnt leise: Der Körper wehrt eine Infektion ab und schädigt dabei die eigenen Organe. In den USA sterben daran jedes Jahr rund 270.000 Menschen, oft weil die Warnzeichen zu spät auffallen.\nEin Programm der Informatikerin Suchi Saria liest laufend Herzfrequenz, Blutdruck und Laborwerte mit und schlägt an, bevor das Muster für einen Menschen sichtbar wird. In Kliniken mit dem System sterben 18 Prozent weniger Patienten an Sepsis.\n\nQuelle: Johns Hopkins Hub — von uns nachgeprüft.",
+  "hashtags": [
+    "#gutenachrichten",
+    "#gesundheit",
+    "#medizin",
+    "#ki"
+  ],
+  "tiktok": {
+    "caption": "Sepsis erkennt man oft zu spät. Der Körper bekämpft eine Infektion und greift dabei die eigenen Organe an, in den USA sterben daran jedes Jahr rund 270.000 Menschen.\nEin Programm von Suchi Saria liest Herzfrequenz, Blutdruck und Laborwerte laufend mit und schlägt Alarm, bevor ein Mensch das Muster sieht. Wo es läuft, sterben 18 Prozent weniger Patienten.\n\nQuelle: Johns Hopkins Hub — von uns nachgeprüft.",
+    "hashtags": [
+      "#gutenachrichten",
+      "#gesundheit",
+      "#medizin",
+      "#ki"
+    ],
+    "location": "Vereinigte Staaten"
+  },
+  "scenes": [
+    {
+      "kind": "number",
+      "snap": true,
+      "kicker": "NUR EINE · GEPRÜFT",
+      "value": "270.000",
+      "unit": "Sepsis-Tote pro Jahr",
+      "context": "allein in den USA",
+      "image": "story/sepsis.jpg",
+      "voText": "Sepsis. In den USA sterben daran jedes Jahr rund zweihundertsiebzigtausend Menschen."
+    },
+    {
+      "kind": "hook",
+      "text": "Eine Krankheit, die man kaum spürt.",
+      "punch": "Bis es zu spät ist.",
+      "image": "story/sepsis.jpg",
+      "full": true,
+      "voText": "Sie beginnt leise. Der Körper wehrt eine Infektion ab und schädigt dabei die eigenen Organe.",
+      "kicker": "USA · GEPRÜFT"
+    },
+    {
+      "kind": "beat",
+      "text": "Ein Programm liest die Werte mit.",
+      "image": "story/sepsis.jpg",
+      "full": true,
+      "voText": "Eine Informatikerin hat ein Programm gebaut, das Herzfrequenz, Blutdruck und Laborwerte laufend mitliest."
+    },
+    {
+      "kind": "beat",
+      "text": "Es schlägt an, bevor ein Mensch das Muster sieht.",
+      "image": "story/sepsis.jpg",
+      "full": true,
+      "voText": "Es schlägt an, bevor jemand auf der Station das Muster bemerkt."
+    },
+    {
+      "kind": "beat",
+      "text": "18 % weniger Tote.",
+      "image": "story/sepsis.jpg",
+      "full": true,
+      "voText": "In diesen Kliniken sterben achtzehn Prozent weniger Patienten an Sepsis."
+    },
+    {
+      "kind": "proof",
+      "source": "Johns Hopkins Hub",
+      "impact": 72,
+      "progress": 1304,
+      "snapshot": {
+        "outlet": "Johns Hopkins Hub",
+        "year": "2026",
+        "title": "KI-Frühwarnsystem für Sepsis von der FDA zugelassen",
+        "quote": "18 Prozent weniger Sepsis-Tote in Kliniken mit dem System"
+      },
+      "voText": "Die Arzneimittelbehörde FDA hat es zugelassen. Die Studien dazu stehen in einer medizinischen Fachzeitschrift. Nicht erfunden."
+    },
+    {
+      "kind": "end",
+      "share": "Ein Algorithmus hört genauer hin als ein müder Nachtdienst.",
+      "cta": "",
+      "engage": true,
+      "voText": "Und die nächste gute Nachricht ist schon nachgeprüft. Nämlich:"
+    }
+  ]
+}

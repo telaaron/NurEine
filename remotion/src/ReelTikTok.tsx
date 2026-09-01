@@ -442,7 +442,12 @@ const BeatScene: React.FC<Extract<DailyScene, { kind: 'beat' }> & { category: st
 	const panelScale = interpolate(panelS, [0, 0.8, 1], [0.9, 1.03, 1]);
 	const zoom = 1 + frame * 0.0016;
 	const textS = spring({ frame: frame - 5, fps: TIKTOK_FPS, config: { damping: 14, mass: 0.55, stiffness: 200 } });
-	const textPop = interpolate(textS, [0, 0.8, 1], [0.86, 1.05, 1]);
+	// Overshoot NUR nach oben (1.05) in Kombination mit transformOrigin 'left bottom'
+	// schob die erste Glyphe über den linken Rand: bei left=M(84) wächst der Kasten
+	// um 5 % nach rechts, der Text selbst aber optisch nach links aus dem Bild.
+	// Belegt 2026-08-29 am Sepsis-Reel („18 % weniger Tote." → die 1 angeschnitten).
+	// Fix: kein Überschwingen über 1.0 hinaus, die Bewegung kommt aus dem Anlauf.
+	const textPop = interpolate(textS, [0, 0.8, 1], [0.9, 1, 1]);
 	return (
 		<AbsoluteFill style={{ background: CANVAS }}>
 			<PaperTextureOverlay kind="halftone" opacity={0.06} />

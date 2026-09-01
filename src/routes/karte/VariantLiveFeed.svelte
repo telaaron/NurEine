@@ -10,8 +10,42 @@
 	import { livePulse } from '$lib/sound';
 	import SoundToggle from '$lib/components/SoundToggle.svelte';
 
-	let { stories = [] }: { stories?: any[] } = $props();
+	import { sparklinePath, sparklineLast, type CategoryTrend } from '$lib/world-index';
+
+	let { stories = [], trends = [] }: { stories?: any[]; trends?: CategoryTrend[] } = $props();
 	const storyCount = $derived(stories.length);
+
+	// --- Puls der Welt: Trendzeile (echte Weltdaten, NICHT NurEine-Storys) ---
+	// Labels/Reihenfolge der Welt-Teilindizes (eigene Ebene, unabh. Story-Töne).
+	const trendMeta: Record<string, { label: string; blurb: string }> = {
+		ueberleben: { label: 'Überleben', blurb: 'Armut, Kindersterblichkeit, Wasser, Strom …' },
+		planet: { label: 'Planet', blurb: 'Erneuerbare Energie, Wald …' },
+		wissen: { label: 'Wissen', blurb: 'Bildung, Alphabetisierung, Internet …' },
+		frieden: { label: 'Frieden', blurb: 'Sicherheit & Konflikte' }
+	};
+	// Pfeil-Symbol nach Delta-Richtung (steigt = Welt wird besser).
+	function trendArrow(delta: number | null): string {
+		if (delta == null) return '→';
+		if (delta > 0.3) return '↗';
+		if (delta < -0.3) return '↘';
+		return '→';
+	}
+	function trendClass(delta: number | null): 'up' | 'down' | 'flat' {
+		if (delta == null) return 'flat';
+		if (delta > 0.3) return 'up';
+		if (delta < -0.3) return 'down';
+		return 'flat';
+	}
+	// Bewusst KEIN wertendes Trendwort und KEIN Pseudo-Score: die naive
+	// Kombination mehrerer Indikatoren zu einem „Index" ist noch nicht validiert
+	// (Gewichtung, Abdeckung). Die Sparkline + der Pfeil zeigen die tatsächliche
+	// Bewegung der Rohdaten; die Beschriftung bleibt rein faktisch (Zeitraum +
+	// Datenstand). Die Deutung liefert später der Statistiker-KI-Layer auf
+	// /stand-der-welt.
+	function fmtDelta(t: CategoryTrend): string {
+		if (t.deltaFromYear == null || t.latestYear == null) return '';
+		return `${t.deltaFromYear}–${t.latestYear} · ${t.metricCount} Indikator${t.metricCount === 1 ? '' : 'en'}`;
+	}
 
 	// --- Zeit-Modell -------------------------------------------------------
 	const DAY = 86_400_000;
@@ -267,6 +301,41 @@
 		<div class="pulse"><span class="pulse-dot"></span>{storyCount} Geschichten &middot; lebendes Zeitfenster</div>
 	</header>
 
+	<!-- ===== PULS DER WELT: Trendzeile (echte Weltdaten, nicht NurEine-Storys) ===== -->
+	{#if trends.length}
+		<div class="worldpulse">
+			<div class="wp-head">
+				<span class="wp-title">Puls der Welt <span class="wp-sub">· Langzeit-Weltdaten, nicht diese Geschichten</span></span>
+				<a class="wp-more" href={base + '/stand-der-welt'}>Wie steht die Welt? →</a>
+			</div>
+			<div class="wp-grid">
+				{#each trends as t}
+					{@const meta = trendMeta[t.category] ?? { label: t.category, blurb: '' }}
+					{@const dir = trendClass(t.delta)}
+					{@const last = t.status === 'ok' ? sparklineLast(t.series, 100, 26) : null}
+					<a class="wp-card" class:pending={t.status === 'pending'} href={base + '/stand-der-welt'} title={meta.blurb}>
+						<div class="wp-row">
+							<span class="wp-label">{meta.label}</span>
+							{#if t.status === 'ok'}
+								<span class="wp-arrow {dir}">{trendArrow(t.delta)}</span>
+							{/if}
+						</div>
+						{#if t.status === 'ok' && last}
+								<svg class="wp-spark {dir}" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden="true">
+									<path class="wp-spark-line" d={sparklinePath(t.series, 100, 26)} />
+									<circle class="wp-spark-dot" cx={last.x} cy={last.y} r="2" />
+								</svg>
+							<span class="wp-delta {dir}">{fmtDelta(t)}</span>
+						{:else}
+							<div class="wp-pending"><span class="wp-pending-line"></span></div>
+							<span class="wp-delta flat">Daten folgen</span>
+						{/if}
+					</a>
+				{/each}
+			</div>
+		</div>
+	{/if}
+
 	<!-- tone filters -->
 	<div class="filters">
 		<button class="chip" class:active={filterTone === null} onclick={() => { skipIntro(); filterTone = null; }}>Alle</button>
@@ -368,7 +437,47 @@
 	.pulse-dot { width: 0.6rem; height: 0.6rem; border-radius: 999px; background: var(--color-amber); box-shadow: 0 0 0 0 var(--color-amber); animation: pulse 1.8s infinite; }
 	@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-amber) 60%, transparent); } 70% { box-shadow: 0 0 0 8px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
 
-	.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.25rem 0; }
+	/* ===== Puls der Welt: Trendzeile ===== */
+	.worldpulse { margin-top: 1.4rem; }
+	.wp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 0.6rem; }
+	.wp-title { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-muted); }
+	.wp-sub { text-transform: none; letter-spacing: 0; color: var(--color-faint); font-size: 0.92em; }
+	@media (max-width: 560px) { .wp-sub { display: none; } }
+	.wp-more { font-size: 0.75rem; color: var(--color-amber); text-decoration: none; }
+	.wp-more:hover { text-decoration: underline; }
+
+	.wp-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+	@media (min-width: 720px) { .wp-grid { grid-template-columns: repeat(4, 1fr); } }
+
+	.wp-card { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.7rem 0.85rem; border-radius: 12px; border: 1px solid var(--color-rule); background: var(--color-paper); text-decoration: none; transition: border-color 0.15s, transform 0.15s; }
+	.wp-card:hover { border-color: var(--color-rule-strong); transform: translateY(-1px); }
+	.wp-card.pending { opacity: 0.72; }
+
+	.wp-row { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; }
+	.wp-label { font-size: 0.82rem; font-weight: 600; color: var(--color-ink); }
+	.wp-arrow { font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; line-height: 1; }
+	.wp-arrow.up { color: var(--color-sage); }
+	.wp-arrow.down { color: var(--color-rose); }
+	.wp-arrow.flat { color: var(--color-muted); }
+
+	.wp-spark { width: 100%; height: 26px; display: block; overflow: visible; }
+	.wp-spark-line { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+	.wp-spark.up .wp-spark-line { stroke: var(--color-sage); }
+	.wp-spark.down .wp-spark-line { stroke: var(--color-rose); }
+	.wp-spark.flat .wp-spark-line { stroke: var(--color-muted); }
+	.wp-spark-dot { stroke: var(--color-paper); stroke-width: 1.2; }
+	.wp-spark.up .wp-spark-dot { fill: var(--color-sage); }
+	.wp-spark.down .wp-spark-dot { fill: var(--color-rose); }
+	.wp-spark.flat .wp-spark-dot { fill: var(--color-muted); }
+
+	.wp-pending { height: 26px; display: flex; align-items: center; }
+	.wp-pending-line { width: 100%; height: 2px; border-radius: 999px; background: repeating-linear-gradient(90deg, var(--color-rule) 0 6px, transparent 6px 12px); }
+
+	.wp-delta { font-size: 0.66rem; color: var(--color-faint); font-family: var(--font-mono); }
+	.wp-delta.up { color: color-mix(in srgb, var(--color-sage) 85%, var(--color-muted)); }
+	.wp-delta.down { color: color-mix(in srgb, var(--color-rose) 85%, var(--color-muted)); }
+
+	.filters { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.25rem 0; align-items: center; }
 	.chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.85rem; border-radius: 999px; font-size: 0.8rem; border: 1px solid var(--color-rule); background: transparent; color: var(--color-ink-soft); cursor: pointer; transition: all 0.15s; }
 	.chip:hover { border-color: var(--color-rule-strong); }
 	.chip.active { background: var(--color-surface-ink); color: var(--color-on-ink); border-color: transparent; }

@@ -5,8 +5,13 @@
 > Zielbild, Produktausrichtung und interne Roadmap. Bei Widerspruch zu einem
 > anderen Dokument gilt dieses hier.
 >
-> **Stand:** 2026-08-26 · **Status:** Entwurf, in Evaluierung
+> **Stand:** 2026-09-01 · **Status:** Entwurf, in Evaluierung
 > **Bearbeitbar unter:** `/admin/vision`
+>
+> **Letzte Änderung (2026-09-01):** Der globale Index wurde durch sechs
+> Fachgutachten geprüft (Abschnitt 16). Abschnitt 6 ist dadurch an mehreren
+> Stellen überholt — die Gutachten-Fassung gilt. Neue Entscheidungen D-04
+> bis D-11, neue offene Punkte E-05 bis E-07.
 
 ---
 
@@ -466,6 +471,17 @@ Storys.
 
 ## 6. Globaler Wirkungsindex
 
+> ⚠️ **Teilweise überholt seit 2026-09-01.** Sechs Fachgutachten haben die
+> Konstruktion geprüft (Abschnitt 16). Wo dieser Abschnitt und Abschnitt 16
+> sich widersprechen, **gilt Abschnitt 16**. Konkret überholt:
+> - **6.3 Bausteine** → ersetzt durch 8 Domänen mit verifizierten Indikatoren (D-06)
+> - **6.4 Darstellung** → die nackte Zahl „67,4/100" ist so nicht zulässig (D-05)
+> - **6.5 Berechnung** → geometrisch ist nicht „Alternative", sondern gesetzt (D-07)
+> - **Name** → „Globaler Wirkungsindex" ist verworfen (D-04)
+>
+> Zweck (6.1) und die Abgrenzung zum Story-Score (6.2) gelten unverändert
+> weiter und wurden durch die Gutachten bestätigt.
+
 ### 6.1 Zweck
 
 Der globale Wirkungsindex ist das neue Herzstück von NurEine.
@@ -918,19 +934,78 @@ sich mehrere „lebende Dokumente".
 markieren, VISION.md ist die einzige aktuelle Quelle.*
 
 **E-03 · Name des globalen Index**
-„Globaler Wirkungsindex" kollidiert sprachlich mit dem bestehenden
-„Wirkungsindex" der Story. Genau diese Verwechslung will Abschnitt 6.2
-verhindern — der Name arbeitet dagegen.
-
-Alternativen: „Weltstand" · „Stand der Welt" (bereits als Seitenname vergeben) ·
-„Welt-Index" · „NurEine-Index"
-
-→ *Noch nicht entschieden.*
+→ **Entschieden am 2026-09-01, siehe D-04.**
 
 **E-04 · Zwei Batches pro Tag?**
 Abschnitt 5.1 nennt zwei Update-Fenster täglich. Der Fetch läuft aktuell
 **vier Mal** (06/10/14/18 UTC), der Newsletter einmal (04:20 UTC). Entweder das
 Konzept anpassen oder die Cronjobs — Cron-Zeiten nur nach Absprache (CLAUDE.md).
+
+→ *Noch nicht entschieden.*
+
+**E-05 · Die Sperrklausel — echte Selbstverpflichtung, nur Aaron kann sie eingehen**
+Der Index wird laut Gutachten **nur dann gebaut**, wenn vorher öffentlich zugesagt
+wird, wie mit einem Rückgang umgegangen wird (Wortlaut in 16.6). Kern: Ein
+fallender Wert wird zur Titelmeldung mit derselben Prominenz wie ein Anstieg, und
+**Methodenänderungen sind danach 12 Monate gesperrt**.
+
+Das ist keine technische Entscheidung, sondern eine Bindung, die ein späteres
+„wir justieren mal die Gewichte" ausschließt. Ohne sie lautet die Empfehlung:
+keine Gesamtzahl, nur 8 Einzelkurven nebeneinander (die Position des Kartografen).
+
+→ *Noch nicht entschieden. Blockiert V0 — ohne Antwort kein Präregistrierungs-Commit.*
+
+**E-06 · Ich-Perspektive (Abschnitt 3.4) — Konflikt mit dem Beleg-Versprechen**
+Abschnitt 3.4 beschreibt ein Ich-Erzähl-Format. In der Sitzung vom 2026-08-27
+wurde eingewandt: Eine **künstlich geschriebene** Ich-Erzählung ist eine erfundene
+Zeugenaussage und entwertet rückwirkend die Belege-Achse des Story-Wirkungsindex —
+bei einem Produkt, dessen Kernvorwurf ohnehin „das ist doch geschönt" lautet.
+
+Der Text in 3.4 sichert das bereits ab („nur wenn reale Person, direkte Quelle und
+belastbares Material existieren") — dann ist es aber **Zitat/Portrait, keine
+Ich-Fiktion**. Die Formulierung „Ich bin Aïcha …" als generiertes Format bleibt
+riskant.
+
+Vorschlag (nicht entschieden): 3.4 umbenennen in „Stimme aus der Quelle" und auf
+wörtliche, belegte Zitate mit Name und Rolle beschränken — psychologisch fast
+gleichwertig, ohne Erfindungsrisiko.
+
+→ *Noch nicht entschieden.*
+
+**E-07 · Was passiert mit den 18 nicht installierten Cronjobs?**
+Geprüft am 2026-08-27: `ops/crontab.txt` enthält 18 Jobs, `crontab -l` kennt
+**keinen davon** (nur ein unbeteiligtes Mac-Cleanup-Skript). Keine Logs, keine
+Läufe. Die GitHub-Actions wurden am 25.07. abgeschaltet, weil sie parallel zum
+Mac-Mini feuerten — der Mac-Mini-Teil wurde nie scharf geschaltet. **Seither läuft
+beides nicht.**
+
+Betroffen: Story-Fetch, Social-Publish/-Generate/-Story, Highlight-Mail,
+IndexNow-Ping, Weltmetriken (monatlich), Welt-Newsletter, Healthcheck. Der
+Healthcheck läuft ebenfalls nicht — deshalb hat nichts Alarm geschlagen.
+
+Zweites Problem: Der Template-Pfad ist `$HOME/NurEine/`, das Repo liegt unter
+`/Volumes/SSD 500G/…`. Ein simples `crontab ops/crontab.txt` würde 18 Jobs
+installieren, die alle ins Leere laufen (plus Leerzeichen im Pfad → Quoting).
+
+→ *Noch nicht entschieden.* Optionen: (a) alles scharf schalten nach Pfadfix,
+(b) nur den Weltmetriken-Job, (c) zurück zu GitHub Actions. Für den Index ist
+(b) ausreichend — die Gutachten-Architektur nutzt ohnehin eine GitHub Action
+statt des Mini (D-09).
+
+**E-08 · SEO-Agent: Inhalte erzeugen oder Prioritäten vorschlagen?**
+Abschnitt 15 hält den Forschungsstand fest. Die Architektur hängt an dieser
+Weiche: Schreibt der Agent (Artikel, Hub-Texte), oder sagt er nur, *was* zu tun
+ist — welche Seite ausbauen, welche URL indexieren, welcher Zusammenhang trägt?
+
+Die Datenlage spricht für „vorschlagen“: 1.153 Seiten sind „gefunden, nicht
+indexiert“ — mehr Inhalt vergrößert diesen Stapel, statt ihn aufzulösen.
+
+→ *Noch nicht entschieden. Blockiert den Bau des Agenten.*
+
+**E-09 · Budget für ein Keyword-Tool?**
+Ohne echtes Suchvolumen (SEMrush o. ä., ~140 €/Monat) arbeitet der Agent blind
+auf den eigenen Daten. Das geht — ist aber eine andere Konstruktion als mit
+Volumendaten. Bei aktuell 2 Klicks pro Quartal ist der Nutzen fraglich.
 
 → *Noch nicht entschieden.*
 
@@ -959,6 +1034,149 @@ und 10 müssen dieses Feature nicht neu erfinden, sondern nur anwenden.
 
 ---
 
+> **D-04 bis D-11 · 2026-09-01 · aus sechs Fachgutachten** (Details: Abschnitt 16)
+
+**D-04 · 2026-09-01 · Der Index heisst „Der Langzeitindex" — löst E-03**
+Untertitel: *„24 Reihen zum Zustand der Welt"* (Zahl steht erst nach dem Nulllauf
+endgültig fest). Englisch: *The Long-Run Index*.
+*Begründung:* Der Name enthält die **Zeitachse, nicht den Zustand**. „Der
+Langzeitindex liegt bei 71" klingt unfertig und provoziert die Rückfrage
+„verglichen womit?" — der Name arbeitet damit aktiv gegen die Niveau-Lesart, die
+laut D-05 ohnehin nicht verteidigbar ist. Er besteht ausserdem den **Fall-Test**:
+„Der Langzeitindex ist gefallen" ist ein normaler Satz. Kein Namenskonflikt
+geprüft (deutsch und englisch frei).
+
+❌ **Ausdrücklich verworfen: jeder Name mit „Fortschritt".** Drei Gründe, jeder
+für sich ausreichend: (1) Das Vorzeichen stünde im Titel — der Vorwurf „kennt sein
+Ergebnis, bevor es misst" wäre in der Überschrift bestätigt. (2) „Fortschrittsindex
+gefallen" ist ein Selbstwiderspruch und ein kostenloser Screenshot für Kritiker.
+(3) Es ist exakt die Rahmung, die bei Eibach & Purdie-Vaughns messbar verlor
+(D-08). Zusätzlich dreifach belegt (Bergheim, BMFSFJ, Social Progress Index).
+Ebenfalls verworfen: „Menschheitsindex" (zu gross → methodische Falschaussage),
+„Weltzustandsindex" (dito).
+
+**D-05 · 2026-09-01 · Es gibt EINE Zahl — aber das Niveau ist nicht zitierfähig**
+Aarons Kernversprechen („nur eine Zahl") bleibt. Aber: Belastbar ist nur die
+**Richtung**, nie das **Niveau**. Zulässige Schlagzeile: „Seit 1990 um X Punkte
+gestiegen" / „6 von 8 Bereichen verbessern sich". Unzulässig: „Der Zustand der
+Welt liegt bei 72."
+
+**Technisch erzwungen, nicht redaktionell:** Die Zahl erscheint in keinem View,
+keiner OG-Karte, keinem Newsletter-Block und keinem API-Response ohne ihre 8
+Domänenwerte. `?fields=index` liefert **400**. Im UI nie grösser als 1,6× der
+Domänenwerte.
+*Begründung:* Redaktionsregeln erodieren, technische Sperren nicht. Der Verzicht
+auf die Zahl (Position des Kartografen) würde laut ESG-Befund nur 6 % des Problems
+lösen (Gewichtung) und dafür das Produkt aufgeben.
+
+**D-06 · 2026-09-01 · Acht Domänen — ersetzt die 7 Bausteine aus 6.3**
+Überleben · Gesundheit · Ernährung · Materielle Existenzsicherung · Infrastruktur
+des Alltags · Sicherheit vor Gewalt · Freiheit und Teilhabe · Ökologische
+Lebensgrundlage. **Jede Domäne exakt 1/8**, unabhängig von der Indikatorzahl.
+
+**Ausgeschlossen — jeweils mangels Daten, nicht mangels Bedeutung:** Bildung,
+psychische Gesundheit, soziale Einbindung, institutionelle Qualität. Sie bleiben
+als **benannte Leerstellen** sichtbar.
+
+⚠️ **Der härteste Ausschluss ist Bildung** — und er widerspricht 6.3, wo Bildung
+als eine der „stabilsten ersten Säulen" genannt wird. Grund: Verfügbar sind nur
+Abschluss- und Alphabetisierungsquoten (Anwesenheitsmasse). Der einzige Indikator,
+der *Gelerntes* misst (`SE.LPV.PRIM`), hat weltweit **zwei Datenpunkte**. Eine
+Bildungsdomäne aus Abschlussquoten wäre Ergebnis-Design mit dem richtigen
+Vorzeichen — und damit nach D-11 verboten.
+
+**D-07 · 2026-09-01 · Geometrisches Mittel ist gesetzt, nicht „Alternative"**
+Korrigiert 6.5. Zweistufig geometrisch (Indikatoren → Domäne → Index), plus Boden
+`I' = 1 + 0,99 × I`.
+*Begründung:* Arithmetisch mitteln behauptet implizit **einen Wechselkurs zwischen
+geretteten Kindern und verlorenem Regenwald**. Der HDI wechselte 2010 aus genau
+diesem Grund; hier wiegt das Argument schwerer, weil noch inkommensurablere Grössen
+kombiniert werden. Der Boden ist ein deklarierter Kompromiss: ohne ihn setzt ein
+einzelner Nullwert den ganzen Index auf null.
+
+**D-08 · 2026-09-01 · Rahmung „das hat gewirkt" statt „X % geschafft"**
+Der einzige gut belegte Befund der ganzen Gutachten-Runde. Geiger et al. (2023):
+Hoffnung auf **eigenes Handeln r = +0,40**; Hoffnung als **„so schlimm ist es
+nicht" r = −0,40**. Dieselben Daten, zwei Lesarten, entgegengesetztes Vorzeichen.
+
+**Bauliche Konsequenz:** Jeder Domänenwert trägt ein Pflichtfeld
+`wirkmechanismus` (mit Quelle). Ein Domänenwert ohne ausgefülltes Feld wird
+**nicht gerendert**. Der Halbsatz „jederzeit zurückdrehbar" ist Schema-Bestandteil,
+keine Stilfrage — er trennt die Verpflichtungs- von der Fortschritts-Rahmung.
+Verbotene Formulierungen (Lint-Regel im Build): „schon X % geschafft", „auf dem
+besten Weg", „bald erreicht".
+
+**D-09 · 2026-09-01 · Kein Tageszähler — stattdessen der Tagesschnitt**
+Ein Zähler „seit gestern X Kinder weniger gestorben" wird **nicht** gebaut. Grund
+ist nicht der Bias, sondern die Nichtberechenbarkeit: Der Satz braucht die
+Sterberate von *gestern*; der letzte harte Wert ist 2024, und der Datenverzug
+korreliert mit Staatsfragilität. Eine ehrliche Spanne müsste „ca. 9.000–19.000"
+lauten — eine Spanne über Faktor 2 kommuniziert keine Grössenordnung mehr.
+
+**Stattdessen — und das erfüllt Aarons Game-Gedanken besser:** Der **Tagesschnitt**.
+Täglich 06:20 CEST mit dem Newsletter eine deterministisch rotierende Ansicht:
+heute ein Indikator, morgen ein Regionenvergleich, übermorgen eine
+Divergenz-Ansicht, dann ein Bereich, der fällt. 24 Indikatoren × 4 Ansichtstypen ×
+7 Regionen = mehrere hundert echte Tagesansichten.
+> **Es ändert sich der Ausschnitt, nicht die Zahl.**
+
+Keine erfundene Zahl, tägliche Veränderung, passt in den bestehenden
+Newsletter-Slot. Datenquelle: statisches JSON im Repo, wöchentlich per **GitHub
+Action** erneuert — kein Supabase-Livecall, damit der Index einen 402 übersteht.
+
+**D-10 · 2026-09-01 · Story steht NEBEN der Kurve, nicht darauf**
+Korrigiert die Erwartung aus 5.4/7.x. Kein Marker auf oder unter der Indexkurve,
+keine Zeitachsen-Berührung. Stattdessen drei Textzeilen auf der Story-Karte:
+
+```
+BEREICH:        Überleben
+GRÖSSENORDNUNG: Betrifft rund 40.000 Menschen.
+                Der Bereich Überleben umfasst 8,1 Milliarden.
+MECHANISMUS:    Programme dieser Art sind einer der Wege,
+                auf denen diese Kurve fällt.
+```
+
+*Begründung:* Zwei unabhängige Gutachten kommen aus entgegengesetzten Richtungen
+zum selben Schluss. Statistisch: Ein Punktbeitrag von 0,0003 liegt
+Grössenordnungen unter der Messunsicherheit — Rauschen als Signal. Psychologisch:
+Eine ausgewiesene 0,0003 ist ein **Pseudoinefficacy-Generator**, sie sagt dem Leser
+„das war nichts" und senkt die Hilfsbereitschaft. Und praktisch: Die Story von
+gestern landet zwangsläufig **rechts vom letzten harten Datenpunkt** (2024) — ein
+Kritiker müsste nur eine Woche schlechte Nachrichten auf dieselbe Kurve setzen.
+Das ist ein Screenshot, kein Aufsatz.
+
+Damit ist 7.1/7.2 (Statistiker-KI) bestätigt, aber die Ausgabe geändert: Der Layer
+liefert **Zuordnung + Grössenordnung + Mechanismus**, keinen quantifizierten
+Indexbeitrag. `estimatedContribution` (7.2) bleibt intern, wird nie angezeigt.
+
+**Zusatzregel gegen Selektionsverstärkung:** Eine Story wird nach ihrem eigenen
+Wert ausgewählt, *dann* zugeordnet — auch zu Bereichen, die fallen. Wenn nach
+6 Monaten keine Story dem Bereich Sicherheit, Klima oder Biodiversität zugeordnet
+wurde, ist das ein messbares Alarmsignal und wird im Quartalsbericht ausgewiesen.
+
+**D-11 · 2026-09-01 · Auswahl vor Richtungsprüfung — die Regel gegen Ergebnis-Design**
+Indikatoren werden ausgewählt, **bevor** jemand ihre Richtung anschaut.
+Auswahlbegründung öffentlich.
+
+❌ **Ausdrücklich verworfen: eine Negativ-Quote** („mindestens ein fallender
+Indikator"). Das wäre Ergebnis-Design mit umgekehrtem Vorzeichen — etwas einbauen,
+damit es ehrlicher *wirkt*.
+
+✅ **Empirisch bestätigt:** Bei sauberer Methode entstehen negative Bausteine
+ohnehin. Der Kartograf definierte 13 Bereiche vor jedem Datenblick; die Bereiche,
+die er als am schwersten messbar einstufte, sind exakt die, die fallen — Gewalt,
+Klima, Biodiversität. Ergebnis: **5 Domänen steigen, 1 steht still, 2 fallen.**
+Keine Quote, sondern Mechanik.
+
+**Ersatz für das Anliegen dahinter (Falsifizierbarkeit):** drei Strukturen statt
+einer Quote — (1) **Präregistrierung** mit Git-Zeitstempel vor dem ersten
+Datenabruf, (2) die **Verliererliste** aller erwogenen und verworfenen Indikatoren
+inklusive Begründung (dass darauf *steigende* Kandidaten stehen — BIP,
+Einschulungsrate — ist der Beleg, dass nicht nach Richtung sortiert wurde),
+(3) die **Sperrklausel** (E-05).
+
+---
+
 ## 14. Roadmap-Board (interner Status)
 
 > Der öffentliche Changelog liegt in der Datenbank (`nureine_changelog`, sichtbar
@@ -979,13 +1197,482 @@ und 10 müssen dieses Feature nicht neu erfinden, sondern nur anwenden.
 | 1 | Datenmodell `StoryEvidence` / `Indicator` | ⬜ offen | neue Migration nötig |
 | 2 | Zeitregler auf der Karte | ⬜ offen | Zeitraffer existiert, Regler fehlt |
 | 2 | Indikator-Tags je Story | ⬜ offen | |
-| 2 | „Puls der Welt" in der Seitenleiste | 🔄 in Arbeit | `src/lib/world-index.ts` + Karten-Seitenleiste, parallele Session (2026-08-29) |
-| 3 | Index-MVP (3–4 Bausteine) | ⬜ offen | |
-| 3 | Öffentliche Methodikseite | ⬜ offen | `/methodik` existiert, müsste erweitert werden |
-| 4 | Statistiker-KI | ⬜ offen | |
-| 4 | Ziel-Fortschrittsleisten | ⬜ offen | |
+| 2 | „Puls der Welt" in der Seitenleiste | 🔄 in Arbeit | `src/lib/world-index.ts` + Karten-Seitenleiste, parallele Session (2026-08-29). ⚠️ **Aggregation weicht vom Langzeitindex ab — siehe 16.12** |
+| 3 | **V0 · Präregistrierung** | ⬜ offen | **blockiert durch E-05 (Sperrklausel).** Muss vor jedem Datenabruf passieren |
+| 3 | **V0.5 · Nulllauf** (`scripts/index_build.py`) | ⬜ offen | Entscheidet, ob überhaupt gebaut wird (16.7) |
+| 3 | Index-MVP → **V1 Langzeitindex** | ⬜ offen | 8 Domänen, 24 Indikatoren (16.2). Ersetzt „3–4 Bausteine" |
+| 3 | Öffentliche Methodikseite | ⬜ offen | `/methodik` existiert, müsste erweitert werden. Muss die drei Sätze aus 16.8 wörtlich enthalten |
+| 3 | Verliererliste (verworfene Indikatoren) | ⬜ offen | Teil von V1, nicht optional — Beleg für D-11 |
+| 4 | Statistiker-KI | ⬜ offen | Ausgabe geändert: Zuordnung + Grössenordnung + Mechanismus, **kein** quantifizierter Indexbeitrag (D-10) |
+| 4 | ~~Ziel-Fortschrittsleisten mit ETA~~ | ⬜ offen | **ETA gestrichen** (16.11). Balken nur bei zählbarem Rest, z. B. Polio |
+| 4 | Tagesschnitt (statt Tageszähler) | ⬜ offen | V2, D-09 |
 | 5 | Satelliten-Vorher/Nachher | ⬜ offen | |
 | 5 | „Seit deinem letzten Besuch" | ⬜ offen | |
+| — | SEO-Agent (Forschung) | 🔄 in Arbeit | Abschnitt 15, wartet auf E-08/E-09 |
+| — | Wikidata-Item Q141203108 | ✅ gebaut | 2026-08-28, `sameAs` beidseitig |
 
 Legende: ✅ gebaut · 🔄 in Arbeit · ⬜ offen · ❌ verworfen (mit Verweis auf
 Entscheidung in Abschnitt 13)
+
+---
+
+## 15. SEO-Agent — Forschungsstand (Stand 2026-08-29)
+
+> **Status: Forschungsphase, noch nicht gebaut.** Dieser Abschnitt hält den
+> Kenntnisstand fest, damit parallele Sessions nicht bei null anfangen. Die
+> Architektur folgt erst, wenn E-08 und E-09 (Abschnitt 13) entschieden sind.
+
+### 15.1 Der Auslöser
+
+Aarons Idee: ein täglicher Agent, der beobachtet, was gerade gesucht wird, und
+NurEine dort positioniert. Ausdrücklich **kein Slop** — sondern KI nutzen, um
+Ereignisse zu verbinden, Zusammenhänge zu sehen und einseitig gehypte Nachrichten
+mit Daten einzuordnen.
+
+Der Kern der Idee ist tragfähig und wird hier festgehalten. Die *Ausführung* als
+täglicher Artikel-Generator ist es nach aktueller Datenlage **nicht** — siehe 15.3.
+
+### 15.2 Was gemessen wurde (nicht vermutet)
+
+Alle Zahlen aus der Google Search Console und der Datenbank, 3-Monats-Fenster
+25.05.–25.08.2026:
+
+| Kennzahl | Wert |
+|---|---|
+| Indexierte Seiten | **108** von ~1.325 (8 %) |
+| „Gefunden – zurzeit nicht indexiert" | **1.153** |
+| Impressionen gesamt | 81 |
+| Klicks gesamt | 2 |
+| Seiten mit ≥1 Impression | 29 |
+
+**Hub- vs. Story-Seiten** — der wichtigste Befund:
+
+| Typ | Seiten | Impressionen | Ø pro Seite |
+|---|---|---|---|
+| Hub-Seiten (`/archiv/*`, `/karte`, `/bei-dir` …) | 9 | 108 | **12,0** |
+| Story-Seiten (`/geschichte/*`) | 1.260 | 31 | **0,025** |
+
+Eine Hub-Seite bringt rund **480×** so viele Impressionen wie eine Story-Seite.
+
+**Wichtige Präzisierung:** Story-Seiten *ranken* nicht schlecht — die
+WHO-Trachom-Geschichte steht auf **Position 1**, Schweden-Handys auf 2. Sie
+treffen nur zu enge Fragen. Eine Hub-Seite deckt ein ganzes Themencluster ab.
+
+**Der Beleg dafür:** `/archiv/wissenschaft` rankt für „kernfusion durchbruch 2026
+geplante experimente" auf Position 9,4 mit 47 Impressionen — und holte den
+einzigen Klick der gesamten Domain. Ungeplant.
+
+Ironie dabei: Zu Kernfusion existieren nur **4 Geschichten**. Die Seite rankt,
+weil sie 267 Wissenschafts-Geschichten bündelt, nicht wegen Themen-Tiefe.
+
+### 15.3 Warum „täglich ein Artikel" der falsche Ansatz wäre
+
+Drei Gründe, alle belegt:
+
+1. **Der Engpass ist nicht fehlender Inhalt.** 1.153 Seiten sind „gefunden, nicht
+   indexiert". Mehr Seiten vergrößern genau diesen Stapel.
+2. **Crawl-Budget ist nachweislich NICHT das Problem** (Messung 2026-08-18:
+   0 verwaiste Seiten, Median 612 Wörter pro Story, kein Thin Content). Es ist ein
+   Crawl-*Nachfrage*-Problem: zu wenig Vertrauen in die junge Domain.
+3. **Risiko „scaled content abuse".** Das März-2026-Core-Update kostete
+   Aggregatoren mit KI-umgeschriebenen Artikeln 50–75 % Traffic. NurEine *ist* ein
+   KI-Aggregator — die Abgrenzung muss im Agenten erzwungen sein, nicht im Prompt
+   erhofft. Siehe auch den Aggregator-Verkürzungsfehler in der Projekthistorie.
+
+### 15.4 Die tragfähige Fassung der Idee
+
+Kein Artikel-Generator, sondern ein **Rechercheur mit Gedächtnis**:
+
+- beobachtet, was in den eigenen Primärquellen läuft
+- gleicht es gegen die 1.260 belegten Geschichten ab
+- findet die Fälle, wo NurEine eine **belegte Gegenposition** oder eine
+  **Langzeitlinie** hat, die sonst niemand zeigen kann
+- legt einen begründeten Vorschlag in eine Queue — Freigabe durch Aaron
+
+**Produziert selten und schwer statt oft und dünn.** Vorbild ist CMOGlobal
+(`~/CMOGlobal` auf mac-mini-server, Dashboard Port 8778): Freigabe-Queue mit
+`dry_run`, Arbeitszeitfenster, Caps pro Kanal und Risiko-Feld pro Eintrag.
+
+Der strukturelle Vorteil, der bisher ungenutzt ist: **NurEine monitort
+Primärquellen und weiß früher als andere, dass etwas passiert ist.**
+
+### 15.5 Verifizierte Themencluster
+
+Aus 1.260 Geschichten, Regex-geprüft gegen Titel + Untertitel + Zusammenfassung:
+
+| Cluster | Stories | Ø Wirkung |
+|---|---|---|
+| Regenwald & Aufforstung | 54 | 64 |
+| Korallen & Meeresschutz | 38 | 65 |
+| Impfstoffe | 31 | **72** |
+| Krebsforschung | 29 | 59 |
+| Solarenergie | 28 | **70** |
+| Artenschutz-Rückkehr | 19 | 66 |
+| Malaria & Tropenkrankheiten | 15 | **74** |
+
+⚠️ **Messfalle, dokumentiert:** Eine erste Messung ergab „Kernfusion: 207
+Stories". Falsch — das Muster `iter` traf „weiter"/„breiter", `fusion` traf
+Firmenfusionen. Themencluster **immer** mit Wortgrenzen (`\y`) messen und
+gegenprüfen.
+
+### 15.6 Warum jetzt KEINE neuen Hub-Seiten gebaut werden
+
+Naheliegend wäre: für jedes Cluster eine Hub-Seite. Dagegen spricht der Ist-Stand
+(geprüft 2026-08-28):
+
+| Seite | Status |
+|---|---|
+| `/archiv/wissenschaft` | ✅ indexiert |
+| `/archiv/klima` | ✅ indexiert (nach manuellem Antrag) |
+| `/gute-nachrichten/klima` | ✅ indexiert (nach manuellem Antrag) |
+
+Es existieren **bereits 21 Hub-Seiten** (7 Kategorien + 14 Länder). Vor neuen
+Hubs muss belegt sein, dass die bestehenden indexiert sind und Impressionen
+holen. Sonst wird nur der ignorierte Stapel größer.
+
+### 15.7 Offene Architekturfragen
+
+Vor dem Bau zu beantworten:
+
+1. **Woher kommt das Nachfragesignal?** GSC ist ein Rückspiegel (zeigt nur, wo man
+   schon auftaucht — aktuell 5 Begriffe). Keyword-Tool kostet ~140 €/Monat.
+   Google Trends ist kostenlos, zeigt aber kein absolutes Volumen.
+2. **Was ist die kleinste nützliche Ausgabe?** Ein Artikel · ein Ausbau-Vorschlag
+   für eine bestehende Seite · eine Indexierungs-Liste · ein CMOGlobal-Entwurf.
+3. **Lässt sich „Zusammenhänge sehen" zuverlässig automatisieren**, oder braucht es
+   menschliches Urteil? Die Projekthistorie mahnt zur Vorsicht.
+4. **Was misst Erfolg?** Bei 2 Klicks/Quartal ist „mehr Traffic" nicht messbar.
+   Brauchbare Frühindikatoren: Indexierungsquote (108 → ?), Anzahl rankender
+   Begriffe (aktuell 5), Hub-Impressionen, externe Erwähnungen.
+5. **Was darf der Agent selbst?** Bei einer Domain, die gerade erst wieder
+   gecrawlt wird, spricht viel für „nur vorschlagen".
+
+### 15.8 Was unabhängig vom Agenten wirkt
+
+Belegt wirksam, kein Agent nötig:
+
+- **Manuelle Indexierungsanträge** — lösten am 17.08. drei Wochen Stillstand;
+  am 26.08. erneut bestätigt (`/archiv/klima` von „unbekannt" auf indexiert).
+- **Externe Erwähnungen** — die openPR-Meldung (11.07.) ist die Quelle, die
+  Googles KI-Übersicht namentlich zitiert, und stützt jetzt das Wikidata-Item.
+- **Wikidata-Item Q141203108** — angelegt 2026-08-28, mit `different from` gegen
+  beide Filme „Nur eine Frau" und die Chemikalie Neurin, drei openPR-Belege.
+
+---
+
+## 16. Der Langzeitindex — geprüfte Spezifikation (Stand 2026-09-01)
+
+> **Dieser Abschnitt hat Vorrang vor Abschnitt 6.** Er ist das Ergebnis von sechs
+> unabhängigen Fachgutachten (Composite-Indicator-Mechanik, Datenkuratierung,
+> Red-Team-Kritik, Verhaltenswissenschaft, Naming, Synthese). Die ersten vier
+> arbeiteten parallel und ohne Kenntnis voneinander, damit sie nicht konvergieren.
+>
+> **Status: noch nichts gebaut.** Vor dem Bau stehen V0 (Präregistrierung) und
+> V0.5 (Nulllauf) — siehe 16.7.
+
+### 16.1 Was sich gegenüber Abschnitt 6 geändert hat
+
+| Thema | Abschnitt 6 (August) | Jetzt gültig |
+|---|---|---|
+| Name | „Globaler Wirkungsindex" | **Der Langzeitindex** (D-04) |
+| Bausteine | 7, inkl. Bildung | **8 Domänen**, ohne Bildung (D-06) |
+| Aggregation | arithmetisch, geometrisch „alternativ" | **geometrisch, zwingend** (D-07) |
+| Zahl | „67,4 / 100" gross above the fold | Zahl **nie ohne** 8 Domänenwerte (D-05) |
+| Story-Bezug | Beitrag zum Index | **Zuordnung statt Beitrag** (D-10) |
+| Tägliche Bewegung | offen | **Tagesschnitt**, kein Zähler (D-09) |
+
+### 16.2 Die acht Domänen und 24 Indikatoren
+
+Alle Codes wurden **gegen die echte Weltbank-API geprüft** (`api.worldbank.org/v2/
+country/WLD/...`). Die Jahresangaben sind die tatsächlichen ersten/letzten
+Nicht-Null-Werte der Weltreihe, nicht geschätzt.
+
+| Domäne | Indikator | Code / Quelle | Reihe (WLD) | Anker |
+|---|---|---|---|---|
+| **1 Überleben** | Kindersterblichkeit u5 | WB `SH.DYN.MORT` | 1990–2024 | B |
+| | Müttersterblichkeit | WB `SH.STA.MMRT` | 1985–2023 | B |
+| | Lebenserwartung | WB `SP.DYN.LE00.IN` | 1960–2024 | C |
+| **2 Gesundheit** | HIV-Neuinfektionen | WB `SH.HIV.INCD.TL.P3` | 1990–2024 | C |
+| | TB-Inzidenz | WB `SH.TBS.INCD` | 2000–2024 | C |
+| | DTP3-Impfquote | WB `SH.IMM.IDPT` | 1980–2024 | A |
+| **3 Ernährung** | Unterernährung | WB `SN.ITK.DEFC.ZS` | 2001–2023 | A |
+| | Wasting u5 | OWID | 2000–2024 | A ⚠️ |
+| **4 Materiell** | Armut < 3,00 $/Tag | WB `SI.POV.DDAY` | 1981–2024, Lücke 2019 | A |
+| | Armut < 8,30 $/Tag | WB `SI.POV.UMIC` | 1981–2024, Lücke 2019 | A |
+| **5 Infrastruktur** | Sicheres Trinkwasser | WB `SH.H2O.SMDW.ZS` | 2000–2024 | A |
+| | Sichere Sanitärversorgung | WB `SH.STA.SMSS.ZS` | 2000–2024 | A |
+| | Stromzugang | WB `EG.ELC.ACCS.ZS` | 1998–2024 | A |
+| | Saubere Kochenergie | WB `EG.CFT.ACCS.ZS` | 2000–2023 | A |
+| | Internetnutzung | WB `IT.NET.USER.ZS` | 2005–2025 | A |
+| **6 Sicherheit** | Tötungen /100k | WB `VC.IHR.PSRC.P5` | 2000–2023 | C |
+| | Konflikttote | UCDP via OWID | 1989–2025 | C |
+| **7 Freiheit & Teilhabe** | Wahldemokratie-Index | V-Dem via OWID | ab 1990 | A |
+| | Bürgerrechtsindex | V-Dem via OWID | ab 1990 | A |
+| | Frauen in Parlamenten | WB `SG.GEN.PARL.ZS` | 1997–2025 | A |
+| **8 Ökologie** | CO₂ pro Kopf | WB `EN.GHG.CO2.PC.CE.AR5` | 1970–2024 | C |
+| | CO₂ absolut | WB `EN.GHG.CO2.MT.CE.AR5` | 1970–2024 | C |
+| | Living Planet Index | ZSL/WWF via OWID | 1970–2020 | A |
+| | Schutzgebiete % | WB `ER.PTD.TOTL.ZS` | 2013–2025 | B |
+
+⚠️ **Domäne 3 (Ernährung) ist ein Grenzfall.** Für Wasting liegen weder Code noch
+Zahlenwerte verifiziert vor. **Verifizierungsauftrag vor Bau:** Existiert keine
+belastbare Weltjahresreihe, wird Ernährung **gestrichen** und der Index läuft mit
+7 Domänen à 1/7. Es wird **kein Ersatzindikator gesucht** — das wäre Nachjustieren
+am Ergebnis (D-11).
+
+⚠️ **Domäne 6 (Sicherheit) verletzt eine Regel — bewusst und deklariert.** Sie
+besteht zu 100 % aus Typ-C-Ankern; die Regel lautet eigentlich „keine Domäne
+überwiegend Typ C". Sie wird trotzdem aufgenommen: Die Domäne steht am *unteren*
+Ende ihres historischen Korridors, der Zirkelschluss wirkt hier **gegen** den Index,
+nicht für ihn. Die einzige klar fallende Gewaltdomäne zu streichen wäre
+Ergebnis-Design. **Der Regelbruch steht namentlich auf der Methodikseite.**
+
+#### Neun Codes, die geprüft und verworfen wurden
+
+Modelle halluzinieren plausible Weltbank-Codes. Diese hier hätte man aus dem
+Gedächtnis zitiert — sie funktionieren nicht:
+
+| Code | Befund |
+|---|---|
+| `EN.ATM.CO2E.PC` (CO₂ p. c.) | **existiert nicht mehr** — „deleted or archived" |
+| `SM.POP.REFG`, `SG.LAW.INDX` | **existieren nicht** |
+| `SI.POV.GINI` (Ungleichheit) | existiert, **keine Weltreihe** |
+| `VC.BTL.DETH` (Konflikttote) | existiert, **keine Weltreihe** |
+| `SH.STA.STNT.ZS` (Stunting) | existiert, **keine Weltreihe** |
+| `SE.LPV.PRIM` (Lernarmut) | Welt nur **2015 + 2019** |
+| `SH.STA.AIRP.P5`, `SH.STA.WASH.P5` | Welt nur **ein Jahr (2019)** |
+
+**Regel für alle künftigen Sessions: jeden Indikator-Code gegen die API prüfen,
+bevor er ins Konzept oder in Code geht.**
+
+### 16.3 Normierung — drei Ankertypen, streng hierarchisch
+
+```
+mehr ist besser:     I = 100 × (x − min) / (max − min)
+weniger ist besser:  I = 100 × (max − x) / (max − min)
+danach kappen auf [0,100], dann Boden:  I' = 1 + 0,99 × I
+```
+
+- **Typ A — logischer Anker.** Nur bei konstruktionsbedingt begrenzten Grössen:
+  min = 0 %, max = 100 %. Der einzige wirklich willkürfreie Fall.
+- **Typ B — offiziell beschlossenes Ziel.** Kindersterblichkeit: 0-Punkt = 87,5
+  (Welt 1990), 100-Punkt = 25 (SDG 3.2). Müttersterblichkeit: 380 → 70 (SDG 3.1).
+  Schutzgebiete: 0 % → 30 % (Kunming-Montreal). Legitimität kommt von aussen:
+  *193 Regierungen haben unterschrieben, nicht wir.*
+- **Typ C — historischer Korridor 1990–2020, eingefroren.** `min = s`,
+  `max = b + 0,2 × (b − s)`. Das Fenster wird **einmal** festgelegt und nie
+  erweitert.
+
+**Zwei Regeln, die den Unterschied machen:**
+1. **Anker werden nie verschoben**, auch nicht wenn ein Ziel verfehlt oder 2030
+   überschritten wird. Sonst wird der Massstab am Ergebnis geeicht.
+2. Die s/b-Werte für Typ C werden im Präregistrierungs-Commit **als Konstanten
+   eingefroren**. Ein Korridor, der bei jedem Lauf neu aus den Daten berechnet
+   wird, verschiebt sich mit den Daten und ist wertlos.
+
+### 16.4 Aggregation und Gewichtung
+
+```
+D_j    = (∏ I'_ji)^(1/k_j)      k = Indikatoren mit Wert für Jahr t
+Index  = (∏_{j=1..8} D_j)^(1/8)
+```
+
+**Gleichgewichtung auf Domänenebene, nicht auf Indikatorebene.** Das ist der
+Punkt, der leicht übersehen wird: Flache Gleichgewichtung über alle Indikatoren
+verschiebt das Gewicht heimlich dorthin, wo es die meisten Daten gibt — acht
+Gesundheits- gegen drei Umweltindikatoren wären 8/11 gegen 3/11, von niemandem
+entschieden. *Statistische Bequemlichkeit würde zur Ethik.*
+
+Jede Domäne bekommt exakt 1/8. Damit liegt die einzige Wertentscheidung in der
+Frage „Welche Domänen gibt es?" — und die steht sichtbar oben auf der
+Methodikseite, statt sich in der Indikatorzählung zu verstecken.
+
+**Kein öffentlicher Gewichtungs-Regler.** Er ist eine rhetorische Entlastung ohne
+Wirkung (die Titelzahl wird zitiert, den Regler bedient fast niemand), und laut
+ESG-Befund erklärt Gewichtung nur 6 % der Divergenz zwischen Ratern. Stattdessen:
+**Robustheitsquote** über 10.000 Dirichlet-Zufallsgewichtungen — der Anteil der
+Ziehungen, bei denen die Trendrichtung 1990→heute unverändert bleibt.
+
+### 16.5 Fehlende Daten, Divergenz, Vintages
+
+- **Lücken zwischen Messpunkten:** linear interpoliert, im Chart als dünnere Linie.
+- **Nach dem letzten Messpunkt: nie fortschreiben.** Fortschreiben ist die
+  gefährlichste Variante, weil der Fehler systematisch in eine Richtung zeigt —
+  Nicht-Messung würde als *Ausbleiben von Verschlechterung* gelesen. Genau der
+  Bias, den eine Good-News-Plattform am wenigsten haben darf. Die Kurve endet
+  **optisch** am letzten harten Punkt.
+- **Mindestabdeckung 60 %** je Domäne, sonst kein Domänenwert und kein Index für
+  dieses Jahr. Dazu ein dauerhaft sichtbarer Vollständigkeits-Balken:
+  „2024: basiert auf 19 von 24 Indikatoren (79 %)."
+- **Kernreihe** aus den lückenlosen Indikatoren 1990–heute. Weicht sie im Trend
+  vom Hauptindex ab (> 5 Punkte), wäre der Trend teilweise Korbwechsel statt
+  Weltveränderung → Warnsignal, wird ausgewiesen.
+- **Spannweite als zweite, gleichrangige Zahl:** Differenz zwischen bester und
+  schlechtester der 7 Weltbank-Regionen. Begründung unten (16.8).
+- **Vintages:** Jede Veröffentlichung ist unveränderlich (`v2026.1`), mit CSV und
+  SHA-256 unter fester URL. Jeder zitierte Wert trägt sein Vintage: „72,4
+  (v2026.2)". Zwei getrennte Zeitachsen — „aktuelle Reihe" und „Vintage-Archiv".
+  Ankeränderungen erzwingen ein Major-Vintage mit neu gerechneter Historie.
+
+### 16.6 Die Sperrklausel (→ E-05, muss VOR dem Bau veröffentlicht werden)
+
+> Wenn der Langzeitindex in einem Vintage fällt, wird der Rückgang zur Titelmeldung
+> des Tages, mit derselben Gestaltung und derselben Prominenz wie jeder Anstieg.
+> Wir stellen keine Erklärung voran, die den Rückgang relativiert. Wir passen weder
+> Indikatoren noch Anker noch Gewichte in dem Vintage an, in dem der Rückgang
+> auftritt. Methodische Änderungen sind ab dem Tag eines gemeldeten Rückgangs für
+> 12 Monate gesperrt — ausser zur Korrektur eines nachgewiesenen Rechenfehlers, die
+> dann einzeln, öffentlich und mit Vorher-Nachher-Wert dokumentiert wird.
+
+**Warum das das Geschäftsmodell überlebt:** NurEine ist kein Optimismus-Produkt,
+sondern ein Wirksamkeits-Produkt. Ein fallender Index passt zur Rahmung „das hat
+gewirkt, und es wirkt nur weiter, solange es getan wird" (D-08) — der Rückschlag
+ist darin bereits als Möglichkeit enthalten. Er passt nur zur Lesart „so schlimm
+ist es nicht" nicht, und die ist ohnehin die schädliche (r = −0,40).
+
+**Ohne diese Klausel wird der Index nicht gebaut.** Rückfallposition: 8
+Einzelkurven nebeneinander, keine Gesamtzahl.
+
+### 16.7 Der Test vor dem Bau — Abbruchkriterien
+
+**Vor der ersten Zeile Frontend-Code wird der Index vollständig gerechnet — nur
+als CSV, ohne jede Visualisierung.** Grund: Der wirksamste Schutz gegen den
+Rater-Effekt ist, die Zahl zu sehen, *bevor* man in sie investiert hat.
+
+| Befund im Nulllauf | Konsequenz |
+|---|---|
+| Weniger als 6 von 8 Domänen haben 2020–2024 einen Wert | **Abbruch** — ein Index, der die letzten Jahre nicht abdeckt, ist ein Geschichtsprodukt |
+| Wasting hat keine verwertbare Weltjahresreihe | Ernährung streichen, 7 Domänen à 1/7. Kein Ersatzindikator |
+| Hauptindex und Kernreihe divergieren > 5 Punkte | **Abbruch** — Trend wäre überwiegend Korbwechsel |
+| Robustheitsquote < 90 % (Dirichlet) | **Abbruch** — hängt die Richtung von der Gewichtung ab, trägt die einzige zulässige Aussage nicht. Dann: keine Zahl, nur 8 Kurven |
+| **Alle 8 Domänen steigen** | **Abbruch und Rückbau** — beweist einen Fehler in Normierung oder Ankern (wahrscheinlich zu grosszügiger Typ-C-Korridor) |
+| Eigene Variante über dem 80. Perzentil der Multiverse-Verteilung | **Nicht veröffentlichen**, überarbeiten bis mittlerer Bereich oder Abweichung methodisch zwingend |
+| Kein Knick 2020 (COVID) | **Warnung** — die Glättung muss gefunden werden, bevor gebaut wird |
+
+Das dritte Kriterium von unten nutzt den Kartografen-Befund als **Fehlerdetektor**:
+Wenn bei sauberer Methode alles steigt, stimmt die Rechnung nicht.
+
+**Zusätzlich die Multiverse-Probe:** Der Index wird über alle vertretbaren
+Varianten durchgerechnet (geometrisch vs. arithmetisch, mit/ohne Boden, anderes
+Typ-C-Fenster, jede Domäne einmal weggelassen, Median statt Mittel). Die
+Verteilung wird veröffentlicht, mit der eigenen Variante darin markiert. Das ist
+der einzige Mechanismus, der den Rater-Effekt **messbar** macht, statt ihn zu
+beteuern.
+
+### 16.8 Drei Sätze, die nicht wegkonstruierbar sind
+
+Sie gehören wörtlich und sichtbar auf die Methodikseite, nicht ins Kleingedruckte:
+
+> **1. Diese Zahl kann steigen, während es der Mehrheit der Menschen schlechter geht.**
+>
+> **2. Wir haben ein wirtschaftliches Interesse daran, dass diese Zahl steigt.**
+>
+> **3. Diese Zahl beschreibt nicht heute. Sie beschreibt einen Datenstand von vor
+> 1 bis 4 Jahren, und die schlechtest gestellten Länder sind darin am schlechtesten
+> erfasst.**
+
+**Zu Satz 1 — empirisch belegt, nicht theoretisch.** Armut unter 3 $, 1995→2024:
+
+| Region | 1995 | 2024 | Delta |
+|---|---|---|---|
+| Ostasien & Pazifik | 55,7 % | 2,0 % | −53,7 |
+| Südasien | 47,1 % | 3,8 % | −43,3 |
+| **Welt** | 39,4 % | 10,4 % | **−29,0** |
+| Subsahara-Afrika | 64,4 % | 45,1 % | −19,3 |
+
+**Der Weltwert beschreibt keine einzige Region.** Deshalb die Spannweite als
+zweite gleichrangige Zahl (16.5) und die Regel: *jeder Indikator nach Region
+ausgewiesen, ein Weltwert erscheint nie allein.*
+
+**Zu Satz 3 — der unterschätzte Teil:** Der Datenverzug ist **nicht zufällig
+verteilt**. Fragile Staaten und Konfliktgebiete melden am spätesten und
+lückenhaftesten. Der Index hat dadurch einen **eingebauten Aufwärts-Bias** — nicht
+durch Absicht, sondern durch Datenverfügbarkeit.
+
+### 16.9 Roadmap des Index
+
+| Stufe | Inhalt | Aufwand |
+|---|---|---|
+| **V0** | **Präregistrierung**: Domänenliste, 24 Codes, Anker, Sperrklausel als Markdown ins öffentliche Repo, Git-Commit mit Zeitstempel. **Muss vor jedem Datenabruf passieren** — sonst ist die Auswahlregel (D-11) nachträglich nicht mehr belegbar | 1 Tag, kein Code |
+| **V0.5** | **Nulllauf**: `scripts/index_build.py`, 24 Reihen ziehen, normieren, aggregieren, CSV. Multiverse-Probe. Alle Abbruchkriterien prüfen. **Hier fällt die Entscheidung, ob überhaupt gebaut wird.** Läuft offline gegen die Weltbank-API, unabhängig vom Supabase-Zustand | 2–3 Tage |
+| **V1** | Route `/index`: Zahl + Spannweite + 8 Domänenwerte + Vollständigkeitsbalken · Kurve 1990–heute · Methodikseite · Verliererliste · Vintage-CSV mit SHA-256 · Story-Karten mit Bereichszuordnung · statisches JSON, wöchentliche GitHub Action · **SEO-Pflicht** (Description+Title ins Layout, Sitemap, interne Links, JSON-LD `Dataset`, llms.txt) | 1–2 Wochen |
+| **V2** | Tagesschnitt (D-09) · Regionenaufschlüsselung · Vintage-Archiv-Ansicht · A/B-Test der Rahmung „das hat gewirkt" vs. „X % geschafft" | nach 4 Wochen V1-Betrieb |
+| **V3** | **Adversarial Review** — jemanden bezahlen, der das Projekt nicht mag, und das Ergebnis ungekürzt neben dem Index veröffentlichen. Die einzige Massnahme, die ein Kritiker nicht als PR abtun kann, weil sie weh tut · Ziel-Fortschrittsbalken · Bugfix-Bounty | bei Budget |
+| **Nie** | ETA-Anzeigen · Streaks · Live-Zähler · Story-Marker auf der Kurve · Anker, die nachjustiert werden, weil ein Ziel verfehlt wurde | — |
+
+### 16.10 Was aus den Gutachten NICHT gebaut wird
+
+| Idee | Warum nicht |
+|---|---|
+| Tageszähler | Kontrafaktik nicht seriös rechenbar (D-09) |
+| Story-Marker auf der Kurve | Screenshot-Risiko asymmetrisch tödlich (D-10) |
+| Öffentlicher Gewichtungs-Regler | Rhetorische Entlastung ohne Wirkung; Gewichtung = 6 % der Divergenz |
+| ETA / Restlaufzeit | Lineare Restlaufzeit auf nichtlinearer Kurve ist eine Falschaussage. Afghanistan und Pakistan sind seit über einem Jahrzehnt die „letzten drei Jahre" bei Polio |
+| Streaks / Punkte / Abzeichen | Extrinsische Schicht frisst intrinsisches Interesse (Deci/Ryan, 128 Studien). Ein Streak befeuert Antrieb ohne Weg — bindet an Zählerpflege statt an ein Thema |
+| Nicht-kompensatorische Aggregation | Sauberer, aber nicht laientauglich erklärbar und liefert keine kardinale Zahl |
+| Negativ-Quote | Ergebnis-Design mit umgekehrtem Vorzeichen (D-11) |
+| BIP als Indikator | Durchsatzmass, kein Zustandsmass. Ölkatastrophe und Krebsbehandlung erhöhen es. Nur als Kontextzahl neben dem Index |
+
+### 16.11 Fortschrittsbalken — die Grenze
+
+Aus 6.4 bleibt der Gedanke, aber mit scharfer Regel:
+
+> **Spielmechanik darf die Struktur eines realen Ziels sichtbar machen. Sie darf
+> nie eine Zielstruktur behaupten, die es nicht gibt.**
+
+- **Polio: zulässig** — es gibt einen definierten Endzustand und eine Zahl
+  verbleibender Fälle. Der Balken bildet etwas ab, das existiert.
+- **„Armut", „Klima", „Frieden": unzulässig** — kein Endzustand. Ein Balken
+  erfindet dort ein Ziel und suggeriert Vollendbarkeit.
+- **Balken nur bei zählbarem Rest. Und: Wenn ein Balken nie fallen kann, ist er
+  kein Messinstrument, sondern eine Dekoration.**
+
+Die ETA aus 6.4 entfällt ersatzlos (D-09 / 16.10). 6.4 sagt bereits „keine harte
+ETA, wenn die Datenlage das nicht erlaubt" — die Gutachten verschärfen das: Bei
+nichtlinearer Endphase gibt es **gar keine** ETA, auch keine weiche.
+
+### 16.12 Kollision mit `src/lib/world-index.ts` (parallele Session, 2026-08-29)
+
+⚠️ **Wichtig für alle Sessions.** Die parallele Session hat für „Puls der Welt"
+(Board-Zeile Phase 2) bereits `src/lib/world-index.ts` gebaut. Der Code ist gut
+und sein Kommentar formuliert die Zirkelschluss-Regel sauber. **Aber seine
+Aggregation weicht in drei Punkten von dieser Spezifikation ab:**
+
+| Punkt | `world-index.ts` (gebaut) | Diese Spezifikation |
+|---|---|---|
+| Normierung | Min-Max **über die eigene Zeitreihe** | Feste Anker Typ A/B/C, eingefroren (16.3) |
+| Aggregation | **arithmetisches** Mittel | **geometrisch**, zweistufig (D-07) |
+| Mindestabdeckung | ≥ 50 % der Metriken | ≥ 60 % (16.5) |
+
+Die erste Abweichung ist die gravierende: Min-Max über die eigene Reihe bedeutet,
+dass der **jüngste Wert fast immer nahe 100 landet**, sobald er der beste der
+Reihe ist — und dass sich die gesamte Historie verschiebt, sobald ein neuer
+Extremwert dazukommt. Das ist genau der Zirkelschluss, den 16.3 mit dem
+eingefrorenen Korridor und dem 20-%-Kopfraum verhindert.
+
+**Kein Grund, den Code wegzuwerfen** — er erfüllt seinen Zweck (Sparklines pro
+Kategorie auf `/karte`) und ist als *Trendrichtungs-Anzeige* brauchbar. Aber:
+
+> **`world-index.ts` darf nicht zur Grundlage des Langzeitindex werden, und die
+> Zahlen, die es liefert, dürfen nicht als Domänenwerte des Langzeitindex
+> ausgegeben werden.** Der Langzeitindex bekommt eine eigene Berechnung
+> (`scripts/index_build.py`, V0.5). Sonst existieren zwei Zahlen für dasselbe
+> Feld — genau die Verwechslung, die 6.2 verhindern will.
+
+Zu klären, wenn der Nulllauf steht: ob `world-index.ts` auf die Anker-Normierung
+umgestellt wird (dann eine Quelle für beides) oder ob es bewusst eine separate,
+gröbere Kartenanzeige bleibt.
+
+### 16.13 Wo die Gutachten sich widersprachen — und wie entschieden wurde
+
+Für spätere Sessions, damit Entscheidungen nicht versehentlich zurückgedreht werden:
+
+| Konflikt | Entscheidung | Grund |
+|---|---|---|
+| Eine Zahl vs. keine Zahl | **Eine Zahl** (D-05) | Der Einwand richtet sich gegen ein *Niveau*, nicht gegen eine *Zahl*. Verzicht löst 6 % des Problems und gibt dafür das Produkt auf |
+| Story auf der Kurve vs. daneben | **Daneben** (D-10) | Die Position „auf der Kurve" adressiert das Zeitachsen-Problem nicht: Die Story landet zwangsläufig rechts vom letzten harten Datenpunkt |
+| Negativ-Quote ja/nein | **Nein** (D-11) | Ergebnis-Design mit umgekehrtem Vorzeichen. Das Anliegen (Falsifizierbarkeit) wird durch Präregistrierung + Verliererliste + Sperrklausel erfüllt |
+| Tageszähler ja/nein | **Nein** (D-09) | Nicht wegen des Bias, sondern weil die Rechnung nicht geht — ehrliche Spanne überspannt Faktor 2 |
+| Bildung als Domäne | **Nein** (D-06) | Nur Anwesenheitsmasse verfügbar. Eine steigende Kurve aufzunehmen, weil sie verfügbar ist, wäre Ergebnis-Design mit dem richtigen Vorzeichen |
+| Name „Fortschrittsindex" | **Verworfen** (D-04) | Vorzeichen im Titel, scheitert am Fall-Test, ist die r = −0,40-Rahmung, dreifach belegt |
+

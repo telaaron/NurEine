@@ -1,16 +1,16 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-09-02T22:32:33Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-09-02T22:46:46Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 7 weeks, 1 day, 9 hours, 17 minutes |
+| Läuft seit | up 7 weeks, 1 day, 9 hours, 31 minutes |
 | Speicherplatz | 841G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
-| Auslastung | load average: 0.18, 0.05, 0.01 |
+| Auslastung | load average: 0.08, 0.05, 0.02 |
 | Tailscale-Adresse | `100.123.159.38` |
 | Claude Code | 2.1.209 (Claude Code) |
 | cron-Dienst | active (17 Jobs) |
@@ -20,13 +20,13 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `14e25d5 fix(ops): Healthcheck meldet fertige Arbeit, die auf Merge wartet` |
-| vom | 2026-09-02 23:32:20 +0100 |
+| Aktueller Commit | `118a8f6 Merge remote-tracking branch 'origin/main'` |
+| vom | 2026-09-02 23:34:29 +0100 |
 | Hinter origin/main | 0 Commits |
 | Vor origin/main | 0 Commits |
 | Uncommittete Dateien | 0 |
 | Branches nur lokal (ungesichert) | 18 |
-| Letzter Pull | aktualisiert 50a6323 → 14e25d5 |
+| Letzter Pull | aktualisiert dd4312a → 118a8f6 |
 
 ## Letzte Agenten-Läufe
 

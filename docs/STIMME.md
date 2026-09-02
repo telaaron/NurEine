@@ -302,6 +302,9 @@ Marke nicht wiederholen.
 
 - Die Zahl oder das eine besondere Detail trägt den Satz.
 - Keine Frage. Keine Auslassungspunkte. Kein Doppelpunkt-Cliffhanger.
+- **Kein „Stell dir vor…"-Einstieg.** Gemessen über 30 Tage: 32,6 % Öffnungsrate
+  mit diesem Einstieg gegen 43,7 % ohne. Direkt mit der Sache beginnen, nicht mit
+  der Aufforderung, sich etwas vorzustellen.
 - Kein „endlich", kein „erstmals", wenn es nicht belegt ist.
 - Nicht der Titel wortgleich, aber ruhig nah dran.
 

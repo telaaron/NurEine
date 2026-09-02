@@ -1494,8 +1494,19 @@ ig_ok: true/false, Taugt die Story für Instagram? Maßstab ist NICHT der Wirkun
   mit echtem Hook. Eine wichtige Studie ohne Hook ist NICHT IG-tauglich; eine Krähe mit Geschenken ist es.
 
 ig_hook_type: Nur wenn ig_ok=true. Genau EINER der sechs Werte oben
-  ["zahl","sieg","kontrast","wow","mensch","charme"], der STÄRKSTE Hook DIESER Story. Wähle ehrlich
-  den dominanten Typ (nicht immer "zahl"): Abwechslung der Hook-Typen hält den Feed wach. Sonst null.
+  ["zahl","sieg","kontrast","wow","mensch","charme"], der STÄRKSTE Hook DIESER Story.
+
+  ⚠️ "zahl" ist NICHT der Standardfall (Verbesserung #7). Gemessen: 80 von 90 Instagram-Posts
+  trugen "zahl", während "kontrast" und "mensch" in den Engagement-Daten deutlich besser
+  abschneiden. Die frühere Bitte "nicht immer zahl" hat daran nichts geändert, deshalb jetzt eine
+  Prüfreihenfolge. Geh sie durch, BEVOR du "zahl" wählst:
+    1. Steckt in der Zahl ein Vorher/Nachher, also zwei Zustände im Kontrast (z.B. "1.253 auf 20")?
+       Dann "kontrast".
+    2. Steht eine konkrete Person oder ein bewegender Moment im Zentrum? Dann "mensch" oder "charme".
+    3. Ist es ein klarer, binärer Erfolg (geschafft, beendet, verboten, erstmals)? Dann "sieg".
+    4. Ist die Story vor allem verblüffend und nicht in erster Linie zahlenbasiert? Dann "wow".
+  "zahl" NUR, wenn eine einzelne, isolierte Zahl ohne Vorher/Nachher und ohne Mensch die Story
+  allein trägt. Abwechslung der Hook-Typen hält den Feed wach. Sonst null.
 
 dach_relevanz: Integer 0-100, Wie persönlich relevant/nah ist die Story für Leser in Deutschland,
   Österreich, Schweiz? NICHT "passiert es in DACH", sondern "berührt es DACH-Leser":

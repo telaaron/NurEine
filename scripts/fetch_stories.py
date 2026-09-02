@@ -2042,15 +2042,25 @@ def composite_on_canvas(image_bytes: bytes) -> bytes:
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+class SourceLoadError(RuntimeError):
+    """Die Quellen-Liste war nicht ladbar (Infrastruktur), nicht: sie ist leer."""
 
 
 def load_active_sources() -> list[dict[str, Any]]:
     """Load all active RSS sources from Supabase.
 
-    Fallback (Storage-402-Sperre): Wenn die REST-API gesperrt ist, kann die
-    Quellenliste nicht geladen werden — dann lädt der Lauf sie aus einer lokalen
-    JSON-Datei (env FETCH_SOURCES_FILE), damit Fetch+Analyse offline weiterlaufen
-    (Team-Regel: Ablage darf verzögern, nicht vernichten).
+    Zwei Schutzmechanismen, die zusammengehören (zusammengeführt 2026-09-02):
+
+    1. Fallback (Storage-402-Sperre): Ist die REST-API gesperrt, lädt der Lauf die
+       Quellenliste aus einer lokalen JSON-Datei (env FETCH_SOURCES_FILE), damit
+       Fetch+Analyse offline weiterlaufen (Team-Regel: Ablage darf verzögern,
+       nicht vernichten).
+    2. Gibt es diesen Fallback NICHT, wird SourceLoadError geworfen statt still
+       ein leeres [] zurückzugeben. Ein leeres [] ist ununterscheidbar von "keine
+       Quellen konfiguriert", und der Lauf meldete sich dann als 'completed'. So
+       stand der Fetch vom 15.-17.07. still (REST 402/Quota), ohne eine einzige
+       Fehlerzeile. Der Fallback darf den Ausfall überbrücken, aber nicht
+       verstecken.
     """
     params = {"active": "eq.true", "select": "*"}
     try:
@@ -2065,12 +2075,17 @@ def load_active_sources() -> list[dict[str, Any]]:
                 with open(fallback, encoding="utf-8") as fh:
                     data = json.load(fh)
                 sources = [s for s in data if s.get("active", True)] if isinstance(data, list) else []
-                log.warning("Fallback: %d Quelle(n) aus lokaler Datei %s geladen (Supabase gesperrt).",
+                # NOTBETRIEB deutlich kennzeichnen: Der Lauf geht weiter, aber er
+                # läuft auf einer eingefrorenen Quellenliste. Ohne dieses Wort im
+                # Log liest sich der Ausfall später wie ein normaler Lauf.
+                log.warning("NOTBETRIEB: %d Quelle(n) aus lokaler Datei %s geladen "
+                            "(Supabase gesperrt). Die Liste ist womöglich veraltet.",
                             len(sources), fallback)
                 return sources
             except Exception as fexc:  # noqa: BLE001
                 log.error("Fallback-Quellendatei %s unlesbar: %s", fallback, fexc)
-        return []
+        # Kein Fallback verfügbar: laut scheitern statt still [] zurückgeben.
+        raise SourceLoadError(f"Quellen nicht ladbar: {exc}") from exc
 
 
 def log_cron_run(

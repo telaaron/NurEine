@@ -357,8 +357,10 @@ const DE_MARKERS = /[äöüß]|sch|ung$|keit$|heit$|lich$|chen$|ische$|ischen$|t
 const DE_OK = new Set([
 	// Deutsche Woerter, die der th-/ea-/oo-Mustererkennung sonst zum Opfer fallen.
 	// Belegt 2026-08-03: 'Themen' blockierte einen Render, obwohl sauber deutsch.
+	// 2026-09-02 aus zwei parallelen Staenden vereinigt — beide Listen behalten.
 	'thema', 'themen', 'theater', 'theorie', 'theoretisch', 'therapie', 'these', 'thesen',
-	'ideal', 'real', 'reale', 'realen', 'reaktion', 'kreativ', 'ozean', 'europaeer',
+	'ideal', 'real', 'reale', 'realen', 'realitaet', 'reaktion', 'kreativ', 'ozean',
+	'europaeer', 'thron',
 	'team', 'teams', 'training', 'internet', 'computer', 'link', 'online', 'live', 'app', 'apps', 'video', 'story', 'update', 'meeting', 'design', 'start', 'test', 'job', 'jobs', 'fair', 'international', 'labor', 'partner', 'sport', 'international']);
 
 function detectEnglishWords(ttsText) {

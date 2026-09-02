@@ -1918,7 +1918,7 @@ def generate_and_upload_image(image_prompt: str, story_title: str, category: str
 
     The pipeline:
       1. Stage 1: Prompt quality review (DeepSeek, fast text check)
-      2. FLUX.1 [pro] generates a 4:3 paper collage illustration (with retry)
+      2. Seedream v4.5 generates a 4:3 photorealistic image (with retry)
       3. Stage 2: Visual quality review with LLaVA-NeXT (retry up to 3x)
       4. Fresh-prompt regenerate (up to 2x) if quality still too low
       5. Composite onto exact brand canvas colour #F5F1EA for consistent look

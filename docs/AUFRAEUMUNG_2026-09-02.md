@@ -160,3 +160,5 @@ Richtung folgte. Drei Entscheidungen dabei:
 `9007/2207027`: Der Video-Container war bei Meta noch nicht fertig, weil
 `waitForContainer` mit 25 Sekunden für Bilder ausgelegt war. Für Reels gelten
 jetzt 100 Sekunden. Erster Post seit dem 29.08. ist live.
+
+<!-- gh-Auth-Probe 2026-09-02: PR-Erstellung vom Mini aus geprueft. Diese Zeile wird nach der Probe wieder entfernt. -->

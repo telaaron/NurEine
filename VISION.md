@@ -1203,9 +1203,9 @@ Einschulungsrate — ist der Beleg, dass nicht nach Richtung sortiert wurde),
 | 2 | Zeitregler auf der Karte | ⬜ offen | Zeitraffer existiert, Regler fehlt |
 | 2 | Indikator-Tags je Story | ⬜ offen | |
 | 2 | „Puls der Welt" in der Seitenleiste | 🔄 in Arbeit | `src/lib/world-index.ts` + Karten-Seitenleiste, parallele Session (2026-08-29). ⚠️ **Aggregation weicht vom Langzeitindex ab — siehe 16.12** |
-| 3 | **V0 · Präregistrierung** | ⬜ offen | **blockiert durch E-05 (Sperrklausel).** Muss vor jedem Datenabruf passieren |
-| 3 | **V0.5 · Nulllauf** (`scripts/index_build.py`) | ⬜ offen | Entscheidet, ob überhaupt gebaut wird (16.7) |
-| 3 | Index-MVP → **V1 Langzeitindex** | ⬜ offen | 8 Domänen, 24 Indikatoren (16.2). Ersetzt „3–4 Bausteine" |
+| 3 | **V0 · Präregistrierung** | ✅ gebaut | Commit `1fe3dbc` · 9 Bereiche, 25 Indikatoren, alle Codes verifiziert |
+| 3 | **V0.5 · Nulllauf** (`scripts/index_build.py`) | ✅ gebaut | Fand einen Ankerfehler (Tuberkulose) und die Robustheits-Unterschreitung |
+| 3 | **V1 · /stand-der-welt** | ✅ gebaut | Commit `845f1b2` · ersetzt die alte Seite vollständig |
 | 3 | Öffentliche Methodikseite | ⬜ offen | `/methodik` existiert, müsste erweitert werden. Muss die drei Sätze aus 16.8 wörtlich enthalten |
 | 3 | Verliererliste (verworfene Indikatoren) | ⬜ offen | Teil von V1, nicht optional — Beleg für D-11 |
 | 4 | Statistiker-KI | ⬜ offen | Ausgabe geändert: Zuordnung + Grössenordnung + Mechanismus, **kein** quantifizierter Indexbeitrag (D-10) |
@@ -1890,3 +1890,83 @@ nicht enthalten. Es wurde separat prototypisiert und ist weder angenommen noch
 verworfen — Aaron war unsicher, ob es zu verspielt wirkt. Entscheidung vertagt;
 es liesse sich später über den Hero legen, ohne die Struktur zu ändern.
 
+
+
+---
+
+## 19. V0 bis V1 gebaut (2026-09-01 bis 2026-09-03)
+
+**D-18 · 2026-09-03 · `/stand-der-welt` wird ersetzt, die URL bleibt**
+
+Die alte Seite hatte vier Probleme, von denen zwei die Marke beschädigt hätten:
+- **Sparklines gespiegelt** — „besser" zeigte immer nach oben. Bei einem
+  Zustandsbild kann Ökologie so nicht fallend aussehen. Behoben.
+- **Daten eingefroren**, weil der Cron nachweislich nicht läuft.
+- **Live-Supabase-Abfrage** — bei einem 402 war die Seite leer.
+- **Falsches Label:** „2,15 $/Tag", die Weltbank liefert 3,00 $ (2021 PPP).
+
+*Warum ersetzen unbedenklich war:* URL-Inspektion ergab **„URL is unknown to
+Google"** — die Seite war nie indexiert. Es gab keinen Ranking-Wert zu verlieren.
+
+*Warum die URL bleibt:* 11 Stellen verlinken sie (Footer, Newsletter, Sitemap,
+IndexNow-Hub, llms.txt, Karte, App-Seite). Und **„Der Stand der Welt" ist der
+bessere Seitenname** — der Langzeitindex ist der Name der *Zahl*. Damit ist E-03
+endgültig gelöst: Seite = „Der Stand der Welt", Zahl darauf = „Der Langzeitindex".
+
+Die alte Tabelle `nureine_world_metrics` bleibt in der Datenbank, wird aber nicht
+mehr gelesen. `src/lib/world-index.ts` der parallelen Session nutzt sie weiter für
+die Karten-Sparklines — die beiden dürfen nie dieselbe Zahl behaupten (16.12).
+
+### 19.1 Was der Nulllauf gefunden hat
+
+Der Zweck von V0.5 war, Fehler zu finden, bevor investiert wird. Er hat geliefert:
+
+**Ein Ankerfehler, der die eigene Regel verletzte.** Tuberkulose hatte
+`anker0 = 190` — den Weltwert von 2000, also einen **aus den Daten abgeleiteten**
+Anker. Der Indikator startete künstlich bei 2 Punkten; die Domäne Gesundheit stieg
+dadurch um **+30,8 statt realistisch +6,1**. Korrigiert auf 300 → 10 (Spec v1.1).
+
+**Die Robustheits-Unterschreitung.** Ohne den künstlichen Schub fiel die Quote auf
+86,5 % (gefordert: 90 %). Ursache ist inhaltlich, nicht technisch: **Ab 23,2 %
+Gewicht auf Ökologie fällt der Index** — bei Gleichgewichtung von 11,1 %.
+
+**D-19 · 2026-09-03 · Die Überschreibung des Robustheitskriteriums**
+Aaron hat entschieden: Zahl behalten, Kipppunkt sichtbar machen. Das ist eine
+bewusste Überschreibung eines präregistrierten Abbruchkriteriums — dokumentiert im
+Änderungsprotokoll v1.2 und in Abschnitt 13 der Präregistrierung, samt Tabelle,
+welche Aussagen dadurch zulässig bleiben. **„Der Index steigt" ohne Zusatz ist es
+nicht mehr.**
+
+### 19.2 Das Ergebnis
+
+| | |
+|---|---|
+| Zahl 2023 | **53,6** von 100 |
+| 2005 | 50,2 |
+| Bewegung | +0,11 Punkte/Jahr |
+| **8 Bereiche steigen, Ökologie fällt** | −14,1 |
+| Kernreihen-Divergenz | 0,4 — unauffällig |
+| Multiverse | 64. Perzentil von 14 Varianten (Grenze 80) |
+
+Der Verlauf zeigt den COVID-Knick: 2020 → 2021 fällt die Zahl von 54,5 auf 53,5.
+Das war ein Warnkriterium („kein Knick 2020 = Glättung prüfen") — es ist erfüllt.
+
+### 19.3 Technik
+
+- **Statisches JSON** (`src/lib/data/langzeitindex.json`) statt Supabase-Livecall.
+  Übersteht einen 402, Seite ist prerendered.
+- **Neue GitHub Action** `langzeitindex.yml`, wöchentlich So 03:00 UTC. Bewusst
+  nicht der Mac-Mini: keine Secrets nötig, nur öffentliche APIs — läuft also auch,
+  wenn der Mini aus ist. Committet nur bei echter Änderung.
+- **`scripts/index_build.py`** ist die einzige Quelle der Zahl. Es kennt die
+  dokumentierte Überschreibung, warnt weiter sichtbar, und bricht doch ab, wenn
+  die Robustheit nochmal 5 Punkte tiefer fällt.
+
+### 19.4 Offen
+
+- **Das Schätzspiel** (erst raten, dann auflösen) ist nicht gebaut. Weder
+  angenommen noch verworfen — es ließe sich über den Hero legen, ohne die
+  Struktur zu ändern.
+- **E-07 (18 tote Cronjobs)** bleibt offen. Der Index braucht sie nicht, der
+  laufende Betrieb schon.
+- **Ungleichheit, psychische Gesundheit, Einsamkeit** bleiben benannte Leerstellen.

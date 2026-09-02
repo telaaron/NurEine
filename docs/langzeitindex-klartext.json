@@ -1,0 +1,131 @@
+{
+  "_hinweis": "Alltagssprache je Indikator (VISION.md D-15, Oma-Test). In den Bereichskacheln erscheinen NIE Indexwerte, sondern diese Saetze mit einer Zahl. {v} wird ersetzt. 'gut' sagt, welche Richtung eine Verbesserung ist — daraus wird der gruene/rote Punkt. 'teiler' skaliert grosse Zahlen auf lesbare Groessen.",
+  "kindersterblichkeit": {
+    "satz": "Von 1000 Kindern sterben {v} vor dem 5. Geburtstag",
+    "nachkomma": 0,
+    "gut": "niedrig"
+  },
+  "muettersterblichkeit": {
+    "satz": "Bei 100.000 Geburten sterben {v} Mütter",
+    "nachkomma": 0,
+    "gut": "niedrig"
+  },
+  "lebenserwartung": {
+    "satz": "Menschen werden im Schnitt {v} Jahre alt",
+    "nachkomma": 1,
+    "gut": "hoch"
+  },
+  "tuberkulose": {
+    "satz": "{v} von 100.000 Menschen erkranken jährlich an Tuberkulose",
+    "nachkomma": 0,
+    "gut": "niedrig"
+  },
+  "impfquote": {
+    "satz": "{v} von 100 Kindern sind gegen Diphtherie, Tetanus und Keuchhusten geimpft",
+    "nachkomma": 0,
+    "gut": "hoch"
+  },
+  "unterernaehrung": {
+    "satz": "{v} von 100 Menschen bekommen nicht genug zu essen",
+    "nachkomma": 0,
+    "gut": "niedrig"
+  },
+  "auszehrung": {
+    "satz": "{v} von 100 Kleinkindern sind für ihre Größe zu leicht",
+    "nachkomma": 0,
+    "gut": "niedrig"
+  },
+  "armut_300": {
+    "satz": "{v} von 100 Menschen leben von weniger als 3 Dollar am Tag",
+    "nachkomma": 0,
+    "gut": "niedrig"
+  },
+  "armut_830": {
+    "satz": "{v} von 100 Menschen leben von weniger als 8,30 Dollar am Tag",
+    "nachkomma": 0,
+    "gut": "niedrig"
+  },
+  "trinkwasser": {
+    "satz": "{v} von 100 Menschen haben sicheres Trinkwasser",
+    "nachkomma": 0,
+    "gut": "hoch"
+  },
+  "sanitaer": {
+    "satz": "{v} von 100 Menschen haben eine sichere Toilette",
+    "nachkomma": 0,
+    "gut": "hoch"
+  },
+  "strom": {
+    "satz": "{v} von 100 Menschen haben Strom",
+    "nachkomma": 0,
+    "gut": "hoch"
+  },
+  "kochenergie": {
+    "satz": "{v} von 100 Menschen kochen ohne gesundheitsschädlichen Rauch",
+    "nachkomma": 0,
+    "gut": "hoch"
+  },
+  "internet": {
+    "satz": "{v} von 100 Menschen nutzen das Internet",
+    "nachkomma": 0,
+    "gut": "hoch"
+  },
+  "toetungen": {
+    "satz": "{v} von 100.000 Menschen werden pro Jahr getötet",
+    "nachkomma": 1,
+    "gut": "niedrig"
+  },
+  "militaer": {
+    "satz": "{v} Prozent der weltweiten Wirtschaftsleistung gehen ins Militär",
+    "nachkomma": 1,
+    "gut": "niedrig"
+  },
+  "demokratie": {
+    "satz": "Wie frei und fair gewählt wird: {v} von 100 Punkten",
+    "nachkomma": 0,
+    "teiler": 0.01,
+    "gut": "hoch"
+  },
+  "menschenrechte": {
+    "satz": "Wie gut Menschenrechte geachtet werden: {v} von 100 Punkten",
+    "nachkomma": 0,
+    "teiler": 0.01,
+    "gut": "hoch"
+  },
+  "frauen_parlament": {
+    "satz": "{v} von 100 Parlamentssitzen haben Frauen",
+    "nachkomma": 0,
+    "gut": "hoch"
+  },
+  "alphabetisierung": {
+    "satz": "{v} von 100 Erwachsenen können lesen und schreiben",
+    "nachkomma": 0,
+    "gut": "hoch"
+  },
+  "grundschulabschluss": {
+    "satz": "{v} von 100 Kindern schließen die Grundschule ab",
+    "nachkomma": 0,
+    "gut": "hoch"
+  },
+  "hochschule": {
+    "satz": "{v} von 100 jungen Menschen beginnen ein Studium",
+    "nachkomma": 0,
+    "gut": "hoch"
+  },
+  "co2_absolut": {
+    "satz": "{v} Milliarden Tonnen CO₂ pro Jahr",
+    "nachkomma": 1,
+    "teiler": 1000,
+    "gut": "niedrig"
+  },
+  "co2_pro_kopf": {
+    "satz": "{v} Tonnen CO₂ pro Mensch und Jahr",
+    "nachkomma": 1,
+    "gut": "niedrig"
+  },
+  "wald": {
+    "satz": "{v} Prozent der Landfläche sind Wald",
+    "nachkomma": 1,
+    "gut": "hoch"
+  }
+}

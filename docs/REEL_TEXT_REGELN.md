@@ -25,6 +25,31 @@ zehn Beispiel-Storys (2026-07-27) + gemessene Stimm-Tests (2026-07-30).
                   (Satzanfang → läuft in Durchlauf 2 hinein)
 ```
 
+### Wenn das Keyword ein Fachwort ist
+
+Der Einstieg darf nicht mit dem Fachbegriff öffnen, aber `render.mjs` verlangt das
+SEO-Keyword dreifach: gesprochen, im Overlay und in den ersten 60 Zeichen der
+Caption. Beides zusammen geht nicht, wenn das Keyword genau der Fachbegriff ist
+(„Narkolepsie", „Sepsis", „Trachom").
+
+Dafür gibt es `seo.spokenOptional: true` im Plan. Dann steht das Keyword im
+Overlay und in der Caption, der gesprochene Text umschreibt es. Zwei der drei
+Kanäle bleiben, und der Einstieg bleibt verständlich.
+
+```json
+"seo": { "keyword": "Narkolepsie", "spokenOptional": true }
+```
+
+Belegt 2026-09-03 am Narkolepsie-Clip: Ohne das Flag bricht der Render ab, mit
+Fachbegriff in Sekunde eins ist der Zuschauer weg. Das Flag löst beides.
+
+### Zahlen im Bild müssen gesprochen werden
+
+Der Kohärenz-Check bricht ab, wenn eine Zahl im Overlay steht, die der voText
+derselben Szene nicht exakt sagt. Wer eine Zahl aus dem Einstieg nach hinten
+verschiebt, muss auch das Overlay mitnehmen — sonst zeigt Szene 1 eine Zahl,
+die niemand ausspricht.
+
 ## 2. Ton: untertreiben, nicht aufblasen
 
 Der Zuschauer soll SELBST „krass" denken. Sagt die Stimme ihm, dass es krass ist,

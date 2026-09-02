@@ -1,0 +1,50 @@
+name: Langzeitindex aktualisieren
+
+# Woechentlich, Sonntag 03:00 UTC. Bewusst GitHub Actions statt Mac-Mini:
+# Der Index braucht keinen Zugriff auf Supabase, keine Secrets und keine
+# lokale Umgebung — nur oeffentliche APIs. Damit laeuft er auch dann, wenn
+# der Mini aus ist oder Supabase 402 liefert.
+#
+# Der Job committet die neue src/lib/data/langzeitindex.json NUR, wenn sich
+# die Daten wirklich geaendert haben. Schlaegt ein Abbruchkriterium aus der
+# Praeregistrierung an, faellt der Job durch und committet NICHTS —
+# die Website behaelt den letzten geprueften Stand.
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  aktualisieren:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Index rechnen und pruefen
+        id: rechnen
+        run: python3 scripts/index_build.py
+
+      - name: Aenderungen committen
+        if: steps.rechnen.outcome == 'success'
+        run: |
+          if git diff --quiet src/lib/data/langzeitindex.json out/langzeitindex/; then
+            echo "Keine Aenderung — nichts zu committen."
+            exit 0
+          fi
+          NEU=$(python3 -c "import json;d=json.load(open('src/lib/data/langzeitindex.json'));print(f\"{d['index'][-1]:.2f} ({d['jahre'][-1]})\")")
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/data/langzeitindex.json out/langzeitindex/
+          git commit -m "data(index): Langzeitindex aktualisiert — $NEU
+
+          Automatischer Woechentlicher Lauf von scripts/index_build.py nach der
+          praeregistrierten Spezifikation. Alle Abbruchkriterien bestanden."
+          git push

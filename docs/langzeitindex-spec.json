@@ -1,0 +1,145 @@
+{
+  "spec_version": "1.0",
+  "festgelegt_am": "2026-09-01",
+  "hinweis": "Praeregistrierte Spezifikation. Aenderungen nur mit Eintrag im Aenderungsprotokoll von docs/langzeitindex-praeregistrierung.md. Anker sind eingefroren und werden NICHT aus Daten berechnet.",
+  "fenster": { "von": 2005, "bis": 2023, "konstanter_korb": true },
+  "aggregation": {
+    "stufe1": "geometrisch ueber die Indikatoren einer Domaene",
+    "stufe2": "geometrisch ueber die Domaenen",
+    "gewichtung": "gleich auf Domaenenebene (1/9 je Domaene)",
+    "saettigung_k": 0.5,
+    "sensitivitaet_k": [0.3, 1.0]
+  },
+  "mindestabdeckung_domaene": 0.6,
+  "domaenen": {
+    "ueberleben":     { "label": "Überleben",           "gewicht": "1/9" },
+    "gesundheit":     { "label": "Gesundheit",          "gewicht": "1/9" },
+    "ernaehrung":     { "label": "Ernährung",           "gewicht": "1/9" },
+    "materiell":      { "label": "Materielle Lage",     "gewicht": "1/9" },
+    "infrastruktur":  { "label": "Infrastruktur",       "gewicht": "1/9" },
+    "sicherheit":     { "label": "Sicherheit",          "gewicht": "1/9" },
+    "freiheit":       { "label": "Freiheit & Teilhabe", "gewicht": "1/9" },
+    "wissen":         { "label": "Wissen",              "gewicht": "1/9" },
+    "oekologie":      { "label": "Ökologie",            "gewicht": "1/9" }
+  },
+  "indikatoren": [
+    { "id": "kindersterblichkeit", "quelle": "worldbank", "code": "SH.DYN.MORT", "domaene": "ueberleben",
+      "label": "Kindersterblichkeit u5", "einheit": "je 1.000", "anker0": 93.5, "anker100": 25, "ankertyp": "B",
+      "ankerbegruendung": "0-Punkt = Weltwert 1990 (verifiziert 93,5). 100-Punkt = SDG-Ziel 3.2." },
+
+    { "id": "muettersterblichkeit", "quelle": "worldbank", "code": "SH.STA.MMRT", "domaene": "ueberleben",
+      "label": "Müttersterblichkeit", "einheit": "je 100.000", "anker0": 391, "anker100": 70, "ankertyp": "B",
+      "ankerbegruendung": "0-Punkt = Weltwert 1990 (verifiziert 391). 100-Punkt = SDG-Ziel 3.1." },
+
+    { "id": "lebenserwartung", "quelle": "worldbank", "code": "SP.DYN.LE00.IN", "domaene": "ueberleben",
+      "label": "Lebenserwartung", "einheit": "Jahre", "anker0": 50, "anker100": 85, "ankertyp": "C",
+      "ankerbegruendung": "Dieselben Marken wie der HDI der UN." },
+
+    { "id": "tuberkulose", "quelle": "worldbank", "code": "SH.TBS.INCD", "domaene": "gesundheit",
+      "label": "Tuberkulose-Inzidenz", "einheit": "je 100.000", "anker0": 190, "anker100": 0, "ankertyp": "A",
+      "ankerbegruendung": "0-Punkt = Weltwert 2000 (Reihenbeginn). 100-Punkt = Elimination." },
+
+    { "id": "impfquote", "quelle": "worldbank", "code": "SH.IMM.IDPT", "domaene": "gesundheit",
+      "label": "DTP3-Impfquote", "einheit": "%", "anker0": 0, "anker100": 100, "ankertyp": "A",
+      "ankerbegruendung": "Logische Grenzen eines Anteils." },
+
+    { "id": "unterernaehrung", "quelle": "worldbank", "code": "SN.ITK.DEFC.ZS", "domaene": "ernaehrung",
+      "label": "Unterernährung", "einheit": "%", "anker0": 100, "anker100": 0, "ankertyp": "A",
+      "ankerbegruendung": "Logische Grenzen eines Anteils, invertiert." },
+
+    { "id": "auszehrung", "quelle": "worldbank", "code": "SH.STA.WAST.ZS", "domaene": "ernaehrung",
+      "label": "Auszehrung u5", "einheit": "%", "anker0": 100, "anker100": 0, "ankertyp": "A",
+      "ankerbegruendung": "Logische Grenzen eines Anteils, invertiert." },
+
+    { "id": "armut_300", "quelle": "worldbank", "code": "SI.POV.DDAY", "domaene": "materiell",
+      "label": "Armut unter 3,00 $/Tag", "einheit": "%", "anker0": 100, "anker100": 0, "ankertyp": "A",
+      "ankerbegruendung": "Logische Grenzen. ACHTUNG: Schwelle 2025 neu basiert (2021 PPP), NICHT mehr 2,15 $." },
+
+    { "id": "armut_830", "quelle": "worldbank", "code": "SI.POV.UMIC", "domaene": "materiell",
+      "label": "Armut unter 8,30 $/Tag", "einheit": "%", "anker0": 100, "anker100": 0, "ankertyp": "A",
+      "ankerbegruendung": "Zweite Schwelle. Ihr Abstand zur ersten macht Verteilung sichtbar." },
+
+    { "id": "trinkwasser", "quelle": "worldbank", "code": "SH.H2O.SMDW.ZS", "domaene": "infrastruktur",
+      "label": "Sicheres Trinkwasser", "einheit": "%", "anker0": 0, "anker100": 100, "ankertyp": "A",
+      "ankerbegruendung": "Logische Grenzen eines Anteils." },
+
+    { "id": "sanitaer", "quelle": "worldbank", "code": "SH.STA.SMSS.ZS", "domaene": "infrastruktur",
+      "label": "Sichere Sanitärversorgung", "einheit": "%", "anker0": 0, "anker100": 100, "ankertyp": "A",
+      "ankerbegruendung": "Logische Grenzen eines Anteils." },
+
+    { "id": "strom", "quelle": "worldbank", "code": "EG.ELC.ACCS.ZS", "domaene": "infrastruktur",
+      "label": "Stromzugang", "einheit": "%", "anker0": 0, "anker100": 100, "ankertyp": "A",
+      "ankerbegruendung": "Logische Grenzen eines Anteils." },
+
+    { "id": "kochenergie", "quelle": "worldbank", "code": "EG.CFT.ACCS.ZS", "domaene": "infrastruktur",
+      "label": "Saubere Kochenergie", "einheit": "%", "anker0": 0, "anker100": 100, "ankertyp": "A",
+      "ankerbegruendung": "Logische Grenzen eines Anteils." },
+
+    { "id": "internet", "quelle": "worldbank", "code": "IT.NET.USER.ZS", "domaene": "infrastruktur",
+      "label": "Internetnutzung", "einheit": "%", "anker0": 0, "anker100": 100, "ankertyp": "A",
+      "ankerbegruendung": "Logische Grenzen eines Anteils." },
+
+    { "id": "toetungen", "quelle": "worldbank", "code": "VC.IHR.PSRC.P5", "domaene": "sicherheit",
+      "label": "Tötungsdelikte", "einheit": "je 100.000", "anker0": 20, "anker100": 0, "ankertyp": "C",
+      "ankerbegruendung": "20 je 100.000 entspricht der Groessenordnung der am staerksten betroffenen Regionen." },
+
+    { "id": "militaer", "quelle": "worldbank", "code": "MS.MIL.XPND.GD.ZS", "domaene": "sicherheit",
+      "label": "Militärausgaben", "einheit": "% BIP", "anker0": 10, "anker100": 0, "ankertyp": "C",
+      "ankerbegruendung": "10 % des BIP ist historisch das Niveau von Kriegswirtschaften." },
+
+    { "id": "demokratie", "quelle": "owid", "code": "electoral-democracy-index", "spalte": "Electoral democracy index",
+      "domaene": "freiheit", "label": "Wahldemokratie-Index", "einheit": "0–1", "anker0": 0, "anker100": 1, "ankertyp": "A",
+      "ankerbegruendung": "Der Index ist konstruktionsbedingt auf 0..1 begrenzt. Quelle: V-Dem." },
+
+    { "id": "menschenrechte", "quelle": "owid", "code": "civil-liberties-index-vdem", "spalte": "Human Rights Index",
+      "domaene": "freiheit", "label": "Menschenrechts-Index", "einheit": "0–1", "anker0": 0, "anker100": 1, "ankertyp": "A",
+      "ankerbegruendung": "Der Index ist konstruktionsbedingt auf 0..1 begrenzt. Quelle: V-Dem." },
+
+    { "id": "frauen_parlament", "quelle": "worldbank", "code": "SG.GEN.PARL.ZS", "domaene": "freiheit",
+      "label": "Frauen in Parlamenten", "einheit": "%", "anker0": 0, "anker100": 50, "ankertyp": "B",
+      "ankerbegruendung": "100-Punkt = Parität (50 %), nicht 100 % — Ziel ist Gleichstellung, nicht Umkehr." },
+
+    { "id": "alphabetisierung", "quelle": "worldbank", "code": "SE.ADT.LITR.ZS", "domaene": "wissen",
+      "label": "Alphabetisierung 15+", "einheit": "%", "anker0": 0, "anker100": 100, "ankertyp": "A",
+      "ankerbegruendung": "Logische Grenzen eines Anteils." },
+
+    { "id": "grundschulabschluss", "quelle": "worldbank", "code": "SE.PRM.CMPT.ZS", "domaene": "wissen",
+      "label": "Grundschulabschluss", "einheit": "%", "anker0": 0, "anker100": 100, "ankertyp": "A",
+      "ankerbegruendung": "Abschluss statt Einschulung — Einschulung taeuscht Fortschritt vor." },
+
+    { "id": "hochschule", "quelle": "worldbank", "code": "SE.TER.ENRR", "domaene": "wissen",
+      "label": "Hochschulbildung (brutto)", "einheit": "%", "anker0": 0, "anker100": 100, "ankertyp": "A",
+      "ankerbegruendung": "Logische Grenzen. Bruttoquote kann 100 ueberschreiten; Saettigung faengt das ab." },
+
+    { "id": "co2_absolut", "quelle": "worldbank", "code": "EN.GHG.CO2.MT.CE.AR5", "domaene": "oekologie",
+      "label": "CO₂ absolut", "einheit": "Mt", "anker0": 42000, "anker100": 0, "ankertyp": "C",
+      "ankerbegruendung": "0-Punkt knapp ueber dem historischen Hoechstwert. 100-Punkt = Netto-Null (Paris)." },
+
+    { "id": "co2_pro_kopf", "quelle": "worldbank", "code": "EN.GHG.CO2.PC.CE.AR5", "domaene": "oekologie",
+      "label": "CO₂ pro Kopf", "einheit": "t", "anker0": 6, "anker100": 0, "ankertyp": "C",
+      "ankerbegruendung": "0-Punkt ueber dem heutigen Weltdurchschnitt. 100-Punkt = Netto-Null." },
+
+    { "id": "wald", "quelle": "worldbank", "code": "AG.LND.FRST.ZS", "domaene": "oekologie",
+      "label": "Waldfläche", "einheit": "%", "anker0": 0, "anker100": 50, "ankertyp": "C",
+      "ankerbegruendung": "50 % entspricht der Groessenordnung der vorindustriellen Bewaldung." }
+  ],
+  "abbruchkriterien": {
+    "min_domaenen_2019_2023": 7,
+    "min_robustheitsquote": 0.90,
+    "max_divergenz_kernreihe": 5.0,
+    "abbruch_wenn_alle_domaenen_steigen": true,
+    "max_perzentil_multiverse": 80,
+    "warnung_wenn_kein_knick_2020": true
+  },
+  "verworfen": [
+    { "code": "NY.GDP.PCAP.PP.KD", "richtung": "steigt", "grund": "Durchsatzmass, kein Zustandsmass" },
+    { "code": "SE.PRM.NENR",      "richtung": "steigt", "grund": "Einschulung misst Anwesenheit, nicht Gelerntes" },
+    { "code": "ER.PTD.TOTL.ZS",   "richtung": "steigt", "grund": "Reihe beginnt erst 2013, bricht den konstanten Korb" },
+    { "code": "SH.STA.SUIC.P5",   "richtung": "faellt", "grund": "endet 2021, bricht den Korb am anderen Ende" },
+    { "code": "SI.POV.GINI",      "richtung": "-",      "grund": "keine Weltreihe (verifiziert)" },
+    { "code": "VC.BTL.DETH",      "richtung": "-",      "grund": "keine Weltreihe (verifiziert)" },
+    { "code": "SH.STA.STNT.ZS",   "richtung": "-",      "grund": "Weltreihe leer (verifiziert)" },
+    { "code": "SE.LPV.PRIM",      "richtung": "-",      "grund": "Welt nur 2015 und 2019 — 2 Punkte" },
+    { "code": "EN.ATM.CO2E.PC",   "richtung": "-",      "grund": "Code existiert nicht mehr" }
+  ]
+}

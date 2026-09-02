@@ -96,7 +96,19 @@ Hintergründe/Hook-Bibliothek: `docs/TIKTOK_FORMAT_REZEPT.md` (§C/§D/§F).
    ```
    Wähle nach Stop-Power (starke Zahl/Überraschung), bevorzugt jünger als 72h. Keine geeignete Story → TikTok fällt heute aus („lieber leer als schwach"), im Report vermerken.
 2. **Tag-Nummer** für den Kicker `TAG <N> · NUR EINE`: N = Kalendertage seit 2026-07-11 inklusive (Aarons manueller Start mit dem Landminen-Demo = Tag 1; macOS: `echo $(( ($(date +%s) - $(date -j -f %Y-%m-%d 2026-07-11 +%s)) / 86400 + 1 ))`).
-3. **Dramaturgie (Beweis-Loop 20):** `number` (snap:true, kicker) → `hook` (Erwartungsbruch) → `beat` (Bild) → `beat` (Mechanismus) → `proof` → `end`. **75-80 gesprochene Woerter** (~30s bei REEL_TEMPO 1.28), Payoff komplett vor Sekunde 15. Pflichtfelder: `seo.keyword` (render.mjs bricht sonst ab), `loop: true`, end.voText EXAKT `Die naechste gute Nachricht ist schon ueberprueft, naemlich diese.`, end.cta `""`. Ziffern im voText sind ok (werden automatisch deutsch ausgeschrieben) — ABER „1 + Substantiv" als „ein/eine" und Ordinalzahlen als Wort schreiben.
+3. **Dramaturgie:** Die Fuenf-Block-Struktur aus `docs/REEL_TEXT_REGELN.md` §1 ist verbindlich, hier steht nur die Zuordnung zu den Szenen-Typen:
+   `number` (snap:true, kicker) = **Einstieg**: Gefuehl/Alltag des Zuschauers spiegeln, NICHT mit dem Fachbegriff oder der Zahl beginnen. Wer das Thema nicht kennt, ist nach zwei Sekunden weg.
+   → `hook` = Kipp-Satz → `beat` (Bild) → `beat` (Mechanismus) → `proof` = **Beleg** (Stempel, kein ganzer Satz)
+   → **`beat` = Einordnung: `Sowas steht selten in den Nachrichten. Hier jeden Tag eins.`** (der einzige Satz, der sagt, warum es diesen Kanal gibt — fehlte in mehreren gesendeten Clips)
+   → `end` = **Loop**.
+   **75-80 gesprochene Woerter** (~30s bei REEL_TEMPO 1.28), Payoff komplett vor Sekunde 15.
+   Pflichtfelder: `seo.keyword` (render.mjs bricht sonst ab), `loop: true`, end.cta `""`,
+   end.voText EXAKT `Die naechste gute Nachricht ist schon ueberprueft, naemlich:`
+   — mit **Doppelpunkt**, nicht mit „naemlich diese.". Ein Punkt schliesst den Satz, der
+   Zuschauer wischt weiter; der offene Satzanfang laeuft in Durchlauf 2 hinein, und der
+   zaehlt bei TikTok als zusaetzliche Wiedergabe. (Belegt 2026-09-03: Von zehn Plaenen
+   endeten fuenf offen und fuenf geschlossen, genau entlang zweier widersprechender
+   Vorgaben — dieser Prompt sagte „diese.", REEL_TEXT_REGELN.md und STIMME.md sagten „:".) Ziffern im voText sind ok (werden automatisch deutsch ausgeschrieben) — ABER „1 + Substantiv" als „ein/eine" und Ordinalzahlen als Wort schreiben.
 4. **Test-Rotation** (Testplan Rezept §F; Aaron liefert Completion-Zahlen manuell — im Report aktiv danach fragen):
    - Woche 1 (12.–18.07.): Hook-Klassen täglich rotieren: Zahl-Snap → Erwartungsbruch → Du-Bezug → Skeptiker („Klingt erfunden. Ist es nicht.") → von vorn.
    - Woche 2 (19.–25.07.): Länge — 2× Blitz-13 (number→beat→proof→end, ~30 Wörter) gegen Standard-20 mit der Gewinner-Hook-Klasse.

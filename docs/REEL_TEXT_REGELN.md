@@ -62,9 +62,16 @@ Großes"), eine danach lässt die Zahl wirken. `[pause]` sparsam, max. 2 pro Ree
 
 ## 5. Länge
 
-~2,4 Wörter/s → **80 Wörter ≈ 33 s**. Aarons Vorgabe: „lieber überhaupt Mehrwert,
-dafür länger" (2026-07-27). Die 20-s-Regel des alten Rezepts gilt damit NICHT mehr
-für diesen Textstil. Obergrenze: 90 Wörter (~37 s).
+**75–80 gesprochene Wörter ≈ 30 s.** Obergrenze 80.
+
+Diese Datei nannte bis zum 2026-09-03 „80–90 Wörter" und rechnete mit 2,4 Wörtern/s.
+Das galt für das alte Tempo. Seit `REEL_TEMPO 1.28` mit ElevenLabs sind dieselben
+30 Sekunden bei 75–80 Wörtern voll — so auch in `docs/REEL_BAUKASTEN.md`,
+`docs/TIKTOK_FORMAT_REZEPT.md` und der Reel-Regie hinterlegt. Drei Dokumente sagten
+das Neue, eines das Alte; der Widerspruch kostete jeden Lauf Prüfaufwand.
+
+Aarons Vorgabe dahinter gilt unverändert: „lieber überhaupt Mehrwert, dafür länger"
+(2026-07-27). Die alte 20-s-Regel ist damit weiterhin außer Kraft.
 
 ## 6. Aussprache-Fallen (belegt, wachsende Liste)
 

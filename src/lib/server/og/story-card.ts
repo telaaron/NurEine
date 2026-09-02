@@ -252,12 +252,18 @@ function clampDek(dek: string, maxWords = DEK_MAX_WORDS): string {
 	const budget = words.slice(0, maxWords).join(' ');
 	const teil = budget.lastIndexOf(',');
 	// Nur nutzen, wenn dabei noch mindestens die Haelfte des Budgets stehen bleibt —
-	// sonst wird die Aussage zu duenn und wir behalten lieber die Wortgrenze.
+	// sonst wird die Aussage zu duenn.
 	if (teil > 0) {
 		const kurz = budget.slice(0, teil).trim();
 		if (kurz.split(/\s+/).length >= Math.ceil(maxWords / 2)) return kurz;
 	}
-	return budget.replace(/[,;:–-]+$/, '').trim();
+
+	// Sitzt das Komma zu frueh (oder fehlt es), blieb hier der harte Wortschnitt —
+	// und damit wieder ein Fragment: "…in den Schutz des".
+	// Ein Fragment ist SCHLIMMER als ein fehlender Untertitel: es liest sich als
+	// kaputtes Template, und Sorgfalt ist das Verkaufsargument der Marke.
+	// Darum lieber nichts ausgeben — die Headline traegt die Aussage allein.
+	return '';
 }
 // KEIN line-clamp mehr — das war die Quelle der „…". Stattdessen begrenzt
 // clampDek() die Wortzahl vorab auf einen vollständigen Satz/Wortgrenze, sodass

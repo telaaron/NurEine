@@ -26,6 +26,11 @@ export interface TikTokStoryInput {
 	source_name: string | null;
 	impact_score: number | null;
 	/**
+	 * Optionaler, zur Story geschriebener Aufruf (aus plan.json `softCta`).
+	 * Ist er gesetzt, ersetzt er die beiden rotierenden Standardsätze.
+	 */
+	cta?: string | null;
+	/**
 	 * Texte, die IM VIDEO stehen (Hook-Szene, Auflösung, Endcard). Die Caption
 	 * wiederholt sie nicht: Video und Caption sieht der Zuschauer gleichzeitig
 	 * auf einem Bildschirm. Ohne diese Angabe stand `share_hook` als Endcard im
@@ -292,8 +297,15 @@ export function buildTikTokCaption(story: TikTokStoryInput): TikTokCaption {
 
 	// Save/Comment-CTA (§3) — NICHT der IG-Send-CTA. Deterministisch nach
 	// impact_score rotiert, damit über die Zeit beide CTA-Typen laufen.
+	//
+	// Nur noch als Rückfall (2026-09-03): Zwei feste Sätze im Wechsel hiessen, dass
+	// jede zweite TikTok-Caption wortgleich endet — 44 von 57 mit „Speichern für
+	// später.". docs/STIMME.md § 9.6 verbietet genau solche rotierenden Bausteine:
+	// „Wenn ein Aufruf kommt, dann konkret zur Story." Ein von der Regie
+	// geschriebener CTA (plan.json `softCta`) gewinnt deshalb immer.
 	const seed = story.impact_score ?? 0;
-	const cta = seed % 2 === 0 ? 'Speichern für später.' : 'Was denkst du? Schreib’s in die Kommentare.';
+	const eigenerCta = (story.cta ?? '').trim();
+	const cta = eigenerCta || (seed % 2 === 0 ? 'Speichern für später.' : 'Was denkst du? Schreib’s in die Kommentare.');
 
 	// Quellenzeile (§ USP): Beleg = unser Alleinstellungsmerkmal.
 	const sourceLine = story.source_name

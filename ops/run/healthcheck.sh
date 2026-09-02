@@ -52,6 +52,30 @@ else
   fi
 fi
 
+# ── 1b. Fertige Arbeit, die auf Merge wartet ───────────────────────────────
+# Warum (Vorfall 2026-09-02): 43 von 48 Branches lagen ungemergt, der aelteste
+# sechs Wochen. Der Verbesserer-Agent kann keinen PR erstellen (`gh` ist auf dem
+# Mini nicht eingeloggt, nur SSH-Push geht), also blieb jede Nacht Arbeit liegen.
+# Weil er weder main noch seine eigenen alten Branches ansah, baute er denselben
+# Fix mehrfach: den TTS-Fehler dreimal, den Publish-Timeout dreimal, den
+# impact-Deckel fuenfmal. Vier Ideen mass der Analyst als "wirkungslos", obwohl
+# der Fix korrekt war — er lag nur auf einem Branch.
+# Ein PR merged sich ohnehin nicht von allein. Was gefehlt hat, war die Meldung.
+if git fetch -q --prune origin 2>/dev/null; then
+  WARTEND=0; AELTESTER_TAG=""; AELTESTE_TAGE=0
+  for B in $(git branch -r --format='%(refname:short)' 2>/dev/null | grep -v 'HEAD' | grep -v '^origin/main$'); do
+    git merge-base --is-ancestor "$B" origin/main 2>/dev/null && continue
+    WARTEND=$((WARTEND+1))
+    D="$(git log -1 --format=%ct "$B" 2>/dev/null || echo 0)"
+    [ "$D" = "0" ] && continue
+    TAGE=$(( ( $(date -u +%s) - D ) / 86400 ))
+    if [ "$TAGE" -gt "$AELTESTE_TAGE" ]; then AELTESTE_TAGE=$TAGE; AELTESTER_TAG="${B#origin/}"; fi
+  done
+  if [ "$WARTEND" -gt 2 ]; then
+    PROBLEME+=("$WARTEND Branch(es) warten auf Merge|Aeltester: $AELTESTER_TAG, seit $AELTESTE_TAGE Tagen. Fertige, gepushte Arbeit, die niemand integriert. Bleibt sie liegen, baut der Verbesserer denselben Fix in der naechsten Nacht erneut.|git branch -r --sort=-committerdate | head -20  —  dann pruefen und mergen oder loeschen")
+  fi
+fi
+
 for f in scripts/fetch_stories.py remotion/scripts/tts.py remotion/scripts/verify_vo.py; do
   [ -f "$f" ] || continue
   python3 -c "import ast; ast.parse(open('$f').read())" 2>/dev/null || \

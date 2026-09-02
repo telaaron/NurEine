@@ -384,8 +384,9 @@
 				zoom: 9, // Stadt + Umland: Orte sind benannt und einordbar
 				zoomControl: true,
 				scrollWheelZoom: false, // Seite soll beim Scrollen nicht in der Karte hängen bleiben
-				attributionControl: false
+				attributionControl: true // Esri-Attribution für die keyfreien Kacheln (Pflicht)
 			});
+			m.attributionControl.setPrefix(false);
 
 			// Basis ohne Ortsnamen — die Labels kommen weiter unten ÜBER die Marker.
 			addBaseTiles(m);

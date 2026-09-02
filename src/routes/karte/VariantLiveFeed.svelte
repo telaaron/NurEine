@@ -129,7 +129,10 @@
 		_init = true;
 		import('leaflet').then((L) => {
 			if (!mapContainer) return;
-			const m = L.map(el, { center: [35, 10], zoom: 2, zoomControl: true, scrollWheelZoom: true, attributionControl: false, worldCopyJump: true });
+			// Attribution AN (Esri verlangt sie für die keyfreien Canvas-Kacheln),
+			// aber ohne das „Leaflet"-Prefix und dezent gestylt (s. leaflet-shared.css).
+			const m = L.map(el, { center: [35, 10], zoom: 2, zoomControl: true, scrollWheelZoom: true, attributionControl: true, worldCopyJump: true });
+			m.attributionControl.setPrefix(false);
 			(window as any).L = L;
 			addBaseTiles(m);
 			for (const s of stories) {

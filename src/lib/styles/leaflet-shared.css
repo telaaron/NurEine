@@ -71,6 +71,18 @@
 	background: var(--color-canvas-soft) !important;
 }
 
+/* Esri-Attribution: Pflicht für die keyfreien Kacheln, aber dezent halten. */
+.leaflet-control-attribution {
+	background: var(--color-veil) !important;
+	color: var(--color-faint) !important;
+	font-size: 10px !important;
+	padding: 1px 6px !important;
+	border-radius: 4px 0 0 0 !important;
+}
+.leaflet-control-attribution a {
+	color: var(--color-muted) !important;
+}
+
 @keyframes rise-up {
 	from {
 		opacity: 0;

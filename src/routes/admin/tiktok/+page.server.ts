@@ -285,10 +285,16 @@ export const actions: Actions = {
 					// NULL` — die Story fiele sonst komplett aus der Liste und man sähe nicht
 					// mehr, was schon gepostet wurde. Stattdessen als aufgeräumt markieren;
 					// die Seite zeigt dann „Datei gelöscht" statt eines toten Download-Links.
-					await supabaseAdmin
+					// Team-Board #379: dieser Schritt blieb bisher fehlerlos, aber unsichtbar
+					// aus — 47 Master wurden gelöscht, aber KEINE Zeile trägt den "deleted:"-
+					// Marker. Fehler jetzt loggen (Muster wie delErr oben), statt sie stumm
+					// zu verschlucken.
+					const { error: markErr } = await supabaseAdmin
 						.from('nureine_stories')
 						.update({ tiktok_video_url: 'deleted:' + m[1] })
 						.eq('id', storyId);
+					if (markErr)
+						console.warn(`[tiktok] Marker für ${storyId} nicht gesetzt: ${markErr.message}`);
 				}
 			}
 		}

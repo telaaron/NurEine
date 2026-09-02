@@ -154,7 +154,7 @@ Richtung folgte. Drei Entscheidungen dabei:
 | 7 tote Python-Skripte, 1 tote TS-Datei | Aufräumen, wenn nichts Dringenderes ansteht |
 | Purge deckt nur `story_images` ab | `story_reels` und `story_audio` räumt niemand, kein Purge läuft per Cron. Unkritisch bei 260/1024 MB. **Ein Reel-Purge MUSS prüfen, ob noch ein Post darauf wartet.** |
 | Zwei Resonanz-Skalen in den Daten | 644 Zeilen auf 0–10, 325 auf 0–100. `normalizeResonance()` fängt das ab, aber eine einmalige Normalisierung wäre sauberer |
-| `gh`-Auth-Blocker #139 | Solange offen, sammelt sich der nächste Stapel an. Die Dubletten-Prüfung im Agenten begrenzt den Schaden, behebt die Ursache aber nicht |
+| ~~`gh`-Auth-Blocker #139~~ | **Behoben am 02.09.** `gh` ist auf dem Mini eingeloggt (Scopes `gist`, `read:org`, `repo`). Ende-zu-Ende geprüft: Branch gepusht, PR #13 vom Mini erstellt, geschlossen, Branch gelöscht. Board-Einträge #139, #393, #411, #433 auf `resolved` gesetzt. |
 
 **Instagram läuft wieder.** Ursache war nicht der Token, sondern Fehler
 `9007/2207027`: Der Video-Container war bei Meta noch nicht fertig, weil

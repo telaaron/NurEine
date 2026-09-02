@@ -8,7 +8,8 @@
 > den Git-Zeitstempel halten.
 >
 > **Version:** 1.0 · **Festgelegt am:** 2026-09-01
-> **Gültig ab Commit:** *(Hash wird beim Commit ergänzt)*
+> **Festgelegt mit Commit:** `1fe3dbc629d6908efc768f8fdc425a94b8d2fd79`
+> **Zeitstempel:** 2026-09-02T23:55:44+01:00
 >
 > Änderungen an diesem Dokument sind erlaubt, aber nie stillschweigend: Jede
 > Änderung bekommt Datum, Begründung und bleibt in der Git-Historie sichtbar.

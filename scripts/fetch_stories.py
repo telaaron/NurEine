@@ -1107,7 +1107,12 @@ Diese Wendungen sind der Grund, warum unsere Texte nach Maschine klingen:
 
 
 # ---------------------------------------------------------------------------
-# DeepSeek prompt — analysis + image prompt
+# Redaktions-Prompt — Analyse + Bild-Prompt.
+# WER das beantwortet, haengt vom Modus ab (siehe call_deepseek, Dispatcher):
+#   PRODUKTIV auf dem Mac Mini: --export sammelt die Prompts, die Claude-Code-
+#   Routine beantwortet sie, --import spielt sie zurueck. KEIN DeepSeek.
+#   DeepSeek ist nur der Fallback, wenn weder Import/Export noch ANTHROPIC_API_KEY
+#   gesetzt sind (belegt 2026-09-02: der Name hier war irrefuehrend).
 # ---------------------------------------------------------------------------
 ANALYSIS_PROMPT_TEMPLATE = """\
 Du bist Chef vom Dienst bei NurEine, einer Premium-Plattform für bedeutsame Good News.

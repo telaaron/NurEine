@@ -7,7 +7,7 @@
 > hätten die Indikatoren nach ihrem Ergebnis ausgesucht, kann diese Datei gegen
 > den Git-Zeitstempel halten.
 >
-> **Version:** 1.0 · **Festgelegt am:** 2026-09-01
+> **Version:** 1.2 · **Festgelegt am:** 2026-09-01
 > **Festgelegt mit Commit:** `1fe3dbc629d6908efc768f8fdc425a94b8d2fd79`
 > **Zeitstempel:** 2026-09-02T23:55:44+01:00
 >
@@ -97,7 +97,7 @@ Korbwechsel statt Weltveränderung.
 | Überleben | Kindersterblichkeit u5 (je 1.000) | WB `SH.DYN.MORT` | 1990–2024 | 93,5 (Welt 1990) | 25 | **B** SDG 3.2 |
 | Überleben | Müttersterblichkeit (je 100.000) | WB `SH.STA.MMRT` | 1985–2023 | 391 (Welt 1990) | 70 | **B** SDG 3.1 |
 | Überleben | Lebenserwartung (Jahre) | WB `SP.DYN.LE00.IN` | 1960–2024 | 50 | 85 | **C** |
-| Gesundheit | Tuberkulose-Inzidenz (je 100.000) | WB `SH.TBS.INCD` | 2000–2024 | 190 (Welt 2000) | 0 | **A** |
+| Gesundheit | Tuberkulose-Inzidenz (je 100.000) | WB `SH.TBS.INCD` | 2000–2024 | 300 | 10 | **C** |
 | Gesundheit | DTP3-Impfquote (%) | WB `SH.IMM.IDPT` | 1980–2024 | 0 | 100 | **A** |
 | Ernährung | Unterernährung (%) | WB `SN.ITK.DEFC.ZS` | 2001–2023 | 100 | 0 | **A** |
 | Ernährung | Auszehrung u5 (%) | WB `SH.STA.WAST.ZS` | 2000–2024 | 100 | 0 | **A** |
@@ -186,6 +186,7 @@ wird deshalb hier einzeln offengelegt.
 | Indikator | Anker | Begründung |
 |---|---|---|
 | Lebenserwartung | 50 → 85 | Dieselben Marken wie der HDI der UN. Nicht von uns gewählt. |
+| Tuberkulose-Inzidenz | 300 → 10 | 300 je 100.000 entspricht der Größenordnung der am stärksten betroffenen Länder; 10 je 100.000 ist die WHO-Schwelle für die Vorstufe der Elimination. **Korrigiert in v1.1** — siehe Änderungsprotokoll. |
 | Tötungsdelikte | 20 → 0 | 20 je 100.000 entspricht der Größenordnung der am stärksten betroffenen Regionen; 0 ist die logische Grenze. |
 | Militärausgaben | 10 % → 0 % | 10 % des BIP ist historisch das Niveau von Kriegswirtschaften. |
 | CO₂ absolut | 42.000 Mt → 0 | Obergrenze knapp über dem historischen Höchstwert; 0 ist Netto-Null nach dem Pariser Abkommen. |
@@ -346,8 +347,37 @@ unserer Variante darin markiert.
 
 ---
 
+## 13. Der Kipppunkt — Pflichtangabe neben jeder Veröffentlichung
+
+Der erste vollständige Lauf (2026-09-03) hat ergeben:
+
+> **Ab 23,2 % Gewicht auf Ökologie fällt der Langzeitindex, statt zu steigen.**
+> Wir gewichten jeden der neun Bereiche mit 11,1 %.
+
+Diese Angabe ist **kein Kleingedrucktes.** Sie erscheint überall dort, wo die Zahl
+erscheint — technisch erzwungen, genau wie die Regel, dass die Zahl nie ohne ihre
+neun Bereichswerte ausgeliefert wird.
+
+**Was daraus folgt für die zulässigen Aussagen:**
+
+| zulässig | unzulässig |
+|---|---|
+| „Bei Gleichgewichtung steigt die Zahl seit 2005 um 3,4 Punkte." | „Die Welt verbessert sich messbar." |
+| „Acht Bereiche steigen, Ökologie fällt um 14 Punkte." | „Der Index steigt." (ohne Zusatz) |
+| „Ab 23 % Ökologie-Gewicht kehrt sich die Richtung um." | jede Aussage, die Gewichtungsrobustheit unterstellt |
+
+Der Grund für diese Strenge: Das präregistrierte Kriterium verlangte 90 %
+Robustheit, gemessen wurden 86,5 %. Die Entscheidung, den Index trotzdem zu bauen,
+wurde bewusst getroffen (Änderungsprotokoll v1.2) — sie ist nur vertretbar, wenn
+die schwächere Aussagekraft überall mitgeliefert wird.
+
+
+---
+
 ## Änderungsprotokoll
 
 | Version | Datum | Änderung |
 |---|---|---|
+| 1.2 | 2026-09-03 | **Abbruchkriterium „Robustheitsquote ≥ 90 %" bewusst überschrieben.** Gemessen: 86,5 %. Das ist die schwerwiegendste Änderung an diesem Dokument, und sie steht hier im Wortlaut, weil sie genau die Sorte Entscheidung ist, gegen die eine Präregistrierung gebaut wird.<br><br>**Was gemessen wurde:** Ab **23,2 % Gewicht auf Ökologie** fällt der Index, statt zu steigen. Die Gleichgewichtung liegt bei 11,1 %. In 13,5 % von 10.000 Zufallsgewichtungen kehrt sich die Richtung um. Wer Ökologie gut doppelt so wichtig nimmt wie jeden anderen Bereich — eine vertretbare Position — sieht eine fallende Zahl.<br><br>**Entscheidung (Aaron, 2026-09-03):** Die Zahl bleibt. Aber sie erscheint **nie ohne den Kipppunkt** — technisch erzwungen wie die Bausteinregel.<br><br>**Was das kostet:** Die Aussage „der Index steigt" ist damit **nicht gewichtungsrobust**. Zulässig ist nur: „Bei Gleichgewichtung steigt er; ab starker Ökologie-Gewichtung fällt er."<br><br>**Was dafür spricht:** Der Kipppunkt ist die ehrlichste Zahl der Konstruktion. Er beziffert exakt, wovon die Richtung abhängt — und macht eine versteckte Annahme zur überprüfbaren Aussage. |
+| 1.1 | 2026-09-03 | **Tuberkulose-Anker korrigiert** (0-Punkt 190 → 300, 100-Punkt 0 → 10, Typ A → C). Der Nulllauf zeigte: 190 war der Weltwert von 2000 und damit ein aus den Daten abgeleiteter Anker — nach Abschnitt 6 unzulässig. Der Indikator startete dadurch künstlich bei 2 Punkten, die Domäne Gesundheit stieg um +30,8 statt realistisch. Die neuen Anker sind extern begründet und stammen nicht aus der Reihe. Änderung erfolgte VOR jeder Veröffentlichung; die Sperrklausel (Abschnitt 9) greift erst ab Veröffentlichung. |
 | 1.0 | 2026-09-01 | Erstfassung. 9 Bereiche, 25 Indikatoren, Fenster 2005–2023. Alle Codes gegen die API verifiziert. Vor dem ersten vollständigen Lauf festgelegt. |

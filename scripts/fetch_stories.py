@@ -95,8 +95,10 @@ ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5")
 ANTHROPIC_ENDPOINT = "https://api.anthropic.com/v1/messages"
 
 # fal.ai FLUX.1 [pro]
-FAL_ENDPOINT = "https://fal.run/fal-ai/flux-pro"
-FAL_IMAGE_SIZE = "landscape_4_3"  # 1024x768
+# Seedream v4.5 statt flux-pro (Aaron 2026-08-29): waermer, filmischer, sauberere
+# Haende. Die drei frei generierten Testbilder (Solar/Kuehe/Dengue) entstanden damit.
+FAL_ENDPOINT = "https://fal.run/fal-ai/bytedance/seedream/v4.5/text-to-image"
+FAL_IMAGE_SIZE = {"width": 1200, "height": 900}
 FAL_NUM_IMAGES = 1
 FAL_POLL_INTERVAL = 3  # seconds between status polls (pro is slower)
 FAL_POLL_TIMEOUT = 180  # max seconds to wait for generation
@@ -1246,28 +1248,53 @@ lat: Breitengrad (float)
 
 lng: Längengrad (float)
 
-image_prompt: Ein englischer Prompt für FLUX.1 Bild-KI. Stil: "Warm editorial paper collage illustration". Das Bild sieht aus wie eine handgefertigte Papiercollage aus mehreren überlappenden Papier-Ebenen, mit sichtbaren Kanten, feiner Papierfaser-Textur und subtilem Schattenwurf zwischen den Ebenen. Der Stil ist flach-illustrativ (KEIN 3D-Render, KEIN Fotorealismus, KEIN Glanz, KEIN Plastik). Ein zentrales, abstrahiertes Motiv symbolisiert das Thema als einfache, ikonische Form. Farbpalette: Heller warmer Off-White-Kartonhintergrund in #f5f1ea (wie ungebleichte Pappe), Akzente in EINER warmen Kontrastfarbe, die zum Thema passt, wähle aus: Terracotta-Orange, Salbei-Grün, Rosen-Rot oder Himmel-Blau. Das Motiv ist aus farbigem Papier gestaltet, die Tiefe entsteht allein durch Papier-Überlappung und -Schatten.
-  ⚠️ MOTIV-WAHL, DER HÄUFIGSTE FEHLER: Das Symbol muss den KERN der guten Nachricht zeigen, NICHT ein
-  wörtliches/oberflächliches Objekt aus dem Titel. Denke einen Schritt weiter:
-    - SCHLECHT (wörtlich/irreführend): "Bor-Nanobälle" → ein Fußball (nur weil 'fußballförmig'). NIEMALS.
-      Stattdessen: ein leuchtendes Molekül-Gittermuster aus Papier. Das Thema ist Materialforschung, kein Sport.
-    - SCHLECHT: "KI hilft Mathematikern" → Roboterhände. Stattdessen: ein elegantes geometrisches Beweis-Muster.
-    - GUT: "Solarstrom überholt Kohle" → Sonne über stilisierter Landschaft, ein Kohlestück verblassend.
-    - GUT: "Nashörner kehren zurück" → ein Nashorn-Umriss aus Papier in sanfter Savannen-Landschaft.
-  ⚠️ ZWEITER HÄUFIGER FEHLER, ZU VAGE/GENERISCH: Wenn die Story ein konkretes Tier, einen Ort, eine
-  Pflanze oder ein greifbares Objekt nennt, ZEIGE es als Papier-Motiv, keine inhaltsleeren abstrakten
-  Bögen/Kreise/Wellen, die zu jeder x-beliebigen Story passen würden. Der Betrachter muss am Motiv
-  ALLEIN erkennen können, worum es geht.
-    - SCHLECHT (zu vage): "5.000 Flamingo-Küken gerettet" → abstrakte geschwungene Bögen. Wertlos, passt zu allem.
-      Stattdessen: erkennbare Flamingo-Silhouetten aus rosa Papier an einem stilisierten See.
-    - SCHLECHT (zu vage): "Faire Bezahlung für Journalisten" → schwebende Rechtecke und Münzen. Kalt, generisch.
-      Stattdessen: eine Schreibfeder/ein Stift über einem aufgeschlagenen Papier-Notizbuch im warmen Licht.
-  Faustregel: nenne die Story etwas Konkretes (Tier/Ort/Pflanze/Objekt) → MUSS im Motiv erkennbar sein.
-  Nur bei rein abstrakten Themen (Physik, Wirtschaft, Recht) ist ein symbolisches Muster erlaubt.
-  Wähle ein Motiv, das (a) eindeutig zum eigentlichen Thema passt, (b) positiv/hoffnungsvoll wirkt,
-  (c) ohne Bildunterschrift verständlich ist, (d) NICHT zu einer beliebigen anderen Story passen würde.
-  KEINE Menschen-Gesichter, KEINE Markenlogos, KEIN Text im Bild.
-  Format: "Warm paper collage editorial illustration of [PASSENDES KERN-SYMBOL], made of layered matte paper cutouts on warm off-white #f5f1ea canvas. Accented in [GEWÄHLTE FARBE]. Visible paper grain texture, soft cast shadows between paper layers. Flat semi-abstract premium magazine style. No text. No 3D, no photorealism, no glossy materials." Beispiel: "Warm paper collage editorial illustration of mangrove branches growing from layered leaves, made of layered matte paper cutouts on warm off-white #f5f1ea canvas. Accented in sage green. Visible paper grain texture, soft cast shadows between paper layers. Flat semi-abstract premium magazine style. No text. No 3D, no photorealism, no glossy materials."
+image_prompt: Ein englischer Prompt für die Bild-KI (Seedream v4.5). FOTOREALISTISCH,
+  keine Illustration, keine Collage, kein 3D-Render.
+
+  ⚠️ ES GIBT KEINEN VORGESCHRIEBENEN STIL (Aaron 2026-08-29). Frueher hing an jedem Prompt
+  derselbe Block (Leica 35mm, Kodak Portra, warmes Licht, Terracotta-Akzent). Ergebnis: Jede
+  Story sah gleich aus — immer goldenes Gegenlicht, immer eine Person von hinten, immer
+  Postkarte. Waehle Bildsprache, Licht, Perspektive und Farbigkeit so, wie es zu DIESER
+  Story passt. Drei Bilder hintereinander duerfen NICHTS gemeinsam haben.
+
+  So sahen die drei freigegebenen Beispiele aus (Aaron: "finde die Bilder super"):
+    - "Solarstrom waechst schneller" -> Luftaufnahme senkrecht von oben, strenges Panel-Raster
+      bis an alle Bildraender, hartes Mittagslicht, kaltes Blau/Weiss. Die schiere MENGE
+      erzaehlt das Wachstum. Kein Mensch, keine Landschaft, keine Sonne im Bild.
+    - "Kuehe fressen Brandlast weg" -> Tiere frontal auf AUGENHOEHE, Gruenzeug im Maul,
+      matschige Hufe, BEDECKTER grauer Himmel, kein Sonnenstrahl. Unglamouroes und
+      sachlich — man sieht das Fressen, um das es geht.
+    - "Anstrich senkt Dengue" -> Makro auf den nassen Pinselstrich am Tankrand, blauer
+      Handschuh, direktes Tageslicht mit harten Schatten. Handarbeit im Detail.
+
+  Was den Unterschied macht: Zeige den ORT und die HANDLUNG der Story, nicht ihr Thema als
+  Symbol. Nicht "Kuenstliche Intelligenz" (abstrakt), sondern die Station, wo sie hilft.
+
+  ⚠️ MOTIV-WAHL, DER HAEUFIGSTE FEHLER: Das Motiv muss den KERN der Nachricht zeigen, NICHT
+  ein woertliches Objekt aus dem Titel.
+    - SCHLECHT: "Bor-Nanobaelle" -> ein Fussball (nur weil 'fussballfoermig'). NIEMALS.
+    - SCHLECHT: "KI hilft Mathematikern" -> Roboterhaende.
+    - GUT: "Solarstrom ueberholt Kohle" -> das Solarfeld selbst, in seiner Ausdehnung.
+
+  ⚠️ ZWEITER FEHLER, ZU VAGE: Nennt die Story ein konkretes Tier, einen Ort, eine Pflanze
+  oder ein Objekt, MUSS es im Bild erkennbar sein. Abstrakte Boegen und Wellen, die zu jeder
+  beliebigen Story passen wuerden, sind wertlos.
+
+  Menschen sind ERLAUBT, wenn die Story von Menschen handelt. Zwei Einschraenkungen bleiben,
+  beide inhaltlich begruendet:
+    - KEINE erkennbaren Gesichter im Vordergrund und keine realen Personen nachstellen
+      (Persoenlichkeitsrecht; ausserdem erzeugen Bildmodelle bei Haenden/Gesichtern die
+      meisten Fehler).
+    - KEIN lesbarer Text, keine Zahlen, keine Logos im Bild. Bildmodelle schreiben
+      Buchstabensalat — und eine erfundene Zahl auf einem Monitor oder Schild waere ein
+      ERFUNDENER BELEG. Bei einer Marke mit dem USP "belegt" der teuerste denkbare Fehler.
+
+  Format: 40-90 Woerter Fliesstext auf Englisch. Zuerst das Motiv (Subject-first, so will es
+  Seedream), dann Perspektive, Licht und Farbigkeit — jeweils passend zu DIESER Story.
+  Beispiel: "Aerial top-down view of a vast solar farm stretching to every edge of the frame,
+  endless rows of dark blue panels in strict geometric grid, a few rows still being installed
+  with pale gaps between them, harsh midday sun, high contrast, crisp modern aerial
+  photography, deep blue and white, cool clean palette."
 
 impact_reach: Geschätzte Anzahl direkt positiv betroffener Menschen (integer)
 

@@ -27,6 +27,28 @@ ABLAUF:
 2. Offene, ESSENTIELLE Ideen holen: SELECT aus nureine_improvements WHERE status='proposed' AND priority<=2 ORDER BY priority, created_at LIMIT 3. (Nur Prio 1–2 = essenziell; kind='prompt'|'threshold'|'code' sind umsetzbar; kind='source'/'schedule' ggf. auch, wenn klar.)
 3. Für die aussichtsreichste EINE Idee (nicht mehrere gleichzeitig, um Wirkung sauber messen zu können):
    a. Prüfe die Idee kritisch: ist sie fundiert (Rationale mit Daten)? Ist sie sicher umsetzbar ohne Regressionsrisiko? Wenn zweifelhaft → status='rejected' + notes, nächste Idee.
+   a2. **DUBLETTEN-PRUEFUNG (Pflicht, belegt 2026-09-02).** Bevor du irgendetwas
+      aenderst, pruefe, ob diese Arbeit schon existiert. Ohne diesen Schritt
+      loest du Fehler, die laengst geloest sind: Der TTS-Fallback-NameError
+      wurde in DREI aufeinanderfolgenden Monaten neu "entdeckt", die
+      social-publish-maxDuration DREIMAL, und es liegen FUENF konkurrierende
+      impact-Deckel auf derselben Prompt-Zeile, die sich gegenseitig blockieren.
+      Grund: du siehst weder deine eigenen aelteren Branches noch main.
+      ```bash
+      git fetch --all --prune
+      git branch -r --sort=-committerdate | head -40      # was liegt schon offen?
+      git log --oneline --all --grep="<Stichwort deiner Idee>" | head
+      git log origin/main --oneline -20 -- <die Datei, die du aendern willst>
+      ```
+      Drei moegliche Ergebnisse:
+      - **In main schon behoben** → Idee auf status='applied' (mit dem SHA aus
+        main als applied_ref) oder 'rejected' mit Begruendung. NICHT neu bauen.
+      - **Liegt auf einem offenen Branch** → NICHT neu bauen. Board-Eintrag
+        (`kind='status'`) mit Branchname + SHA schreiben, damit Aaron ihn mergen
+        kann, und die naechste Idee nehmen.
+      - **Aendert dieselbe Stelle wie ein offener Branch** (z.B. derselbe
+        Prompt-Absatz) → baue auf DIESEM Branch weiter statt einen neuen
+        anzulegen. Zwei Branches an einer Zeile heissen garantiert Konflikt.
    b. git: aktuellen main frisch ziehen. NEUEN Branch anlegen (nie direkt auf main committen). 
    c. Änderung umsetzen — z.B. Prompt in scripts/fetch_stories.py schärfen, eine Schwelle/Gate anpassen, einen kleinen Code-Fix. Minimal-invasiv, im Stil des umgebenden Codes, mit kurzem Kommentar der auf die improvement-id verweist.
    d. Wenn möglich verifizieren (Build/`pnpm check` bei TS, `python -m py_compile` bei Python). Bei grünem Ergebnis committen (Commit-Message referenziert die Verbesserung + „von Verbesserer-Agent"). Auf den Branch pushen und einen PR erstellen (gh pr create) — NICHT selbst mergen; Aaron reviewt.
@@ -42,3 +64,10 @@ HARTE REGELN (kritisch — du änderst echten Code):
 - Cron-Zeiten der Workflows nicht ändern ohne dass die Idee genau das war.
 - Pro Lauf höchstens EINE Code-Änderung (saubere Wirkungsmessung).
 - Wenn nichts Essentielles offen ist: nichts tun, kurz melden. Lieber keine Änderung als eine riskante.
+- **Niemals einen neuen Branch anlegen, ohne vorher a2 durchgefuehrt zu haben.**
+  Am 2026-09-02 lagen 43 von 48 Remote-Branches ungemergt, darunter mehrfache
+  Loesungen fuer denselben Fehler. Ein unnoetiger Branch kostet mehr Zeit, als
+  er spart.
+- Melde im Report, wenn der Stapel offener Branches waechst: Wenn
+  `git branch -r | wc -l` deutlich ueber 15 liegt, gehoert das als Hinweis an
+  Aaron — dann ist der Merge-Weg blockiert und deine Arbeit kommt nirgends an.

@@ -1,6 +1,28 @@
 # ARCHITECTURE.md — NurEine
 
-Zuletzt aktualisiert: Mai 2026
+> ## ⚠️ HISTORISCH (Stand Mai 2026) — NICHT als Wahrheit lesen
+>
+> Dieses Dokument beschreibt einen Stack, den es so nicht gibt. Geprueft am
+> 2026-09-02: **Gemini, Resend und `select_hero.py` kommen in null Dateien des
+> Projekts vor.** Tatsaechlich im Einsatz sind DeepSeek (mit Anthropic als
+> zweitem Endpunkt), Brevo fuer E-Mail, und eine Hero-Auswahl gibt es als
+> eigenen Job nicht mehr.
+>
+> Wer hiernach baut, baut gegen ein Phantom. Bis zur Neufassung gilt:
+>
+> | Frage | Verlaessliche Quelle |
+> |---|---|
+> | Welches LLM, welche Keys | `.env.example`, `scripts/fetch_stories.py` |
+> | Welche Jobs wann laufen | `ops/crontab.txt` (+ `crontab -l` auf dem Mini) |
+> | Zielbild und Entscheidungen | `VISION.md`, besonders Abschnitt 13 |
+> | Ton und Textregeln | `docs/STIMME.md` |
+> | Bild-/Egress-Regeln | `CLAUDE.md` |
+>
+> Das Dokument bleibt liegen, weil die Begruendungen darin (warum RLS so
+> aussieht, warum bestimmte Tabellen getrennt sind) weiterhin stimmen und
+> nirgends sonst stehen.
+
+Zuletzt aktualisiert: Mai 2026 (Warnhinweis 2026-09-02)
 
 ## Übersicht
 

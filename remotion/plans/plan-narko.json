@@ -1,0 +1,106 @@
+{
+  "story": {
+    "id": "7fa8f14b-84db-4580-9934-6ce45714fe17",
+    "slug": "narkolepsie-neu",
+    "category": "gesundheit",
+    "image": "story/narko.jpg",
+    "source": "Good News Network",
+    "impactScore": 78,
+    "shareHook": "Erstmals ein Mittel gegen die Ursache — nicht nur gegen die Symptome."
+  },
+  "seo": {
+    "keyword": "Narkolepsie",
+    "spokenOptional": true
+  },
+  "loop": true,
+  "softCta": "Sowas steht selten in den Nachrichten. Hier jeden Tag eins.",
+  "caption": "Narkolepsie: Manche Menschen schlafen mitten im Satz ein, weil im Gehirn ein Botenstoff fehlt. Seit August gibt es das erste Medikament, das genau diesen Botenstoff ersetzt. In einer Studie mit 273 Teilnehmenden blieben sie tagsüber wach und schliefen nachts durch.\n\nQuelle: Good News Network — von uns nachgeprüft.",
+  "hashtags": [
+    "#gutenachrichten",
+    "#narkolepsie",
+    "#gesundheit",
+    "#medizin"
+  ],
+  "tiktok": {
+    "caption": "Narkolepsie: Manche Menschen schlafen mitten im Satz ein, weil im Gehirn ein Botenstoff fehlt. Seit August gibt es das erste Medikament, das genau diesen Botenstoff ersetzt. In einer Studie mit 273 Teilnehmenden blieben sie tagsüber wach und schliefen nachts durch.\n\nQuelle: Good News Network — von uns nachgeprüft.",
+    "hashtags": [
+      "#gutenachrichten",
+      "#narkolepsie",
+      "#gesundheit",
+      "#medizin"
+    ],
+    "location": "Berlin",
+    "soundKeywords": [
+      "warm documentary",
+      "soft piano build",
+      "gentle hopeful",
+      "calm underscore"
+    ]
+  },
+  "scenes": [
+    {
+      "kind": "number",
+      "snap": true,
+      "kicker": "NUR EINE · GEPRÜFT",
+      "value": "Mitten im Satz",
+      "unit": "eingeschlafen",
+      "context": "Narkolepsie",
+      "image": "story/narko.jpg",
+      "voText": "Manche Menschen schlafen mitten im Satz ein. Nicht aus Müdigkeit, sondern weil im Gehirn etwas fehlt."
+    },
+    {
+      "kind": "hook",
+      "text": "Dagegen half bisher nichts.",
+      "punch": "nichts",
+      "kicker": "USA · ZULASSUNG",
+      "voText": "Dagegen half jahrzehntelang nur, die Symptome zu dämpfen."
+    },
+    {
+      "kind": "beat",
+      "text": "Ein Medikament ersetzt den Botenstoff.",
+      "image": "story/narko.jpg",
+      "full": true,
+      "voText": "Seit August ersetzt ein Medikament den fehlenden Botenstoff."
+    },
+    {
+      "kind": "beat",
+      "text": "273 Teilnehmende: wach am Tag, Schlaf in der Nacht.",
+      "image": null,
+      "voText": "In einer Studie blieben 273 Teilnehmende tagsüber wach und schliefen nachts durch."
+    },
+    {
+      "kind": "beat",
+      "text": "120.000 Menschen allein in den USA.",
+      "image": "story/narko.jpg",
+      "full": true,
+      "voText": "Für 120.000 Menschen allein in den USA ändert das den Alltag."
+    },
+    {
+      "kind": "proof",
+      "source": "Good News Network",
+      "impact": 78,
+      "progress": 1290,
+      "snapshot": {
+        "outlet": "Good News Network",
+        "year": "2026",
+        "title": "Erstes Medikament gegen die Ursache der Narkolepsie zugelassen",
+        "quote": "273 Teilnehmende, US-Zulassung erteilt"
+      },
+      "voText": "Zugelassen von der US-Gesundheitsbehörde. Nicht erfunden."
+    },
+    {
+      "kind": "beat",
+      "text": "Sowas steht selten in den Nachrichten.",
+      "image": "story/narko.jpg",
+      "full": true,
+      "voText": "Sowas steht selten in den Nachrichten. Hier jeden Tag eins."
+    },
+    {
+      "kind": "end",
+      "share": "Erstmals ein Mittel gegen die Ursache.",
+      "cta": "",
+      "engage": true,
+      "voText": "Die nächste gute Nachricht ist schon überprüft, nämlich:"
+    }
+  ]
+}

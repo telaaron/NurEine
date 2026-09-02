@@ -128,19 +128,31 @@ verstecken.
 
 ## Was noch offen ist
 
+**Branch-Rückstau: 43 → 0.** Alle abgearbeitet. Gemergt wurde, was fehlte;
+gelöscht, was nachweislich schon in `main` war oder einer inzwischen verworfenen
+Richtung folgte. Drei Entscheidungen dabei:
+
+- **Zombie-Watchdog:** Zwei Sessions hatten ihn gebaut (Shell und DB-Funktion).
+  Übernommen wurde nur die Admin-Ansicht, nicht die Migration. Zwei Mechanismen,
+  die dieselben Zeilen schreiben, sind schlechter als einer.
+- **`chore/storage-purge-tool` verworfen:** Das Skript löscht `story_reels`
+  komplett, ohne zu prüfen, ob noch ein Post darauf wartet. Genau das ließ am
+  24./26.08. zwei Instagram-Posts scheitern. Der Speicherdruck von damals
+  (1,2 GB) existiert nicht mehr: aktuell 260 von 1024 MB.
+- **`claude/hopeful-lovelace` verworfen:** Fordert `resonance_score` auf der
+  0–10-Skala. Das Projekt ist seither auf 0–100 gegangen, `normalizeResonance()`
+  rechnet Altdaten um, die Schwelle steht bei 70.
+
 | Thema | Warum es wartet |
 |---|---|
-| 29 ungemergte Branches | Einzeln zu sichten, mehrere berühren dieselbe Prompt-Zeile |
-| Fünf impact-Deckel | Gehören als **ein** Regelblock in einen Commit, sonst Konflikte |
 | Doppelte Migrationsnummern (00016, 00047, 00048) | Reihenfolge ist alphabetisch, DB-Neuaufbau nicht reproduzierbar |
-| Schwellenwerte zentralisieren | `src/lib/thresholds.ts` + Python-Pendant |
+| Schwellenwerte zentralisieren | `src/lib/thresholds.ts` + Python-Pendant; heute an neun Orten verstreut |
 | 7 tote Python-Skripte, 1 tote TS-Datei | Aufräumen, wenn nichts Dringenderes ansteht |
-| Instagram steht seit 29.08. | Verdacht: abgelaufener Token. Braucht Vercel-Logs |
-| `gh`-Auth-Blocker #139 | Ursache dafür, dass Agenten-Arbeit liegen bleibt |
+| Purge deckt nur `story_images` ab | `story_reels` und `story_audio` räumt niemand, kein Purge läuft per Cron. Unkritisch bei 260/1024 MB. **Ein Reel-Purge MUSS prüfen, ob noch ein Post darauf wartet.** |
+| Zwei Resonanz-Skalen in den Daten | 644 Zeilen auf 0–10, 325 auf 0–100. `normalizeResonance()` fängt das ab, aber eine einmalige Normalisierung wäre sauberer |
+| `gh`-Auth-Blocker #139 | Solange offen, sammelt sich der nächste Stapel an. Die Dubletten-Prüfung im Agenten begrenzt den Schaden, behebt die Ursache aber nicht |
 
-**Vor jedem Löschen von Branches prüfen:** `sicherung-vor-merge-2026-08-03`
-(„21 fehlende Funktionen aus Merge-Konflikt wiederherstellen") und
-`fix/restore-fetch-stories-functions-board125` belegen zusammen mit dem
-Kommentar in `healthcheck.sh` („main war 2 Wochen kaputt — 1140 Zeilen aus
-fetch_stories.py gelöscht") einen früheren Datenverlust. Diese Branches nicht
-anfassen, bevor bestätigt ist, dass alle Funktionen heute in `main` sind.
+**Instagram läuft wieder.** Ursache war nicht der Token, sondern Fehler
+`9007/2207027`: Der Video-Container war bei Meta noch nicht fertig, weil
+`waitForContainer` mit 25 Sekunden für Bilder ausgelegt war. Für Reels gelten
+jetzt 100 Sekunden. Erster Post seit dem 29.08. ist live.

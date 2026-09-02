@@ -526,13 +526,18 @@ export async function getLatestFeatured(): Promise<StoryResult | undefined> {
     .maybeSingle();
   const yesterdayHeroId = (yHero as { story_id: string } | null)?.story_id ?? null;
 
+  // Nur 'approved' zählt (improvement #41, Verbesserer-Agent 2026-07-24):
+  // 'proposed' ist ein UNREVIDIERTER Auto-Vorschlag, teils mit Wochen alter Story
+  // und Alt-Skala-Score — der ließ wiederholt (16.07., 20.07., 21.-24.07.) eine
+  // stille, nie freigegebene Perle unbemerkt als Tages-Aufmacher durchgehen. Ohne
+  // approved fällt es auf den Freshness-Fallback unten (analog zum Newsletter-Fix
+  // 13f4cf7, der denselben Fehler für selectApprovedOrBestHero behoben hat).
   const { data: heroPick } = await supabaseAdmin
     .from('nureine_curation_queue')
     .select('story_id')
     .eq('channel', 'hero')
     .eq('for_date', today)
-    .in('status', ['approved', 'proposed'])
-    .order('status', { ascending: true }) // 'approved' vor 'proposed'
+    .eq('status', 'approved')
     .limit(1)
     .maybeSingle();
   const heroId = (heroPick as { story_id: string } | null)?.story_id ?? null;

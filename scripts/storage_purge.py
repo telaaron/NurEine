@@ -38,6 +38,7 @@ KEEP_IMPACT = 75  # Perlen-Schwelle, spiegelt MILESTONE in ArchiveTrace.svelte
 KEEP_DAYS = 30  # frischer Bestand
 KEEP_TOP_PER_MONTH = 5  # spiegelt highlights() in ArchiveLogbook.svelte
 BUCKET = "story_images"
+UPLOAD_PREFIX = "story-images"  # fester Unterordner, siehe fetch_stories.py::filename
 
 # Ein Bild ist entbehrlich, wenn KEINE der Behalte-Regeln greift.
 SQL_CANDIDATES = """
@@ -77,6 +78,38 @@ def env(name: str) -> str:
     if not val:
         sys.exit(f"FEHLER: {name} fehlt. Erst `set -a; source .env; set +a`.")
     return val
+
+
+def fetch_object_sizes(base: str, key: str) -> dict[str, int]:
+    """Dateigröße je Objektname aus dem Storage-Bucket holen (paginiert), damit
+    main() die freigegebenen MB beziffern kann (Hinweis Redaktion, #storage_purge
+    Board-Eintrag 2026-08-10: Script gab bisher keine Byte-Summe aus)."""
+    headers = {"apikey": key, "Authorization": f"Bearer {key}"}
+    sizes: dict[str, int] = {}
+    offset = 0
+    limit = 1000
+    while True:
+        resp = requests.post(
+            f"{base}/storage/v1/object/list/{BUCKET}",
+            headers=headers,
+            json={
+                "limit": limit,
+                "offset": offset,
+                "prefix": UPLOAD_PREFIX,
+                "sortBy": {"column": "name", "order": "asc"},
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        batch = resp.json()
+        for obj in batch:
+            size = (obj.get("metadata") or {}).get("size")
+            if size is not None:
+                sizes[f"{UPLOAD_PREFIX}/{obj['name']}"] = int(size)
+        if len(batch) < limit:
+            break
+        offset += limit
+    return sizes
 
 
 def fetch_candidates(base: str, key: str) -> list[dict]:
@@ -172,14 +205,20 @@ def main() -> int:
     stories = fetch_candidates(base, key)
     weg = pick_deletable(stories)
 
+    def fname_of(s: dict) -> str:
+        return s["image_url"].split(f"/{BUCKET}/", 1)[-1]
+
     if args.liste:
         for s in weg:
-            print(s["image_url"].split(f"/{BUCKET}/", 1)[-1])
+            print(fname_of(s))
         return 0
+
+    sizes = fetch_object_sizes(base, key)
+    geschaetzte_mb = sum(sizes.get(fname_of(s), 0) for s in weg) / (1024 * 1024)
 
     print(f"Bilder gesamt:     {len(stories)}")
     print(f"Behalten:          {len(stories) - len(weg)}")
-    print(f"Zu löschen:        {len(weg)}")
+    print(f"Zu löschen:        {len(weg)} (~{geschaetzte_mb:.1f} MB)")
     if weg:
         hoechster = max((s.get("impact_score") or 0) for s in weg)
         print(f"Höchster Wirkungsindex darunter: {hoechster} (Grenze: {KEEP_IMPACT})")
@@ -189,12 +228,15 @@ def main() -> int:
         return 0
 
     ok = 0
+    freed_bytes = 0
     for i, s in enumerate(weg, 1):
         if delete_one(base, key, s["image_url"], s["id"]):
             ok += 1
+            freed_bytes += sizes.get(fname_of(s), 0)
         if i % 25 == 0:
             print(f"  … {i}/{len(weg)}")
-    print(f"\nFertig: {ok}/{len(weg)} gelöscht, image_url auf NULL gesetzt.")
+    print(f"\nFertig: {ok}/{len(weg)} gelöscht, image_url auf NULL gesetzt, "
+          f"{freed_bytes / (1024 * 1024):.1f} MB freigegeben.")
     return 0 if ok == len(weg) else 1
 
 

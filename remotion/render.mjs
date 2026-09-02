@@ -530,7 +530,21 @@ function synthSegment(text, slug, name) {
 		// obwohl der eigentliche Fehler ein einziges Wort war ("Merseyside").
 		const istBefund = /spricht NICHT, was geplant ist|ENGLISCHE Wörter/.test(e.message);
 		if (istBefund) throw e;
-		console.log(`VO-Segment "${name}" fehlgeschlagen (${e.message}) — Szene ohne Stimme`);
+		// Board-Hinweis #225 (2026-08-11): eine TECHNISCH fehlgeschlagene Synthese (z.B.
+		// TTS-Kontingent leer) wurde hier bisher genauso verschluckt wie ein Gate-Treffer
+		// -> das Video rendert komplett stumm durch und meldet trotzdem "OK reel"/"OK
+		// upload", als wäre nichts gewesen. Widerspricht der Doku-Zusage "ungeprüften Ton
+		// gibt es nicht mehr" (REEL_BAUKASTEN.md): ohne Synthese gibt es gar keinen Ton zu
+		// prüfen. Bricht deshalb jetzt ebenfalls hart ab; bewusst übersteuern: --allow-silent-scene.
+		if (!arg('allow-silent-scene')) {
+			throw new Error(
+				`VO-Segment "${name}" technisch fehlgeschlagen: ${e.message}\n` +
+					`  Die Szene würde ohne Ton rendern, ohne dass das im Log auffällt.\n` +
+					`  Fix: TTS-Engine/Kontingent prüfen (REEL_TTS=eleven|edge|local).\n` +
+					`  Bewusst ohne Ton rendern: --allow-silent-scene`
+			);
+		}
+		console.log(`WARN VO-Segment "${name}" fehlgeschlagen (${e.message}) — Szene ohne Stimme — bewusst erlaubt (--allow-silent-scene)`);
 		return null;
 	}
 }

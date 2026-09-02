@@ -31,6 +31,11 @@ gegen den geplanten Text geprueft (`scripts/verify_vo.py`). Abweichung = harter
 Render-Abbruch. Faellt das Gate technisch aus, bricht der Render EBENFALLS ab —
 ungeprueften Ton gibt es nicht mehr. Bewusst uebersteuern: `--allow-unverified-vo`.
 
+**Synthese-Fehler (Pflicht, seit 2026-08-11):** Schlaegt die TTS-Synthese selbst
+fehl (z.B. Kontingent leer, API-Fehler), bricht der Render ebenfalls hart ab, statt
+die Szene stumm zu rendern und trotzdem "OK reel"/"OK upload" zu melden (Board
+#225). Bewusst uebersteuern: `--allow-silent-scene`.
+
 **Belegte Sprech-Fallen** (bei der Regie schon vermeiden):
 - Nacktes Substantiv am Satzanfang kippt ins Englische → Artikel davor
   („Die Pruefer suchten…", nicht „Pruefer suchten…").

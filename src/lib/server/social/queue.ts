@@ -14,7 +14,7 @@ import { normalizeResonance } from '$lib/server/resonance';
 import { env } from '$env/dynamic/private';
 import { PUBLIC_BASE_URL } from '$env/static/public';
 import { selectInstagramStory, selectWeeklyDigestStories } from '$lib/server/queries';
-import { buildCaption, buildCaptionFromHook, hashtagsFor, pickHookType } from './caption';
+import { buildCaption, buildCaptionFromHook, hashtagsFor, pickHookType, type HookType } from './caption';
 import { slidePlanForWeekday, slideUrlsFromPlan } from './schedule';
 
 const BASE_URL = PUBLIC_BASE_URL || 'https://nureine.de';
@@ -144,7 +144,13 @@ export async function generateTodayDraft(): Promise<{
 		.eq('platform', 'instagram');
 	const hookStyle = 'image';
 
-	const hookType = pickHookType(story);
+	// Verbesserer #7: hier stand bisher pickHookType(story) — eine reine
+	// Zahl-im-Titel-Heuristik, die fast jeden Titel als 'zahl' erkannte und damit
+	// die Rotations-Historie (selectInstagramStory, Recency-Penalty) verfälschte,
+	// egal welchen Hook-Typ die Story tatsächlich trug. story.igHookType ist der
+	// von der Rotation wirklich gewählte Hook (queries.ts HOOK_STOP_POWER) —
+	// nur wenn er fehlt (kein ig_hook_type), greift die alte Heuristik als Notnagel.
+	const hookType = (story.igHookType as HookType | null) ?? pickHookType(story);
 	// Caption-Priorität: (1) KI-igCaption (eigener Blickwinkel, wiederholt Folien NICHT),
 	// (2) buildCaptionFromHook (aus Substanz), (3) regelbasiert.
 	const caption = story.igCaption

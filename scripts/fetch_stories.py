@@ -188,7 +188,6 @@ SOURCE_CONFIG: dict[str, dict[str, int]] = {
     "Anthropocene Magazine":  {"max_per_run": 6,  "priority": 2},
     "Yale Environment 360":   {"max_per_run": 6,  "priority": 2},
     "Grist":                  {"max_per_run": 6,  "priority": 2},
-    "Spektrum Wissenschaft":  {"max_per_run": 6,  "priority": 2},
     "Perspective Daily":      {"max_per_run": 5,  "priority": 2},
     "Our World in Data":      {"max_per_run": 4,  "priority": 2},
     "ScienceDaily":           {"max_per_run": 5,  "priority": 3},
@@ -207,6 +206,12 @@ SOURCE_CONFIG: dict[str, dict[str, int]] = {
     # heruntergestuft (wird nach den relevanten Quellen verarbeitet) + Durchsatz 5→3,
     # ohne die Quelle abzuschalten (die seltene echte Perle kommt weiter durch).
     "ScienceDaily Tech":      {"max_per_run": 3,  "priority": 3},
+    # improvement #17 (Verbesserer-Agent): Spektrum Wissenschaft war P2/6, lieferte
+    # in der 7-Tage-Sub-55-Analyse aber 17 Sub-55-Stories bei Ø impact 38.4 (min 28)
+    # — Rang 2 hinter ScienceDaily Tech (#12), reine Wissenschafts-Kuriosität ohne
+    # menschliche Resonanz (IG-Kategorie wissenschaft: 0 Likes/0 Kommentare). Gleiches
+    # Muster, gleicher Fix: auf P3 herunterstufen + Durchsatz 6→3, Quelle bleibt aktiv.
+    "Spektrum Wissenschaft":  {"max_per_run": 3,  "priority": 3},
     "The Conversation":       {"max_per_run": 6,  "priority": 2},
     "Medical Xpress":         {"max_per_run": 6,  "priority": 3},
     "STAT News":              {"max_per_run": 5,  "priority": 3},
@@ -798,6 +803,35 @@ def upload_audio_to_storage(audio_bytes: bytes, filename: str) -> str | None:
     return public_url
 
 
+def generate_audio_via_edge_function(text: str, story_id: Any) -> str | None:
+    """Fallback-TTS via die Supabase Edge Function 'generate-audio' (OpenAI gpt-4o-mini-tts).
+
+    Wird nur aufgerufen, wenn ElevenLabs nicht verfügbar ist (Board-Blocker
+    2026-07-23: Funktion fehlte komplett, NameError beim Fallback).
+    """
+    url = f"{SUPABASE_URL}/functions/v1/generate-audio"
+    headers = {
+        "apikey": SUPABASE_SERVICE_KEY,  # type: ignore[arg-type]
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": "application/json",
+    }
+    try:
+        resp = requests.post(
+            url,
+            headers=headers,
+            json={"text": text, "slug": str(story_id)},
+            timeout=60,
+        )
+        resp.raise_for_status()
+        audio_url = resp.json().get("audio_url")
+        if audio_url:
+            log.info("  Audio via Edge Function generiert: %s", audio_url)
+        return audio_url
+    except (requests.RequestException, ValueError) as exc:
+        log.error("  Edge-Function-TTS-Fallback fehlgeschlagen: %s", exc)
+        return None
+
+
 def source_exists(source_url: str) -> bool:
     """Return True if a story with this source_url already exists in Supabase."""
     params = {"source_url": f"eq.{source_url}", "select": "id", "limit": "1"}
@@ -1320,6 +1354,22 @@ impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
     „Sex beschleunigte die Evolution", „Ältester Baum entdeckt", faszinierend fürs Archiv, aber KEINE
     Wirkung auf das Leben von heute. NIEMALS 90+ nur weil peer-reviewed und das Thema groß ist.
   • 1-24: Minimaler Impact, Grenzfall der gerade noch reinkommt.
+
+  ⚠️ AUSSICHT IST NICHT WIRKUNG (harte Obergrenze, Verbesserung #37): Reine Labor-/Zellkultur-/
+  Tiermodell-Ergebnisse OHNE Nachweis am Menschen/in der Praxis, sowie bloß ANGEKÜNDIGTE/GEPLANTE
+  Maßnahmen (noch nicht in Betrieb) sind eine AUSSICHT, keine belegte Wirkung — impact_score MAX 55,
+  egal wie vielversprechend das Ergebnis klingt oder wie groß die potenzielle Zielgruppe ist.
+  Beispiele: ein Wirkstoff nur „im Labor" oder „an Mäusen" getestet; eine neue Zuglinie, die erst
+  „ab 2027 fahren soll". Über 55 geht der Score erst, wenn der Nutzen tatsächlich an Menschen/in
+  der realen Praxis nachgewiesen ist.
+
+  ⚠️ WETTER IST KEINE DAUERHAFTE WIRKUNG (Verbesserung #43): Beruht eine positive Entwicklung
+  überwiegend auf einem Wetterereignis (El Niño/La Niña, ungewöhnlich starker Regen, Dürre-Ende
+  durch Regen) statt auf einer politischen/technischen/menschlichen Maßnahme, ist der Effekt NICHT
+  dauerhaft — er kehrt sich beim nächsten Wetterumschwung um. impact_score MAX 52, auch wenn die
+  Zahl selbst beeindruckend klingt (weniger Waldbrände, mehr Regen). Beispiele: „Amazonas-Waldbrände
+  stark zurückgegangen" (Ursache laut Artikel: La Niña) → max 52; „Mexikos Dürre endet durch starken
+  Regen" → max 52. impact_durability muss diese Vergänglichkeit ehrlich niedrig widerspiegeln.
 
   Merksatz: Frag „Wird das Leben von irgendwem morgen messbar besser?" Wenn nein → max 44, egal wie gut belegt.
   impact_reach/durability/evidence fülle separat ehrlich aus, aber der impact_score folgt dem Wirkungs-Maßstab

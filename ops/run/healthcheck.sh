@@ -163,6 +163,35 @@ for a in fetch chefredakteur reel-regie; do
   [ "$ALTER" -gt 2 ] && PROBLEME+=("Routine '$a' lief seit $ALTER Tagen nicht|Letzter Start: $LETZTER|crontab -l | grep $a  —  und $L pruefen")
 done
 
+# ── 5. Zombie-Laeufe (nureine_ai_runs haengt in status=running) ────────────
+# Wiederholt beobachtet (zuletzt 03.08., Team-Board #146 + Idee #50): ein
+# Cloud-Agent bleibt ohne finished_at haengen, die Kette merkt es nicht.
+# >90 Min running -> als 'failed' schliessen, damit Kollegen es sehen.
+ZOMBIES="$(python3 - <<'PY' 2>/dev/null
+import json, os, urllib.request, urllib.parse, datetime
+U = os.environ["SUPABASE_URL"].rstrip("/"); K = os.environ["SUPABASE_SERVICE_KEY"]
+CUTOFF = (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(minutes=90)).isoformat()
+def req(method, path, body=None):
+    data = json.dumps(body).encode() if body is not None else None
+    r = urllib.request.Request(U + path, data=data, method=method,
+        headers={"apikey": K, "Authorization": "Bearer " + K, "Content-Type": "application/json"})
+    raw = urllib.request.urlopen(r, timeout=30).read()
+    return json.loads(raw) if raw else None  # PATCH antwortet mit 204 + leerem Body
+q = "/rest/v1/nureine_ai_runs?select=id,agent,started_at&status=eq.running&started_at=lt." + urllib.parse.quote(CUTOFF)
+stale = req("GET", q)
+for row in stale:
+    req("PATCH", f"/rest/v1/nureine_ai_runs?id=eq.{row['id']}", {
+        "status": "failed",
+        "finished_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "error": "watchdog: >90 Min ohne finished_at (healthcheck.sh)",
+    })
+print(json.dumps([f"{r['agent']}#{r['id']} seit {r['started_at']}" for r in stale]))
+PY
+)"
+if [ -n "$ZOMBIES" ] && [ "$ZOMBIES" != "[]" ]; then
+  PROBLEME+=("Zombie-Lauf/-Laeufe beendet (>90 Min running)|$ZOMBIES|nureine_ai_runs war fuer die Kette unsichtbar haengen geblieben, status steht jetzt auf 'failed'")
+fi
+
 # ── Ergebnis ───────────────────────────────────────────────────────────────
 if [ ${#PROBLEME[@]} -eq 0 ] && [ "${1:-}" != "--test" ]; then
   echo "[$STAMP] OK — keine Probleme" >>"$LOG"

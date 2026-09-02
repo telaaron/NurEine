@@ -20,6 +20,34 @@ VISION.md ist das Gedächtnis über alle parallelen Sessions hinweg.
 
 Im Admin sichtbar und bearbeitbar unter `/admin/vision`.
 
+## PARALLELE SESSIONS — eigener Arbeitsplatz, nie im Hauptordner
+
+Aaron arbeitet mit mehreren Claude-Code-Sessions gleichzeitig. Ein Git-Ordner
+kann aber nur EINEN Branch ausgecheckt haben: Ein `git checkout` in Session A
+reißt Session B den Boden weg. Genau daher kommen die Einträge in
+`git stash list` mit Namen wie „fremd-", „pre-switch", „geparkt".
+
+**Regel: Wechsle nie den Branch im Hauptordner.** Leg dir stattdessen einen
+eigenen Arbeitsplatz an (Git-Worktree — mehrere Verzeichnisse, ein Repository,
+jedes auf seinem Branch, wie bei einer Firma mit einem Checkout pro Dev):
+
+```bash
+ops/wt new <thema>     # Arbeitsplatz + Branch ab origin/main, .env + pnpm install inklusive
+ops/wt list            # alle Arbeitsplätze + Branches mit ungemergter Arbeit
+ops/wt sync            # wer hängt wie weit hinter main
+ops/wt done <thema>    # aufräumen (verweigert, wenn Arbeit ungesichert ist)
+```
+
+Der Hauptordner bleibt auf `main` und dient zum Lesen, Mergen und Deployen.
+
+**Wenn du in einem fremden Zustand landest** (Branch ist nicht `main`, fremde
+uncommittete Dateien): nichts wegräumen, nicht stashen, nicht auschecken.
+Das ist die Arbeit einer anderen Session. Sag es Aaron und arbeite in deinem
+eigenen Arbeitsplatz weiter.
+
+Beim Committen nur die **eigenen** Dateien stagen (`git add <pfad>`), nie
+`git add -A` — sonst wandert fremde Arbeit in deinen Commit.
+
 ## Wichtigste Regel
 Bevor du Code schreibst: Lies `VISION.md` (Zielbild) und `docs/STIMME.md`
 (Ton, falls du Text anfasst).

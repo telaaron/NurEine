@@ -1,0 +1,150 @@
+#!/usr/bin/env bash
+# ops/wt — ein Arbeitsplatz pro Claude-Session.
+#
+# DAS PROBLEM, das dieses Skript loest:
+# Ein Git-Verzeichnis kann immer nur EINEN Branch ausgecheckt haben. Wenn fuenf
+# Claude-Sessions im selben Ordner arbeiten, sehen alle denselben Branch — und
+# ein `git checkout` in Session A reisst Session B den Boden weg. Die Spuren
+# davon stehen in `git stash list`: "fremd-", "pre-switch", "geparkt".
+#
+# DIE LOESUNG: git worktree. Mehrere Arbeitsverzeichnisse, EIN Repository,
+# jedes auf seinem eigenen Branch — wie bei einer Firma, in der jeder Dev
+# seinen eigenen Checkout hat. Kein Wechsel stoert mehr jemanden.
+#
+#   ops/wt new <name>    neuen Arbeitsplatz + Branch anlegen
+#   ops/wt list          alle Arbeitsplaetze zeigen
+#   ops/wt done <name>   Arbeitsplatz aufraeumen (nur wenn alles gemergt/gepusht)
+#   ops/wt sync          alle Arbeitsplaetze auf den neuesten main-Stand ziehen
+#
+set -euo pipefail
+
+# Repo-Wurzel finden, egal aus welchem Worktree heraus aufgerufen.
+HAUPT="$(git rev-parse --path-format=absolute --git-common-dir)"
+HAUPT="$(cd "$(dirname "$HAUPT")" && pwd)"
+WT_ROOT="$HAUPT/.worktrees"
+
+farbe() { printf '\033[%sm%s\033[0m\n' "$1" "$2"; }
+info()  { farbe '36' "$1"; }
+ok()    { farbe '32' "$1"; }
+warn()  { farbe '33' "$1"; }
+fehler(){ farbe '31' "$1" >&2; }
+
+cmd_new() {
+  local name="${1:-}"
+  [ -n "$name" ] || { fehler "Name fehlt.  ops/wt new <name>"; exit 1; }
+  # Branch-Namen entschaerfen: Leerzeichen/Sonderzeichen raus.
+  local slug branch pfad
+  slug="$(echo "$name" | tr '[:upper:] ' '[:lower:]-' | tr -cd 'a-z0-9._/-')"
+  branch="$slug"
+  pfad="$WT_ROOT/$(basename "$slug")"
+
+  if [ -e "$pfad" ]; then
+    warn "Arbeitsplatz existiert schon: $pfad"
+    echo "$pfad"
+    return 0
+  fi
+
+  info "Hole neuesten Stand von origin/main …"
+  git -C "$HAUPT" fetch origin main --quiet
+
+  mkdir -p "$WT_ROOT"
+  if git -C "$HAUPT" show-ref --verify --quiet "refs/heads/$branch"; then
+    info "Branch '$branch' existiert — wird ausgecheckt."
+    git -C "$HAUPT" worktree add "$pfad" "$branch" --quiet
+  else
+    info "Neuer Branch '$branch' ab origin/main."
+    git -C "$HAUPT" worktree add -b "$branch" "$pfad" origin/main --quiet
+  fi
+
+  # .env mitnehmen: liegt in .gitignore, fehlt im Worktree sonst komplett.
+  # Symlink statt Kopie — ein rotierter Key gilt sofort ueberall.
+  if [ -f "$HAUPT/.env" ] && [ ! -e "$pfad/.env" ]; then
+    ln -s "$HAUPT/.env" "$pfad/.env"
+    info ".env verlinkt"
+  fi
+
+  # node_modules: eigene Installation pro Worktree. pnpm arbeitet mit einem
+  # globalen Store, die Platte kostet das also kaum (harte Links).
+  if [ -f "$pfad/package.json" ]; then
+    info "pnpm install … (einmalig pro Arbeitsplatz)"
+    (cd "$pfad" && pnpm install --silent) || warn "pnpm install schlug fehl — im Worktree manuell nachholen."
+  fi
+
+  ok "Fertig. Arbeitsplatz: $pfad   (Branch: $branch)"
+  echo
+  echo "Claude Code dort starten:"
+  echo "  cd \"$pfad\" && claude"
+}
+
+cmd_list() {
+  info "Arbeitsplätze:"
+  git -C "$HAUPT" worktree list
+  echo
+  info "Ungemergte Branches (Arbeit, die noch nirgends gelandet ist):"
+  local leer=1
+  while read -r b; do
+    [ -n "$b" ] || continue
+    local n; n="$(git -C "$HAUPT" rev-list --count "origin/main..$b" 2>/dev/null || echo 0)"
+    [ "$n" -gt 0 ] && { printf '  %-52s %s Commits\n' "$b" "$n"; leer=0; }
+  done < <(git -C "$HAUPT" for-each-ref --format='%(refname:short)' refs/heads/)
+  [ "$leer" = 1 ] && echo "  (keine)"
+}
+
+cmd_done() {
+  local name="${1:-}"
+  [ -n "$name" ] || { fehler "Name fehlt.  ops/wt done <name>"; exit 1; }
+  local pfad="$WT_ROOT/$(basename "$name")"
+  [ -d "$pfad" ] || { fehler "Kein Arbeitsplatz unter $pfad"; exit 1; }
+
+  local branch; branch="$(git -C "$pfad" rev-parse --abbrev-ref HEAD)"
+
+  # Nichts wegwerfen, was noch nicht gesichert ist.
+  if [ -n "$(git -C "$pfad" status --porcelain)" ]; then
+    fehler "Arbeitsplatz hat uncommittete Änderungen — nicht aufgeräumt."
+    git -C "$pfad" status --short | head -10
+    exit 1
+  fi
+  git -C "$HAUPT" fetch origin main --quiet
+  local offen; offen="$(git -C "$HAUPT" rev-list --count "origin/main..$branch" 2>/dev/null || echo 0)"
+  if [ "$offen" -gt 0 ]; then
+    fehler "Branch '$branch' hat $offen Commits, die nicht in origin/main sind — nicht aufgeräumt."
+    echo "  Erst mergen oder pushen, dann erneut versuchen."
+    exit 1
+  fi
+
+  git -C "$HAUPT" worktree remove "$pfad"
+  git -C "$HAUPT" branch -d "$branch" 2>/dev/null || true
+  ok "Aufgeräumt: $branch"
+}
+
+cmd_sync() {
+  git -C "$HAUPT" fetch origin main --quiet
+  info "origin/main: $(git -C "$HAUPT" rev-parse --short origin/main)"
+  while read -r pfad; do
+    [ -d "$pfad" ] || continue
+    local branch; branch="$(git -C "$pfad" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
+    local hinter; hinter="$(git -C "$pfad" rev-list --count "HEAD..origin/main" 2>/dev/null || echo '?')"
+    local schmutzig=""
+    [ -n "$(git -C "$pfad" status --porcelain 2>/dev/null)" ] && schmutzig=" (uncommittete Änderungen)"
+    printf '  %-40s %-12s %s Commits hinter main%s\n' "$(basename "$pfad")" "$branch" "$hinter" "$schmutzig"
+    # `cut -d' ' -f2-` statt `awk '{print $2}'`: Aarons Repo-Pfad enthaelt
+    # Leerzeichen ("SSD 500G", "Dateien - Local"). awk schnitte am ersten ab.
+  done < <(git -C "$HAUPT" worktree list --porcelain | grep '^worktree ' | cut -d' ' -f2-)
+  echo
+  info "Rebasen macht jede Session selbst:  git rebase origin/main"
+}
+
+case "${1:-}" in
+  new)  shift; cmd_new "$@" ;;
+  list) cmd_list ;;
+  done) shift; cmd_done "$@" ;;
+  sync) cmd_sync ;;
+  *)
+    echo "ops/wt — ein Arbeitsplatz pro Claude-Session"
+    echo
+    echo "  ops/wt new <name>    neuen Arbeitsplatz + Branch anlegen"
+    echo "  ops/wt list          alle Arbeitsplätze + ungemergte Branches"
+    echo "  ops/wt done <name>   aufräumen (nur wenn alles gesichert ist)"
+    echo "  ops/wt sync          Überblick: wer hängt wie weit hinter main"
+    ;;
+esac

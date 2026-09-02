@@ -63,3 +63,6 @@ ios-native/**/DerivedData/
 # ...aber README + Ordner-Gerüst gehören ins Repo (sonst kennt kein Agent das Schema)
 !.agent-spool/README.md
 !.agent-spool/.gitkeep
+
+# Worktrees (ein Arbeitsplatz pro Claude-Session, siehe ops/wt)
+.worktrees/

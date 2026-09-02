@@ -4,6 +4,49 @@
 Du arbeitest an **NurEine**, einer autonomen Good-News-Plattform.
 Teltow, Brandenburg. Gegründet 2026.
 
+## ERSTER SCHRITT JEDER SESSION — eigenen Arbeitsplatz anlegen
+
+**Bevor du irgendetwas änderst, führe das aus:**
+
+```bash
+ops/wt new <thema>
+```
+
+Das legt einen eigenen Ordner mit eigenem Branch ab `origin/main` an (`.env`
+verlinkt, `pnpm install` erledigt) und nennt dir am Ende den Pfad. Dort
+arbeitest du — nicht im Hauptordner.
+
+**Warum das Pflicht ist:** Aaron fährt mehrere Claude-Code-Sessions parallel.
+Ein Git-Ordner kann aber nur EINEN Branch ausgecheckt haben — ein
+`git checkout` in Session A reißt Session B den Boden weg. Genau daher stammen
+die Einträge in `git stash list` mit Namen wie „fremd-", „pre-switch",
+„geparkt". Am 2026-09-03 passierte es zweimal in einer Stunde: ein Commit
+landete auf einem fremden Feature-Branch, eine `.gitignore`-Änderung wurde
+mitten im Vorgang überschrieben.
+
+Die weiteren Befehle:
+
+```bash
+ops/wt list            # alle Arbeitsplätze + Branches mit ungemergter Arbeit
+ops/wt sync            # wer hängt wie weit hinter main
+ops/wt done <thema>    # aufräumen (verweigert, wenn Arbeit ungesichert ist)
+```
+
+**Ausnahmen** — im Hauptordner darfst du bleiben, wenn du nur liest (Fragen
+beantworten, Code erklären, `git log` ansehen) oder wenn Aaron ausdrücklich
+etwas auf `main` will (mergen, deployen, eine Zeile Hotfix).
+
+**Harte Regeln beim Arbeiten:**
+
+- **Nie den Branch im Hauptordner wechseln.** Der bleibt auf `main`.
+- **Nur eigene Dateien stagen:** `git add <pfad>`, nie `git add -A` — sonst
+  wandert fremde Arbeit in deinen Commit. (Ist am 2026-09-03 passiert.)
+- **Fremde uncommittete Arbeit in Ruhe lassen.** Nicht stashen, nicht
+  auschecken, nicht wegräumen. Aaron Bescheid sagen und im eigenen
+  Arbeitsplatz weitermachen.
+- **Am Ende pushen**, damit die Arbeit nicht auf einem lokalen Branch
+  versandet.
+
 ## PFLICHTLEKTÜRE — VISION.md
 **Lies `VISION.md`, BEVOR du irgendetwas tust.** Es ist die einzige verbindliche
 Quelle für Zielbild, Produktausrichtung und interne Roadmap. Bei Widerspruch zu
@@ -20,33 +63,25 @@ VISION.md ist das Gedächtnis über alle parallelen Sessions hinweg.
 
 Im Admin sichtbar und bearbeitbar unter `/admin/vision`.
 
-## PARALLELE SESSIONS — eigener Arbeitsplatz, nie im Hauptordner
 
-Aaron arbeitet mit mehreren Claude-Code-Sessions gleichzeitig. Ein Git-Ordner
-kann aber nur EINEN Branch ausgecheckt haben: Ein `git checkout` in Session A
-reißt Session B den Boden weg. Genau daher kommen die Einträge in
-`git stash list` mit Namen wie „fremd-", „pre-switch", „geparkt".
+## Offene Migrationen (Stand 2026-09-03)
 
-**Regel: Wechsle nie den Branch im Hauptordner.** Leg dir stattdessen einen
-eigenen Arbeitsplatz an (Git-Worktree — mehrere Verzeichnisse, ein Repository,
-jedes auf seinem Branch, wie bei einer Firma mit einem Checkout pro Dev):
+Zwei Migrationen liegen im Repo, sind aber **noch nicht in Supabase
+eingespielt**. Bis dahin laufen die zugehoerigen Funktionen im Fallback:
+
+| Datei | Was fehlt ohne sie |
+|---|---|
+| `00051_vision_document.sql` | `/admin/vision` kann live nicht lesen/schreiben (faellt auf die Datei zurueck, die auf Vercel nicht existiert) |
+| `00052_ai_runs_zombie_watchdog.sql` | nur die Datei fehlt — die DB-Funktion `nureine_ai_runs_reap_stale` ist bereits live |
+
+Einspielen kann das nur Aaron (Supabase SQL Editor). Danach einmalig:
 
 ```bash
-ops/wt new <thema>     # Arbeitsplatz + Branch ab origin/main, .env + pnpm install inklusive
-ops/wt list            # alle Arbeitsplätze + Branches mit ungemergter Arbeit
-ops/wt sync            # wer hängt wie weit hinter main
-ops/wt done <thema>    # aufräumen (verweigert, wenn Arbeit ungesichert ist)
+python3 scripts/vision_sync.py push   # VISION.md in die Datenbank laden
 ```
 
-Der Hauptordner bleibt auf `main` und dient zum Lesen, Mergen und Deployen.
-
-**Wenn du in einem fremden Zustand landest** (Branch ist nicht `main`, fremde
-uncommittete Dateien): nichts wegräumen, nicht stashen, nicht auschecken.
-Das ist die Arbeit einer anderen Session. Sag es Aaron und arbeite in deinem
-eigenen Arbeitsplatz weiter.
-
-Beim Committen nur die **eigenen** Dateien stagen (`git add <pfad>`), nie
-`git add -A` — sonst wandert fremde Arbeit in deinen Commit.
+Erst wenn `scripts/vision_sync.py status` beide Seiten meldet, ist der Umzug
+fertig. Kein Workaround-Code dafuer bauen — die Migration ist der Weg.
 
 ## Wichtigste Regel
 Bevor du Code schreibst: Lies `VISION.md` (Zielbild) und `docs/STIMME.md`

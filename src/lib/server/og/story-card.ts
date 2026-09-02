@@ -182,11 +182,24 @@ function ctaBlock(bg = AMBER, subColor = 'rgba(255,255,255,0.96)'): string {
 
 function headlineSize(title: string): number {
 	const n = title.length;
-	if (n <= 28) return 104;
-	if (n <= 45) return 90;
-	if (n <= 70) return 76;
-	if (n <= 95) return 62;
-	return 52;
+	let size = 104;
+	if (n > 28) size = 90;
+	if (n > 45) size = 76;
+	if (n > 70) size = 62;
+	if (n > 95) size = 52;
+
+	// Die Gesamtlaenge allein reicht NICHT: Ein einzelnes langes Wort kann nicht
+	// umbrechen und laeuft rechts aus dem Bild. Belegt 2026-09-02 (IG-Story):
+	// "…Bauchspeicheldruesenkrebs" — 62 Zeichen ergaben 76px, das Wort allein
+	// brauchte dabei ~1003px bei 930px Inhaltsbreite.
+	// Darum zusaetzlich das LAENGSTE Wort gegen die Breite pruefen.
+	const longest = title.split(/\s+/).reduce((a, w) => (w.length > a.length ? w : a), '');
+	if (longest) {
+		// Space Grotesk 700 laeuft bei ~0.55em je Zeichen (an den Renderings gemessen).
+		const passt = Math.floor(CONTENT_W / (longest.length * 0.55));
+		size = Math.min(size, passt);
+	}
+	return Math.max(size, 40); // unter 40px wird es unleserlich — dann lieber knapp
 }
 
 // Riesige Zahl als Hook. Label (z.B. "WIRKUNG") steht ÜBER der Zahl → klare
@@ -229,9 +242,22 @@ function clampDek(dek: string, maxWords = DEK_MAX_WORDS): string {
 	}
 	if (acc) return acc.trim(); // ≥1 vollständiger Satz passt → sauberer Abschluss
 
-	// Kein ganzer Satz passt: an Wortgrenze schneiden, hängende Satzzeichen weg,
-	// KEIN „…". Ein Doppelpunkt/Komma am Ende wird entfernt, damit es ruhig endet.
-	return words.slice(0, maxWords).join(' ').replace(/[,;:–-]+$/, '').trim();
+	// Kein ganzer Satz passt ins Budget. Frueher wurde hier hart an der Wortgrenze
+	// geschnitten — das ergab Fragmente wie "…offiziell für" (belegt 2026-09-02,
+	// IG-Story Uganda/Ebola: 18 Woerter, Budget 16, Satz brach mitten ab).
+	//
+	// Besser: am letzten TEILSATZ enden. Deutsche Saetze haben ihre Nebensatz-
+	// grenzen an Kommas; dort zu schneiden ergibt eine lesbare Aussage statt eines
+	// Fragments ("42 Tage ohne neuen Fall" statt "...offiziell für").
+	const budget = words.slice(0, maxWords).join(' ');
+	const teil = budget.lastIndexOf(',');
+	// Nur nutzen, wenn dabei noch mindestens die Haelfte des Budgets stehen bleibt —
+	// sonst wird die Aussage zu duenn und wir behalten lieber die Wortgrenze.
+	if (teil > 0) {
+		const kurz = budget.slice(0, teil).trim();
+		if (kurz.split(/\s+/).length >= Math.ceil(maxWords / 2)) return kurz;
+	}
+	return budget.replace(/[,;:–-]+$/, '').trim();
 }
 // KEIN line-clamp mehr — das war die Quelle der „…". Stattdessen begrenzt
 // clampDek() die Wortzahl vorab auf einen vollständigen Satz/Wortgrenze, sodass

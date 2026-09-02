@@ -1,16 +1,16 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-09-02T04:30:01Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-09-02T11:30:01Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 7 weeks, 15 hours, 14 minutes |
+| Läuft seit | up 7 weeks, 22 hours, 14 minutes |
 | Speicherplatz | 841G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
-| Auslastung | load average: 0,01, 0,02, 0,00 |
+| Auslastung | load average: 0,00, 0,02, 0,00 |
 | Tailscale-Adresse | `100.123.159.38` |
 | Claude Code | 2.1.209 (Claude Code) |
 | cron-Dienst | active (17 Jobs) |
@@ -20,10 +20,10 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `0f2bb66 chore(state): Zustandsbericht mac-mini-server 2026-09-01T19:30:01Z` |
-| vom | 2026-09-01 21:30:57 +0200 |
+| Aktueller Commit | `6d5fa81 chore(state): Zustandsbericht mac-mini-server 2026-09-02T04:30:01Z` |
+| vom | 2026-09-02 06:30:54 +0200 |
 | Hinter origin/main | 8 Commits |
-| Vor origin/main | 10 Commits |
+| Vor origin/main | 11 Commits |
 | Uncommittete Dateien | 1 |
 | Branches nur lokal (ungesichert) | 0 |
 | Letzter Pull | kein Pull — uncommittete Änderungen im Arbeitsbaum |
@@ -36,8 +36,8 @@
 | chefredakteur | 20260902T012325Z | ✅ exit=0 |
 | redaktion | 20260902T012537Z | ✅ exit=0 |
 | analyst | 20260902T013451Z | ✅ exit=0 |
-| reel-regie | 20260901T060001Z | ✅ exit=0 |
-| verbesserer | 20260901T081701Z | ✅ exit=0 |
+| reel-regie | 20260902T060001Z | ✅ exit=0 |
+| verbesserer | 20260902T081701Z | ✅ exit=0 |
 
 
 ## Fernwartung

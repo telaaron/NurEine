@@ -46,16 +46,20 @@ rausgeht.
 Neu: Alarm bei Instagram > 2 Tage ohne Post, TikTok > 4 Tage, mehr als 3
 gestapelte Entwürfe.
 
-### 2. Der Wächter konnte nicht einmal starten
+### 2. Der Wächter hing an einem hartkodierten Pfad
 
 `healthcheck.sh` und `reel-watchdog.sh` hatten `ROOT="/home/aaron/NurEine"`
 hartkodiert, während `agent.sh`, `trigger.sh`, `pyjob.sh` und `selfupdate.sh`
-den Pfad aus `BASH_SOURCE` ableiten. Stimmt der Pfad nicht, bricht
-`cd "$ROOT" || exit 1` ab, **bevor** eine Prüfung läuft — und weil der Abbruch
-vor dem Mail-Block liegt, kommt keine Mail.
+den Pfad aus `BASH_SOURCE` ableiten.
 
-In einem Werkzeug, dessen Konzept „Stille heißt alles gut" ist, sieht der
-eigene Ausfall exakt wie ein gesundes System aus.
+**Korrektur zur ersten Fassung dieses Dokuments:** Ich hatte hier geschrieben,
+der Healthcheck laufe deshalb überhaupt nicht. Das war falsch. Auf dem Mini
+*ist* `/home/aaron/NurEine` der richtige Pfad, und das Log
+(`~/nureine-logs/healthcheck.log`) belegt Läufe über Wochen. Der Fix bleibt
+richtig, aber als Vorsorge: Auf jeder anderen Maschine bräche `cd "$ROOT" ||
+exit 1` ab, **bevor** eine Prüfung läuft, und weil der Abbruch vor dem
+Mail-Block liegt, käme keine Mail. In einem Werkzeug, dessen Konzept „Stille
+heißt alles gut" ist, sähe der eigene Ausfall wie ein gesundes System aus.
 
 ### 3. Threads postete ins Leere
 

@@ -1,5 +1,5 @@
 {
-  "spec_version": "1.1",
+  "spec_version": "1.2",
   "fenster": [
     2005,
     2023
@@ -18,9 +18,5 @@
     "max": 6.880755648475223
   },
   "kernreihe_start": 48.91137883766835,
-  "kernreihe_ende": 52.665658729298855,
-  "kipppunkt_oekologie": 0.232,
-  "gleichgewicht": 0.1111111111111111,
-  "robustheit_ueberschrieben": true,
-  "pflicht_hinweis": "Ab 23 % Gewicht auf Ökologie fällt diese Zahl. Wir gewichten jeden der neun Bereiche mit 11 %."
+  "kernreihe_ende": 52.665658729298855
 }

@@ -91,7 +91,7 @@
                 '/roadmap':
                         'Was bei NurEine neu ist, woran wir arbeiten und was geplant ist — transparent. Gib Feedback und gestalte mit.',
                 '/stand-der-welt':
-                        'Auf den Metriken, die wirklich zählen, bewegt sich die Welt in die richtige Richtung. Kuratierte Langzeit-Daten — und ehrlich, was wir nicht zeigen.',
+                        'Wie die Welt heute steht — eine Zahl aus 25 Messreihen in 9 Bereichen, gemessen am Abstand zu Zielen, die Staaten und Wissenschaft gesetzt haben. Offene Methodik, benannte Grenzen.',
                 '/teilen':
                         'Empfiehl NurEine weiter: wähle Plattform und Zielgruppe, bekomme eine fertige Karte und den passenden Text — mit deinem Empfehlungslink.',
                 '/unterstuetzer':

@@ -45,7 +45,7 @@ Betreiber: Aaron Technologies OÜ, Tallinn (Estland). Redaktionell verantwortlic
 - [Was ist NurEine?](https://nureine.de/ueber-uns): Entity-Definition, Begriffsklärung, FAQ
 - [Startseite](https://nureine.de): die Geschichte des Tages
 - [Methodik](https://nureine.de/methodik): wie wir auswählen, Wirkungsindex erklärt
-- [Der Stand der Welt](https://nureine.de/stand-der-welt): Daten-Dashboard
+- [Der Stand der Welt](https://nureine.de/stand-der-welt): Der Langzeitindex — eine Zahl (0–100) für den Zustand der Welt, aus 25 Messreihen in 9 Bereichen (2005–2023). Gemessen am Abstand zu Zielmarken, die Staaten und Wissenschaft gesetzt haben, nicht NurEine. Offengelegte Methodik, geometrische Aggregation, benannte Grenzen inkl. Kipppunkt der Gewichtung.
 - [Unsere Werte](https://nureine.de/werte): woran wir Fortschritt messen
 - [Warum NurEine](https://nureine.de/warum): das Manifest in Kurzform
 - [Newsletter](https://nureine.de/newsletter): täglich eine gute Nachricht per E-Mail

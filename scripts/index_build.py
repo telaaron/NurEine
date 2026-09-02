@@ -186,7 +186,23 @@ def check_abort(spec: dict, results: dict, kern: dict, robust: float) -> list[st
         fails.append("Keine Jahre 2019–2023 berechenbar")
 
     if robust < crit["min_robustheitsquote"]:
-        fails.append(f"Robustheitsquote {robust:.1%} < {crit['min_robustheitsquote']:.0%}")
+        # Die Unterschreitung wurde am 2026-09-03 bewusst ueberschrieben
+        # (Aenderungsprotokoll v1.2). Bedingung: die Zahl erscheint nie ohne
+        # den Kipppunkt-Hinweis. Die Warnung bleibt trotzdem sichtbar — sie
+        # soll nicht verschwinden, nur weil eine Entscheidung getroffen wurde.
+        ueber = crit.get("robustheit_ueberschrieben")
+        msg = f"Robustheitsquote {robust:.1%} < {crit['min_robustheitsquote']:.0%}"
+        if ueber:
+            log.warning("WARNUNG  %s — bewusst ueberschrieben (v1.2). "
+                        "Kipppunkt: %.1f %% Gewicht auf Oekologie.",
+                        msg, ueber["kipppunkt_oekologie"] * 100)
+            # Faellt die Robustheit deutlich WEITER, ist die Ueberschreibung
+            # nicht mehr gedeckt — dann bricht der Lauf doch ab.
+            if robust < ueber["gemessen"] - 0.05:
+                fails.append(f"{msg} — und {ueber['gemessen']:.1%} bei der "
+                             f"Ueberschreibung deutlich unterschritten")
+        else:
+            fails.append(msg)
 
     if kern:
         haupt_d = results[years[-1]]["index"] - results[years[0]]["index"]
@@ -412,7 +428,11 @@ def main() -> int:
         "kernreihe_start": kern[years[0]], "kernreihe_ende": kern[years[-1]],
     }, indent=2, ensure_ascii=False))
 
-    # 7) Abbruchkriterien
+    # 7) Statisches JSON fuer die Website
+    export_web(spec, results, series, norm_by_year, kern, robust, mv,
+               REPO / "src" / "lib" / "data" / "langzeitindex.json")
+
+    # 8) Abbruchkriterien
     fails = check_abort(spec, results, kern, robust)
     if mv["perzentil"] > spec["abbruchkriterien"]["max_perzentil_multiverse"]:
         fails.append(f"Eigene Variante im {mv['perzentil']:.0f}. Perzentil "
@@ -431,6 +451,59 @@ def main() -> int:
 
     log.info("\nAlle Abbruchkriterien bestanden. Der Index traegt.")
     return 0
+
+
+
+def export_web(spec: dict, results: dict, series: dict, norm_by_year: dict,
+               kern: dict, robust: float, mv: dict, target: Path) -> None:
+    """
+    Schreibt das statische JSON fuer /stand-der-welt.
+
+    Bewusst KEIN Supabase-Livecall auf der Seite: Der Index aendert sich
+    woechentlich, nicht sekuendlich — und muss einen 402 ueberstehen.
+    """
+    von, bis = spec["fenster"]["von"], spec["fenster"]["bis"]
+    years = sorted(results)
+    # Alltagssaetze: Wert in Klartext, damit die Kacheln ohne Indexwerte auskommen
+    say = json.loads((REPO / "docs" / "langzeitindex-klartext.json").read_text())
+
+    payload = {
+        "spec_version": spec["spec_version"],
+        "fenster": [von, bis],
+        "jahre": years,
+        "index": [round(results[y]["index"], 2) for y in years],
+        "kernreihe": [round(kern[y], 2) for y in years if y in kern],
+        "bereiche": {
+            d: {"label": spec["domaenen"][d]["label"],
+                "werte": [round(results[y]["domains"][d], 2) for y in years]}
+            for d in sorted(spec["domaenen"])
+        },
+        "indikatoren": [],
+        "pflicht_hinweis": spec["abbruchkriterien"].get(
+            "robustheit_ueberschrieben", {}).get("pflicht_hinweis"),
+        "kipppunkt": spec["abbruchkriterien"].get(
+            "robustheit_ueberschrieben", {}).get("kipppunkt_oekologie"),
+        "gleichgewicht": 1 / len(spec["domaenen"]),
+        "robustheitsquote": round(robust, 4),
+        "quellen": sorted({("Weltbank" if i["quelle"] == "worldbank" else "Our World in Data")
+                           for i in spec["indikatoren"]}),
+    }
+    for ind in spec["indikatoren"]:
+        filled, _ = interpolate_gaps(series[ind["id"]], von, bis)
+        k = say.get(ind["id"], {})
+        payload["indikatoren"].append({
+            "id": ind["id"], "label": ind["label"], "bereich": ind["domaene"],
+            "einheit": ind["einheit"], "code": ind["code"],
+            "satz": k.get("satz"), "nachkomma": k.get("nachkomma", 1),
+            "teiler": k.get("teiler", 1),
+            "wert": round(filled[bis], 4), "wert_start": round(filled[von], 4),
+            "jahr": bis, "jahr_start": von,
+            "besser": k.get("gut") == ("hoch" if filled[bis] > filled[von] else "niedrig"),
+            "norm": [round(norm_by_year[ind["id"]][y], 2) for y in years],
+        })
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")))
+    log.info("Web-JSON: %s (%.1f kB)", target, target.stat().st_size / 1024)
 
 
 if __name__ == "__main__":

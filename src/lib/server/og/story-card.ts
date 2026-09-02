@@ -94,6 +94,7 @@ export interface StoryCardInput {
 	logoDataUri?: string | null;
 	id?: string; // für deterministische Template-Rotation
 	template?: TemplateName; // expliziter Override (Test via ?tpl=)
+	aiImage?: boolean; // Bild KI-generiert → Kennzeichnung auf der Karte (Default: true)
 }
 
 function esc(s: string): string {
@@ -172,12 +173,39 @@ function topLabels(accent: string, catLabel: string, _logoDataUri?: string | nul
     </div>`;
 }
 
-// Persönlicher Newsletter-CTA. `bg` erlaubt Variante (amber auf dunkel, dunkel auf Farbe).
+// Newsletter-CTA — NICHT mehr auf jeder Karte (Aaron 2026-09-03).
+//
+// Vorher lief dieser Block in allen vier Templates, jede Karte trug ihn. In der
+// Zielgruppen-Bewertung war das der meistgenannte Kritikpunkt, unabhaengig von
+// drei Seiten: Der orange Kasten macht aus einer Nachricht eine Werbeflaeche
+// ("Das ist kein Beitrag, das ist eine Anzeige"), er frisst ein Drittel der
+// Karte, und neben einer toedlichen Krankheit wirkt er pietaetlos.
+//
+// Jetzt: nur noch auf JEDER DRITTEN Karte, deterministisch ueber den Story-Hash
+// (nicht zufaellig — dieselbe Story ergibt beim Neurendern dieselbe Karte).
+// Eine Karte, die nichts will, ist glaubwuerdiger als drei, die es tun.
+//
+// "Link im Profil" ist ausserdem raus: Seit igPostStory() einen Link-Sticker
+// setzt, ist der Tap direkt auf der Story moeglich — vier Schritte weniger.
 function ctaBlock(bg = AMBER, subColor = 'rgba(255,255,255,0.96)'): string {
 	return `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:${CONTENT_W}px;background:${bg};border-radius:34px;padding:50px 32px;margin-top:42px;">
         <div style="display:flex;font-family:'Space Grotesk';font-size:46px;font-weight:700;color:#fff;letter-spacing:-0.02em;text-align:center;white-space:nowrap;">Deine gute Nachricht für heute →</div>
-        <div style="display:flex;font-family:'Inter';font-size:38px;font-weight:600;color:${subColor};margin-top:14px;">Kostenlos abonnieren · Link im Profil</div>
+        <div style="display:flex;font-family:'Inter';font-size:38px;font-weight:600;color:${subColor};margin-top:14px;">Kostenlos abonnieren · tippen</div>
       </div>`;
+}
+
+// Traegt DIESE Karte den CTA? Jede dritte, deterministisch aus der Story-Id.
+function wantsCta(id?: string): boolean {
+	return hashStr(id || '') % 3 === 0;
+}
+
+// Sensible Themen: Kein Wirkungs-Score, kein CTA. Eine Punktzahl neben einer
+// toedlichen Krankheit liest sich wie eine Schulnote ("Ihr benotet den Tod
+// meiner Schwester mit einer Vier minus" — Zielgruppen-Bewertung 2026-09-03),
+// und ein Abo-Button direkt darunter wirkt respektlos.
+const SENSIBEL = /krebs|tumor|leukäm|demenz|alzheimer|suizid|sterb|todesfäll|tödlich|palliativ|hospiz|aids|ebola|sepsis/i;
+function istSensibel(input: StoryCardInput): boolean {
+	return SENSIBEL.test(`${input.title} ${input.dek}`);
 }
 
 function headlineSize(title: string): number {
@@ -279,6 +307,17 @@ function dekText(dek: string, color = '#ffffff', size = 48, maxWords = DEK_MAX_W
 // EIN Wirkungs-System überall: dezente Pill "● 78/100". Nur wenn ein echter
 // Text-Hook (z.B. "1,4 Mio.") schon die große Zahl trägt — sonst ist der Score
 // selbst der Hook und die Pill entfällt (kein doppelter Score).
+// KI-Kennzeichnung. Bis 2026-09-03 trugen NUR Reels und Karussells sie, die
+// Story-Karten nicht — obwohl dort dieselben Seedream-Bilder laufen. Bei einer
+// Marke, deren Versprechen "belegt" ist, ist ein ungekennzeichnetes KI-Bild der
+// teuerste denkbare Vertrauensbruch: Wer merkt, dass das Foto erfunden ist,
+// glaubt auch der Zahl daneben nicht mehr. (Ab 2026 zudem EU-Kennzeichnungspflicht
+// fuer synthetische Medien.) Wortlaut identisch zu den Reels.
+function aiLabel(onDark = true): string {
+	const col = onDark ? 'rgba(255,255,255,0.62)' : 'rgba(22,20,15,0.52)';
+	return `<div style="position:absolute;display:flex;bottom:${SAFE_BOTTOM}px;right:${SAFE_SIDE}px;font-family:'Inter';font-size:22px;font-weight:500;color:${col};letter-spacing:0.02em;">Illustration: KI · NurEine</div>`;
+}
+
 function impactPill(score: number | null | undefined, accent: string, dark = false): string {
 	if (score == null) return '';
 	const txtBg = dark ? 'rgba(0,0,0,0.32)' : 'rgba(255,255,255,0.14)';
@@ -295,9 +334,19 @@ function imageCover(imageBase64: string | null, imgH: number, pos = 'center 35%'
 		: `<div style="position:absolute;top:0;left:0;display:flex;width:${W}px;height:${imgH}px;align-items:center;justify-content:center;background:linear-gradient(150deg,#f0c9a0,#d98b52 60%,#b5673a);"><div style="font-family:'Space Grotesk';font-size:340px;font-weight:700;color:rgba(255,255,255,0.9);">N</div></div>`;
 }
 
-function page(inner: string, bg = BG): string {
+// Das KI-Label wird ZENTRAL hier angehaengt, nicht in den vier Templates einzeln —
+// so kann es beim Anlegen eines neuen Templates nicht vergessen werden.
+// Vom Dispatcher gesetzt (siehe buildStoryCard). Modul-weit statt als Parameter,
+// weil page() aus vier Templates aufgerufen wird, die den Input nicht durchreichen.
+let AI_ON = true;
+// Ebenfalls vom Dispatcher gesetzt: ob diese Karte den CTA traegt und ob das
+// Thema sensibel ist (dann kein Score, kein CTA).
+let zeigeCta = true;
+let sensibel = false;
+
+function page(inner: string, bg = BG, ai = AI_ON): string {
 	return `<!DOCTYPE html><html><body style="margin:0;width:${W}px;height:${H}px;background:${bg};font-family:'Inter';display:flex;">
-  <div style="display:flex;position:relative;width:${W}px;height:${H}px;">${inner}</div>
+  <div style="display:flex;position:relative;width:${W}px;height:${H}px;">${inner}${ai ? aiLabel() : ''}</div>
 </body></html>`;
 }
 
@@ -317,8 +366,8 @@ function tplStat(input: StoryCardInput, accent: string, catLabel: string, hook: 
       ${hookInline(hook, accent)}
       <div style="display:flex;font-family:'Space Grotesk';font-size:${headlineSize(input.title)}px;font-weight:700;color:#fff;line-height:1.0;letter-spacing:-0.03em;">${esc(input.title)}</div>
       ${dekText(input.dek)}
-      ${hook?.fromText ? `<div style="display:flex;margin-top:24px;">${impactPill(input.impactScore, accent)}</div>` : ''}
-      ${ctaBlock()}
+      ${hook?.fromText && !sensibel ? `<div style="display:flex;margin-top:24px;">${impactPill(input.impactScore, accent)}</div>` : ''}
+      ${zeigeCta ? ctaBlock() : ''}
     </div>`);
 }
 
@@ -342,8 +391,8 @@ function tplPoster(input: StoryCardInput, accent: string, catLabel: string): str
       <div style="display:flex;width:120px;height:12px;border-radius:12px;background:${accent};margin-bottom:30px;"></div>
       <div style="display:flex;font-family:'Space Grotesk';font-size:${hs}px;font-weight:700;color:#fff;line-height:0.98;letter-spacing:-0.03em;">${esc(input.title)}</div>
       ${dekText(input.dek)}
-      ${input.impactScore != null ? `<div style="display:flex;margin-top:24px;">${impactPill(input.impactScore, accent)}</div>` : ''}
-      ${ctaBlock()}
+      ${input.impactScore != null && !sensibel ? `<div style="display:flex;margin-top:24px;">${impactPill(input.impactScore, accent)}</div>` : ''}
+      ${zeigeCta ? ctaBlock() : ''}
     </div>`);
 }
 
@@ -370,8 +419,8 @@ function tplStatement(input: StoryCardInput, accent: string, catLabel: string): 
         </div>
       </div>
       <div style="display:flex;flex-direction:column;">
-        ${input.impactScore != null ? `<div style="display:flex;margin-bottom:24px;">${impactPill(input.impactScore, accent)}</div>` : ''}
-        ${ctaBlock()}
+        ${input.impactScore != null && !sensibel ? `<div style="display:flex;margin-bottom:24px;">${impactPill(input.impactScore, accent)}</div>` : ''}
+        ${zeigeCta ? ctaBlock() : ''}
       </div>
     </div>`,
 		darkBg
@@ -406,19 +455,25 @@ function tplTicker(
     ${topLabels(accent, catLabel, input.logoDataUri)}
     <div style="position:absolute;display:flex;flex-direction:column;left:${SAFE_SIDE}px;right:${SAFE_SIDE}px;bottom:${SAFE_BOTTOM}px;width:${CONTENT_W}px;">
       <!-- Wirkungs-Pill ÜBER der Headline = erster Kontext-Geber -->
-      ${input.impactScore != null ? `<div style="display:flex;margin-bottom:24px;">${impactPill(input.impactScore, accent)}</div>` : ''}
+      ${input.impactScore != null && !sensibel ? `<div style="display:flex;margin-bottom:24px;">${impactPill(input.impactScore, accent)}</div>` : ''}
       ${locPill}
       <!-- Headline: fett + groß (klare Hierarchie-Spitze) -->
       <div style="display:flex;font-family:'Space Grotesk';font-size:${headlineSize(input.title)}px;font-weight:700;color:#fff;line-height:1.0;letter-spacing:-0.03em;">${esc(input.title)}</div>
       <!-- Editorial-Trennlinie zwischen Headline und Subline -->
       <div style="display:flex;width:${CONTENT_W}px;height:2px;background:rgba(255,255,255,0.18);margin-top:28px;margin-bottom:4px;"></div>
       ${dekText(input.dek, '#ffffff', 42)}
-      ${ctaBlock()}
+      ${zeigeCta ? ctaBlock() : ''}
     </div>`);
 }
 
 // ─── Dispatcher ──────────────────────────────────────────────────────────────
 export function buildStoryCard(input: StoryCardInput): string {
+	// Default TRUE: Alle Story-Bilder entstehen derzeit per Seedream. Wer je ein
+	// echtes Foto einsetzt, setzt aiImage:false — die Kennzeichnung faellt dann weg.
+	AI_ON = input.aiImage !== false;
+	sensibel = istSensibel(input);
+	// Sensible Themen NIE mit Abo-Aufforderung, sonst jede dritte Karte.
+	zeigeCta = !sensibel && wantsCta(input.id);
 	const accent = CATEGORY_ACCENT[input.category] || HOOK;
 	const catLabel = (CATEGORY_LABELS[input.category] || input.category).toUpperCase();
 	const hook = pickHook(input.dek || '', input.title, input.impactScore);

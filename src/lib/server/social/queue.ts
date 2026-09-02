@@ -672,7 +672,9 @@ export async function publishPostNow(id: number): Promise<{ ok: boolean; reason:
 	try {
 		let mediaId: string;
 		if (p.platform === 'instagram_story') {
-			mediaId = await igPostStory(p.card_url || '');
+			// Slug fuer die Attribution aus og_url ableiten (…/api/og/<slug>) —
+			const slugAusOg = p.og_url?.split('/').pop() || undefined;
+			mediaId = await igPostStory(p.card_url || '', slugAusOg);
 		} else if (p.is_carousel) {
 			const urls = carouselUrlsFor(p);
 			if (!urls) throw new Error('cannot derive carousel urls');
@@ -843,10 +845,38 @@ export async function refreshInsights(): Promise<{ updated: number; skipped: str
 // ---------------------------------------------------------------------------
 
 /** Eine IG-Story posten (9:16 Bild). */
-async function igPostStory(imageUrl: string): Promise<string> {
+// LINK-STICKER auf jeder Story (Aaron 2026-09-03).
+//
+// Bis hierher trug keine einzige Story einen antippbaren Link — die Karte sagte
+// "Link im Profil", was den Leser vier Schritte kostet (Story verlassen, Profil
+// oeffnen, Bio-Link finden, tippen). Bei bis zu 10 Stories taeglich waren das
+// ~300 Kontaktpunkte im Monat, von denen keiner klickbar war. Groesster
+// Einzelhebel im ganzen Account.
+//
+// Das Ziel laeuft ueber den bestehenden /go-Redirector, damit jeder Klick in
+// nureine_events landet — vorher war Instagram attributionstechnisch blind.
+// Ziel ist /lichtblick (E-Mail-Feld weit oben), nicht die Startseite.
+//
+// Der Sticker ist seit 2021 fuer alle Accounts verfuegbar, unabhaengig von der
+// Followerzahl. Schlaegt der Parameter bei Meta fehl, posten wir die Story
+// TROTZDEM ohne Link — eine Story ohne Sticker ist besser als keine Story.
+async function igPostStory(imageUrl: string, slug?: string): Promise<string> {
 	await assertImageUrl(imageUrl); // verhindert 9004 bei kaputter share-card-URL
-	const creationId = await igCreateContainer({ image_url: imageUrl, media_type: 'STORIES' });
-	return igPublish(creationId);
+	const ziel =
+		`${BASE_URL}/go?bet=ig&src=story&to=/lichtblick` +
+		(slug ? `&asset=${encodeURIComponent(slug)}` : '');
+	try {
+		const creationId = await igCreateContainer({
+			image_url: imageUrl,
+			media_type: 'STORIES',
+			link: ziel
+		});
+		return igPublish(creationId);
+	} catch (err) {
+		console.warn('[ig-story] Link-Sticker abgelehnt, poste ohne Link:', err);
+		const creationId = await igCreateContainer({ image_url: imageUrl, media_type: 'STORIES' });
+		return igPublish(creationId);
+	}
 }
 
 /**
@@ -920,7 +950,7 @@ export async function publishStoryDue(): Promise<{ posted: boolean; reason: stri
 	await warmCard(imageUrl);
 
 	try {
-		const mediaId = await igPostStory(imageUrl);
+		const mediaId = await igPostStory(imageUrl, slug);
 		await supabaseAdmin.from('nureine_social_posts').insert({
 			story_id: story.id,
 			platform: 'instagram_story',

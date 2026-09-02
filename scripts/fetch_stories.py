@@ -1092,6 +1092,23 @@ Diese Wendungen sind der Grund, warum unsere Texte nach Maschine klingen:
 - "Teil eines größeren Trends" -> die Zahl nennen, die den Trend belegt
 - "Strukturell relevant ist das, weil" -> streichen, der Leser merkt es selbst
 - "Es ist wichtig zu verstehen, dass" -> streichen, immer
+
+--- REGEL 6b: RELATIVE ZAHLEN BEI SCHWEREN KRANKHEITEN (Aaron 2026-09-03) ---
+Bei Krankheiten, an denen Menschen sterben, NIE die relative Steigerung als
+Aufmacher — immer die ABSOLUTE Zahl.
+- SCHLECHT: "Neues Mittel verdoppelt Überleben bei Bauchspeicheldrüsenkrebs"
+  Der Leser liest eine halbe Sekunde lang "geheilt". Erst darunter steht dann
+  "von 6 auf 13 Monate". Fuer Angehoerige ist diese halbe Sekunde grausam.
+- GUT: "Neues Mittel schenkt sieben Monate mehr Lebenszeit"
+  Kleiner, wahrer, trifft tiefer. Sieben Monate sind ein Sommer, ein letzter
+  Geburtstag, eine Einschulung.
+Belegt in einer Zielgruppen-Bewertung mit einer Betroffenen (Schwester an
+Bauchspeicheldruesenkrebs gestorben): "Sagt es doch einfach so: Sieben Monate
+mehr. Das ist kleiner, wahrer und trifft mich viel tiefer als verdoppelt."
+
+Ebenfalls Pflicht bei Medikamenten-Storys: Wenn das Mittel noch NICHT zugelassen
+ist, gehoert das in den Untertitel — nicht nur in den Fliesstext. Sonst liest
+jemand die Karte und hofft auf etwas, das es noch gar nicht gibt.
 - "In einer Welt, in der" -> streichen, immer
 - "Manchmal" am Satzanfang (steht in 61 Prozent unserer Instagram-Nachhall-Texte)
   -> konkret werden statt Kalenderspruch. Ebenso: "Vielleicht", "Es sind oft die",

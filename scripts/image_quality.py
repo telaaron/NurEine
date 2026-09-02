@@ -60,43 +60,54 @@ MIN_QUALITY_SCORE = 5.0  # Hard-fail threshold: if best image scores below this 
 # Review prompt — 4 binary NO-GOs + GOLD criteria
 # ---------------------------------------------------------------------------
 REVIEW_PROMPT = """\
-You are an art director for a premium B2B magazine. Evaluate this editorial illustration.
+You are a photo editor for a serious news outlet. Evaluate this photograph.
 
-=== 4 NO-GO RULES (if ANY triggered → rejected=true) ===
+The outlet publishes one verified good-news story per day. The image must make a
+reader stop and believe the story is real. There is NO house style: every story
+gets its own look, light and perspective. Do NOT reward images for resembling
+each other.
+
+=== 4 NO-GO RULES (if ANY triggered -> rejected=true) ===
 
 NO-GO #1 — "FRANKENSTEIN": Does the image mash up TWO incompatible objects into
-one unnatural hybrid? (Examples: a DNA helix with an animal jammed inside, a
-stethoscope fused with a clock, a robot face fused with a child). If the image
-tries to merge two unrelated things → no_go_frankenstein: true.
+one unnatural hybrid? (a DNA helix with an animal jammed inside, a stethoscope
+fused with a clock). Merged unrelated things -> no_go_frankenstein: true.
 
-NO-GO #2 — "ZOO MODE": Is the main subject a LITERAL, recognizable animal, person
-face, car, or famous artwork? We want ABSTRACTION, not encyclopedia illustrations.
-A literal lion, turtle, car, or Mona Lisa → no_go_zoo: true.
+NO-GO #2 — "READABLE TEXT": Is there any legible writing, number, sign, label or
+logo in the image? Image models produce garbled letters, and an invented number
+on a screen or sign would be a FABRICATED PIECE OF EVIDENCE — fatal for an outlet
+whose promise is "verified". Any readable text -> no_go_text: true.
 
-NO-GO #3 — "MEDICAL HORROR": Does the image show internal organs, raw meat textures,
-parasites, worms, bloody structures, or anything clinically repulsive? Think "would
-this ruin someone's breakfast?" If yes → no_go_medical: true.
+NO-GO #3 — "MEDICAL HORROR": Internal organs, raw meat textures, parasites, worms,
+bloody structures, anything clinically repulsive -> no_go_medical: true.
 
-NO-GO #4 — "KITSCH & CLIPART": Does the image use overused PowerPoint metaphors?
-Puzzle pieces for unity, calendar pages for time, generic handshakes, cliché hearts.
-If the symbolism is lazy ClipArt-level → no_go_kitsch: true.
+NO-GO #4 — "KITSCH & CLIPART": Overused stock metaphors — puzzle pieces for unity,
+calendar pages for time, generic handshakes, cliché hearts, glowing brains for AI,
+lightbulbs for ideas. Lazy symbolism -> no_go_kitsch: true.
 
 === WHAT GOLD LOOKS LIKE (APPROVE) ===
-Abstract geometric forms, elegant shapes, subtle color gradients, iconographic
-simplicity. Examples: a luminous abstract diamond/crystal, layered concentric
-rings, an abstract droplet/flask form, a stylized wave pattern. High-end,
-editorial, not literal.
+A real place, moment or detail from THIS story, photographed as a news
+photographer would. Recognisable animals, objects, machines and landscapes are
+WANTED — they are what makes a story concrete. Three approved examples:
+  - a solar farm shot straight down, panels filling the frame, harsh midday light
+  - cattle at eye level chewing brush under a flat overcast sky
+  - a macro shot of a wet brush stroke on the rim of a water tank
+Anything is fine — aerial or macro, night or noon, warm or cold, wide or tight —
+as long as it belongs to this story and could not illustrate any other one.
 
 === SCORING ===
-style_score (1-10): How well does it match the warm paper collage style?
-(Flat layers, paper texture, cast shadows, off-white #f5f1ea background)
+style_score (1-10): Does this look like a real photograph a news outlet would
+run, and does it show something specific to THIS story? Score LOW for generic
+stock imagery that would fit any story, and for obvious AI artefacts (malformed
+hands, impossible anatomy, melted objects). Do NOT score for matching a house
+style — there is none.
 
 === OUTPUT ===
 Respond ONLY with this exact JSON — no markdown, no extra text:
 
 {{
   "no_go_frankenstein": true/false,
-  "no_go_zoo": true/false,
+  "no_go_text": true/false,
   "no_go_medical": true/false,
   "no_go_kitsch": true/false,
   "rejected": true/false,
@@ -112,22 +123,27 @@ Story: {title} | Category: {category}"""
 # Stage 1 — Prompt text review (DeepSeek, fast/cheap, catches NO-GOs early)
 # ---------------------------------------------------------------------------
 PROMPT_REVIEW_SYSTEM = """\
-You are an art director screening image prompts BEFORE generation.
+You are a photo editor screening image prompts BEFORE generation for a news outlet.
 Your job: Check if the prompt violates any of 4 NO-GO rules.
-Be STRICT — if it's borderline, reject it. We want only abstract, elegant prompts.
+
+Concrete, realistic scenes are WANTED. Recognisable animals, objects, machines,
+buildings and landscapes are GOOD — they are what makes a story believable.
+Do NOT reject a prompt for being literal, and do NOT ask for abstraction.
 
 === 4 NO-GO RULES ===
 1. FRANKENSTEIN: Prompt asks to MERGE two incompatible objects into one hybrid
    (e.g. "DNA with animal inside", "stethoscope fused with clock")
-2. ZOO MODE: Prompt asks for a LITERAL recognizable animal, person, car, artwork
-   (e.g. "a lion", "Mona Lisa", "a turtle")
+2. READABLE TEXT: Prompt asks for legible writing, numbers, signs, labels or logos
+   in the image (e.g. "a banner reading X", "a screen showing 42%"). An invented
+   number would be fabricated evidence. Also reject prompts asking for a
+   recognisable face in the foreground or a real named person.
 3. MEDICAL HORROR: Prompt mentions organs, meat, blood, parasites, worms
    (e.g. "internal organs", "bloody texture")
-4. KITSCH: Prompt uses overused PowerPoint metaphors
-   (e.g. "puzzle pieces", "calendar pages", "handshake", "heart")
+4. KITSCH: Prompt uses overused stock metaphors
+   (e.g. "puzzle pieces", "calendar pages", "handshake", "glowing brain", "lightbulb")
 
-Reject if the prompt explicitly asks for these things.
-If it says "abstract" or "stylized" or "geometric" — that's good, approve."""
+Reject ONLY if the prompt explicitly asks for one of these four things.
+A prompt describing a real place, animal or working scene is fine — approve it."""
 
 PROMPT_REVIEW_USER = """\
 Check this image prompt for NO-GO violations:
@@ -141,7 +157,7 @@ Respond ONLY with this JSON (no markdown):
 {{
   "rejected": true/false,
   "no_go_frankenstein": true/false,
-  "no_go_zoo": true/false,
+  "no_go_text": true/false,
   "no_go_medical": true/false,
   "no_go_kitsch": true/false,
   "reason": "if rejected: ONE German sentence"
@@ -149,9 +165,10 @@ Respond ONLY with this JSON (no markdown):
 
 # System prompt for regenerating prompts after NO-GO rejection
 PROMPT_REGENERATE_SYSTEM = """\
-You are a creative director fixing bad image prompts.
-The prompt below was REJECTED for violating style rules.
-Rewrite it to be abstract, elegant, paper collage style.
+You are a photo editor fixing bad image prompts for a news outlet.
+The prompt below was REJECTED. Rewrite it so it describes a real, photographable
+scene from this story. There is NO house style to match — light, perspective and
+colour follow the story.
 Respond ONLY with the corrected prompt — no JSON, no explanation."""
 
 PROMPT_REGENERATE_USER = """\
@@ -160,12 +177,11 @@ REJECT REASON: {reason}
 FIX INSTRUCTION: {fix_instruction}
 
 Rewrite the prompt. Must be:
-- A SINGLE abstract symbol (not a complex scene)
-- Warm paper collage style, #f5f1ea background
-- Flat 2D, NO 3D, NO photorealism
-- NO text in the image
-- Use only geometric/shape-based abstraction
-- One accent colour
+- A real place, moment or detail from THIS story — concrete, not symbolic
+- Photorealistic; state perspective, light and colour that suit this story
+- NO readable text, numbers, signs or logos in the image
+- NO recognisable faces in the foreground
+- Specific enough that it could not illustrate a different story
 
 Respond ONLY with the corrected English prompt text."""
 
@@ -179,10 +195,11 @@ FIX_INSTRUCTIONS: dict[str, str] = {
         "Do NOT merge two different things into one shape. "
         "Pick the primary concept and make it a single elegant paper cutout."
     ),
-    "no_go_zoo": (
-        "NO LITERAL ANIMALS, PEOPLE, CARS, OR ARTWORKS. Abstract the concept. "
-        "Instead of a literal animal, use geometric shapes, patterns, or "
-        "stylized forms that hint at the idea without being a realistic depiction."
+    "no_go_text": (
+        "NO READABLE TEXT, NUMBERS, SIGNS, LABELS OR LOGOS anywhere in the image. "
+        "Choose a scene or camera angle where no writing is visible — plain "
+        "surfaces, a tighter crop, or a viewpoint that avoids signage. "
+        "An invented number would read as fabricated evidence."
     ),
     "no_go_medical": (
         "NO ORGANS, NO MEAT, NO BLOOD, NO PARASITES, NOTHING GROSS. "
@@ -320,7 +337,7 @@ def review_image_prompt(
 
         flags = {
             "frankenstein": bool(result.get("no_go_frankenstein", False)),
-            "zoo": bool(result.get("no_go_zoo", False)),
+            "text": bool(result.get("no_go_text", False)),
             "medical": bool(result.get("no_go_medical", False)),
             "kitsch": bool(result.get("no_go_kitsch", False)),
         }
@@ -373,14 +390,14 @@ def review_prompt_and_retry(
         if flags.get("frankenstein"):
             fix_parts.append(FIX_INSTRUCTIONS["no_go_frankenstein"])
         if flags.get("zoo"):
-            fix_parts.append(FIX_INSTRUCTIONS["no_go_zoo"])
+            fix_parts.append(FIX_INSTRUCTIONS["no_go_text"])
         if flags.get("medical"):
             fix_parts.append(FIX_INSTRUCTIONS["no_go_medical"])
         if flags.get("kitsch"):
             fix_parts.append(FIX_INSTRUCTIONS["no_go_kitsch"])
 
         fix_instruction = " ".join(fix_parts) if fix_parts else (
-            "Create an ABSTRACT, elegant paper collage symbol. "
+            "Describe a real, photographable scene from this story. "
             "No literal objects, no hybrid mashups."
         )
 
@@ -463,7 +480,7 @@ def review_image(
         (passed, reject_reason, style_score, feedback)
         - passed: False if ANY NO-GO triggered (must regenerate)
         - reject_reason: German explanation of which NO-GO failed (empty if passed)
-        - style_score: 1-10 paper collage style score
+        - style_score: 1-10 wie glaubwuerdig als echtes Pressefoto zu DIESER Story
         - feedback: German quality feedback
     """
     if not FAL_KEY:
@@ -546,7 +563,7 @@ def review_image(
 
         # Check NO-GOs
         frankenstein = bool(result.get("no_go_frankenstein", False))
-        zoo = bool(result.get("no_go_zoo", False))
+        zoo = bool(result.get("no_go_text", False))
         medical = bool(result.get("no_go_medical", False))
         kitsch = bool(result.get("no_go_kitsch", False))
         rejected = bool(result.get("rejected", False))
@@ -606,14 +623,14 @@ def enhance_prompt_for_retry(
     if "frankenstein" in lowered:
         fix_parts.append(FIX_INSTRUCTIONS["no_go_frankenstein"])
     if "zoo" in lowered or "literal" in lowered or "tier" in lowered:
-        fix_parts.append(FIX_INSTRUCTIONS["no_go_zoo"])
+        fix_parts.append(FIX_INSTRUCTIONS["no_go_text"])
     if "medical" in lowered or "organ" in lowered or "fleisch" in lowered:
         fix_parts.append(FIX_INSTRUCTIONS["no_go_medical"])
     if "kitsch" in lowered or "clipart" in lowered:
         fix_parts.append(FIX_INSTRUCTIONS["no_go_kitsch"])
 
     fix_instruction = " ".join(fix_parts) if fix_parts else (
-        "Create an ABSTRACT, elegant paper collage symbol. "
+        "Describe a real, photographable scene from this story. "
         "NO literal objects. NO hybrid mashups. Think high-end editorial magazine."
     )
 
@@ -621,7 +638,7 @@ def enhance_prompt_for_retry(
         f"{prefix} {reject_reason} "
         f"{fix_instruction} "
         f"Original prompt: {original_prompt} "
-        "Must be flat paper collage on #f5f1ea background. Abstract, elegant, ONE symbol only."
+        "Photorealistic. No readable text, no recognisable faces. Let the story decide the look."
     )
 
 

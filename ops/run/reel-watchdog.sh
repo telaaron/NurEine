@@ -11,7 +11,13 @@
 # Laeuft taeglich 09:00 (eine Stunde nach der Regie).
 # ============================================================================
 set -uo pipefail
-ROOT="/home/aaron/NurEine"
+# ROOT NICHT hartkodieren (2026-09-02): Hier stand "/home/aaron/NurEine". Auf
+# jedem anderen Rechner — und auf macOS ist $HOME=/Users/… — bricht `cd || exit 1`
+# ab, BEVOR eine Pruefung laeuft. Und weil der Abbruch vor dem Mail-Block liegt,
+# kommt keine Mail. In einem Werkzeug, dessen Konzept "Stille = alles gut" ist,
+# sieht der eigene Ausfall exakt wie ein gesundes System aus.
+# Dieselbe Ableitung wie in agent.sh/trigger.sh/pyjob.sh/selfupdate.sh.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 set -a; source "$ROOT/.env"; set +a
 LOG="${NUREINE_LOGDIR:-$HOME/nureine-logs}/reel-watchdog.log"
 STAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"

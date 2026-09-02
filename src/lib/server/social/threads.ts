@@ -136,8 +136,23 @@ export async function publishThreadsDue(): Promise<{ posted: boolean; reason: st
 	// Bild bevorzugt die echte Hero-Illustration (öffentliche URL).
 	const imageUrl = story.image_url || null;
 
+	// Posten und Protokollieren BEWUSST getrennt (2026-09-02): Vorher lag beides
+	// in einem try, und `hook_type: 'hook'` verletzte den CHECK aus Migration
+	// 00022 (erlaubt nur zahl|frage|kontrast). Der Insert warf, der gemeinsame
+	// catch fing ihn — Ergebnis: Der Post war LÄNGST auf Threads, wurde aber nie
+	// gespeichert und der Cron meldete ihn als "failed". Belegt: 0 Threads-Zeilen
+	// in nureine_social_posts, obwohl der Job seit Wochen läuft.
+	let mediaId: string;
 	try {
-		const mediaId = await postToThreads(text, imageUrl, linkUrl);
+		mediaId = await postToThreads(text, imageUrl, linkUrl);
+	} catch (err) {
+		console.error('[threads] publish failed', err);
+		return { posted: false, reason: `failed: ${(err as Error).message}` };
+	}
+
+	// Ab hier IST der Post draußen. Ein Fehler beim Protokollieren darf diese
+	// Tatsache nicht in ein "failed" verwandeln.
+	try {
 		await supabaseAdmin.from('nureine_social_posts').insert({
 			story_id: story.id,
 			platform: 'threads',
@@ -145,7 +160,8 @@ export async function publishThreadsDue(): Promise<{ posted: boolean; reason: st
 			hashtags: [],
 			card_url: imageUrl,
 			og_url: `${BASE_URL}/api/og/${slug}`,
-			hook_type: 'hook',
+			// 'hook' verletzte den CHECK und ließ jeden Insert scheitern.
+			hook_type: 'kontrast',
 			hook_style: 'image',
 			category: story.category,
 			is_carousel: false,
@@ -155,9 +171,10 @@ export async function publishThreadsDue(): Promise<{ posted: boolean; reason: st
 			scheduled_for: new Date().toISOString()
 		});
 		console.info('[threads] posted', slug, story.impact_score);
-		return { posted: true, reason: 'threads posted', slug };
 	} catch (err) {
-		console.error('[threads] publish failed', err);
-		return { posted: false, reason: `failed: ${(err as Error).message}` };
+		// Laut, aber nicht fatal: Der Post ist raus, nur die Zeile fehlt.
+		console.error('[threads] posted, aber NICHT protokolliert', slug, err);
+		return { posted: true, reason: 'threads posted (nicht protokolliert)', slug };
 	}
+	return { posted: true, reason: 'threads posted', slug };
 }

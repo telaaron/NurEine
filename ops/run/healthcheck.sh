@@ -20,7 +20,13 @@
 # Aufruf:  healthcheck.sh [--test]   (--test schickt die Mail auch bei "alles gut")
 # ============================================================================
 set -uo pipefail
-ROOT="/home/aaron/NurEine"
+# ROOT NICHT hartkodieren (2026-09-02): Hier stand "/home/aaron/NurEine". Auf
+# jedem anderen Rechner — und auf macOS ist $HOME=/Users/… — bricht `cd || exit 1`
+# ab, BEVOR eine Pruefung laeuft. Und weil der Abbruch vor dem Mail-Block liegt,
+# kommt keine Mail. In einem Werkzeug, dessen Konzept "Stille = alles gut" ist,
+# sieht der eigene Ausfall exakt wie ein gesundes System aus.
+# Dieselbe Ableitung wie in agent.sh/trigger.sh/pyjob.sh/selfupdate.sh.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LOG="${NUREINE_LOGDIR:-$HOME/nureine-logs}/healthcheck.log"
 STAMP="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 HEUTE="$(date -u +%Y-%m-%d)"

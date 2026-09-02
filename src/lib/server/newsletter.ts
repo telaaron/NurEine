@@ -112,16 +112,44 @@ const SUBJECT_DAILY = 'NurEine: Gute Nachrichten. Jeden Tag exakt eine.';
 
 /**
  * Betreff pro Story statt täglich identischem Text: identische Betreffs
- * werden von Gmail/Apple gethreadet und erzeugen null Neugier. share_hook
- * (der fertige Weitersag-Satz) ist die Neugier-Lücke; Fallback Titel,
- * Fallback Standard-Betreff. Max ~70 Zeichen, sonst schneidet Mobile ab.
+ * werden von Gmail/Apple gethreadet und erzeugen null Neugier. Bevorzugt
+ * das von der Redaktion extra 70-Zeichen-optimierte newsletter_subject aus
+ * curation_queue.draft (voller Satz, Pointe/Zahl vorn) — share_hook ist für
+ * Social/Carousel-Endcards geschrieben und oft 100–130 Zeichen lang, das harte
+ * Abschneiden bei 70 kappt dort regelmäßig die Zahl/Pointe (improvement #29,
+ * Hinweis Redaktion 2026-08-16). Fallback: share_hook, dann Titel, dann Standard.
  */
-function dailySubject(story: HeroStory): string {
+function dailySubject(story: HeroStory, curatedSubject?: string): string {
+  const curated = (curatedSubject ?? '').trim();
   const hook = (story.share_hook ?? '').trim();
   const title = (story.title ?? '').trim();
-  const pick = hook || title;
+  const pick = curated || hook || title;
   if (!pick) return SUBJECT_DAILY;
   return pick.length > 70 ? `${pick.slice(0, 67).trimEnd()}…` : pick;
+}
+
+/**
+ * story_id → redaktionell geschriebenes newsletter_subject (curation_queue.draft)
+ * für den heutigen for_date, nur freigegebene (status='approved') Einträge.
+ */
+async function fetchTodaysNewsletterSubjects(): Promise<Map<string, string>> {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabaseAdmin
+    .from('nureine_curation_queue')
+    .select('story_id, draft')
+    .eq('for_date', today)
+    .eq('status', 'approved')
+    .not('story_id', 'is', null);
+  if (error) {
+    console.error('[newsletter] fetchTodaysNewsletterSubjects error:', error);
+    return new Map();
+  }
+  const map = new Map<string, string>();
+  for (const row of (data as { story_id: string; draft: Record<string, unknown> | null }[]) ?? []) {
+    const subject = row.draft?.newsletter_subject;
+    if (typeof subject === 'string' && subject.trim()) map.set(row.story_id, subject.trim());
+  }
+  return map;
 }
 
 const BASE_URL = PUBLIC_BASE_URL || 'https://nureine.de';
@@ -999,6 +1027,7 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
   const candidateIds = ranked.map((s) => s.id);
   if (heroForAll && !candidateIds.includes(heroForAll.id)) candidateIds.push(heroForAll.id);
   const sentByStory = await fetchRecentSendsByStory(candidateIds);
+  const curatedSubjects = await fetchTodaysNewsletterSubjects();
 
   let b2cSent = 0;
   let b2cFailed = 0;
@@ -1021,7 +1050,7 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
     }
     try {
       const html = buildB2CHtml(pick, sub.email, sub.confirmation_token || '', sub.has_kids === true);
-      await sendBrevoEmail(sub.email, dailySubject(pick), html);
+      await sendBrevoEmail(sub.email, dailySubject(pick, curatedSubjects.get(pick.id)), html);
       await logSend(sub.id, pick.id);
       sentStoryIds.add(pick.id);
       b2cSent += 1;

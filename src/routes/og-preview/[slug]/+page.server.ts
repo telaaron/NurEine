@@ -7,7 +7,8 @@ export const load: PageServerLoad = async ({ params }) => {
 	let story = await getStoryBySlug(slug);
 
 	if (!story) {
-		const allStories = await getAllStories();
+		// QA-Vorschau: auch Stories unter dem Impact-Gate müssen prüfbar sein.
+		const allStories = await getAllStories(true);
 		story = allStories.find((s) => s.slug.startsWith(slug) || slug.startsWith(s.slug));
 	}
 

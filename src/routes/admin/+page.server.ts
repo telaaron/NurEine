@@ -3,7 +3,7 @@ import { supabaseAdmin } from '$lib/server/supabase/client';
 
 export async function load() {
   const [stories, storyStats, subscribers, heroStory, b2bStats, deliveryLog, funnel, openCuration] = await Promise.all([
-    getAllStories(),
+    getAllStories(true), // Admin-Dashboard: auch Stories unter dem Impact-Gate zählen
     getStats(), // echter exact-count (stories.length ist auf 1000 gedeckelt)
     getSubscriberStats(),
     getLatestFeatured(),

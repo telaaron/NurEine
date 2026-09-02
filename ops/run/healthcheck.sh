@@ -75,6 +75,32 @@ try:
     out["stories_48h"] = len(get(f"/rest/v1/nureine_stories?select=id&created_at=gte.{seit}"))
 except Exception as e:
     out["stories_48h"] = -1; out["story_fehler"] = str(e)[:120]
+
+# AUSLIEFERUNG (Vorfall 2026-09-02): Produktion und Verteilung sind zwei Paar
+# Schuhe. Stories und Newsletter liefen taeglich weiter, waehrend Instagram vier
+# und TikTok sechs Tage komplett stand — und NICHTS schlug an, weil dieser Check
+# nur prueft, ob etwas PRODUZIERT wird, nie ob es ANKOMMT. Ein Entwurf, der
+# liegen bleibt, sieht in der DB genauso aus wie einer, der gleich rausgeht.
+for kanal, feld in (("instagram", "ig"), ("tiktok", "tiktok")):
+    try:
+        rows = get("/rest/v1/nureine_social_posts?select=posted_at"
+                   f"&platform=eq.{kanal}&status=eq.posted"
+                   "&order=posted_at.desc&limit=1")
+        if rows and rows[0].get("posted_at"):
+            letzter = datetime.datetime.fromisoformat(rows[0]["posted_at"].replace("Z", "+00:00"))
+            alter = (datetime.datetime.now(datetime.timezone.utc) - letzter).days
+            out[f"{feld}_tage_still"] = alter
+        else:
+            out[f"{feld}_tage_still"] = 999
+    except Exception as e:
+        out[f"{feld}_tage_still"] = -1; out[f"{feld}_fehler"] = str(e)[:120]
+
+# Entwuerfe, die sich stapeln: sicheres Zeichen fuer einen kaputten Publish-Pfad.
+try:
+    out["ig_entwuerfe"] = len(get("/rest/v1/nureine_social_posts?select=id"
+                                  "&platform=eq.instagram&status=in.(draft,failed)"))
+except Exception:
+    out["ig_entwuerfe"] = -1
 print(json.dumps(out))
 PY
 )"
@@ -85,6 +111,14 @@ else
   S=$(echo "$BEFUND" | python3 -c "import json,sys; print(json.load(sys.stdin).get('stories_48h',-1))")
   [ "$R" = "0" ] && PROBLEME+=("Heute kein Reel gebaut|Die Reel-Regie (08:00) hat kein Video produziert. Achtung: ein gruener exit=0 ist KEIN Beweis — der Agent darf den Render nicht im Hintergrund starten.|tail -40 ~/nureine-logs/agent-reel-regie.log")
   [ "$S" = "0" ] && PROBLEME+=("Seit 48h keine neue Story|Der Fetch-Job liefert keinen Nachschub — ohne Stories gibt es auch keine Reels.|tail -40 ~/nureine-logs/agent-fetch.log")
+
+  # AUSLIEFERUNG — der blinde Fleck bis 2026-09-02.
+  IG=$(echo "$BEFUND" | python3 -c "import json,sys; print(json.load(sys.stdin).get('ig_tage_still',-1))")
+  TT=$(echo "$BEFUND" | python3 -c "import json,sys; print(json.load(sys.stdin).get('tiktok_tage_still',-1))")
+  DR=$(echo "$BEFUND" | python3 -c "import json,sys; print(json.load(sys.stdin).get('ig_entwuerfe',-1))")
+  [ "$IG" != "-1" ] && [ "$IG" -gt 2 ] && PROBLEME+=("Instagram seit $IG Tagen ohne Post|Der Feed steht. Geschrieben wird weiter, nur veroeffentlicht nichts mehr — das faellt ohne diesen Check tagelang niemandem auf.|curl -sS -X POST \$PUBLIC_BASE_URL/api/cron/social-publish -H \"Authorization: Bearer \$CRON_SECRET\" ; und nureine_social_posts nach status=draft/failed durchsehen")
+  [ "$TT" != "-1" ] && [ "$TT" -gt 4 ] && PROBLEME+=("TikTok seit $TT Tagen ohne Post|TikTok laeuft manuell ueber /admin/tiktok — laenger als vier Tage Stille heisst meist: es liegt ein fertiges Reel da, das niemand hochgeladen hat.|/admin/tiktok oeffnen und die fertigen MP4s pruefen")
+  [ "$DR" != "-1" ] && [ "$DR" -gt 3 ] && PROBLEME+=("$DR Instagram-Entwuerfe stapeln sich|Entwuerfe, die liegen bleiben, sind das Symptom eines kaputten Publish-Pfads (abgelaufener Token, geloeschtes Video, Timeout).|Fehler-Spalte in nureine_social_posts lesen: die letzten Eintraege mit status=failed")
 fi
 
 # ── 3b. ElevenLabs-Kontingent ──────────────────────────────────────────────

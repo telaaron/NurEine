@@ -451,11 +451,11 @@ async function waitForContainer(creationId: string, maxWaitMs = 25000): Promise<
 	// Timeout — trotzdem versuchen zu publizieren (igPublish retryt 9007 nochmal).
 }
 
-async function igPublish(creationId: string): Promise<string> {
+async function igPublish(creationId: string, maxWaitMs?: number): Promise<string> {
 	const userId = env.IG_USER_ID!;
 	const token = env.IG_ACCESS_TOKEN!;
 	// Erst auf FINISHED warten, dann publizieren (verhindert 9007-Race).
-	await waitForContainer(creationId);
+	await waitForContainer(creationId, maxWaitMs);
 
 	for (let attempt = 0; attempt < 3; attempt++) {
 		const resp = await fetch(`https://graph.facebook.com/${IG_V}/${userId}/media_publish`, {
@@ -508,6 +508,14 @@ async function igPostCarousel(imageUrls: string[], caption: string): Promise<str
 	return igPublish(parent);
 }
 
+// Reel-Container (Video-Transcoding bei Meta) brauchen deutlich länger als Bild-
+// Container bis FINISHED. Board-Blocker #322/#439 (reel-regie): mit dem
+// bisherigen 25s-Timeout (für alle Media-Typen) publizierte igPublish
+// regelmäßig, bevor der Container fertig war → Fehler 9007 "Media ID is not
+// available" bzw. Vercel-Timeout durch wiederholte Publish-Retries. 100s statt
+// 25s nur für REELS. (nureine_improvements #77)
+const REEL_CONTAINER_MAX_WAIT_MS = 100000;
+
 /**
  * Reel-Post (media_type=REELS). Erwartet eine öffentliche MP4-URL (vom Renderer
  * nach Supabase Storage hochgeladen). Video-Container brauchen länger als Bilder
@@ -520,7 +528,7 @@ async function igPostReel(videoUrl: string, caption: string): Promise<string> {
 		caption,
 		share_to_feed: true
 	});
-	return igPublish(creationId);
+	return igPublish(creationId, REEL_CONTAINER_MAX_WAIT_MS);
 }
 
 /** Build the 3 carousel slide URLs from a post's og_url (same slug + base).

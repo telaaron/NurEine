@@ -1287,7 +1287,7 @@ image_prompt: Ein englischer Prompt für die Bild-KI (Seedream v4.5). FOTOREALIS
 
   ⚠️ ES GIBT KEINEN VORGESCHRIEBENEN STIL (Aaron 2026-08-29). Frueher hing an jedem Prompt
   derselbe Block (Leica 35mm, Kodak Portra, warmes Licht, Terracotta-Akzent). Ergebnis: Jede
-  Story sah gleich aus — immer goldenes Gegenlicht, immer eine Person von hinten, immer
+  Story sah gleich aus, immer goldenes Gegenlicht, immer eine Person von hinten, immer
   Postkarte. Waehle Bildsprache, Licht, Perspektive und Farbigkeit so, wie es zu DIESER
   Story passt. Drei Bilder hintereinander duerfen NICHTS gemeinsam haben.
 
@@ -1297,7 +1297,7 @@ image_prompt: Ein englischer Prompt für die Bild-KI (Seedream v4.5). FOTOREALIS
       erzaehlt das Wachstum. Kein Mensch, keine Landschaft, keine Sonne im Bild.
     - "Kuehe fressen Brandlast weg" -> Tiere frontal auf AUGENHOEHE, Gruenzeug im Maul,
       matschige Hufe, BEDECKTER grauer Himmel, kein Sonnenstrahl. Unglamouroes und
-      sachlich — man sieht das Fressen, um das es geht.
+      sachlich, man sieht das Fressen, um das es geht.
     - "Anstrich senkt Dengue" -> Makro auf den nassen Pinselstrich am Tankrand, blauer
       Handschuh, direktes Tageslicht mit harten Schatten. Handarbeit im Detail.
 
@@ -1320,11 +1320,11 @@ image_prompt: Ein englischer Prompt für die Bild-KI (Seedream v4.5). FOTOREALIS
       (Persoenlichkeitsrecht; ausserdem erzeugen Bildmodelle bei Haenden/Gesichtern die
       meisten Fehler).
     - KEIN lesbarer Text, keine Zahlen, keine Logos im Bild. Bildmodelle schreiben
-      Buchstabensalat — und eine erfundene Zahl auf einem Monitor oder Schild waere ein
+      Buchstabensalat, und eine erfundene Zahl auf einem Monitor oder Schild waere ein
       ERFUNDENER BELEG. Bei einer Marke mit dem USP "belegt" der teuerste denkbare Fehler.
 
   Format: 40-90 Woerter Fliesstext auf Englisch. Zuerst das Motiv (Subject-first, so will es
-  Seedream), dann Perspektive, Licht und Farbigkeit — jeweils passend zu DIESER Story.
+  Seedream), dann Perspektive, Licht und Farbigkeit, jeweils passend zu DIESER Story.
   Beispiel: "Aerial top-down view of a vast solar farm stretching to every edge of the frame,
   endless rows of dark blue panels in strict geometric grid, a few rows still being installed
   with pale gaps between them, harsh midday sun, high contrast, crisp modern aerial
@@ -1357,7 +1357,7 @@ impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
 
   ⚠️ AUSSICHT IST NICHT WIRKUNG (harte Obergrenze, Verbesserung #37): Reine Labor-/Zellkultur-/
   Tiermodell-Ergebnisse OHNE Nachweis am Menschen/in der Praxis, sowie bloß ANGEKÜNDIGTE/GEPLANTE
-  Maßnahmen (noch nicht in Betrieb) sind eine AUSSICHT, keine belegte Wirkung — impact_score MAX 55,
+  Maßnahmen (noch nicht in Betrieb) sind eine AUSSICHT, keine belegte Wirkung, impact_score MAX 55,
   egal wie vielversprechend das Ergebnis klingt oder wie groß die potenzielle Zielgruppe ist.
   Beispiele: ein Wirkstoff nur „im Labor" oder „an Mäusen" getestet; eine neue Zuglinie, die erst
   „ab 2027 fahren soll". Über 55 geht der Score erst, wenn der Nutzen tatsächlich an Menschen/in
@@ -1366,10 +1366,32 @@ impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
   ⚠️ WETTER IST KEINE DAUERHAFTE WIRKUNG (Verbesserung #43): Beruht eine positive Entwicklung
   überwiegend auf einem Wetterereignis (El Niño/La Niña, ungewöhnlich starker Regen, Dürre-Ende
   durch Regen) statt auf einer politischen/technischen/menschlichen Maßnahme, ist der Effekt NICHT
-  dauerhaft — er kehrt sich beim nächsten Wetterumschwung um. impact_score MAX 52, auch wenn die
+  dauerhaft, er kehrt sich beim nächsten Wetterumschwung um. impact_score MAX 52, auch wenn die
   Zahl selbst beeindruckend klingt (weniger Waldbrände, mehr Regen). Beispiele: „Amazonas-Waldbrände
   stark zurückgegangen" (Ursache laut Artikel: La Niña) → max 52; „Mexikos Dürre endet durch starken
   Regen" → max 52. impact_durability muss diese Vergänglichkeit ehrlich niedrig widerspiegeln.
+
+  ⚠️ PRÄKLINIK-DECKEL (Verbesserung #25): Medizin-/Gesundheits-Meldungen, die NUR im Tierversuch, im
+  Labor oder in einer erst geplanten klinischen Phase stehen (Human-Studien „in Planung", „könnten
+  folgen", Jahre entfernt), bekommen HÖCHSTENS 55, egal wie dramatisch das Ergebnis klingt („alle
+  Tumore verschwunden", „Selbstreparatur", „Durchbruch"). Die dramatische Zahl ist eine HOFFNUNG, kein
+  Nutzen für heute lebende Menschen. Erst wenn ein Mittel am Menschen wirkt oder zugelassen ist, darf
+  der Score darüber steigen.
+
+  ⚠️ ZUSAGE IST NICHT WIRKUNG (Verbesserung #27): Eine Finanzierungszusage, ein unterzeichnetes Abkommen
+  oder eine angekündigte Investitionssumme ist für sich genommen noch kein Nutzen. Der entsteht erst,
+  wenn das Geld bei konkreten Menschen ankommt. Verwechsle die Größe der Zahl (Millionen Dollar, viele
+  beteiligte Staaten) NICHT mit belegter Wirkung: eine reine Absichtserklärung ohne nachgewiesenen
+  Einzelnutzen bekommt MAX 55. Beispiel: „260 Mio. Dollar für ein Meeresschutz-Abkommen" → max 55,
+  nicht 68.
+
+  ⚠️ CSR-/PARTNERSCHAFTS-MARKETING IST NICHT WIRKUNG (Verbesserung #56): Presseerklärungen von Firmen
+  („Partnerschaft mit X", „300 Projekte gefördert", „Y % des Programms abgeschlossen") klingen
+  strukturell bedeutsam, sind aber oft PR mit diffusem Nutzen. Frag: Wie viel bekommt EIN Mensch real
+  und dauerhaft, nicht, wie groß die Fördersumme klingt? Prozentzahlen zu FÖRDERSUMMEN oder
+  PROGRAMM-FORTSCHRITT (statt zu tatsächlicher Wirkung) sind ein Warnsignal für Score-Inflation nahe
+  der 55er-Schwelle. Beispiel: Fußmatten aus „geretteten Geisternetzen" als Marken-Partnerschaft
+  (real: Symbolik, kaum Umweltwirkung) → max 45.
 
   Merksatz: Frag „Wird das Leben von irgendwem morgen messbar besser?" Wenn nein → max 44, egal wie gut belegt.
   impact_reach/durability/evidence fülle separat ehrlich aus, aber der impact_score folgt dem Wirkungs-Maßstab
@@ -1915,10 +1937,14 @@ def generate_and_upload_image(image_prompt: str, story_title: str, category: str
             # ---- Fresh-prompt regenerate via DeepSeek ----
             log.info("  Fresh-prompt regenerate %d/%d for '%.60s'", fresh_attempt, FRESH_PROMPT_MAX, story_title)
             reason = f"Niedrige Bildqualität (Score {best_qscore:.1f}/10) für Story '{story_title}'"
+            # KEIN Stil vorgeben (Aaron 2026-08-29). Hier stand frueher "abstract symbol"
+            # + "flat, elegant paper collage" — das haette die freie Bild-Regel oben bei
+            # genau den Bildern wieder ausgehebelt, die nachgebessert werden.
             fix_instruction = (
-                "Create a COMPLETELY DIFFERENT abstract symbol for this topic. "
-                "Use a new metaphor. Avoid any shapes or concepts from the previous failed attempt. "
-                "The image MUST be flat, elegant paper collage. Maximum editorial quality."
+                "Choose a COMPLETELY DIFFERENT scene for this story. Show a different place, "
+                "moment or detail than the failed attempt, and change perspective and light "
+                "with it. Stay photorealistic. Let the story decide how the image looks — "
+                "there is no house style to match."
             )
             new_prompt = _regenerate_prompt_via_deepseek(image_prompt, reason, fix_instruction)
             if not new_prompt:

@@ -1,0 +1,26 @@
+{
+  "spec_version": "1.1",
+  "fenster": [
+    2005,
+    2023
+  ],
+  "index_start": 50.200416407048245,
+  "index_ende": 53.59458941230515,
+  "bewegung_pro_jahr": 0.11118072714584529,
+  "bereiche_steigend": 8,
+  "bereiche_fallend": 1,
+  "robustheitsquote": 0.865,
+  "multiverse": {
+    "eigene_delta": 3.394173005256903,
+    "varianten": 14,
+    "perzentil": 64.28571428571429,
+    "min": 1.9866287811450007,
+    "max": 6.880755648475223
+  },
+  "kernreihe_start": 48.91137883766835,
+  "kernreihe_ende": 52.665658729298855,
+  "kipppunkt_oekologie": 0.232,
+  "gleichgewicht": 0.1111111111111111,
+  "robustheit_ueberschrieben": true,
+  "pflicht_hinweis": "Ab 23 % Gewicht auf Ökologie fällt diese Zahl. Wir gewichten jeden der neun Bereiche mit 11 %."
+}

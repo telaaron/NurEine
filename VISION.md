@@ -12,6 +12,11 @@
 > Fachgutachten geprüft (Abschnitt 16). Abschnitt 6 ist dadurch an mehreren
 > Stellen überholt — die Gutachten-Fassung gilt. Neue Entscheidungen D-04
 > bis D-11, neue offene Punkte E-05 bis E-07.
+>
+> ⚠️ **KURSÄNDERUNG am selben Tag (D-12, Abschnitt 17):** Der Index ist kein
+> Fortschrittsindex mehr, sondern ein **Zustandsbild**. Das ändert die
+> Auswahlregel und macht Teile von Abschnitt 16 hinfällig. **Lies Abschnitt 17,
+> bevor du Abschnitt 16 anwendest.**
 
 ---
 
@@ -1675,4 +1680,213 @@ Für spätere Sessions, damit Entscheidungen nicht versehentlich zurückgedreht 
 | Tageszähler ja/nein | **Nein** (D-09) | Nicht wegen des Bias, sondern weil die Rechnung nicht geht — ehrliche Spanne überspannt Faktor 2 |
 | Bildung als Domäne | **Nein** (D-06) | Nur Anwesenheitsmasse verfügbar. Eine steigende Kurve aufzunehmen, weil sie verfügbar ist, wäre Ergebnis-Design mit dem richtigen Vorzeichen |
 | Name „Fortschrittsindex" | **Verworfen** (D-04) | Vorzeichen im Titel, scheitert am Fall-Test, ist die r = −0,40-Rahmung, dreifach belegt |
+
+
+---
+
+## 17. Kursänderung: vom Fortschrittsindex zum Zustandsbild (2026-09-01)
+
+> **Dieser Abschnitt hat Vorrang vor Abschnitt 16 und 6.** Er ist am selben Tag
+> entstanden wie Abschnitt 16, aber nach ihm — und ändert die Grundfrage.
+
+### 17.1 Die Entscheidung
+
+**D-12 · 2026-09-01 · Der Index zeigt, WIE die Welt ist — nicht, wie GUT sie ist**
+
+Aarons Wortlaut:
+
+> „Lass uns grundsätzlich von 0 diesen Index aufbauen. Ziel ist nicht, zu zeigen
+> wie gut die Welt ist, sondern allgemeiner wie die Welt IST. Wir finden heraus,
+> welche Indikatoren alle wichtig sind für einen Überblick über die Welt. Bloß
+> nicht schauen, welche Indikatoren zeigen, dass wir wachsen."
+
+*Begründung:* Alle sechs Gutachten aus Abschnitt 16 arbeiteten sich am selben
+Kernvorwurf ab — *„Er kennt sein Ergebnis, bevor er es misst."* Sperrklausel,
+Negativ-Quoten-Debatte, der Name, der gegen die Niveau-Lesart arbeitet: alles
+Abwehrarchitektur gegen eine Prämisse, die jetzt entfällt. **Ein Index, der nicht
+zeigen will, dass die Welt wächst, kann diesen Vorwurf nicht bekommen.**
+
+### 17.2 Was das konkret ändert
+
+| | Abschnitt 16 (Fortschrittsindex) | Ab jetzt (Zustandsbild) |
+|---|---|---|
+| Grundfrage | „Wird die Welt besser?" | **„Wie ist die Welt?"** |
+| Auswahlregel | Auswahl *vor* Richtungsprüfung (D-11) | **Richtung ist in KEINER Phase ein Kriterium** |
+| Ausgeschlossene Bereiche | Bildung, Ungleichheit, psych. Gesundheit, Einsamkeit — mangels Daten vertretbar | **Gravierende Lücken.** Bei „wie IST die Welt" wiegt eine fehlende Ungleichheits-Spalte schwerer als bei einem Fortschrittsbild → härter nachsuchen |
+| Fallende Indikatoren | Beleg für Redlichkeit | **Normalfall, kein Thema** |
+| Sperrklausel (E-05) | Existenzbedingung | **Weitgehend gegenstandslos** — ein Zustandsbild darf fallen, das ist sein Zweck |
+
+D-11 (Auswahl vor Richtungsprüfung) wird dadurch nicht aufgehoben, sondern
+**verschärft**: Die Richtung ist nicht mehr „erst später anschauen", sondern
+**gar kein Kriterium**. Sie wird nur noch protokolliert.
+
+### 17.3 Was bestehen bleibt
+
+Aus Abschnitt 16 gilt unverändert weiter:
+
+- **D-05** — eine Zahl, aber nie ohne ihre Bausteine (technisch erzwungen)
+- **D-07** — geometrische Aggregation
+- **D-08** — Rahmung „das hat gewirkt" statt „X % geschafft"
+- **D-09** — kein Tageszähler
+- **D-10** — Story neben der Kurve, nicht darauf
+- **16.5** — Vintages, Mindestabdeckung, keine Fortschreibung
+- **16.8** — die drei Sätze auf der Methodikseite (Satz 1 und 3 gelten weiter;
+  Satz 2 „wir haben ein wirtschaftliches Interesse, dass die Zahl steigt" wird
+  durch D-12 schwächer, aber nicht falsch)
+
+**Offen und Gegenstand der laufenden zweiten Expertenrunde:** Name (D-04 hiess
+„Der Langzeitindex" — passt weiterhin, weil richtungsoffen), Domänenschnitt,
+Normierung, und die Frage, wie eine Zahl 0–100 einen Zustand beschreiben kann,
+ohne implizit „höher = besser" zu behaupten.
+
+### 17.4 Aarons zweite Festlegung: eine Zahl, leicht und spielerisch
+
+> „Ich will eine Zahl. Möglichst leicht und spielerisch für den Endnutzer."
+
+Das erzeugt eine echte Konstruktionsspannung, die benannt gehört: **Eine Skala
+0–100 impliziert immer „höher = besser".** Wer „wie IST die Welt" sagt und dann
+eine 0–100-Zahl zeigt, behauptet Ergebnisoffenheit, ohne sie zu konstruieren.
+Diese Spannung ist Auftrag an die Experten, nicht wegzudefinieren.
+
+### 17.5 Verifizierte Datenkorrekturen (2026-09-01)
+
+Beim Vorbereiten der Präregistrierung gegen die echte Weltbank-API geprüft.
+**Drei Befunde, die Abschnitt 16 korrigieren:**
+
+**(a) Die Ernährungs-Domäne ist gerettet — 8 Domänen, nicht 7.**
+`SH.STA.WAST.ZS` (Wasting u5) hat eine echte Weltreihe **2000–2024, 25 Punkte**,
+direkt bei der Weltbank. Der OWID-Umweg und der Streichungsvorbehalt aus 16.2
+entfallen. (`SH.STA.STNT.ZS` (Stunting) ist dagegen bestätigt leer.)
+
+**(b) Zwei Typ-B-Anker in 16.3 waren falsch.**
+
+| Indikator | in 16.3 | **verifiziert** |
+|---|---|---|
+| Kindersterblichkeit, Welt 1990 | 87,5 | **93,5** |
+| Müttersterblichkeit, Welt 1990 | 380 | **391** |
+
+Beide wären als eingefrorene Konstanten falsch ins Präregistrierungs-Dokument
+gegangen. **Lehre: auch Anker verifizieren, nicht nur Codes.**
+
+**(c) Die Kappungsfalle — ein echtes Konstruktionsproblem.**
+CO₂ absolut liegt heute bei **39.633 Mt**; der schlechteste Wert im eingefrorenen
+Fenster 1990–2020 ist **38.008 Mt** (2019). Nach der Kappungsregel steht der
+Indikator dauerhaft auf **0** — für 2021, 2022, 2023, 2024 gleichermassen — und
+**bewegt sich nie wieder**, egal wie sich Emissionen entwickeln. Bei Tötungen
+tritt derselbe Effekt am oberen Ende auf (5,2 in 2023 ist besser als der
+Fenster-Bestwert 5,3 → Kappung bei 100).
+
+Das ist kein Rechenfehler, sondern eine Grenze des eingefrorenen Korridors: Der
+Fall „ein Indikator liegt dauerhaft ausserhalb des Fensters" war in 16.3 nicht
+vorgesehen. **Ein gekappter Indikator misst nichts mehr** — er kann nicht zwischen
+„schlimm" und „noch schlimmer" unterscheiden. Gegenstand der laufenden
+Expertenrunde; die Lösung muss grundsätzlich sein, nicht CO₂-spezifisch.
+
+**Alle 20 geprüften Weltbank-Codes liefern echte WLD-Reihen** — die Codeliste aus
+16.2 ist ansonsten belastbar.
+
+
+---
+
+## 18. Entwurfsentscheidungen zur Oberfläche (2026-09-01)
+
+**D-13 · 2026-09-01 · Eine Zahl als Hero, darunter ein Dashboard**
+
+Aaron hat fünf Gestaltungsentwürfe verglichen (Hero / Globus / Magazin / Terminal /
+Feed, alle mit echten Daten als klickbarer Prototyp). Ergebnis:
+
+| Entwurf | Entscheidung |
+|---|---|
+| **Eine Zahl (Hero)** | ✅ **übernommen** — aber nur mit visuellem Kontext (D-14) |
+| **Magazin** | ✅ teilweise — eine aus den Daten generierte Schlagzeile unter dem Hero |
+| **Terminal** | ✅ die *Dichte*, ❌ die Optik — „sehr techy und nerdy", Oma darf nicht überfordert werden |
+| **Globus** | ❌ vorerst raus (nicht verworfen, vertagt) |
+| **Feed** | ❌ verworfen |
+
+Aarons Zielbild wörtlich: *„Ich will wirklich Dashboard. Zahlen, Infos, Grafiken,
+Stats. Benutzerfreundlich aufbereitet. Also eigentlich eher nicht techy."*
+
+**D-14 · 2026-09-01 · Der Kontext zur Zahl ist visuell, nicht textlich**
+
+Aaron: *„Es muss noch mehr Kontext gegeben sein. Dieser muss nicht als Text da sein,
+sondern kann visuell sein. Aber man muss verstehen, was einem die Zahl sagt."*
+
+Drei visuelle Ebenen direkt unter der Zahl, keine davon Fließtext:
+
+1. **Die Skala** beantwortet „ist 54 viel?" ohne einen Satz. Vier Marken:
+   `0 = nichts erreicht` · `Stand 2001` · `heute` · `100 = Ziele erreicht`.
+2. **Die Verlaufskurve** 2001–heute — zeigt, dass es keine Momentaufnahme ist.
+3. **Die Bausteinleiste** — ein Balken je Bereich, mit dunklem Strich für den
+   Stand 2001. Links vom Strich = schlechter als damals. Ökologie ist der einzige
+   Balken links vom Strich; das ist ohne Erklärung lesbar.
+
+**D-15 · 2026-09-01 · Jeder Wert wird in Alltagssprache übersetzt (Oma-Test)**
+
+In den Bereichskacheln erscheinen **nie** Indexwerte, sondern Sätze mit einer Zahl:
+
+> Von 1000 Kindern sterben **37** vor dem 5. Geburtstag
+> **92** von 100 Menschen haben Strom
+> **39,6** Milliarden Tonnen CO₂ pro Jahr
+
+Punkt grün/rot je nach Richtung gegenüber dem Startjahr. Der normierte Indexwert
+existiert im Datenmodell, wird aber auf Kachelebene nie angezeigt.
+
+**D-16 · 2026-09-01 · Terminal-Dichte ja, Terminal-Ästhetik nein**
+
+Alle Messreihen stehen in einer Tabelle am Seitenende: heutiger Wert, früherer Wert,
+Sparkline, Richtung als Pill. Dieselbe Informationsdichte wie ein Analysten-Tool —
+aber auf warmem Papier (`--color-canvas`), mit Newsreader-Serife, ohne Monospace-
+Neon-Ästhetik. **Progressive Offenlegung:** Wer die Tiefe will, scrollt; wer nicht,
+sieht sie nie.
+
+**D-17 · 2026-09-01 · Die Schlagzeile wird aus den Daten generiert**
+
+Statt einer redaktionellen Überschrift: `"{n} Bereiche steigen. {m} bricht ein."` —
+automatisch aus den Domänen-Deltas. Sie ändert sich mit den Daten. Fällt nächstes
+Jahr ein zweiter Bereich, steht das da, ohne dass jemand eingreift. Das ist die
+technische Umsetzung der Sperrklausel-Haltung (16.6) auf Textebene.
+
+### 18.1 Prototyp-Befund: die Konstruktion trägt
+
+Der Entwurf wurde mit **16 echten Weltbank-Reihen** gerechnet (2001–2023,
+8 Domänen, konstanter Korb, geometrisch, Sättigungsnormierung gegen externe Anker).
+Vorläufiges Ergebnis — **nicht** die endgültige Zahl, aber ein Beleg, dass die
+Mechanik funktioniert:
+
+| | |
+|---|---|
+| Weltzahl 2023 | **54,0** von 100 |
+| 2001 | 48,8 |
+| Bewegung | **+0,25 Punkte/Jahr** |
+| Überleben | +16,7 |
+| Freiheit & Teilhabe | +15,6 |
+| Wissen | +12,0 |
+| Materielle Lage | +11,5 |
+| Infrastruktur / Sicherheit / Ernährung | +2,4 / +1,4 / +1,1 |
+| **Ökologie** | **−17,2** |
+
+Drei Dinge sind damit belegt:
+
+1. **Die Bewegung liegt bei +0,25/Jahr** — fast exakt die Prognose aus den
+   Gutachten (±0,4). Die Zahl bewegt sich zu langsam für tägliche Anzeige; das
+   bestätigt D-09 (kein Tageszähler).
+2. **Die geometrische Aggregation wirkt wie vorgesehen.** Ökologie fällt um 17
+   Punkte und dämpft die Gesamtzahl sichtbar — arithmetisch wäre der Einbruch
+   fast unsichtbar geblieben.
+3. **Der Korbwechsel-Effekt ist real.** Bei Rechnung über 1990–2024 sprang die
+   Zahl von 54,6 (2020) auf 50,2 (2024) — überwiegend, weil Domänen fehlten,
+   nicht weil sich die Welt änderte. Deshalb konstanter Korb 2001–2023. Das ist
+   die Bestätigung der Kernreihen-Warnung aus 16.5 an echten Daten.
+
+### 18.2 Was der Prototyp NICHT ist
+
+Die Anker sind noch **nicht präregistriert** — sie wurden für den Entwurf gesetzt,
+um die Mechanik zu zeigen. Die endgültige Zahl entsteht im Nulllauf (V0.5) mit den
+präregistrierten Ankern und wird anders aussehen. Beurteilt wurde die **Struktur**,
+nicht der Wert.
+
+Ebenfalls offen: Das **Schätzspiel** (erst raten, dann auflösen) ist im Dashboard
+nicht enthalten. Es wurde separat prototypisiert und ist weder angenommen noch
+verworfen — Aaron war unsicher, ob es zu verspielt wirkt. Entscheidung vertagt;
+es liesse sich später über den Hero legen, ohne die Struktur zu ändern.
 

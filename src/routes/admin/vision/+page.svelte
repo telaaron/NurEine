@@ -147,22 +147,30 @@
 
 {#if !data.readable}
 	<div class="note err">
-		<strong>VISION.md nicht lesbar.</strong> Die Datei liegt im Repo-Wurzelverzeichnis. Auf der
-		Live-Umgebung ist sie je nach Bundling nicht unter <code>process.cwd()</code> auffindbar —
-		lokal im Dev-Server funktioniert die Ansicht.
+		<strong>Kein Inhalt gefunden.</strong> Weder die Tabelle <code>nureine_vision</code> noch
+		<code>VISION.md</code> lieferten etwas. Ist Migration <code>00051</code> eingespielt und der
+		Erstimport gelaufen?
+	</div>
+{:else if data.quelle === 'datei'}
+	<div class="note">
+		<strong>Quelle: Datei (Fallback).</strong> Die Tabelle <code>nureine_vision</code> ist noch
+		nicht befüllt — angezeigt wird <code>VISION.md</code> von der Platte. Live auf Vercel
+		funktioniert das <em>nicht</em>, weil Markdown-Dateien nicht ins Serverless-Bundle kommen.
+		Migration <code>00051</code> einspielen, dann ist die Datenbank führend.
 	</div>
 {:else}
-	<div class="note">
-		<strong>Bearbeiten funktioniert nur lokal.</strong> Auf Vercel ist das Dateisystem
-		schreibgeschützt; dort ist diese Seite nur zum Lesen. Änderungen schreibt der lokale
-		Dev-Server direkt in <code>VISION.md</code> — danach committen nicht vergessen.
+	<div class="note ok">
+		<strong>Quelle: Datenbank.</strong> Lesen und Bearbeiten funktionieren auch live. Jede
+		Speicherung legt eine neue Version an; <code>VISION.md</code> wird lokal mitgeschrieben.
 	</div>
 {/if}
 
 {#if form?.error}
 	<div class="note err">{form.error}</div>
 {:else if form?.saved}
-	<div class="note ok">Gespeichert. Nicht vergessen: <code>git commit</code>.</div>
+	<div class="note ok">
+		{form.dateiHinweis ?? 'Gespeichert — in der Datenbank und in VISION.md. Nicht vergessen: git commit.'}
+	</div>
 {/if}
 
 {#if editing}

@@ -66,3 +66,6 @@ ios-native/**/DerivedData/
 
 # Worktrees (ein Arbeitsplatz pro Claude-Session, siehe ops/wt)
 .worktrees/
+
+# Langzeitindex: API-Cache (reproduzierbar, gehoert nicht ins Repo)
+.cache/

@@ -71,7 +71,9 @@ def norm(s: str) -> str:
     # Whisper schreibt "47%" als ein Token direkt an die Ziffer angehängt — die generische
     # Interpunktions-Bereinigung unten würde das "%" ersatzlos löschen (nicht durch ein
     # Leerzeichen ersetzen), bevor TOLERATED es zu "prozent" auflösen kann. Deshalb hier
-    # VOR dem Strip in Textform bringen (belegt 2026-08-15: "47%" != "Siebenundvierzig Prozent").
+    # VOR dem Strip in Textform bringen (belegt 2026-08-15: "47%" != "Siebenundvierzig
+    # Prozent"; und 2026-08-06: "80%" wurde zu "80", das Gate meldete "prozent"
+    # faelschlich als fehlend).
     s = s.replace("%", " prozent ")
     # Deutsche Tausendertrennpunkte ("500.000") sind nie Dezimalpunkte (die nutzen im
     # Deutschen ein Komma) — als Zifferngruppe zusammenziehen, sonst zerfällt die Zahl in
@@ -90,10 +92,6 @@ def norm(s: str) -> str:
     # Wort und das Gate schlägt falsch Alarm. Zusammenziehen VOR dem Tokenisieren.
     s = re.sub(r"(?<=[a-zäöüß])-(?=[a-zäöüß])", "", s)
     s = s.replace("ä", "ae").replace("ö", "oe").replace("ü", "ue").replace("ß", "ss")
-    # "%" MUSS vor der Interpunktions-Regex zu "prozent" werden, sonst streicht die
-    # Regex das Zeichen ersatzlos und die TOLERATED-Zuordnung unten laeuft nie (belegt
-    # 2026-08-06: "80%" wurde zu "80", das Gate meldete "prozent" faelschlich als fehlend).
-    s = s.replace("%", " prozent ")
     # Tausender-Punkt MUSS vor der Interpunktions-Regex verschwinden, sonst wird er zu
     # einem Leerzeichen und "8.000" zerfaellt in die zwei Tokens "8"/"000" statt EINER
     # Zahl "8000" -- numeric_key() kann das gesprochene "achttausend" dann nie matchen

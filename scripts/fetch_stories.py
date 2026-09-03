@@ -1561,12 +1561,16 @@ ig_hook: Nur wenn ig_ok=true. Der INSTAGRAM-HOOK für Folie 1, die ersten 1,5 Ze
     - charme   → das entzückende Bild zuerst, der Grund kommt beim Wischen
   ⚠️ NIEMALS die Schlagzeile/der Titel. Eine Schlagzeile ("EU beschließt Tierschutzgesetz") gibt KEINEN Grund
   zu wischen, die ganze Info steht schon da. Stattdessen: SPANNUNG aufbauen, eine offene Schleife, ein Problem
-  oder ein überraschender Einstieg, dessen Auflösung erst auf Folie 2 kommt. Idealerweise endet der Hook mit
-  einem Doppelpunkt, einer offenen Frage oder einem Cliffhanger. Max 110 Zeichen.
+  oder ein überraschender Einstieg, dessen Auflösung erst auf Folie 2 kommt. Max 110 Zeichen.
+  ⚠️ Die Spannung kommt aus dem INHALT, nicht aus der Interpunktion (Verbesserung #91): kein
+  Cliffhanger-Doppelpunkt als Lückenfüller ("Der Grund:", "Was dann geschah:", "Was da gerade passiert:")
+  und keine Frage als billiger Trick. Die Redaktion entfernt genau das seit Wochen fast jede Nacht manuell.
+  Ein guter Hook endet als vollständiger Aussagesatz, offen bleibt die Auflösung, weil eine INFORMATION
+  fehlt, nicht weil ein Satzzeichen sie zurückhält.
   SCHLECHT (Schlagzeile): "EU beschließt erstes Tierschutzgesetz für Hunde und Katzen"
+  SCHLECHT (Cliffhanger-Lückenfüller): "Ein Land hat gerade ein Tierschutzgesetz beschlossen. Der Grund:"
   GUT (offene Schleife): "Millionen Hunde wurden bisher legal so gezüchtet, dass sie kaum atmen können. Das endet jetzt."
   GUT (Spannung): "Drei Hirsche standen am ersten Tag vor der neuen Brücke. Was dann passierte, ändert alles."
-  GUT (Frage): "Was wäre, wenn die schlimmste Blindheits-Ursache eines Landes einfach verschwindet?"
   Der Leser muss das GEFÜHL haben: "ich MUSS wissen wie's weitergeht". Sonst null.
   ⚠️ FAKTEN-TREUE: auch hier KEINE erfundenen Zahlen/Vergleiche. Spannung kommt aus
   einer offenen Schleife, NICHT aus aufgepeppten Steigerungen ("doppelt so schnell",

@@ -1,16 +1,16 @@
 # Zustand: mac-mini-server
 
-> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-09-03T19:30:01Z**
+> Automatisch erzeugt von `ops/run/selfupdate.sh` — **2026-09-04T04:30:01Z**
 > Diese Datei ist der Blick auf den Mini von überall: einfach hier auf GitHub lesen.
 
 ## System
 
 | | |
 |---|---|
-| Läuft seit | up 7 weeks, 2 days, 6 hours, 14 minutes |
+| Läuft seit | up 7 weeks, 2 days, 15 hours, 14 minutes |
 | Speicherplatz | 841G frei von 915G (4% belegt) |
 | Arbeitsspeicher | 13Gi verfügbar von 15Gi |
-| Auslastung | load average: 0,00, 0,00, 0,00 |
+| Auslastung | load average: 0,00, 0,02, 0,01 |
 | Tailscale-Adresse | `100.123.159.38` |
 | Claude Code | 2.1.209 (Claude Code) |
 | cron-Dienst | active (17 Jobs) |
@@ -20,10 +20,10 @@
 | | |
 |---|---|
 | Branch | `main` |
-| Aktueller Commit | `2b453bd chore(state): Zustandsbericht mac-mini-server 2026-09-03T11:30:01Z` |
-| vom | 2026-09-03 13:31:01 +0200 |
+| Aktueller Commit | `6e9c80c chore(state): Zustandsbericht mac-mini-server 2026-09-03T19:30:01Z` |
+| vom | 2026-09-03 21:31:07 +0200 |
 | Hinter origin/main | 15 Commits |
-| Vor origin/main | 2 Commits |
+| Vor origin/main | 3 Commits |
 | Uncommittete Dateien | 0 |
 | Branches nur lokal (ungesichert) | 18 |
 | Letzter Pull | Pull fehlgeschlagen (divergiert?) — Handarbeit nötig |
@@ -32,10 +32,10 @@
 
 | Agent | Zeitpunkt (UTC) | Ergebnis |
 |---|---|---|
-| fetch | 20260903T011001Z | ✅ exit=0 |
-| chefredakteur | 20260903T013236Z | ✅ exit=0 |
-| redaktion | 20260903T013553Z | ✅ exit=0 |
-| analyst | 20260903T014656Z | ✅ exit=0 |
+| fetch | 20260904T011001Z | ✅ exit=0 |
+| chefredakteur | 20260904T012916Z | ✅ exit=0 |
+| redaktion | 20260904T013233Z | ✅ exit=0 |
+| analyst | 20260904T014451Z | ✅ exit=0 |
 | reel-regie | 20260903T060001Z | ✅ exit=0 |
 | verbesserer | 20260903T081701Z | ✅ exit=0 |
 

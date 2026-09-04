@@ -664,11 +664,26 @@ export async function getApprovedCurationStoryId(
 }
 
 export async function selectInstagramStory(): Promise<StoryResult | undefined> {
-  // (0) Folgt der freigegebenen Kuration, falls vorhanden.
+  // (0) Folgt der freigegebenen Kuration, falls vorhanden — aber nur, wenn sie
+  // heute noch nicht in einem ANDEREN post_kind gepostet wurde (Verbesserer #460:
+  // Feed-Carousel und Reel-Auswahl griffen sonst auf dieselbe Kuration zu, der
+  // spätere Insert scheiterte am unique constraint). Ist sie schon vergeben,
+  // fällt der Aufruf durch auf die normale Kandidatenwahl unten, die bereits
+  // je-gepostete Stories ausschließt.
   const curatedId = await getApprovedCurationStoryId('instagram');
   if (curatedId) {
-    const curated = await getStoryById(curatedId);
-    if (curated) return curated;
+    const dayStart = new Date();
+    dayStart.setUTCHours(0, 0, 0, 0);
+    const { count: curatedPostedToday } = await supabaseAdmin
+      .from('nureine_social_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('platform', 'instagram')
+      .eq('story_id', curatedId)
+      .gte('created_at', dayStart.toISOString());
+    if (!curatedPostedToday) {
+      const curated = await getStoryById(curatedId);
+      if (curated) return curated;
+    }
   }
 
   const since = sinceFresh();

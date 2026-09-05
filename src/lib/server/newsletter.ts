@@ -628,15 +628,40 @@ export async function selectApprovedOrBestHero(): Promise<string | null> {
   // mehrere Kanäle freigegeben sind (Blocker #153, Team-Board 2026-08-04).
   const { data: approved } = await supabaseAdmin
     .from('nureine_curation_queue')
-    .select('story_id')
+    .select('story_id, nureine_stories!inner(created_at, sensitive)')
     .eq('for_date', today)
     .eq('status', 'approved')
     .eq('channel', 'hero')
     .not('story_id', 'is', null)
     .limit(1)
     .maybeSingle();
-  const approvedId = (approved as { story_id: string | null } | null)?.story_id;
-  if (approvedId) return approvedId;
+  const approvedRow = approved as {
+    story_id: string | null;
+    nureine_stories: { created_at: string | null; sensitive: boolean | null } | null;
+  } | null;
+  if (approvedRow?.story_id) {
+    // Sichtbarkeitsnetz (improvement #48): eine approved-Zeile wird blind
+    // übernommen, auch wenn sie eine heikle oder wochenalte Story trägt (Fund
+    // 2026-07-25: >1 Monat alte, sensitive=true Kuration lag unbemerkt auf einem
+    // künftigen for_date). Blockiert den Versand NICHT — Aaron/Chefredakteur hat
+    // explizit freigegeben —, macht den Fall aber im Log sichtbar statt ihn
+    // stillschweigend durchzulassen wie bisher.
+    const story = approvedRow.nureine_stories;
+    const ageDays = story?.created_at
+      ? (Date.now() - new Date(story.created_at).getTime()) / 86_400_000
+      : 0;
+    if (story?.sensitive) {
+      console.warn(
+        `[newsletter] Achtung: freigegebene Hero-Story ${approvedRow.story_id} ist sensitive=true.`
+      );
+    }
+    if (ageDays > 7) {
+      console.warn(
+        `[newsletter] Achtung: freigegebene Hero-Story ${approvedRow.story_id} ist ${Math.round(ageDays)} Tage alt.`
+      );
+    }
+    return approvedRow.story_id;
+  }
 
   // 2) Fallback: beste kuratierte des Tages, aber NUR wenn sie die Schwelle reißt.
   // resonance_score steht gemischt auf 0–10 (alt) und 0–100 (neu) — deshalb NICHT

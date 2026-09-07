@@ -281,9 +281,16 @@ function clampDek(dek: string, maxWords = DEK_MAX_WORDS): string {
 	const teil = budget.lastIndexOf(',');
 	// Nur nutzen, wenn dabei noch mindestens die Haelfte des Budgets stehen bleibt —
 	// sonst wird die Aussage zu duenn.
-	if (teil > 0) {
-		const kurz = budget.slice(0, teil).trim();
-		if (kurz.split(/\s+/).length >= Math.ceil(maxWords / 2)) return kurz;
+	// Ein Teilsatz taugt nur, wenn er nicht selbst in der Luft haengt. "…weg, eine
+	// Methode" ist zwar ein sauberer Komma-Schnitt, liest sich aber wie ein
+	// abgebrochener Satz (gesehen 2026-09-03 auf der Kuehe-Karte). Endet er auf
+	// einem Artikel, einer Praeposition oder einem einzelnen Anschlusswort,
+	// weichen wir auf das vorige Komma aus.
+	const HAENGT = /\b(ein|eine|einen|einem|einer|der|die|das|den|dem|des|und|oder|mit|von|für|bei|als|wie|eine\s+\w+)$/i;
+	for (let k = teil; k > 0; k = budget.lastIndexOf(',', k - 1)) {
+		const kurz = budget.slice(0, k).trim();
+		if (kurz.split(/\s+/).length < Math.ceil(maxWords / 2)) break;
+		if (!HAENGT.test(kurz)) return kurz;
 	}
 
 	// Sitzt das Komma zu frueh (oder fehlt es), blieb hier der harte Wortschnitt —
@@ -315,7 +322,9 @@ function dekText(dek: string, color = '#ffffff', size = 48, maxWords = DEK_MAX_W
 // fuer synthetische Medien.) Wortlaut identisch zu den Reels.
 function aiLabel(onDark = true): string {
 	const col = onDark ? 'rgba(255,255,255,0.62)' : 'rgba(22,20,15,0.52)';
-	return `<div style="position:absolute;display:flex;bottom:${SAFE_BOTTOM}px;right:${SAFE_SIDE}px;font-family:'Inter';font-size:22px;font-weight:500;color:${col};letter-spacing:0.02em;">Illustration: KI · NurEine</div>`;
+	// bottom bewusst UNTER SAFE_BOTTOM: Das Label ist Kleingedrucktes und darf
+	// nicht mit CTA oder Untertitel auf einer Linie liegen (gesehen 2026-09-03).
+	return `<div style="position:absolute;display:flex;bottom:${Math.round(SAFE_BOTTOM / 2.5)}px;right:${SAFE_SIDE}px;font-family:'Inter';font-size:22px;font-weight:500;color:${col};letter-spacing:0.02em;">Illustration: KI · NurEine</div>`;
 }
 
 function impactPill(score: number | null | undefined, accent: string, dark = false): string {

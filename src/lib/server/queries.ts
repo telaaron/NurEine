@@ -664,11 +664,25 @@ export async function getApprovedCurationStoryId(
 }
 
 export async function selectInstagramStory(): Promise<StoryResult | undefined> {
-  // (0) Folgt der freigegebenen Kuration, falls vorhanden.
+  // (0) Folgt der freigegebenen Kuration, falls vorhanden — aber nur, wenn sie
+  // noch GAR NICHT gepostet wurde (Verbesserer #460 fixte zunächst nur den
+  // Heute-Fall: Feed-Carousel und Reel-Auswahl griffen sonst auf dieselbe
+  // Kuration zu, der spätere Insert scheiterte am unique constraint). Das
+  // reicht nicht: Team-Board #487 (reel-regie, 2026-09-07) fand einen Fall, in
+  // dem dieselbe Story 4 Tage nach ihrem Carousel-Post erneut als Reel
+  // vorgeschlagen wurde, weil der Today-Filter ältere Posts durchließ. Die
+  // Prüfung ist jetzt zeitlos, wie bei der Kandidatenwahl unten (`postedIds`).
   const curatedId = await getApprovedCurationStoryId('instagram');
   if (curatedId) {
-    const curated = await getStoryById(curatedId);
-    if (curated) return curated;
+    const { count: curatedAlreadyPosted } = await supabaseAdmin
+      .from('nureine_social_posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('platform', 'instagram')
+      .eq('story_id', curatedId);
+    if (!curatedAlreadyPosted) {
+      const curated = await getStoryById(curatedId);
+      if (curated) return curated;
+    }
   }
 
   const since = sinceFresh();

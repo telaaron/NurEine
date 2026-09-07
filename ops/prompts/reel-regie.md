@@ -89,11 +89,17 @@ Hintergründe/Hook-Bibliothek: `docs/TIKTOK_FORMAT_REZEPT.md` (§C/§D/§F).
 
 1. **Story:** An IG-Tagen dieselbe Story wie Schritt B (denselben plan.json um `seo`/`loop`/TikTok-Szenen-Varianten erweitern oder separaten tiktok-plan.json schreiben). An anderen Tagen beste unverbrauchte Perle per SQL (Supabase `gbfbhspqwaqvnoxitohd`):
    ```sql
-   SELECT id, title, summary, ig_hook, share_hook, source_name, category, image_url, impact_score, resonance_score
-   FROM nureine_stories
-   WHERE tiktok_caption IS NULL AND impact_score >= 55 AND sensitive IS NOT TRUE AND image_url IS NOT NULL
-   ORDER BY resonance_score DESC NULLS LAST, created_at DESC LIMIT 3;
+   SELECT s.id, s.title, s.summary, s.ig_hook, s.share_hook, s.source_name, s.category, s.image_url, s.impact_score, s.resonance_score
+   FROM nureine_stories s
+   WHERE s.tiktok_caption IS NULL AND s.impact_score >= 55 AND s.sensitive IS NOT TRUE AND s.image_url IS NOT NULL
+     AND NOT EXISTS (SELECT 1 FROM nureine_social_posts p WHERE p.story_id = s.id)
+   ORDER BY s.resonance_score DESC NULLS LAST, s.created_at DESC LIMIT 3;
    ```
+   `tiktok_caption IS NULL` allein reicht nicht: die Story kann schon als IG-Carousel
+   gelaufen sein, ohne je für TikTok gewählt worden zu sein (Team-Board #487,
+   reel-regie 2026-09-07 — Story lief 11 Tage nach ihrem Carousel-Post erneut als
+   Reel). Der `NOT EXISTS` schließt jede Story aus, die in JEDEM `post_kind`
+   schon einmal gepostet wurde, egal auf welchem Kanal.
    Wähle nach Stop-Power (starke Zahl/Überraschung), bevorzugt jünger als 72h. Keine geeignete Story → TikTok fällt heute aus („lieber leer als schwach"), im Report vermerken.
 2. **Tag-Nummer** für den Kicker `TAG <N> · NUR EINE`: N = Kalendertage seit 2026-07-11 inklusive (Aarons manueller Start mit dem Landminen-Demo = Tag 1; macOS: `echo $(( ($(date +%s) - $(date -j -f %Y-%m-%d 2026-07-11 +%s)) / 86400 + 1 ))`).
 3. **Dramaturgie:** Die Fuenf-Block-Struktur aus `docs/REEL_TEXT_REGELN.md` §1 ist verbindlich, hier steht nur die Zuordnung zu den Szenen-Typen:

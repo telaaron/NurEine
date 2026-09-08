@@ -1003,6 +1003,45 @@ async function main() {
 		console.log('OK Kohärenz-Check: Bild-Zahlen = gesprochene Zahlen');
 	}
 
+	// BELEG-CHECK: Die proof-Szene MUSS einen snapshot tragen — den Artikel-
+	// Ausschnitt, der sich einfliegend öffnet. Fehlt er, rendert die Szene nur die
+	// Punkt-Spirale, und der sichtbare Beleg — das Herzstück des USP — verschwindet.
+	// Genau das ist am 04./05.09.2026 passiert: 'snapshot' stand nicht im Baukasten,
+	// also liess die Regie es weg. Eine Doku-Zeile allein reicht offensichtlich
+	// nicht, darum hier ein harter Abbruch.
+	if (!arg('no-proof-check')) {
+		const proofs = (plan.scenes || []).filter((sz) => sz.kind === 'proof');
+		const ohne = proofs.filter((sz) => {
+			const sn = sz.snapshot;
+			return !sn || !sn.outlet || !sn.title || !sn.quote;
+		});
+		if (ohne.length) {
+			throw new Error(
+				'Beleg-Check: proof-Szene ohne vollständigen snapshot —\n' +
+					'  Ohne snapshot{outlet,title,quote} rendert nur die Punkt-Spirale,\n' +
+					'  der Artikel-Ausschnitt fehlt. Siehe docs/REEL_BAUKASTEN.md (proof).\n' +
+					'  (übersteuern: --no-proof-check)'
+			);
+		}
+		// Der Quellenname muss zur Story gehoeren. Am 05.09. stand "Johns Hopkins Hub"
+		// ueber einer Baltimore-Story — aus einem fremden Plan uebernommen.
+		const quelle = (plan.story?.source || '').trim().toLowerCase();
+		if (quelle) {
+			const fremd = proofs.filter((sz) => {
+				const o = (sz.snapshot?.outlet || '').trim().toLowerCase();
+				return o && o !== quelle;
+			});
+			if (fremd.length) {
+				throw new Error(
+					`Beleg-Check: snapshot.outlet "${fremd[0].snapshot.outlet}" != story.source "${plan.story.source}" —\n` +
+						'  Ein falscher Quellenname ist ein FALSCHER BELEG.\n' +
+						'  (übersteuern: --no-proof-check)'
+				);
+			}
+		}
+		console.log(`OK Beleg-Check: ${proofs.length} proof-Szene(n) mit Artikel-Ausschnitt`);
+	}
+
 	// MUSIKBETT: seit 2026-08-01 standardmäßig AUS (Aaron). Der Sound kommt beim Posten
 	// aus TikToks Commercial Music Library — ein zweites Bett im Master würde sich damit
 	// überlagern. Nur noch an, wenn der Plan es ausdrücklich verlangt (plan.music) oder

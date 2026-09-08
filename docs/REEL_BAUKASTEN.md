@@ -100,7 +100,7 @@ Im `plan.json` kann `tiktok.soundKeywords` die Ableitung überschreiben.
 | `hook` | Stopper, Frame 0 | `text` (≤9 Wörter), `punch` (Wort-Teilstring aus text), `kicker` (`GUTE NACHRICHT · <KAT>`) | Immer Szene 1 |
 | `number` | Zahl-Count-up, dunkler Kontrast | `value` ("90%", "50 Mio"), `unit` (Wort oder null), `context` (≤12 Wörter) | Wenn eine ECHTE Kern-Zahl existiert; auch mehrfach möglich (Vorher/Nachher als 2 Szenen) |
 | `beat` | Erzähl-Beat, hell | `text` (≤14 Wörter), `image` (Story-Bild-URL oder null), `pose` (`point-side`/`thinking`/`point-up`/`reading`/`idle`/`wave`) | 1–3×; erster Beat gern mit Bild |
-| `proof` | Beleg-Stempel (USP!) | `source`, `impact` (Zahl oder null — **nur ≥50 zeigen**) | Fast immer vorletzte Szene |
+| `proof` | Beleg-Stempel (USP!) | `source`, `impact` (Zahl oder null — **nur ≥50 zeigen**), `progress` (Pflicht), **`snapshot` (Pflicht!)** | Fast immer vorletzte Szene |
 | `end` | Share-CTA (Sends!) | `share` (schickbare Zeile), `cta` (Standard: `Schick’s jemandem, der das heute braucht`), `hasVo` (bool) | Immer letzte Szene |
 
 Jede Szene zusätzlich: `voText` — der gesprochene Satz. **Eiserne Regeln:**
@@ -131,6 +131,23 @@ Jede Szene zusätzlich: `voText` — der gesprochene Satz. **Eiserne Regeln:**
   („Klippe" statt „Kliff") — die Stimme spricht seltene Wörter unnatürlich, und
   falsche Betonungen einzelner Wörter gehören ins `remotion/tts-lexikon.json`.
 - proof-voText EXAKT: `Belegt — von uns nachgeprüft.` (Quellenname steht im Bild).
+- **`snapshot` ist PFLICHT** (Aaron 2026-09-05). Ohne dieses Feld rendert die
+  proof-Szene NUR die Punkt-Spirale — der Artikel-Ausschnitt, der sich einfliegend
+  öffnet, fehlt dann komplett. Genau das ist am 04./05.09. passiert: Dieses Feld
+  stand bis dahin NICHT im Baukasten, also hat die Regie es weggelassen, und der
+  sichtbare Beleg — das Herzstück des USP — verschwand aus den Reels.
+  Aufbau, alle vier Felder aus DIESER Story (nie aus einem alten Plan kopieren):
+  ```json
+  "snapshot": {
+    "outlet": "<Quellenname, exakt wie in nureine_stories.source_name>",
+    "year":   "2026",
+    "title":  "<Schlagzeile der Quelle, gekürzt auf ~60 Zeichen>",
+    "quote":  "<die belegende Zahl als Zitat, ~50 Zeichen>"
+  }
+  ```
+  Der `outlet` MUSS zur Story gehören. Am 05.09. stand „Johns Hopkins Hub" über
+  einer Baltimore-Nachbarschafts-Story — aus einem fremden Plan übernommen. Das
+  ist ein FALSCHER BELEG und damit der teuerste denkbare Fehler dieser Marke.
 - end-voText EXAKT: `Schick das jemandem, der heute eine gute Nachricht braucht.`
 - Timing macht das System: die Stimme führt die Szenendauer (VO + kurzer Nachlauf).
 

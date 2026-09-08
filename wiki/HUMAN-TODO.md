@@ -5,7 +5,9 @@
 
 ## Jetzt (blockiert den CEO)
 
-- [ ] **Die 8 Entscheidungen in `wiki/REBUILD-PLAN.md` treffen** (Kill-Liste, Stack, Repo, Datenbank, Kanal). Bis dahin: Stillstand nach Plan, kein Abriss.
+- [x] ~~Die 8 Entscheidungen treffen~~ — **erledigt 2026-09-08** (VISION D-20…D-28).
+- [ ] **Neues Supabase-Projekt anlegen** (Free-Tier, Region EU) und URL / Service-Key / Anon-Key in `~/.claude/secrets/keys.env` als `NUREINE_V2_SUPABASE_URL`, `NUREINE_V2_SUPABASE_SERVICE_KEY`, `NUREINE_V2_SUPABASE_ANON_KEY` ablegen — ohne das kann Phase 2 nicht starten.
+- [ ] **Neues GitHub-Repo** (`telaaron/nureine`, privat) — oder mir sagen, dass ich es per `gh repo create` anlegen darf.
 
 ## Betrieb — sofort, je unter 15 Minuten, 0 €
 
@@ -16,7 +18,7 @@
 ## Accounts & Geld (nur bei „Übernehmen" der jeweiligen Funktion)
 
 - [ ] **Eigenes Supabase-Projekt für NurEine** (Free-Tier reicht: DB 83 MB). Heute teilt NurEine Projekt `gbfbhspqwaqvnoxitohd` mit bridge/ledge/selah/websniper — ein Quota-Riss eines Produkts legt alle lahm (Vorfall 16.–20.07.). Empfehlung: neu anlegen, beim Rebuild dorthin.
-- [ ] **Apple Developer Account (99 €/Jahr)** — **nur** falls Entscheidung 2 „iOS behalten" lautet. Empfehlung: nicht kaufen.
+- ~~Apple Developer Account~~ — entfällt (D-21, iOS gekillt).
 - [ ] **fal.ai:** kommerzielle Bildlizenz im Plan einmal bestätigen.
 - [ ] **Brevo:** SPF/DKIM/DMARC im DNS prüfen (offen seit Juni).
 - [ ] **Vercel-Env prüfen:** `PUBLIC_BASE_URL`, `FAL_KEY`, `ELEVENLABS_API_KEY`, `ADMIN_SESSION_SECRET` gesetzt?

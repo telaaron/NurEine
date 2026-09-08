@@ -5,7 +5,7 @@
 > Zielbild, Produktausrichtung und interne Roadmap. Bei Widerspruch zu einem
 > anderen Dokument gilt dieses hier.
 >
-> **Stand:** 2026-09-01 · **Status:** Entwurf, in Evaluierung
+> **Stand:** 2026-09-08 · **Status:** Zielbild gesetzt, Rebuild beschlossen (D-20 bis D-28)
 > **Bearbeitbar unter:** `/admin/vision`
 > **Seit 2026-09-08:** Ist-Zustand, Human-TODO und Rebuild-Plan liegen im
 > Firmen-Wiki `wiki/` (Leseordnung in `wiki/README.md`). VISION.md bleibt die
@@ -920,6 +920,7 @@ Produkts.
 ### Offen — Aaron muss entscheiden
 
 **E-01 · Fahrplan-Konflikt: Nutzer gewinnen vs. Features bauen**
+→ **Entschieden 2026-09-08, siehe D-20.**
 `FAHRPLAN.md` sagt „KEIN neues Feature, erst 200 Nutzer". Dieses Dokument
 beschreibt ein Programm über fünf Phasen. Bei 15 bestätigten Abonnenten ist die
 Frage real: Baut das Programm eine Plattform für Leser, die es noch nicht gibt?
@@ -933,6 +934,7 @@ Denkbare Auflösungen:
 → *Noch nicht entschieden.*
 
 **E-02 · Was passiert mit den bestehenden Planungsdokumenten?**
+→ **Entschieden 2026-09-08, siehe D-20.**
 Es existieren `ROADMAP.md` (Juni), `FAHRPLAN.md` (Juni), `STRATEGY.md` (Juni),
 `BACKLOG.md`, `docs/APP_ROADMAP.md`, `docs/AI_ROADMAP.md`. Wenn VISION.md
 Pflichtlektüre ist, brauchen die anderen einen klaren Status — sonst widersprechen
@@ -952,6 +954,7 @@ Konzept anpassen oder die Cronjobs — Cron-Zeiten nur nach Absprache (CLAUDE.md
 → *Noch nicht entschieden.*
 
 **E-05 · Die Sperrklausel — echte Selbstverpflichtung, nur Aaron kann sie eingehen**
+→ **Entschieden 2026-09-08, siehe D-26.**
 Der Index wird laut Gutachten **nur dann gebaut**, wenn vorher öffentlich zugesagt
 wird, wie mit einem Rückgang umgegangen wird (Wortlaut in 16.6). Kern: Ein
 fallender Wert wird zur Titelmeldung mit derselben Prominenz wie ein Anstieg, und
@@ -981,6 +984,7 @@ gleichwertig, ohne Erfindungsrisiko.
 → *Noch nicht entschieden.*
 
 **E-07 · Was passiert mit den 18 nicht installierten Cronjobs?**
+→ **Entschieden 2026-09-08, siehe D-28.**
 Geprüft am 2026-08-27: `ops/crontab.txt` enthält 18 Jobs, `crontab -l` kennt
 **keinen davon** (nur ein unbeteiligtes Mac-Cleanup-Skript). Keine Logs, keine
 Läufe. Die GitHub-Actions wurden am 25.07. abgeschaltet, weil sie parallel zum
@@ -1202,6 +1206,69 @@ Datenabruf, (2) die **Verliererliste** aller erwogenen und verworfenen Indikator
 inklusive Begründung (dass darauf *steigende* Kandidaten stehen — BIP,
 Einschulungsrate — ist der Beleg, dass nicht nach Richtung sortiert wurde),
 (3) die **Sperrklausel** (E-05).
+
+---
+
+
+### Entschieden am 2026-09-08 (CEO-Neustart, Aaron mündlich, protokolliert vom CEO-Agenten)
+
+Grundlage: `wiki/00-LAGE.md` (verifizierter Ist-Zustand) und `wiki/REBUILD-PLAN.md`.
+Aarons Mandat: *„einmal abreißen, neu bauen … sonst alles fresh bitte, keine Scheiße mehr."*
+
+**D-20 · 2026-09-08 · E-01 gelöst: Die Vision gilt, der Fahrplan ist Geschichte**
+`FAHRPLAN.md`, `ROADMAP.md`, `STRATEGY.md`, `BACKLOG.md`, `GROWTH*.md` werden nach
+`docs/archiv/` verschoben (löst zugleich **E-02**). Einzige lebende Quellen: VISION.md
+(Zielbild, Entscheidungen) und `wiki/` (Ist, Plan, Human-TODO).
+
+**D-21 · 2026-09-08 · Beide iOS-Apps werden gekillt**
+`ios/` (Capacitor) und `ios-native/` (SwiftUI) samt Capacitor-Paketen, APNs, Widget.
+*Begründung:* nie gelaufen, nie im Store, 99 €/Jahr plus Review-Zyklus für 16 Abonnenten.
+Web-first war bereits Aarons Entscheidung (07/2026). Kein Apple-Developer-Account.
+
+**D-22 · 2026-09-08 · Social-Automation wird gekillt — und danach neu aufgebaut**
+Aarons Wortlaut: *„die social media automation killen, aber danach neu aufbauen. bzw.
+tiktok creation fundament übernehmen. da kommen wirklich gute videos raus."*
+Gekillt: IG-/Threads-Publish-Automatik, 7 Cron-Trigger, Digest, Insights, Kommentar-Bot,
+alte Reels-Varianten. **Übernommen als Fundament:** der TikTok-Erstellungsweg —
+Remotion-Baukasten (`docs/REEL_BAUKASTEN.md`), Textregeln (`docs/REEL_TEXT_REGELN.md`),
+Whisper-Aussprache-Gate, ElevenLabs-Stimme „Luca", Beleg-Szene. Neu aufgebaut wird
+*nach* dem Kern (Phase 2 des Rebuild-Plans), als eigenes, kleines Modul.
+
+**D-23 · 2026-09-08 · B2B wird gekillt**
+Tabellen, Seiten (`/fuer-unternehmen`, `/preise`), LinkedIn-/B2B-Konzepte, B2B-Newsletter-
+Zweig. *Begründung:* 0 Kunden in 4 Monaten; im Juni bereits als schwächstes Modell markiert.
+
+**D-24 · 2026-09-08 · Claude-Code-Agenten bleiben Betriebsform — vollständig neu**
+Aarons Wortlaut: *„claude code agenten bleiben, aus kosteneffizienz aber auch vollständig
+neu machen. alles übersichtlicher."* Damit ersetzt: die Empfehlung, Agenten durch reinen
+Code zu ersetzen. Vorgaben für den Neubau: wenige, klar geschnittene Agenten; deterministische
+Vorarbeit im Code, Urteil im Agenten; Kostenbudget pro Lauf sichtbar (Ist: Fetch Ø 8 $/Nacht
+nominal für eine Story — das ist die Messlatte, die unterboten werden muss); kein Agent
+erzeugt Branches, die niemand merged; keine „Analyst"/„Verbesserer"-Rollen ohne messbaren Output.
+
+**D-25 · 2026-09-08 · Stack bleibt, Fundament wird neu**
+SvelteKit + TypeScript + Vercel bleiben. **Neues Repository**, **eigenes Supabase-Projekt**
+(heute geteilt mit vier Fremdprodukten), Schema von null mit einem Präfix, Migrationen ab
+0001, Stories und Abonnenten per Import. Alt-Repo wird nach dem Umzug archiviert (read-only).
+Designsystem (Newsreader, warmes Papier, Anthrazit-Dark, Heroicons, Tailwind v4) wird übernommen.
+
+**D-26 · 2026-09-08 · E-05 gelöst: Die Sperrklausel wird eingegangen**
+Fällt der Langzeitindex, ist das die Titelmeldung; Methodikänderungen sind 12 Monate gesperrt
+(Ausnahme: dokumentierte Datenfehler nach 16.x). Durch D-12 (Zustandsbild) ist die Klausel
+billig geworden und gehört wörtlich auf die Methodikseite.
+
+**D-27 · 2026-09-08 · Ein Distributionskanal, den Aaron persönlich bedient**
+Zuerst **Warm-100**: 100 persönliche Nachrichten in 14 Tagen, mit `/go`-Attribution.
+Alle anderen Kanäle warten, bis der Kern steht.
+
+**D-28 · 2026-09-08 · Grundsatz des Neubaus**
+Alles, was nicht ausdrücklich in `wiki/REBUILD-PLAN.md` als ÜBERNEHMEN oder STEINBRUCH
+steht, wird neu gebaut oder entfällt. Altcode ist Steinbruch, kein Gesetz. Kein Live-Abriss
+vor dem Umzug (Phase 3); bis dahin laufen Fetch-Kette und Newsletter unverändert.
+**E-07 ist gegenstandslos** (Cronjobs laufen auf dem Mini, siehe Korrektur oben).
+
+Offen bleiben und werden in Phase 1 (Spezifikation) vom CEO-Agenten entschieden und
+hier nachgetragen: E-04 (zwei Batches), E-06 (Ich-Perspektive), E-08/E-09 (SEO-Agent, Keyword-Tool).
 
 ---
 

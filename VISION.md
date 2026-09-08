@@ -992,10 +992,24 @@ Zweites Problem: Der Template-Pfad ist `$HOME/NurEine/`, das Repo liegt unter
 `/Volumes/SSD 500G/…`. Ein simples `crontab ops/crontab.txt` würde 18 Jobs
 installieren, die alle ins Leere laufen (plus Leerzeichen im Pfad → Quoting).
 
-→ *Noch nicht entschieden.* Optionen: (a) alles scharf schalten nach Pfadfix,
-(b) nur den Weltmetriken-Job, (c) zurück zu GitHub Actions. Für den Index ist
-(b) ausreichend — die Gutachten-Architektur nutzt ohnehin eine GitHub Action
-statt des Mini (D-09).
+**URSACHE GEFUNDEN (2026-09-08):** `ops/install-cron.sh` war kaputt. Es ersetzte
+`$HOME` im Template und baute daraus `$HOME/NurEine` — das Repo liegt aber auf
+einem externen Volume mit **Leerzeichen** im Pfad. Wer das Skript ausführte, bekam
+18 Cron-Einträge, von denen **keiner je etwas ausführen konnte** — stumm, ohne
+Fehlermeldung. Der Healthcheck war selbst betroffen, deshalb schlug nichts Alarm.
+
+Behoben in `b718db5`: Pfad wird aus dem Skript-Standort abgeleitet und gequotet;
+eine Vorab-Prüfung bricht ab, statt stumm kaputte Jobs zu schreiben; `--dry-run`
+und Sicherheitsabfrage ergänzt. Alle 18 Jobs zeigen im Trockenlauf jetzt auf
+existierende Skripte.
+
+→ *Installation weiterhin offen — das bleibt Aarons Entscheidung*, weil die Jobs
+Mails verschicken und auf Social posten. Ansehen ohne Risiko:
+`bash ops/install-cron.sh --dry-run`
+
+Für den Langzeitindex ist das nicht blockierend: Die GitHub Action
+`langzeitindex.yml` läuft unabhängig vom Mini (D-09). Betroffen ist der laufende
+Betrieb — Story-Fetch, Highlight-Mail, IndexNow, Social.
 
 **E-08 · SEO-Agent: Inhalte erzeugen oder Prioritäten vorschlagen?**
 Abschnitt 15 hält den Forschungsstand fest. Die Architektur hängt an dieser

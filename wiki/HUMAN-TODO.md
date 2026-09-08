@@ -11,6 +11,12 @@
 
 ## Betrieb — sofort, je unter 15 Minuten, 0 €
 
+- [ ] **Tailscale auf dem MacBook starten** (Menüleiste → Connect). Es ist gestoppt, deshalb ist der Mini (100.123.159.38) nicht erreichbar. Danach führe ich Phase 0 (Einfrieren) aus — oder du selbst, Backup inklusive:
+  ```bash
+  ssh mini 'crontab -l > ~/crontab.backup.2026-09-08.txt && crontab -l | sed -E "/agent\.sh (verbesserer|reel-regie)|trigger\.sh (social-[a-z]+|world-newsletter)|fetch_world_metrics\.py|fetch_worldbank\.py/ s|^([^#])|# EINGEFROREN 2026-09-08 \1|" | crontab - && crontab -l | grep -v "^#" | grep -v "^$"'
+  ```
+  Bleiben aktiv: Fetch-Kette (03:10), selfupdate, healthcheck, highlight, indexnow. Newsletter läuft über Cloudflare, unberührt.
+
 - [ ] **Mini nachziehen:** `ssh mini`, dann `cd /home/aaron/NurEine && git stash && git pull --rebase origin main` — er hängt 16 Commits zurück, die Newsletter-Fixes vom 07./08.09. sind dort nicht aktiv. (Der lokale Commit `070d5d4` „Zustandsbericht" divergiert; Rebase reicht.)
 - [ ] **Verbesserer-Agent pausieren oder Branches wegräumen:** 5 ungemergte Branches (`ig-hook-cliffhanger-91`, `newsletter-subject-twist-69`, `hero-approval-sensitive-stale-guard-48`, `chefredakteur-ig-hook-mensch-bias-59`, `verbesserer/ig-curation-double-post-guard-460`). Empfehlung: Cron-Zeile `17 10 * * * … verbesserer` auskommentieren, Branches löschen — der Rebuild macht sie gegenstandslos.
 - [ ] **TikTok-Stapel:** `/admin/tiktok` — fertige MP4s entweder posten oder den Kanal bis zum Rebuild offiziell pausieren (siehe Entscheidung 3).

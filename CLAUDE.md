@@ -47,6 +47,13 @@ etwas auf `main` will (mergen, deployen, eine Zeile Hotfix).
 - **Am Ende pushen**, damit die Arbeit nicht auf einem lokalen Branch
   versandet.
 
+## PFLICHTLEKTÜRE — wiki/ und VISION.md
+**Seit 2026-09-08 gibt es ein Firmen-Wiki unter `wiki/`.** Leseordnung steht in
+`wiki/README.md`: zuerst `wiki/00-LAGE.md` (verifizierter Ist-Zustand), dann
+VISION.md §1/§13/§17, dann `wiki/REBUILD-PLAN.md`. Aufgaben, die nur Aaron kann,
+stehen ausschließlich in `wiki/HUMAN-TODO.md`. **Betriebsstatus (Cron, Agenten)
+nie aus Docs übernehmen — auf dem Mac Mini prüfen (`ssh mini`).**
+
 ## PFLICHTLEKTÜRE — VISION.md
 **Lies `VISION.md`, BEVOR du irgendetwas tust.** Es ist die einzige verbindliche
 Quelle für Zielbild, Produktausrichtung und interne Roadmap. Bei Widerspruch zu

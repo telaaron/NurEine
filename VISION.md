@@ -7,6 +7,9 @@
 >
 > **Stand:** 2026-09-01 · **Status:** Entwurf, in Evaluierung
 > **Bearbeitbar unter:** `/admin/vision`
+> **Seit 2026-09-08:** Ist-Zustand, Human-TODO und Rebuild-Plan liegen im
+> Firmen-Wiki `wiki/` (Leseordnung in `wiki/README.md`). VISION.md bleibt die
+> Quelle für Zielbild und Entscheidungen (Abschnitt 13).
 >
 > **Letzte Änderung (2026-09-01):** Der globale Index wurde durch sechs
 > Fachgutachten geprüft (Abschnitt 16). Abschnitt 6 ist dadurch an mehreren
@@ -1003,9 +1006,15 @@ eine Vorab-Prüfung bricht ab, statt stumm kaputte Jobs zu schreiben; `--dry-run
 und Sicherheitsabfrage ergänzt. Alle 18 Jobs zeigen im Trockenlauf jetzt auf
 existierende Skripte.
 
-→ *Installation weiterhin offen — das bleibt Aarons Entscheidung*, weil die Jobs
-Mails verschicken und auf Social posten. Ansehen ohne Risiko:
-`bash ops/install-cron.sh --dry-run`
+**KORREKTUR (2026-09-08, CEO-Neustart): Die Prämisse war falsch.** Alle
+Prüfungen (27.08. und 08.09.) liefen per `crontab -l` auf dem **MacBook**. Der
+Runner ist der Mac Mini (`ssh mini`, `/home/aaron/NurEine`). Dort sind **alle 17
+Jobs installiert und laufen seit Wochen** — Logs in `~/nureine-logs/`, Healthcheck-
+Mail kommt täglich, Fetch-Kette lief am 08.09. um 03:10. Der Fix `b718db5` war
+für die Mini-Installation nicht nötig (dort ist der Pfad ohne Leerzeichen).
+**E-07 ist damit gegenstandslos.** Was stattdessen offen ist, steht in
+`wiki/00-LAGE.md` (Mini 16 Commits hinter main, 5 ungemergte Branches).
+Lehre: Betriebsstatus nur auf der Maschine prüfen, die ihn trägt.
 
 Für den Langzeitindex ist das nicht blockierend: Die GitHub Action
 `langzeitindex.yml` läuft unabhängig vom Mini (D-09). Betroffen ist der laufende

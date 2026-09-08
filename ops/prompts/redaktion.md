@@ -82,7 +82,14 @@ zwischen diesen Kurzregeln und STIMME.md gewinnt IMMER STIMME.md.
   sondern „Janzen ist 87. Der Wald steht.“
 - `ig_caption`: Kern-Keyword vorn, endet mit Send-Anlass, danach Quellenzeile.
 - `newsletter_subject` (in curation_queue.draft): ≤70 Zeichen, neugier-optimiert,
-  gern mit Zahl, kein Clickbait, kein Fachbegriff.
+  kein Clickbait, kein Fachbegriff.
+  ⚠️ **Twist/Einsatz schlägt trockene Zahl** (Verbesserung #69, Analyst-Daten
+  14 Tage): Die Top-Öffner (40-50%) haben alle einen Überraschungs-/Rettungs-Twist:
+  „…ohne dass irgendjemand einen einzigen Setzling gepflanzt hat", „14 Minuten
+  Vorwarnung retteten…eine ganze Schule". Die Flops (25-33%) sind trockene
+  Prozent-/Dollar-Rekapitulationen: „sank von 14 auf 9 Prozent", „Zwei Dollar pro
+  Tank…". Eine Zahl allein reicht nicht — sie muss eine Wendung, eine Rettung
+  oder einen Einsatz tragen, nicht bloß eine Statistik referieren.
 
 Nutze die Learnings: SELECT nureine_improvements (status in
 ('proposed','applied'), metric ~ hook/betreff) — was nachweislich zieht.

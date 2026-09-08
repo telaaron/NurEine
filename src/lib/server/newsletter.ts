@@ -626,13 +626,26 @@ export async function selectApprovedOrBestHero(): Promise<string | null> {
   // 1) Freigegeben, NUR Kanal "hero" — sonst zieht die Query ohne ORDER BY
   // undefiniert irgendeine approved Zeile (z.B. "instagram"), wenn an einem Tag
   // mehrere Kanäle freigegeben sind (Blocker #153, Team-Board 2026-08-04).
+  //
+  // GESENDET-GATE (Fix 2026-09-07): Die Freigabe wurde bisher UNGEPRÜFT
+  // übernommen — ohne `newsletter_sent_at IS NULL` und ohne Frische-Fenster,
+  // obwohl der Fallback direkt darunter beides seit dem 22.07. hat.
+  // Am 05./06./07.09. stand dieselbe Story als hero in der Queue; am 07.09.
+  // ging sie deshalb ein zweites Mal raus, obwohl eine frische Story vom
+  // selben Tag (Wirkung 62, ungesendet) bereitlag. Folge: 15 der 16
+  // Abonnenten wurden in der Sendeschleife still übersprungen, weil sie die
+  // Story längst hatten — der Lauf meldete trotzdem "0 Fehler".
+  //
+  // Eine bereits versendete Freigabe ist immer ein Fehler in der Kuration,
+  // nie eine Absicht. Wir ignorieren sie und lassen Tier 1/2/3 übernehmen.
   const { data: approved } = await supabaseAdmin
     .from('nureine_curation_queue')
-    .select('story_id')
+    .select('story_id, nureine_stories!inner(newsletter_sent_at, created_at)')
     .eq('for_date', today)
     .eq('status', 'approved')
     .eq('channel', 'hero')
     .not('story_id', 'is', null)
+    .is('nureine_stories.newsletter_sent_at', null)
     .limit(1)
     .maybeSingle();
   const approvedId = (approved as { story_id: string | null } | null)?.story_id;
@@ -952,7 +965,8 @@ async function logCronRun(
   type: string,
   total: number,
   success: number,
-  failure: number
+  failure: number,
+  skipped = 0
 ): Promise<void> {
   const row: Record<string, unknown> = {
     type,
@@ -962,6 +976,13 @@ async function logCronRun(
   };
   if (failure > 0) {
     row.error = `${failure} of ${total} sends failed`;
+  }
+  // STILLER AUSFALL SICHTBAR MACHEN (Fix 2026-09-07): Übersprungene Empfänger
+  // sind kein `failure` — der Lauf am 07.09. meldete deshalb "0 Fehler",
+  // obwohl 15 von 16 Abonnenten leer ausgingen. Ein Lauf, bei dem die Mehrheit
+  // nichts bekommt, gehört als Fehler in cron_runs, sonst sieht ihn niemand.
+  else if (skipped > 0 && success * 2 < total) {
+    row.error = `nur ${success} von ${total} Empfängern beliefert — ${skipped} übersprungen (nichts Ungesendetes übrig)`;
   }
   const { error } = await supabaseAdmin.from('nureine_cron_runs').insert(row);
   if (error) console.error('[newsletter] logCronRun error:', error);
@@ -1031,6 +1052,7 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
 
   let b2cSent = 0;
   let b2cFailed = 0;
+  let b2cSkipped = 0; // nichts Ungesendetes mehr übrig — kein Fehler, aber sichtbar
   const sentStoryIds = new Set<string>(); // stories actually sent today → mark once
 
   for (const sub of subscribers) {
@@ -1041,11 +1063,21 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
     const alreadySent = sentByStory.get(sub.id) ?? new Set<string>();
     // Hero-für-alle: kuratierte Hero → jeder kriegt sie, aber nur EINMAL —
     // ein zweiter Cron-Lauf (Backup-Trigger) darf sie nicht erneut verschicken.
-    const pick = heroForAll
+    //
+    // AUSWEICHEN STATT ÜBERSPRINGEN (Fix 2026-09-07): Hatte ein Abonnent die
+    // Hero schon, ging er früher LEER aus. Am 07.09. traf das 15 von 16 zu —
+    // ein faktisch ausgefallener Newsletter, den der Lauf als "0 Fehler"
+    // meldete. Jetzt fällt er auf seine personalisierte Auswahl zurück; nur
+    // wenn auch die nichts Ungesendetes hergibt, wird übersprungen.
+    let pick = heroForAll
       ? (alreadySent.has(heroForAll.id) ? null : heroForAll)
       : pickForSubscriber(ranked, sub.categories, sub.category_scores, alreadySent);
+    if (!pick && heroForAll) {
+      pick = pickForSubscriber(ranked, sub.categories, sub.category_scores, alreadySent);
+    }
     if (!pick) {
       // Everything in the candidate set already sent to this subscriber — skip.
+      b2cSkipped += 1;
       continue;
     }
     try {
@@ -1066,7 +1098,7 @@ export async function sendDailyNewsletter(): Promise<NewsletterRunResult> {
   sentStoryIds.add(story.id);
   for (const id of sentStoryIds) await markStorySent(id);
 
-  await logCronRun('daily', subscribers.length, b2cSent, b2cFailed);
+  await logCronRun('daily', subscribers.length, b2cSent, b2cFailed, b2cSkipped);
 
   // ---- B2B ----
   const clients = await fetchActiveB2BClients();

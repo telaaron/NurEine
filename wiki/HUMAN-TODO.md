@@ -6,11 +6,21 @@
 ## Jetzt (blockiert den CEO)
 
 - [x] ~~Die 8 Entscheidungen treffen~~ — **erledigt 2026-09-08** (VISION D-20…D-28).
-- [ ] **Supabase „MustSeen" endgültig löschen** (Dashboard → Settings → General → Delete project; ref `gbfbhspqwaqvnoxitohd`) — **erst nachdem** `_supabase-mustseen-export-2026-09-09/MANIFEST.md` überall OK zeigt und das Projekt bereits pausiert ist. Löschen kann und darf nur Aaron; der CEO-Agent pausiert nur.
-- [ ] **Tavenlo entscheiden:** 9 Kunden (3 E-Mail-Domains, letzte Rechnung 23.07.2026), 13 Rechnungen, 7 PDFs. Mit dem Pausieren von MustSeen ist tavenlo offline. Optionen: (a) sterben lassen, Export liegt in `tavenlo/_supabase-export-2026-09-09/`; (b) eigene DB woanders (Neon Free o. ä.). Empfehlung: (a), falls die 9 Kunden Testdaten sind — bitte kurz prüfen.
+- [ ] **Supabase „MustSeen" endgültig löschen** — **erst nach dem Cutover** (D-35; bis dahin läuft das Alt-System darauf weiter). Dashboard → Settings → General → Delete project; ref `gbfbhspqwaqvnoxitohd`. Voraussetzung: `_supabase-mustseen-export-2026-09-09/MANIFEST.md` überall OK zeigt und das Projekt bereits pausiert ist. Löschen kann und darf nur Aaron; der CEO-Agent pausiert nur.
+- [ ] **Tavenlo entscheiden:** 9 Kunden (3 E-Mail-Domains, letzte Rechnung 23.07.2026), 13 Rechnungen, 7 PDFs. Beim Cutover (Pausieren von MustSeen) geht tavenlo offline — bis dahin läuft es weiter. Optionen: (a) sterben lassen, Export liegt in `tavenlo/_supabase-export-2026-09-09/`; (b) eigene DB woanders (Neon Free o. ä.). Empfehlung: (a), falls die 9 Kunden Testdaten sind — bitte kurz prüfen.
 - [ ] **Vercel-Projekt `tavenlo` pausieren oder löschen**, sobald (a) feststeht. `mustseen` und `mustseen-bridge-engine` sind seit 2026-09-09 pausiert.
 - [x] ~~Neues GitHub-Repo~~ — **angelegt 2026-09-09**: github.com/telaaron/nureine-v2 (privat; `nureine` ist vom Alt-Repo belegt, Umbenennung beim Umzug).
 - [ ] **Repo öffentlich schalten?** Ohne GitHub Pro gibt es für private Repos keinen Branch-Schutz und keine Discussions für externes Feedback. Empfehlung: public, sobald keine Secrets/Altlasten drin sind (Entscheidung, siehe REBUILD-PLAN).
+
+## Entscheidungen (aus der Spezifikation 2026-09-09, Empfehlung jeweils dabei)
+
+- [ ] **A-1 Claim:** „Wie die Welt ist. Jeden Tag ein Beleg." — annehmen? Gilt dann für Title, JSON-LD, DOI-Mails, Endcard, Bios, Wikidata.
+- [ ] **A-2 Tavenlo:** siehe unten (Vertragsstand der 9 Kunden prüfen; Rechnungen sind bis 2034 aufzubewahren — Export liegt).
+- [ ] **A-3 Repo `nureine-v2` öffentlich?** Empfehlung: vor dem Cutover, sobald geprüft ist, dass keine Secrets in der Historie liegen.
+- [ ] **A-4 Steuer-/Sitzfrage der OÜ:** Teltow wird kommuniziert, Rechtsträger ist Tallinn. Steuerberater fragen, **bevor** NAP, Wikidata oder Google Business Profile angefasst werden. (Firma-Spec §3.6)
+- [ ] **A-5 Label-Wortlaute** für KI-Bild und Alt-Archiv abnicken (`wiki/spec/beweis.md` §2) — beide stehen öffentlich.
+- [ ] **A-6 `kontakt@nureine.de` einrichten** (Impressum, SECURITY.md, Crossref-User-Agent) statt `admin@must-seen.com`.
+- [ ] **Discussions-Kategorien** im neuen Repo anlegen (Fragen · Fehler an Inhalten · Quellenhinweise · Ideen) — GitHub hat dafür keine API, ~5 Minuten im Web.
 
 ## Betrieb — sofort, je unter 15 Minuten, 0 €
 

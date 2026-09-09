@@ -947,6 +947,7 @@ markieren, VISION.md ist die einzige aktuelle Quelle.*
 → **Entschieden am 2026-09-01, siehe D-04.**
 
 **E-04 · Zwei Batches pro Tag?**
+→ **Entschieden 2026-09-09, siehe D-33.**
 Abschnitt 5.1 nennt zwei Update-Fenster täglich. Der Fetch läuft aktuell
 **vier Mal** (06/10/14/18 UTC), der Newsletter einmal (04:20 UTC). Entweder das
 Konzept anpassen oder die Cronjobs — Cron-Zeiten nur nach Absprache (CLAUDE.md).
@@ -967,6 +968,7 @@ keine Gesamtzahl, nur 8 Einzelkurven nebeneinander (die Position des Kartografen
 → *Noch nicht entschieden. Blockiert V0 — ohne Antwort kein Präregistrierungs-Commit.*
 
 **E-06 · Ich-Perspektive (Abschnitt 3.4) — Konflikt mit dem Beleg-Versprechen**
+→ **Entschieden 2026-09-09, siehe D-33.**
 Abschnitt 3.4 beschreibt ein Ich-Erzähl-Format. In der Sitzung vom 2026-08-27
 wurde eingewandt: Eine **künstlich geschriebene** Ich-Erzählung ist eine erfundene
 Zeugenaussage und entwertet rückwirkend die Belege-Achse des Story-Wirkungsindex —
@@ -1025,6 +1027,7 @@ Für den Langzeitindex ist das nicht blockierend: Die GitHub Action
 Betrieb — Story-Fetch, Highlight-Mail, IndexNow, Social.
 
 **E-08 · SEO-Agent: Inhalte erzeugen oder Prioritäten vorschlagen?**
+→ **Entschieden 2026-09-09, siehe D-36.**
 Abschnitt 15 hält den Forschungsstand fest. Die Architektur hängt an dieser
 Weiche: Schreibt der Agent (Artikel, Hub-Texte), oder sagt er nur, *was* zu tun
 ist — welche Seite ausbauen, welche URL indexieren, welcher Zusammenhang trägt?
@@ -1035,6 +1038,7 @@ indexiert“ — mehr Inhalt vergrößert diesen Stapel, statt ihn aufzulösen.
 → *Noch nicht entschieden. Blockiert den Bau des Agenten.*
 
 **E-09 · Budget für ein Keyword-Tool?**
+→ **Entschieden 2026-09-09, siehe D-36.**
 Ohne echtes Suchvolumen (SEMrush o. ä., ~140 €/Monat) arbeitet der Agent blind
 auf den eigenen Daten. Das geht — ist aber eine andere Konstruktion als mit
 Volumendaten. Bei aktuell 2 Klicks pro Quartal ist der Nutzen fraglich.
@@ -1269,6 +1273,54 @@ vor dem Umzug (Phase 3); bis dahin laufen Fetch-Kette und Newsletter unveränder
 
 Offen bleiben und werden in Phase 1 (Spezifikation) vom CEO-Agenten entschieden und
 hier nachgetragen: E-04 (zwei Batches), E-06 (Ich-Perspektive), E-08/E-09 (SEO-Agent, Keyword-Tool).
+
+
+### Entschieden am 2026-09-09 (Spezifikation angenommen, CEO-Agent; Aaron-Punkte markiert)
+
+**D-29 · 2026-09-09 · Arbeitsweise im neuen Repo** (Spiegel von `nureine-v2/docs/ENTSCHEIDUNGEN.md`)
+Trunk-based, `main` immer deploybar, PR-Pflicht auch solo (Squash, Conventional Commits, CI grün),
+Issues sind der einzige Backlog, Entscheidungen nur in `docs/ENTSCHEIDUNGEN.md`, Human-TODO nur in
+`docs/HUMAN-TODO.md`, kein Branch älter als 7 Tage ohne PR, Agenten pushen nie direkt auf `main`.
+Ruleset auf `main` ist aktiv und wird auch auf dem Free-Plan durchgesetzt (geprüft).
+
+**D-30 · 2026-09-09 · Die Spezifikation `wiki/spec/README.md` ist verbindlich**
+Fünf Fachseiten (technik, produkt, beweis, wachstum, firma) sind angenommen; Abweichungen und
+Streitpunkte sind in der Synthese entschieden. Widerspricht eine Fachseite der Synthese, gilt die Synthese.
+
+**D-31 · 2026-09-09 · Beweis-Pflicht für alles Neue, ehrliches Label fürs Alt-Archiv**
+Jede neu veröffentlichte Story (ab Stufe ②) braucht die vollständige Beweis-Schicht (Primärquelle mit
+Zitat-Span, Zahl mit Bezug, Ort mit Genauigkeitsstufe, Bild-Label, Index-Zuordnung). Fehlt ein Feld →
+`blocked`, notfalls kein Newsletter („lieber leer als falsch" gilt auch für den Kanal). Die 1.335
+Alt-Stories werden mit Label importiert, nicht nachgeprüft; nur `impact ≥ 55` als `published`.
+
+**D-32 · 2026-09-09 · Drei Agenten: Redakteur, Zweiter Blick, Bildprüfer**
+Löst D-24 ein. Deterministische Vorarbeit und DeepSeek-Extraktion im Code; der Redakteur urteilt
+und schreibt; der Zweite Blick ist ein eigener Agent, blind gegenüber dem Finder, und prüft jede
+Behauptung am Primärtext (die 3-von-5-Fehler entstanden ohne ihn); der Bildprüfer wählt Best-of-2.
+Budget < 1 $ nominal pro Nacht, sichtbar in `ne_runs`. Reel-Agent folgt nach dem Kern.
+
+**D-33 · 2026-09-09 · Ordnungssystem sind die 8 Index-Bereiche**
+Ersetzt die alten Kategorien (gesundheit, tiere, …). Optionaler Eimer „außerhalb des Index".
+Archiv als Monatsseiten. Löst E-04 (ein Batch pro Nacht, ein Tag Vorlauf) und E-06 (Ich-Perspektive
+gestrichen; Ersatz „Stimme aus der Quelle": nur belegte Zitate).
+
+**D-34 · 2026-09-09 · Scheduler: Mini primär, Vercel-Cron Fallback**
+Hobby-Cron feuert nur innerhalb einer Stunde — für ein 06:30-Ritual zu unpräzise. Newsletter und
+Healthcheck werden vom Mini per `curl` ausgelöst, Vercel-Cron ist Fallback; beide idempotent über
+die Tages-Sperre in `ne_issues`. Cloudflare-Worker entfällt beim Cutover.
+
+**D-35 · 2026-09-09 · Umzugsreihenfolge: Alt-System läuft bis zum Cutover**
+Ersetzt die Absicht vom Vormittag, MustSeen sofort zu pausieren. Entwicklung gegen lokales Supabase
+(Docker); der Export vom 2026-09-09 ist Import-Quelle. Cutover in einem Zug: MustSeen pausieren →
+Projekt `nureine` anlegen → Migrationen → Import → Domain. Dunkelheit: Minuten, nicht Wochen.
+Warm-100 (D-27) startet mit dem Cutover, nicht davor.
+
+**D-36 · 2026-09-09 · E-08/E-09 gelöst**
+SEO-Agent schlägt nur Prioritäten vor (E-08), kein Keyword-Tool (E-09). Google Business Profile
+bleibt zurückgestellt, bis die Steuer-/Sitzfrage der OÜ geklärt ist.
+
+**Offen für Aaron (A-1…A-6 in `wiki/spec/README.md` §4):** Claim „Wie die Welt ist. Jeden Tag ein
+Beleg.", Tavenlo, Repo öffentlich, Steuer-/Sitzfrage, Label-Wortlaute, `kontakt@nureine.de`.
 
 ---
 

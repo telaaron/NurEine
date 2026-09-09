@@ -63,10 +63,10 @@
 | Was | Stand |
 |---|---|
 | Phase 0 Einfrieren | **erledigt** — 12 von 17 Cron-Zeilen auf dem Mini auskommentiert (Verbesserer, Reel-Regie, alle Social-Trigger, Welt-Newsletter, Weltmetriken). Backup auf dem Mini. |
-| Supabase | Konto erlaubt 2 aktive Projekte (JazzChords + MustSeen). Plan: MustSeen **vollständig exportieren** (läuft, Ziel `Dateien - Local/_supabase-mustseen-export-2026-09-09/`) → **pausieren** (gibt den Slot frei, reversibel) → neues Projekt `nureine` anlegen → Löschen von MustSeen bleibt Aarons Schritt. **Folge:** Alt-nureine.de, Tavenlo, must-seen.com verlieren ihre Datenbank; Newsletter an 16 Abos stoppt bis zum Neubau. Das ist mit „alles fresh" gedeckt, wird hier aber ausdrücklich festgehalten. |
+| Supabase | Konto erlaubt 2 aktive Projekte (JazzChords + MustSeen). **Export von MustSeen erledigt** (`Dateien - Local/_supabase-mustseen-export-2026-09-09/`, Manifest prüfen). **Korrektur (D-35):** MustSeen wird **nicht** vorab pausiert — das Alt-System (Newsletter an 16 Abos) läuft bis zum Cutover weiter; Entwicklung gegen lokales Supabase. Pausieren → `nureine` anlegen → Import → Domain passiert in einem Zug in Woche 4. |
 | Vercel | `mustseen` (must-seen.com) und `mustseen-bridge-engine` **pausiert** (503, reversibel). |
-| Neues Repo | github.com/telaaron/nureine-v2 (privat) angelegt; Arbeitsgrundlage (Branches, PRs, Issues, CI, Feedback-Wege) wird gerade eingerichtet. |
-| Spezifikation | 5 Fachseiten in Arbeit unter `wiki/spec/` (Branch `ceo-spec`). |
+| Neues Repo | github.com/telaaron/nureine-v2 (privat) — Arbeitsgrundlage steht: Ruleset auf main (PR-Pflicht, CI), Issue-Formulare, Labels, Milestones, Dependabot, CI grün. |
+| Spezifikation | **fertig** — 5 Fachseiten + Synthese `wiki/spec/README.md`; Entscheidungen D-29…D-36. Phase 2 kann starten (Repo `nureine-v2`, lokales Supabase). |
 
 ## Nächster Zug (Vorschlag, wartet auf Aaron)
 

@@ -1,7 +1,7 @@
 # Rebuild-Plan — einmal abreißen, neu bauen
 
-> Stand 2026-09-08, Entwurf des CEO-Agenten. **Nichts hiervon ist umgesetzt.**
-> Es gilt: erst Plan, dann Aarons Entscheidungen (unten), dann Schnitt.
+> Stand 2026-09-08. **Entschieden** (VISION D-20…D-28). Phase 0 (Einfrieren) läuft,
+> Phase 1 (Spezifikation) beginnt. Status je Phase in Abschnitt 3.
 > Grundlage: `wiki/00-LAGE.md`, `wiki/inventar/*`, `VISION.md` §1/§13/§17.
 
 ## 1. Was NurEine ist (der Kern, den alles härten muss)
@@ -80,7 +80,20 @@ Legende: **KILL** = weg, Code bleibt nur in Git-Historie · **STEINBRUCH** = Mus
 | **3 · Umzug** | Stories importieren, Abonnenten importieren, Redirects für `/geschichte/*` (SEO-Wert gering, aber Links existieren), Domain umhängen, Alt-Crons aus. | 2 Tage | Newsletter-Aussetzer — Cutover morgens nach Versand |
 | **4 · Abriss** | Alt-Repo archivieren (read-only), Supabase-Tabellen exportieren + löschen, Accounts kündigen (ElevenLabs), Mini-Crontab auf 1 Eintrag. | 1 Tag | keins |
 
-## 4. Entscheidungen für Aaron (mit Empfehlung)
+## 4. Entscheidungen — **getroffen am 2026-09-08** (VISION §13, D-20 bis D-28)
+
+Aaron hat alle acht Punkte entschieden. Zwei weichen von der Empfehlung ab:
+
+- **#3 Social-Automation:** killen **und danach neu aufbauen**. Das TikTok-Erstellungs-
+  fundament (Remotion-Baukasten, Textregeln, Whisper-Gate, Stimme) wird **übernommen** —
+  „da kommen wirklich gute Videos raus". Neubau als eigenes Modul nach dem Kern (D-22).
+- **#5 Claude-Code-Agenten:** **bleiben** Betriebsform, werden aber vollständig neu gebaut,
+  kosteneffizient und übersichtlich (D-24). Die Tabelle in Abschnitt 2 („KILL als Betriebsform")
+  ist damit überholt: KILL gilt für die *heutigen* Agenten und Prompts, nicht für die Form.
+
+Die ursprüngliche Vorlage bleibt zur Nachvollziehbarkeit stehen:
+
+### 4a. Vorlage vom 2026-09-08 (historisch)
 
 Groß, irreversibel oder kernändernd. Alles andere entscheide ich.
 

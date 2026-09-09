@@ -5,7 +5,7 @@
 > Zielbild, Produktausrichtung und interne Roadmap. Bei Widerspruch zu einem
 > anderen Dokument gilt dieses hier.
 >
-> **Stand:** 2026-09-01 · **Status:** Entwurf, in Evaluierung
+> **Stand:** 2026-09-08 · **Status:** Zielbild gesetzt, Rebuild beschlossen (D-20 bis D-28)
 > **Bearbeitbar unter:** `/admin/vision`
 > **Seit 2026-09-08:** Ist-Zustand, Human-TODO und Rebuild-Plan liegen im
 > Firmen-Wiki `wiki/` (Leseordnung in `wiki/README.md`). VISION.md bleibt die
@@ -920,6 +920,7 @@ Produkts.
 ### Offen — Aaron muss entscheiden
 
 **E-01 · Fahrplan-Konflikt: Nutzer gewinnen vs. Features bauen**
+→ **Entschieden 2026-09-08, siehe D-20.**
 `FAHRPLAN.md` sagt „KEIN neues Feature, erst 200 Nutzer". Dieses Dokument
 beschreibt ein Programm über fünf Phasen. Bei 15 bestätigten Abonnenten ist die
 Frage real: Baut das Programm eine Plattform für Leser, die es noch nicht gibt?
@@ -933,6 +934,7 @@ Denkbare Auflösungen:
 → *Noch nicht entschieden.*
 
 **E-02 · Was passiert mit den bestehenden Planungsdokumenten?**
+→ **Entschieden 2026-09-08, siehe D-20.**
 Es existieren `ROADMAP.md` (Juni), `FAHRPLAN.md` (Juni), `STRATEGY.md` (Juni),
 `BACKLOG.md`, `docs/APP_ROADMAP.md`, `docs/AI_ROADMAP.md`. Wenn VISION.md
 Pflichtlektüre ist, brauchen die anderen einen klaren Status — sonst widersprechen
@@ -945,6 +947,7 @@ markieren, VISION.md ist die einzige aktuelle Quelle.*
 → **Entschieden am 2026-09-01, siehe D-04.**
 
 **E-04 · Zwei Batches pro Tag?**
+→ **Entschieden 2026-09-09, siehe D-33.**
 Abschnitt 5.1 nennt zwei Update-Fenster täglich. Der Fetch läuft aktuell
 **vier Mal** (06/10/14/18 UTC), der Newsletter einmal (04:20 UTC). Entweder das
 Konzept anpassen oder die Cronjobs — Cron-Zeiten nur nach Absprache (CLAUDE.md).
@@ -952,6 +955,7 @@ Konzept anpassen oder die Cronjobs — Cron-Zeiten nur nach Absprache (CLAUDE.md
 → *Noch nicht entschieden.*
 
 **E-05 · Die Sperrklausel — echte Selbstverpflichtung, nur Aaron kann sie eingehen**
+→ **Entschieden 2026-09-08, siehe D-26.**
 Der Index wird laut Gutachten **nur dann gebaut**, wenn vorher öffentlich zugesagt
 wird, wie mit einem Rückgang umgegangen wird (Wortlaut in 16.6). Kern: Ein
 fallender Wert wird zur Titelmeldung mit derselben Prominenz wie ein Anstieg, und
@@ -964,6 +968,7 @@ keine Gesamtzahl, nur 8 Einzelkurven nebeneinander (die Position des Kartografen
 → *Noch nicht entschieden. Blockiert V0 — ohne Antwort kein Präregistrierungs-Commit.*
 
 **E-06 · Ich-Perspektive (Abschnitt 3.4) — Konflikt mit dem Beleg-Versprechen**
+→ **Entschieden 2026-09-09, siehe D-33.**
 Abschnitt 3.4 beschreibt ein Ich-Erzähl-Format. In der Sitzung vom 2026-08-27
 wurde eingewandt: Eine **künstlich geschriebene** Ich-Erzählung ist eine erfundene
 Zeugenaussage und entwertet rückwirkend die Belege-Achse des Story-Wirkungsindex —
@@ -981,6 +986,7 @@ gleichwertig, ohne Erfindungsrisiko.
 → *Noch nicht entschieden.*
 
 **E-07 · Was passiert mit den 18 nicht installierten Cronjobs?**
+→ **Entschieden 2026-09-08, siehe D-28.**
 Geprüft am 2026-08-27: `ops/crontab.txt` enthält 18 Jobs, `crontab -l` kennt
 **keinen davon** (nur ein unbeteiligtes Mac-Cleanup-Skript). Keine Logs, keine
 Läufe. Die GitHub-Actions wurden am 25.07. abgeschaltet, weil sie parallel zum
@@ -1021,6 +1027,7 @@ Für den Langzeitindex ist das nicht blockierend: Die GitHub Action
 Betrieb — Story-Fetch, Highlight-Mail, IndexNow, Social.
 
 **E-08 · SEO-Agent: Inhalte erzeugen oder Prioritäten vorschlagen?**
+→ **Entschieden 2026-09-09, siehe D-36.**
 Abschnitt 15 hält den Forschungsstand fest. Die Architektur hängt an dieser
 Weiche: Schreibt der Agent (Artikel, Hub-Texte), oder sagt er nur, *was* zu tun
 ist — welche Seite ausbauen, welche URL indexieren, welcher Zusammenhang trägt?
@@ -1031,6 +1038,7 @@ indexiert“ — mehr Inhalt vergrößert diesen Stapel, statt ihn aufzulösen.
 → *Noch nicht entschieden. Blockiert den Bau des Agenten.*
 
 **E-09 · Budget für ein Keyword-Tool?**
+→ **Entschieden 2026-09-09, siehe D-36.**
 Ohne echtes Suchvolumen (SEMrush o. ä., ~140 €/Monat) arbeitet der Agent blind
 auf den eigenen Daten. Das geht — ist aber eine andere Konstruktion als mit
 Volumendaten. Bei aktuell 2 Klicks pro Quartal ist der Nutzen fraglich.
@@ -1202,6 +1210,117 @@ Datenabruf, (2) die **Verliererliste** aller erwogenen und verworfenen Indikator
 inklusive Begründung (dass darauf *steigende* Kandidaten stehen — BIP,
 Einschulungsrate — ist der Beleg, dass nicht nach Richtung sortiert wurde),
 (3) die **Sperrklausel** (E-05).
+
+---
+
+
+### Entschieden am 2026-09-08 (CEO-Neustart, Aaron mündlich, protokolliert vom CEO-Agenten)
+
+Grundlage: `wiki/00-LAGE.md` (verifizierter Ist-Zustand) und `wiki/REBUILD-PLAN.md`.
+Aarons Mandat: *„einmal abreißen, neu bauen … sonst alles fresh bitte, keine Scheiße mehr."*
+
+**D-20 · 2026-09-08 · E-01 gelöst: Die Vision gilt, der Fahrplan ist Geschichte**
+`FAHRPLAN.md`, `ROADMAP.md`, `STRATEGY.md`, `BACKLOG.md`, `GROWTH*.md` werden nach
+`docs/archiv/` verschoben (löst zugleich **E-02**). Einzige lebende Quellen: VISION.md
+(Zielbild, Entscheidungen) und `wiki/` (Ist, Plan, Human-TODO).
+
+**D-21 · 2026-09-08 · Beide iOS-Apps werden gekillt**
+`ios/` (Capacitor) und `ios-native/` (SwiftUI) samt Capacitor-Paketen, APNs, Widget.
+*Begründung:* nie gelaufen, nie im Store, 99 €/Jahr plus Review-Zyklus für 16 Abonnenten.
+Web-first war bereits Aarons Entscheidung (07/2026). Kein Apple-Developer-Account.
+
+**D-22 · 2026-09-08 · Social-Automation wird gekillt — und danach neu aufgebaut**
+Aarons Wortlaut: *„die social media automation killen, aber danach neu aufbauen. bzw.
+tiktok creation fundament übernehmen. da kommen wirklich gute videos raus."*
+Gekillt: IG-/Threads-Publish-Automatik, 7 Cron-Trigger, Digest, Insights, Kommentar-Bot,
+alte Reels-Varianten. **Übernommen als Fundament:** der TikTok-Erstellungsweg —
+Remotion-Baukasten (`docs/REEL_BAUKASTEN.md`), Textregeln (`docs/REEL_TEXT_REGELN.md`),
+Whisper-Aussprache-Gate, ElevenLabs-Stimme „Luca", Beleg-Szene. Neu aufgebaut wird
+*nach* dem Kern (Phase 2 des Rebuild-Plans), als eigenes, kleines Modul.
+
+**D-23 · 2026-09-08 · B2B wird gekillt**
+Tabellen, Seiten (`/fuer-unternehmen`, `/preise`), LinkedIn-/B2B-Konzepte, B2B-Newsletter-
+Zweig. *Begründung:* 0 Kunden in 4 Monaten; im Juni bereits als schwächstes Modell markiert.
+
+**D-24 · 2026-09-08 · Claude-Code-Agenten bleiben Betriebsform — vollständig neu**
+Aarons Wortlaut: *„claude code agenten bleiben, aus kosteneffizienz aber auch vollständig
+neu machen. alles übersichtlicher."* Damit ersetzt: die Empfehlung, Agenten durch reinen
+Code zu ersetzen. Vorgaben für den Neubau: wenige, klar geschnittene Agenten; deterministische
+Vorarbeit im Code, Urteil im Agenten; Kostenbudget pro Lauf sichtbar (Ist: Fetch Ø 8 $/Nacht
+nominal für eine Story — das ist die Messlatte, die unterboten werden muss); kein Agent
+erzeugt Branches, die niemand merged; keine „Analyst"/„Verbesserer"-Rollen ohne messbaren Output.
+
+**D-25 · 2026-09-08 · Stack bleibt, Fundament wird neu**
+SvelteKit + TypeScript + Vercel bleiben. **Neues Repository**, **eigenes Supabase-Projekt**
+(heute geteilt mit vier Fremdprodukten), Schema von null mit einem Präfix, Migrationen ab
+0001, Stories und Abonnenten per Import. Alt-Repo wird nach dem Umzug archiviert (read-only).
+Designsystem (Newsreader, warmes Papier, Anthrazit-Dark, Heroicons, Tailwind v4) wird übernommen.
+
+**D-26 · 2026-09-08 · E-05 gelöst: Die Sperrklausel wird eingegangen**
+Fällt der Langzeitindex, ist das die Titelmeldung; Methodikänderungen sind 12 Monate gesperrt
+(Ausnahme: dokumentierte Datenfehler nach 16.x). Durch D-12 (Zustandsbild) ist die Klausel
+billig geworden und gehört wörtlich auf die Methodikseite.
+
+**D-27 · 2026-09-08 · Ein Distributionskanal, den Aaron persönlich bedient**
+Zuerst **Warm-100**: 100 persönliche Nachrichten in 14 Tagen, mit `/go`-Attribution.
+Alle anderen Kanäle warten, bis der Kern steht.
+
+**D-28 · 2026-09-08 · Grundsatz des Neubaus**
+Alles, was nicht ausdrücklich in `wiki/REBUILD-PLAN.md` als ÜBERNEHMEN oder STEINBRUCH
+steht, wird neu gebaut oder entfällt. Altcode ist Steinbruch, kein Gesetz. Kein Live-Abriss
+vor dem Umzug (Phase 3); bis dahin laufen Fetch-Kette und Newsletter unverändert.
+**E-07 ist gegenstandslos** (Cronjobs laufen auf dem Mini, siehe Korrektur oben).
+
+Offen bleiben und werden in Phase 1 (Spezifikation) vom CEO-Agenten entschieden und
+hier nachgetragen: E-04 (zwei Batches), E-06 (Ich-Perspektive), E-08/E-09 (SEO-Agent, Keyword-Tool).
+
+
+### Entschieden am 2026-09-09 (Spezifikation angenommen, CEO-Agent; Aaron-Punkte markiert)
+
+**D-29 · 2026-09-09 · Arbeitsweise im neuen Repo** (Spiegel von `nureine-v2/docs/ENTSCHEIDUNGEN.md`)
+Trunk-based, `main` immer deploybar, PR-Pflicht auch solo (Squash, Conventional Commits, CI grün),
+Issues sind der einzige Backlog, Entscheidungen nur in `docs/ENTSCHEIDUNGEN.md`, Human-TODO nur in
+`docs/HUMAN-TODO.md`, kein Branch älter als 7 Tage ohne PR, Agenten pushen nie direkt auf `main`.
+Ruleset auf `main` ist aktiv und wird auch auf dem Free-Plan durchgesetzt (geprüft).
+
+**D-30 · 2026-09-09 · Die Spezifikation `wiki/spec/README.md` ist verbindlich**
+Fünf Fachseiten (technik, produkt, beweis, wachstum, firma) sind angenommen; Abweichungen und
+Streitpunkte sind in der Synthese entschieden. Widerspricht eine Fachseite der Synthese, gilt die Synthese.
+
+**D-31 · 2026-09-09 · Beweis-Pflicht für alles Neue, ehrliches Label fürs Alt-Archiv**
+Jede neu veröffentlichte Story (ab Stufe ②) braucht die vollständige Beweis-Schicht (Primärquelle mit
+Zitat-Span, Zahl mit Bezug, Ort mit Genauigkeitsstufe, Bild-Label, Index-Zuordnung). Fehlt ein Feld →
+`blocked`, notfalls kein Newsletter („lieber leer als falsch" gilt auch für den Kanal). Die 1.335
+Alt-Stories werden mit Label importiert, nicht nachgeprüft; nur `impact ≥ 55` als `published`.
+
+**D-32 · 2026-09-09 · Drei Agenten: Redakteur, Zweiter Blick, Bildprüfer**
+Löst D-24 ein. Deterministische Vorarbeit und DeepSeek-Extraktion im Code; der Redakteur urteilt
+und schreibt; der Zweite Blick ist ein eigener Agent, blind gegenüber dem Finder, und prüft jede
+Behauptung am Primärtext (die 3-von-5-Fehler entstanden ohne ihn); der Bildprüfer wählt Best-of-2.
+Budget < 1 $ nominal pro Nacht, sichtbar in `ne_runs`. Reel-Agent folgt nach dem Kern.
+
+**D-33 · 2026-09-09 · Ordnungssystem sind die 8 Index-Bereiche**
+Ersetzt die alten Kategorien (gesundheit, tiere, …). Optionaler Eimer „außerhalb des Index".
+Archiv als Monatsseiten. Löst E-04 (ein Batch pro Nacht, ein Tag Vorlauf) und E-06 (Ich-Perspektive
+gestrichen; Ersatz „Stimme aus der Quelle": nur belegte Zitate).
+
+**D-34 · 2026-09-09 · Scheduler: Mini primär, Vercel-Cron Fallback**
+Hobby-Cron feuert nur innerhalb einer Stunde — für ein 06:30-Ritual zu unpräzise. Newsletter und
+Healthcheck werden vom Mini per `curl` ausgelöst, Vercel-Cron ist Fallback; beide idempotent über
+die Tages-Sperre in `ne_issues`. Cloudflare-Worker entfällt beim Cutover.
+
+**D-35 · 2026-09-09 · Umzugsreihenfolge: Alt-System läuft bis zum Cutover**
+Ersetzt die Absicht vom Vormittag, MustSeen sofort zu pausieren. Entwicklung gegen lokales Supabase
+(Docker); der Export vom 2026-09-09 ist Import-Quelle. Cutover in einem Zug: MustSeen pausieren →
+Projekt `nureine` anlegen → Migrationen → Import → Domain. Dunkelheit: Minuten, nicht Wochen.
+Warm-100 (D-27) startet mit dem Cutover, nicht davor.
+
+**D-36 · 2026-09-09 · E-08/E-09 gelöst**
+SEO-Agent schlägt nur Prioritäten vor (E-08), kein Keyword-Tool (E-09). Google Business Profile
+bleibt zurückgestellt, bis die Steuer-/Sitzfrage der OÜ geklärt ist.
+
+**Offen für Aaron (A-1…A-6 in `wiki/spec/README.md` §4):** Claim „Wie die Welt ist. Jeden Tag ein
+Beleg.", Tavenlo, Repo öffentlich, Steuer-/Sitzfrage, Label-Wortlaute, `kontakt@nureine.de`.
 
 ---
 

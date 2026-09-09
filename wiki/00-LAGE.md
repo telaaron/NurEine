@@ -57,6 +57,17 @@
 3. **Das Gedächtnis lügt.** 48 Docs, 31 überholt, mehrfach dieselben Fehler (Cron-Mythos,
    Phantom-Stack Gemini/Resend). Sessions lasen das Falsche zuerst.
 
+
+## Nachtrag 2026-09-09 (Umsetzung begonnen)
+
+| Was | Stand |
+|---|---|
+| Phase 0 Einfrieren | **erledigt** — 12 von 17 Cron-Zeilen auf dem Mini auskommentiert (Verbesserer, Reel-Regie, alle Social-Trigger, Welt-Newsletter, Weltmetriken). Backup auf dem Mini. |
+| Supabase | Konto erlaubt 2 aktive Projekte (JazzChords + MustSeen). **Export von MustSeen erledigt** (`Dateien - Local/_supabase-mustseen-export-2026-09-09/`, Manifest prüfen). **Korrektur (D-35):** MustSeen wird **nicht** vorab pausiert — das Alt-System (Newsletter an 16 Abos) läuft bis zum Cutover weiter; Entwicklung gegen lokales Supabase. Pausieren → `nureine` anlegen → Import → Domain passiert in einem Zug in Woche 4. |
+| Vercel | `mustseen` (must-seen.com) und `mustseen-bridge-engine` **pausiert** (503, reversibel). |
+| Neues Repo | github.com/telaaron/nureine-v2 (privat) — Arbeitsgrundlage steht: Ruleset auf main (PR-Pflicht, CI), Issue-Formulare, Labels, Milestones, Dependabot, CI grün. |
+| Spezifikation | **fertig** — 5 Fachseiten + Synthese `wiki/spec/README.md`; Entscheidungen D-29…D-36. Phase 2 kann starten (Repo `nureine-v2`, lokales Supabase). |
+
 ## Nächster Zug (Vorschlag, wartet auf Aaron)
 
 Siehe `wiki/REBUILD-PLAN.md` Abschnitt „Entscheidungen für Aaron". Bis die vorliegen:

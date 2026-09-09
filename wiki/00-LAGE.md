@@ -57,6 +57,17 @@
 3. **Das Gedächtnis lügt.** 48 Docs, 31 überholt, mehrfach dieselben Fehler (Cron-Mythos,
    Phantom-Stack Gemini/Resend). Sessions lasen das Falsche zuerst.
 
+
+## Nachtrag 2026-09-09 (Umsetzung begonnen)
+
+| Was | Stand |
+|---|---|
+| Phase 0 Einfrieren | **erledigt** — 12 von 17 Cron-Zeilen auf dem Mini auskommentiert (Verbesserer, Reel-Regie, alle Social-Trigger, Welt-Newsletter, Weltmetriken). Backup auf dem Mini. |
+| Supabase | Konto erlaubt 2 aktive Projekte (JazzChords + MustSeen). Plan: MustSeen **vollständig exportieren** (läuft, Ziel `Dateien - Local/_supabase-mustseen-export-2026-09-09/`) → **pausieren** (gibt den Slot frei, reversibel) → neues Projekt `nureine` anlegen → Löschen von MustSeen bleibt Aarons Schritt. **Folge:** Alt-nureine.de, Tavenlo, must-seen.com verlieren ihre Datenbank; Newsletter an 16 Abos stoppt bis zum Neubau. Das ist mit „alles fresh" gedeckt, wird hier aber ausdrücklich festgehalten. |
+| Vercel | `mustseen` (must-seen.com) und `mustseen-bridge-engine` **pausiert** (503, reversibel). |
+| Neues Repo | github.com/telaaron/nureine-v2 (privat) angelegt; Arbeitsgrundlage (Branches, PRs, Issues, CI, Feedback-Wege) wird gerade eingerichtet. |
+| Spezifikation | 5 Fachseiten in Arbeit unter `wiki/spec/` (Branch `ceo-spec`). |
+
 ## Nächster Zug (Vorschlag, wartet auf Aaron)
 
 Siehe `wiki/REBUILD-PLAN.md` Abschnitt „Entscheidungen für Aaron". Bis die vorliegen:

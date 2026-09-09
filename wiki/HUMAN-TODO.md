@@ -6,21 +6,15 @@
 ## Jetzt (blockiert den CEO)
 
 - [x] ~~Die 8 Entscheidungen treffen~~ — **erledigt 2026-09-08** (VISION D-20…D-28).
-- [ ] **Neues Supabase-Projekt anlegen** (Free-Tier, Region EU) und URL / Service-Key / Anon-Key in `~/.claude/secrets/keys.env` als `NUREINE_V2_SUPABASE_URL`, `NUREINE_V2_SUPABASE_SERVICE_KEY`, `NUREINE_V2_SUPABASE_ANON_KEY` ablegen — ohne das kann Phase 2 nicht starten.
-- [ ] **Neues GitHub-Repo** (`telaaron/nureine`, privat) — oder mir sagen, dass ich es per `gh repo create` anlegen darf.
+- [ ] **Supabase „MustSeen" endgültig löschen** (Dashboard → Settings → General → Delete project; ref `gbfbhspqwaqvnoxitohd`) — **erst nachdem** `_supabase-mustseen-export-2026-09-09/MANIFEST.md` überall OK zeigt und das Projekt bereits pausiert ist. Löschen kann und darf nur Aaron; der CEO-Agent pausiert nur.
+- [ ] **Tavenlo entscheiden:** 9 Kunden (3 E-Mail-Domains, letzte Rechnung 23.07.2026), 13 Rechnungen, 7 PDFs. Mit dem Pausieren von MustSeen ist tavenlo offline. Optionen: (a) sterben lassen, Export liegt in `tavenlo/_supabase-export-2026-09-09/`; (b) eigene DB woanders (Neon Free o. ä.). Empfehlung: (a), falls die 9 Kunden Testdaten sind — bitte kurz prüfen.
+- [ ] **Vercel-Projekt `tavenlo` pausieren oder löschen**, sobald (a) feststeht. `mustseen` und `mustseen-bridge-engine` sind seit 2026-09-09 pausiert.
+- [x] ~~Neues GitHub-Repo~~ — **angelegt 2026-09-09**: github.com/telaaron/nureine-v2 (privat; `nureine` ist vom Alt-Repo belegt, Umbenennung beim Umzug).
+- [ ] **Repo öffentlich schalten?** Ohne GitHub Pro gibt es für private Repos keinen Branch-Schutz und keine Discussions für externes Feedback. Empfehlung: public, sobald keine Secrets/Altlasten drin sind (Entscheidung, siehe REBUILD-PLAN).
 
 ## Betrieb — sofort, je unter 15 Minuten, 0 €
 
-- [ ] **Tailscale auf dem MacBook starten** (Menüleiste → Connect). Es ist gestoppt, deshalb ist der Mini (100.123.159.38) nicht erreichbar. Danach führe ich Phase 0 (Einfrieren) aus — oder du selbst, Backup inklusive:
-  ```bash
-  ssh mini 'crontab -l > ~/crontab.backup.2026-09-08.txt && crontab -l | sed -E "/agent\.sh (verbesserer|reel-regie)|trigger\.sh (social-[a-z]+|world-newsletter)|fetch_world_metrics\.py|fetch_worldbank\.py/ s|^([^#])|# EINGEFROREN 2026-09-08 \1|" | crontab - && crontab -l | grep -v "^#" | grep -v "^$"'
-  ```
-  Bleiben aktiv: Fetch-Kette (03:10), selfupdate, healthcheck, highlight, indexnow. Newsletter läuft über Cloudflare, unberührt.
-
-- [ ] **Mini nachziehen:** `ssh mini`, dann `cd /home/aaron/NurEine && git stash && git pull --rebase origin main` — er hängt 16 Commits zurück, die Newsletter-Fixes vom 07./08.09. sind dort nicht aktiv. (Der lokale Commit `070d5d4` „Zustandsbericht" divergiert; Rebase reicht.)
-- [ ] **Verbesserer-Agent pausieren oder Branches wegräumen:** 5 ungemergte Branches (`ig-hook-cliffhanger-91`, `newsletter-subject-twist-69`, `hero-approval-sensitive-stale-guard-48`, `chefredakteur-ig-hook-mensch-bias-59`, `verbesserer/ig-curation-double-post-guard-460`). Empfehlung: Cron-Zeile `17 10 * * * … verbesserer` auskommentieren, Branches löschen — der Rebuild macht sie gegenstandslos.
-- [ ] **TikTok-Stapel:** `/admin/tiktok` — fertige MP4s entweder posten oder den Kanal bis zum Rebuild offiziell pausieren (siehe Entscheidung 3).
-
+- [x] ~~Tailscale starten / Phase 0 einfrieren~~ — **erledigt 2026-09-09**: 12 Cron-Zeilen auf dem Mini auskommentiert (Backup `~/crontab.backup.2026-09-08.txt`). Aktiv bleiben: Fetch-Kette 03:10, selfupdate, healthcheck, highlight, indexnow.
 ## Accounts & Geld (nur bei „Übernehmen" der jeweiligen Funktion)
 
 - [ ] **Eigenes Supabase-Projekt für NurEine** (Free-Tier reicht: DB 83 MB). Heute teilt NurEine Projekt `gbfbhspqwaqvnoxitohd` mit bridge/ledge/selah/websniper — ein Quota-Riss eines Produkts legt alle lahm (Vorfall 16.–20.07.). Empfehlung: neu anlegen, beim Rebuild dorthin.

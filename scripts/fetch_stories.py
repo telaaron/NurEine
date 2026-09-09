@@ -1406,6 +1406,17 @@ impact_score: Integer 0-100. Der NurEine-WIRKUNGSINDEX misst EINE Sache:
   Nutzen für heute lebende Menschen. Erst wenn ein Mittel am Menschen wirkt oder zugelassen ist, darf
   der Score darüber steigen.
 
+  ⚠️ AGGREGAT-STATISTIK NICHT UNTERBEWERTEN (Verbesserung #62): Eine amtliche/offizielle Statistik über
+  einen bereits eingetretenen, breiten Fortschritt („X Millionen weniger Hungernde laut FAO-Bericht",
+  „Kindersterblichkeit sinkt drittes Jahr in Folge") ist KEINE Aussicht und braucht KEIN einzelnes
+  Anekdoten-Subjekt („eine Familie", „ein Dorf"), um hoch zu punkten. Fehlendes Gesicht zur Zahl ist
+  kein Grund für einen niedrigen Score, wenn Beleg (offizieller Bericht) und Reichweite (Millionen) für
+  sich stehen — das ist bereits eingetretene Wirkung, kein Versprechen. Umgekehrt bleibt eine reine
+  Ankündigung/Vorstufe (z. B. „Land kartiert erstmals seine Landschaften" ohne Schutzmaßnahme) unter
+  dem AUSSICHT-Deckel oben, auch wenn die beteiligte Zahl groß ist. Unterscheide: Ist der Fortschritt
+  schon da (nur ohne Einzelperson) → nicht deckeln. Ist der Fortschritt nur angekündigt/geplant → wie
+  oben deckeln.
+
   ⚠️ ZUSAGE IST NICHT WIRKUNG (Verbesserung #27): Eine Finanzierungszusage, ein unterzeichnetes Abkommen
   oder eine angekündigte Investitionssumme ist für sich genommen noch kein Nutzen. Der entsteht erst,
   wenn das Geld bei konkreten Menschen ankommt. Verwechsle die Größe der Zahl (Millionen Dollar, viele

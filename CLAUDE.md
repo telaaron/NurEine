@@ -47,6 +47,10 @@ etwas auf `main` will (mergen, deployen, eine Zeile Hotfix).
 - **Am Ende pushen**, damit die Arbeit nicht auf einem lokalen Branch
   versandet.
 
+## ⚠️ DIESES REPO IST SEIT 2026-09-10 STEINBRUCH + BETRIEB BIS ZUM CUTOVER
+Neue Arbeit passiert in `Dateien - Local/nureine-v2` (Leseordnung dort: `docs/README.md`).
+Hier nur noch: laufenden Betrieb (Fetch-Kette, Newsletter) am Leben halten, nichts Neues bauen.
+
 ## PFLICHTLEKTÜRE — wiki/ und VISION.md
 **Seit 2026-09-08 gibt es ein Firmen-Wiki unter `wiki/`.** Leseordnung steht in
 `wiki/README.md`: zuerst `wiki/00-LAGE.md` (verifizierter Ist-Zustand), dann

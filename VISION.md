@@ -7,9 +7,10 @@
 >
 > **Stand:** 2026-09-08 · **Status:** Zielbild gesetzt, Rebuild beschlossen (D-20 bis D-28)
 > **Bearbeitbar unter:** `/admin/vision`
-> **Seit 2026-09-08:** Ist-Zustand, Human-TODO und Rebuild-Plan liegen im
-> Firmen-Wiki `wiki/` (Leseordnung in `wiki/README.md`). VISION.md bleibt die
-> Quelle für Zielbild und Entscheidungen (Abschnitt 13).
+> ⚠️ **Seit 2026-09-10 eingefroren (D-37).** Das Gedächtnis von NurEine lebt im neuen
+> Repo `telaaron/nureine-v2` unter `docs/` (Entscheidungen, Lage, Spezifikation,
+> Human-TODO). Dieses Dokument und `wiki/` werden nicht mehr fortgeschrieben; sie
+> bleiben als Historie (D-01…D-36) lesbar. Korrektur zu D-33: es sind 9 Index-Bereiche.
 >
 > **Letzte Änderung (2026-09-01):** Der globale Index wurde durch sechs
 > Fachgutachten geprüft (Abschnitt 16). Abschnitt 6 ist dadurch an mehreren

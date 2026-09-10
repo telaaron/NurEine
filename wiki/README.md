@@ -1,3 +1,5 @@
+> ⚠️ **Eingefroren am 2026-09-10 (D-37).** Weiter geht es in `telaaron/nureine-v2/docs/`.
+
 # NurEine Firmen-Wiki
 
 **Einzige Wahrheit für den CEO-Agenten und alle Subagents.** Wiki schlägt Chat.
